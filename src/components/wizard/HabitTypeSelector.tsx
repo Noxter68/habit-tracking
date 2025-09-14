@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { TrendingUp, ShieldOff } from 'lucide-react-native';
 import tw from '../../lib/tailwind';
 import { HabitType } from '../../types';
 
@@ -10,47 +11,80 @@ interface HabitTypeCardsProps {
 }
 
 const HabitTypeCards: React.FC<HabitTypeCardsProps> = ({ selected, onSelect }) => {
+  const habitTypes = [
+    {
+      id: 'good' as HabitType,
+      title: 'Build a Good Habit',
+      subtitle: 'Start something positive for your life',
+      icon: TrendingUp,
+      color: '#10b981',
+      bgColor: '#f0fdf4',
+      borderColor: '#86efac',
+    },
+    {
+      id: 'bad' as HabitType,
+      title: 'Quit a Bad Habit',
+      subtitle: 'Break free from what holds you back',
+      icon: ShieldOff,
+      color: '#ef4444',
+      bgColor: '#fef2f2',
+      borderColor: '#fca5a5',
+    },
+  ];
+
   return (
-    <View style={tw`px-6`}>
-      <Text style={tw`text-2xl font-semibold text-slate-700 mb-2`}>Let's get started</Text>
-      <Text style={tw`text-slate-600 mb-8`}>What would you like to do?</Text>
+    <View style={tw`px-5`}>
+      {/* Header */}
+      <View style={tw`mb-6`}>
+        <Text style={tw`text-2xl font-bold text-gray-900 mb-2`}>Let's Get Started</Text>
+        <Text style={tw`text-gray-600 leading-5`}>Choose your path to personal growth</Text>
+      </View>
 
-      <View style={tw`gap-4`}>
-        {/* Build Good Habit Card */}
-        <Animated.View entering={FadeInDown.delay(100).duration(400)}>
-          <Pressable
-            onPress={() => onSelect('good')}
-            style={({ pressed }) => [tw`bg-white rounded-2xl p-6 border-2`, selected === 'good' ? tw`border-teal-500 bg-teal-50` : tw`border-slate-200`, pressed && tw`opacity-95`]}
-          >
-            <View style={tw`flex-row items-center`}>
-              <View style={tw`w-16 h-16 bg-teal-100 rounded-2xl items-center justify-center mr-4`}>
-                <Text style={tw`text-3xl`}>🌱</Text>
-              </View>
-              <View style={tw`flex-1`}>
-                <Text style={tw`text-xl font-semibold text-slate-800 mb-1`}>Build a Good Habit</Text>
-                <Text style={tw`text-slate-600`}>Start something positive for your life</Text>
-              </View>
-            </View>
-          </Pressable>
-        </Animated.View>
+      {/* Cards */}
+      <View style={tw`gap-3`}>
+        {habitTypes.map((type, index) => {
+          const Icon = type.icon;
+          const isSelected = selected === type.id;
 
-        {/* Quit Bad Habit Card */}
-        <Animated.View entering={FadeInDown.delay(200).duration(400)}>
-          <Pressable
-            onPress={() => onSelect('bad')}
-            style={({ pressed }) => [tw`bg-white rounded-2xl p-6 border-2`, selected === 'bad' ? tw`border-red-500 bg-red-50` : tw`border-slate-200`, pressed && tw`opacity-95`]}
-          >
-            <View style={tw`flex-row items-center`}>
-              <View style={tw`w-16 h-16 bg-red-100 rounded-2xl items-center justify-center mr-4`}>
-                <Text style={tw`text-3xl`}>🚫</Text>
-              </View>
-              <View style={tw`flex-1`}>
-                <Text style={tw`text-xl font-semibold text-slate-800 mb-1`}>Quit a Bad Habit</Text>
-                <Text style={tw`text-slate-600`}>Break free from something holding you back</Text>
-              </View>
-            </View>
-          </Pressable>
-        </Animated.View>
+          return (
+            <Animated.View key={type.id} entering={FadeInDown.delay(index * 100).duration(400)}>
+              <Pressable
+                onPress={() => onSelect(type.id)}
+                style={({ pressed }) => [
+                  tw`p-4 rounded-2xl border`,
+                  isSelected ? { backgroundColor: type.bgColor, borderColor: type.borderColor, borderWidth: 2 } : tw`bg-white border-gray-200`,
+                  pressed && tw`opacity-90`,
+                ]}
+              >
+                <View style={tw`flex-row items-start justify-between`}>
+                  <View style={tw`flex-row items-center flex-1`}>
+                    {/* Icon Container */}
+                    <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-3`, isSelected ? { backgroundColor: type.color + '20' } : tw`bg-gray-50`]}>
+                      <Icon size={24} color={isSelected ? type.color : '#6b7280'} />
+                    </View>
+
+                    {/* Text Content */}
+                    <View style={tw`flex-1`}>
+                      <Text style={tw`text-base font-semibold text-gray-900 mb-1`}>{type.title}</Text>
+                      <Text style={tw`text-sm text-gray-600 leading-5`}>{type.subtitle}</Text>
+                    </View>
+                  </View>
+
+                  {/* Radio Button */}
+                  <View style={[tw`w-5 h-5 rounded-full border-2 ml-2`, isSelected ? { borderColor: type.color, backgroundColor: 'white' } : tw`border-gray-300`]}>
+                    {isSelected && <View style={[tw`w-2 h-2 rounded-full m-auto`, { backgroundColor: type.color }]} />}
+                  </View>
+                </View>
+              </Pressable>
+            </Animated.View>
+          );
+        })}
+      </View>
+
+      {/* Helper Section */}
+      <View style={tw`mt-6 p-4 bg-gray-50 rounded-2xl`}>
+        <Text style={tw`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2`}>Quick Tip</Text>
+        <Text style={tw`text-sm text-gray-700 leading-5`}>Most people start with building good habits. You can always track multiple habits of both types.</Text>
       </View>
     </View>
   );

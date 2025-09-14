@@ -1,10 +1,11 @@
-// src/screens/HabitWizard.tsx (Updated section without premium check)
+// src/screens/HabitWizard.tsx (Improved Navigation Section)
 import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import { ChevronLeft, ChevronRight, X, Check } from 'lucide-react-native';
 import tw from '../lib/tailwind';
 import { Habit, HabitType } from '../types';
 import { useHabits } from '../context/HabitContext';
@@ -26,6 +27,7 @@ const HabitWizard: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { addHabit, habits } = useHabits();
   const [step, setStep] = useState(1);
+  const [isCreating, setIsCreating] = useState(false);
   const [habitData, setHabitData] = useState<Partial<Habit>>({
     frequency: 'daily',
     notifications: false,
@@ -38,6 +40,8 @@ const HabitWizard: React.FC = () => {
   });
 
   const totalSteps = 6;
+  const isFirstStep = step === 1;
+  const isLastStep = step === totalSteps;
 
   // Request notification permissions when reaching notification step
   useEffect(() => {
@@ -64,6 +68,8 @@ const HabitWizard: React.FC = () => {
     if (step < totalSteps) {
       setStep(step + 1);
     } else {
+      setIsCreating(true);
+
       // Auto-generate name based on category and type
       const habitName = getCategoryName(habitData.category!, habitData.type!);
 
@@ -88,16 +94,21 @@ const HabitWizard: React.FC = () => {
         customDays: habitData.customDays,
       };
 
-      // Add habit to database
-      await addHabit(newHabit);
+      try {
+        // Add habit to database
+        await addHabit(newHabit);
 
-      // Schedule notifications if enabled
-      if (newHabit.notifications && newHabit.notificationTime) {
-        await NotificationService.scheduleHabitNotifications(newHabit);
+        // Schedule notifications if enabled
+        if (newHabit.notifications && newHabit.notificationTime) {
+          await NotificationService.scheduleHabitNotifications(newHabit);
+        }
+
+        // Navigate to dashboard
+        navigation.replace('MainTabs');
+      } catch (error) {
+        setIsCreating(false);
+        Alert.alert('Error', 'Failed to create habit. Please try again.');
       }
-
-      // Navigate to dashboard
-      navigation.replace('MainTabs');
     }
   };
 
@@ -158,29 +169,81 @@ const HabitWizard: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-slate-50`}>
+    <SafeAreaView style={tw`flex-1 bg-gray-50`}>
       <View style={tw`flex-1`}>
         {/* Header */}
-        <View style={tw`px-6 py-4`}>
+        <View style={tw`px-5 py-4`}>
           <ProgressIndicator current={step} total={totalSteps} />
         </View>
 
         {/* Content */}
-        <ScrollView style={tw`flex-1`} showsVerticalScrollIndicator={false}>
+        <ScrollView style={tw`flex-1`} showsVerticalScrollIndicator={false} contentContainerStyle={tw`pb-4`}>
           <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)} key={step}>
             {renderStep()}
           </Animated.View>
         </ScrollView>
 
-        {/* Navigation */}
-        <View style={tw`flex-row justify-between px-6 py-4 bg-white border-t border-slate-200`}>
-          <Pressable onPress={handleBack} style={tw`px-6 py-3 rounded-xl bg-slate-100`}>
-            <Text style={tw`text-slate-600 font-medium`}>{step === 1 ? 'Cancel' : 'Back'}</Text>
-          </Pressable>
+        {/* Improved Navigation */}
+        <View style={tw`bg-white border-t border-gray-100 top-8`}>
+          <View style={tw`px-5 py-4`}>
+            <View style={tw`flex-row gap-3`}>
+              {/* Back/Cancel Button */}
+              <Pressable
+                onPress={handleBack}
+                disabled={isCreating}
+                style={({ pressed }) => [
+                  tw`flex-1 py-4 rounded-xl border`,
+                  isFirstStep ? tw`bg-white border-gray-200` : tw`bg-gray-50 border-gray-200`,
+                  pressed && tw`opacity-80`,
+                  isCreating && tw`opacity-50`,
+                ]}
+              >
+                <View style={tw`flex-row items-center justify-center`}>
+                  {isFirstStep ? (
+                    <>
+                      <X size={18} color="#6b7280" style={tw`mr-2`} />
+                      <Text style={tw`text-gray-600 font-semibold text-base`}>Cancel</Text>
+                    </>
+                  ) : (
+                    <>
+                      <ChevronLeft size={18} color="#6b7280" style={tw`mr-1.5`} />
+                      <Text style={tw`text-gray-600 font-semibold text-base`}>Back</Text>
+                    </>
+                  )}
+                </View>
+              </Pressable>
 
-          <Pressable onPress={handleNext} style={({ pressed }) => [tw`px-8 py-3 rounded-xl bg-teal-600`, pressed && tw`bg-teal-700`]}>
-            <Text style={tw`text-white font-medium`}>{step === totalSteps ? 'Create Habit' : 'Next'}</Text>
-          </Pressable>
+              {/* Next/Create Button */}
+              <Pressable
+                onPress={handleNext}
+                disabled={isCreating}
+                style={({ pressed }) => [tw`flex-1 py-4 rounded-xl`, isLastStep ? tw`bg-green-500` : tw`bg-indigo-600`, pressed && tw`opacity-90`, isCreating && tw`opacity-50`]}
+              >
+                <View style={tw`flex-row items-center justify-center`}>
+                  {isCreating ? (
+                    <Text style={tw`text-white font-semibold text-base`}>Creating...</Text>
+                  ) : isLastStep ? (
+                    <>
+                      <Check size={18} color="#ffffff" style={tw`mr-2`} />
+                      <Text style={tw`text-white font-semibold text-base`}>Create Habit</Text>
+                    </>
+                  ) : (
+                    <>
+                      <Text style={tw`text-white font-semibold text-base`}>Continue</Text>
+                      <ChevronRight size={18} color="#ffffff" style={tw`ml-1.5`} />
+                    </>
+                  )}
+                </View>
+              </Pressable>
+            </View>
+
+            {/* Step Indicator Text */}
+            <View style={tw`mt-3 items-center`}>
+              <Text style={tw`text-xs text-gray-500`}>
+                Step {step} of {totalSteps}
+              </Text>
+            </View>
+          </View>
         </View>
       </View>
     </SafeAreaView>

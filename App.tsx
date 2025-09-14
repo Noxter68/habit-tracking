@@ -1,12 +1,13 @@
-// App.tsx
+// App.tsx - Updated MainTabs with clean design
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Text, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Animated, { useAnimatedStyle, withSpring, useSharedValue, withTiming } from 'react-native-reanimated';
 import tw from './src/lib/tailwind';
 
 // Screens
@@ -46,44 +47,35 @@ export type TabParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
 
-// Tab Navigator Component with beautiful design
+// Clean Tab Navigator with modern design
 function MainTabs() {
+  const tabBarHeight = Platform.OS === 'ios' ? 88 : 68;
+
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#14b8a6',
-        tabBarInactiveTintColor: '#64748b',
+        tabBarActiveTintColor: '#6366f1', // Indigo for active
+        tabBarInactiveTintColor: '#9ca3af', // Gray for inactive
         tabBarStyle: {
           backgroundColor: '#ffffff',
-          borderTopWidth: 0,
+          borderTopWidth: 1,
+          borderTopColor: '#f3f4f6',
           elevation: 0,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 15,
-          position: 'absolute',
-          bottom: 0,
-          left: 20,
-          right: 20,
-          height: 72,
-          borderRadius: 24,
-          paddingBottom: 8,
-          paddingTop: 8,
-          paddingHorizontal: 10,
+          shadowOpacity: 0,
+          height: tabBarHeight,
+          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
+          paddingTop: 12,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: '600',
           marginTop: 4,
-          marginBottom: 0,
-          letterSpacing: 0.2,
+          letterSpacing: 0.5,
+          textTransform: 'uppercase',
         },
         tabBarIconStyle: {
-          marginTop: 0,
-        },
-        tabBarItemStyle: {
-          paddingVertical: 4,
+          marginTop: 4,
         },
       }}
     >
@@ -92,7 +84,7 @@ function MainTabs() {
         component={Dashboard}
         options={{
           tabBarLabel: 'Home',
-          tabBarIcon: ({ color, focused }) => <TabBarIcon name="home" color={color} focused={focused} size={24} />,
+          tabBarIcon: ({ color, focused }) => <TabBarIcon name="home" color={color} focused={focused} />,
         }}
       />
       <Tab.Screen
@@ -100,7 +92,7 @@ function MainTabs() {
         component={CalendarScreen}
         options={{
           tabBarLabel: 'Calendar',
-          tabBarIcon: ({ color, focused }) => <TabBarIcon name="calendar" color={color} focused={focused} size={24} />,
+          tabBarIcon: ({ color, focused }) => <TabBarIcon name="calendar" color={color} focused={focused} />,
         }}
       />
       <Tab.Screen
@@ -108,7 +100,7 @@ function MainTabs() {
         component={StatsScreen}
         options={{
           tabBarLabel: 'Stats',
-          tabBarIcon: ({ color, focused }) => <TabBarIcon name="chart" color={color} focused={focused} size={24} />,
+          tabBarIcon: ({ color, focused }) => <TabBarIcon name="chart" color={color} focused={focused} />,
         }}
       />
       <Tab.Screen
@@ -116,7 +108,82 @@ function MainTabs() {
         component={SettingsScreen}
         options={{
           tabBarLabel: 'Settings',
-          tabBarIcon: ({ color, focused }) => <TabBarIcon name="settings" color={color} focused={focused} size={24} />,
+          tabBarIcon: ({ color, focused }) => <TabBarIcon name="settings" color={color} focused={focused} />,
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+// Alternative: Premium Floating Tab Bar (Optional)
+export function FloatingTabBar() {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: '#6366f1',
+        tabBarInactiveTintColor: '#9ca3af',
+        tabBarStyle: {
+          backgroundColor: '#ffffff',
+          borderTopWidth: 0,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 20,
+          position: 'absolute',
+          bottom: 20,
+          left: 20,
+          right: 20,
+          height: 64,
+          borderRadius: 20,
+          paddingBottom: 8,
+          paddingTop: 8,
+          paddingHorizontal: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 10,
+          fontWeight: '600',
+          marginTop: 2,
+        },
+        tabBarIconStyle: {
+          marginTop: 2,
+        },
+        tabBarItemStyle: {
+          borderRadius: 12,
+        },
+      }}
+    >
+      <Tab.Screen
+        name="Dashboard"
+        component={Dashboard}
+        options={{
+          tabBarLabel: 'Home',
+          tabBarIcon: ({ color, focused }) => <TabBarIcon name="home" color={color} focused={focused} />,
+        }}
+      />
+      <Tab.Screen
+        name="Calendar"
+        component={CalendarScreen}
+        options={{
+          tabBarLabel: 'Calendar',
+          tabBarIcon: ({ color, focused }) => <TabBarIcon name="calendar" color={color} focused={focused} />,
+        }}
+      />
+      <Tab.Screen
+        name="Stats"
+        component={StatsScreen}
+        options={{
+          tabBarLabel: 'Stats',
+          tabBarIcon: ({ color, focused }) => <TabBarIcon name="chart" color={color} focused={focused} />,
+        }}
+      />
+      <Tab.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          tabBarLabel: 'Settings',
+          tabBarIcon: ({ color, focused }) => <TabBarIcon name="settings" color={color} focused={focused} />,
         }}
       />
     </Tab.Navigator>
@@ -137,7 +204,6 @@ function AppNavigator() {
     try {
       const hasLaunched = await AsyncStorage.getItem('hasLaunched');
       if (hasLaunched === null && user) {
-        // First time launching the app with a logged-in user
         setIsFirstLaunch(true);
       } else {
         setIsFirstLaunch(false);
@@ -162,8 +228,8 @@ function AppNavigator() {
   // Show loading screen while checking auth and first launch
   if (loading || isCheckingFirstLaunch) {
     return (
-      <View style={[tw`flex-1 items-center justify-center bg-white`]}>
-        <ActivityIndicator size="large" color="#14b8a6" />
+      <View style={tw`flex-1 items-center justify-center bg-white`}>
+        <ActivityIndicator size="large" color="#6366f1" />
       </View>
     );
   }
@@ -201,7 +267,7 @@ function AppNavigator() {
       />
       <Stack.Screen
         name="MainTabs"
-        component={MainTabs}
+        component={MainTabs} // Or use FloatingTabBar for floating design
         options={{
           animation: 'fade',
         }}
@@ -216,6 +282,8 @@ function AppNavigator() {
     </Stack.Navigator>
   );
 }
+
+// Notification setup
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowBanner: true,
@@ -227,7 +295,6 @@ Notifications.setNotificationHandler({
 
 export default function App(): React.JSX.Element {
   useEffect(() => {
-    // Request notification permissions on app start
     const setupNotifications = async () => {
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
@@ -242,31 +309,26 @@ export default function App(): React.JSX.Element {
         return;
       }
 
-      // For Android, set up notification channel
       if (Platform.OS === 'android') {
         await Notifications.setNotificationChannelAsync('default', {
           name: 'default',
           importance: Notifications.AndroidImportance.MAX,
           vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#14b8a6',
+          lightColor: '#6366f1',
         });
       }
     };
 
     setupNotifications();
 
-    // Handle notification responses (when user taps on notification)
     const responseSubscription = Notifications.addNotificationResponseReceivedListener((response) => {
       console.log('Notification tapped:', response);
-      // You can navigate to specific habit here if needed
       const habitId = response.notification.request.content.data?.habitId;
       if (habitId) {
-        // Navigate to habit details or dashboard
         console.log('Navigate to habit:', habitId);
       }
     });
 
-    // Handle notifications received while app is in foreground
     const receivedSubscription = Notifications.addNotificationReceivedListener((notification) => {
       console.log('Notification received:', notification);
     });

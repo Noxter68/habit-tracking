@@ -1,8 +1,9 @@
 // src/components/NotificationSetup.tsx
-import React, { useState } from 'react';
-import { View, Text, Switch, Pressable, Modal } from 'react-native';
-import { Svg, Path, Circle, Rect, Line } from 'react-native-svg';
-
+import React, { useState, useEffect } from 'react';
+import { View, Text, Switch, Pressable, Modal, Alert, Platform } from 'react-native';
+import { Bell, Sun, Sunrise, Sunset, Moon, Clock } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Notifications from 'expo-notifications';
 import TimePicker from '../TimePicker';
 import tw from '@/lib/tailwind';
 
@@ -12,56 +13,67 @@ interface NotificationSetupProps {
   onChange: (enabled: boolean, time?: string) => void;
 }
 
-// Custom SVG Icons
-const SunriseIcon = () => (
-  <Svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-    <Circle cx="12" cy="12" r="4" stroke="#f59e0b" strokeWidth="2" fill="#fef3c7" />
-    <Path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round" />
-  </Svg>
-);
-
-const SunIcon = () => (
-  <Svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-    <Circle cx="12" cy="12" r="5" fill="#fde047" stroke="#facc15" strokeWidth="2" />
-    <Path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" />
-  </Svg>
-);
-
-const SunsetIcon = () => (
-  <Svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-    <Path d="M12 16a4 4 0 100-8 4 4 0 000 8z" fill="#fb923c" stroke="#f97316" strokeWidth="1.5" />
-    <Path d="M3 16h1M7 16h10M20 16h1M3 20h18" stroke="#ea580c" strokeWidth="1.5" strokeLinecap="round" />
-    <Path d="M12 2v4M4.93 4.93l2.83 2.83M16.24 7.76l2.83-2.83" stroke="#fdba74" strokeWidth="1.5" strokeLinecap="round" />
-  </Svg>
-);
-
-const MoonIcon = () => (
-  <Svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-    <Path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" fill="#e0e7ff" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <Circle cx="18" cy="5" r="1" fill="#fbbf24" />
-    <Circle cx="20" cy="9" r="0.5" fill="#fbbf24" />
-    <Circle cx="15" cy="7" r="0.5" fill="#fbbf24" />
-  </Svg>
-);
-
-const ClockIcon = () => (
-  <Svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-    <Circle cx="12" cy="12" r="9" stroke="#14b8a6" strokeWidth="2" fill="#f0fdfa" />
-    <Path d="M12 6v6l4 2" stroke="#14b8a6" strokeWidth="2" strokeLinecap="round" />
-  </Svg>
-);
-
 const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, onChange }) => {
   const [selectedTime, setSelectedTime] = useState(time || '09:00');
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [isCustomTime, setIsCustomTime] = useState(false);
+  const [hasPermission, setHasPermission] = useState(false);
+
+  useEffect(() => {
+    checkNotificationPermissions();
+  }, []);
+
+  const checkNotificationPermissions = async () => {
+    const { status } = await Notifications.getPermissionsAsync();
+    setHasPermission(status === 'granted');
+  };
+
+  const requestNotificationPermission = async () => {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+
+    if (finalStatus !== 'granted') {
+      Alert.alert('Permission Required', 'Please enable notifications in your device settings to receive habit reminders.', [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Open Settings',
+          onPress: () => {
+            if (Platform.OS === 'ios') {
+              Linking.openURL('app-settings:');
+            } else {
+              Linking.openSettings();
+            }
+          },
+        },
+      ]);
+      return false;
+    }
+
+    setHasPermission(true);
+    return true;
+  };
+
+  const handleToggleNotifications = async (value: boolean) => {
+    if (value && !hasPermission) {
+      const granted = await requestNotificationPermission();
+      if (!granted) {
+        return; // Don't enable if permission denied
+      }
+    }
+    onChange(value, selectedTime);
+  };
 
   const commonTimes = [
-    { label: 'Morning', time: '07:00', icon: <SunriseIcon /> },
-    { label: 'Noon', time: '12:00', icon: <SunIcon /> },
-    { label: 'Evening', time: '18:00', icon: <SunsetIcon /> },
-    { label: 'Night', time: '21:00', icon: <MoonIcon /> },
-    { label: 'Custom', time: 'custom', icon: <ClockIcon /> },
+    { label: 'Early Morning', time: '07:00', icon: Sunrise, subtitle: '7:00 AM', color: '#fbbf24' },
+    { label: 'Morning', time: '09:00', icon: Sun, subtitle: '9:00 AM', color: '#facc15' },
+    { label: 'Evening', time: '18:00', icon: Sunset, subtitle: '6:00 PM', color: '#fb923c' },
+    { label: 'Night', time: '21:00', icon: Moon, subtitle: '9:00 PM', color: '#818cf8' },
+    { label: 'Custom Time', time: 'custom', icon: Clock, subtitle: 'Choose your time', color: '#14b8a6' },
   ];
 
   const handleTimeSelect = (timeOption: any) => {
@@ -90,41 +102,60 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, on
   };
 
   return (
-    <View style={tw`px-6`}>
-      <Text style={tw`text-2xl font-semibold text-slate-700 mb-2`}>Stay on Track</Text>
-      <Text style={tw`text-slate-600 mb-6`}>Would you like daily reminders to complete your habit?</Text>
+    <View style={tw`px-5`}>
+      {/* Header */}
+      <View style={tw`mb-6`}>
+        <Text style={tw`text-2xl font-bold text-gray-900 mb-2`}>Stay on Track</Text>
+        <Text style={tw`text-gray-600 leading-5`}>Set daily reminders to build consistency</Text>
+      </View>
 
-      <View style={tw`bg-white p-4 rounded-2xl shadow-sm`}>
-        <View style={tw`flex-row items-center justify-between mb-4`}>
-          <Text style={tw`text-lg text-slate-700`}>Enable notifications</Text>
-          <Switch value={enabled} onValueChange={(value) => onChange(value, selectedTime)} trackColor={{ false: '#cbd5e1', true: '#5eead4' }} thumbColor={enabled ? '#14b8a6' : '#f4f4f5'} />
+      {/* Main Toggle Card */}
+      <View style={tw`bg-white rounded-2xl p-4 border border-gray-100`}>
+        <View style={tw`flex-row items-center justify-between`}>
+          <View style={tw`flex-row items-center flex-1`}>
+            <View style={tw`w-10 h-10 bg-indigo-50 rounded-xl items-center justify-center mr-3`}>
+              <Bell size={20} color="#6366f1" />
+            </View>
+            <View style={tw`flex-1`}>
+              <Text style={tw`text-base font-semibold text-gray-900`}>Daily Reminders</Text>
+              <Text style={tw`text-xs text-gray-500 mt-0.5`}>{enabled ? `Reminder at ${formatDisplayTime(selectedTime)}` : 'Get notified daily'}</Text>
+            </View>
+          </View>
+          <Switch value={enabled} onValueChange={handleToggleNotifications} trackColor={{ false: '#e5e7eb', true: '#c7d2fe' }} thumbColor={enabled ? '#6366f1' : '#f9fafb'} />
         </View>
 
+        {/* Time Selection - Only show when enabled */}
         {enabled && (
-          <View>
-            <Text style={tw`text-slate-600 mb-3`}>Reminder time:</Text>
+          <View style={tw`mt-4 pt-4 border-t border-gray-100`}>
+            <Text style={tw`text-sm font-medium text-gray-700 mb-3`}>Choose reminder time</Text>
+
             <View style={tw`gap-2`}>
               {commonTimes.map((timeOption) => {
+                const Icon = timeOption.icon;
                 const isSelected = timeOption.time === 'custom' ? isCustomTime : selectedTime === timeOption.time && !isCustomTime;
 
                 return (
                   <Pressable
                     key={timeOption.time}
                     onPress={() => handleTimeSelect(timeOption)}
-                    style={({ pressed }) => [tw`flex-row items-center p-3 rounded-xl border`, isSelected ? tw`bg-teal-50 border-teal-400` : tw`bg-white border-slate-200`, pressed && tw`bg-slate-50`]}
+                    style={({ pressed }) => [
+                      tw`flex-row items-center p-3 rounded-xl border`,
+                      isSelected ? tw`bg-indigo-50 border-indigo-300` : tw`bg-gray-50 border-gray-200`,
+                      pressed && tw`opacity-80`,
+                    ]}
                   >
-                    <View style={tw`mr-3`}>{timeOption.icon}</View>
-                    <View style={tw`flex-1`}>
-                      <Text style={[tw`font-medium`, isSelected ? tw`text-slate-800` : tw`text-slate-700`]}>{timeOption.label}</Text>
-                      <Text style={tw`text-slate-500 text-sm`}>
-                        {timeOption.time === 'custom' && isCustomTime ? formatDisplayTime(selectedTime) : timeOption.time !== 'custom' ? formatDisplayTime(timeOption.time) : 'Set your preferred time'}
-                      </Text>
+                    <View style={[tw`w-10 h-10 rounded-lg items-center justify-center mr-3`, { backgroundColor: isSelected ? timeOption.color + '20' : '#f9fafb' }]}>
+                      <Icon size={20} color={isSelected ? timeOption.color : '#9ca3af'} />
                     </View>
+
+                    <View style={tw`flex-1`}>
+                      <Text style={[tw`text-sm font-medium`, isSelected ? tw`text-gray-900` : tw`text-gray-700`]}>{timeOption.label}</Text>
+                      <Text style={tw`text-xs text-gray-500 mt-0.5`}>{timeOption.time === 'custom' && isCustomTime ? formatDisplayTime(selectedTime) : timeOption.subtitle}</Text>
+                    </View>
+
                     {isSelected && (
-                      <View style={tw`w-5 h-5 bg-teal-500 rounded-full items-center justify-center`}>
-                        <Svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                          <Path d="M20 6L9 17l-5-5" stroke="white" strokeWidth="3" strokeLinecap="round" />
-                        </Svg>
+                      <View style={tw`w-5 h-5 bg-indigo-600 rounded-full items-center justify-center`}>
+                        <View style={tw`w-2 h-2 bg-white rounded-full`} />
                       </View>
                     )}
                   </Pressable>
@@ -135,17 +166,22 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, on
         )}
       </View>
 
-      <View style={tw`mt-4 p-4 bg-amber-50 rounded-2xl`}>
+      {/* Tip Card */}
+      <LinearGradient colors={['#fef3c7', '#fde68a']} style={tw`rounded-2xl p-4 mt-4`}>
         <View style={tw`flex-row items-start`}>
-          <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={tw`mr-2 mt-0.5`}>
-            <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#fbbf24" stroke="#f59e0b" strokeWidth="1" />
-          </Svg>
+          <View style={tw`w-8 h-8 bg-amber-200 rounded-lg items-center justify-center mr-3`}>
+            <Text style={tw`text-base`}>💡</Text>
+          </View>
           <View style={tw`flex-1`}>
-            <Text style={tw`text-amber-900 font-medium mb-1`}>Pro Tip</Text>
-            <Text style={tw`text-amber-700 text-sm`}>Set reminders at times when you're most likely to complete your habit successfully.</Text>
+            <Text style={tw`text-sm font-semibold text-amber-900 mb-1`}>Best Practice</Text>
+            <Text style={tw`text-xs text-amber-800 leading-5`}>
+              {enabled
+                ? 'Stack your habit with an existing routine. If you chose morning, do it right after brushing your teeth.'
+                : 'Reminders increase habit success by 40%. Enable them to stay consistent.'}
+            </Text>
           </View>
         </View>
-      </View>
+      </LinearGradient>
 
       {/* Time Picker Modal */}
       <Modal visible={showTimePicker} transparent animationType="slide" onRequestClose={() => setShowTimePicker(false)}>
