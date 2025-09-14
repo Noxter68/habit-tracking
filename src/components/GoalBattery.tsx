@@ -1,10 +1,9 @@
 // src/components/GoalBattery.tsx
-import React, { useEffect } from 'react';
+import React, { useEffect, createElement } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withRepeat, withSequence, interpolate, Easing, FadeIn, withSpring } from 'react-native-reanimated';
-import Svg, { Path, Rect, Circle, G, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Battery, TrendingUp, AlertTriangle, Zap, Target } from 'lucide-react-native';
+import { Battery, TrendingUp, AlertTriangle, Zap, Target, Calendar, CheckCircle2, XCircle, Rocket, BatteryWarning, AlertOctagon, Trophy, Flame, Shield, Clock, ChevronUp } from 'lucide-react-native';
 import tw from '../lib/tailwind';
 
 interface GoalBatteryProps {
@@ -20,6 +19,7 @@ const GoalBattery: React.FC<GoalBatteryProps> = ({ totalDays, completedDays, mis
   const pulse = useSharedValue(0);
   const batteryFill = useSharedValue(0);
   const glowAnimation = useSharedValue(0);
+  const iconScale = useSharedValue(1);
 
   // Calculate days since start
   const today = new Date();
@@ -45,11 +45,11 @@ const GoalBattery: React.FC<GoalBatteryProps> = ({ totalDays, completedDays, mis
   };
 
   const getStatusIcon = () => {
-    if (successProbability > 80) return '🚀';
-    if (successProbability > 60) return '⚡';
-    if (successProbability > 40) return '🔋';
-    if (successProbability > 20) return '⚠️';
-    return '🆘';
+    if (successProbability > 80) return Rocket;
+    if (successProbability > 60) return Zap;
+    if (successProbability > 40) return Battery;
+    if (successProbability > 20) return BatteryWarning;
+    return AlertOctagon;
   };
 
   const getMotivationalMessage = () => {
@@ -105,6 +105,8 @@ const GoalBattery: React.FC<GoalBatteryProps> = ({ totalDays, completedDays, mis
     // Glow animation for high performance
     if (successProbability > 80) {
       glowAnimation.value = withRepeat(withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.ease) }), -1, true);
+      // Celebrate with icon animation
+      iconScale.value = withRepeat(withSequence(withSpring(1.2, { damping: 10 }), withSpring(1, { damping: 10 })), -1, false);
     }
   }, [successProbability]);
 
@@ -120,170 +122,239 @@ const GoalBattery: React.FC<GoalBatteryProps> = ({ totalDays, completedDays, mis
     opacity: interpolate(glowAnimation.value, [0, 1], [0.3, 0.6]),
   }));
 
+  const iconAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: iconScale.value }],
+  }));
+
   const batteryColors = getBatteryColor();
   const status = getMotivationalMessage();
+  const StatusIcon = getStatusIcon();
 
   return (
-    <Animated.View entering={FadeIn.duration(400)} style={tw`bg-white rounded-2xl shadow-sm overflow-hidden`}>
-      {/* Header with gradient background */}
-      <LinearGradient colors={[batteryColors[0] + '10', batteryColors[0] + '05']} style={tw`px-5 pt-5 pb-3`}>
+    <Animated.View entering={FadeIn.duration(400)} style={tw`bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-100`}>
+      {/* Modern Header with Gradient */}
+      <LinearGradient colors={[batteryColors[0] + '15', batteryColors[0] + '08']} style={tw`px-6 pt-6 pb-4`}>
         <View style={tw`flex-row items-center justify-between`}>
           <View style={tw`flex-1`}>
-            <Text style={tw`text-lg font-bold text-gray-900`}>Goal Achievement</Text>
-            {habitName && <Text style={tw`text-sm text-gray-600 mt-0.5`}>{habitName}</Text>}
+            <Text style={tw`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1`}>Goal Progress</Text>
+            <Text style={tw`text-xl font-bold text-gray-900`}>{habitName || 'Daily Achievement'}</Text>
+            {habitType && (
+              <View style={tw`flex-row items-center mt-2`}>
+                <View style={[tw`px-2 py-1 rounded-full flex-row items-center`, { backgroundColor: batteryColors[0] + '20' }]}>
+                  <Shield size={12} color={batteryColors[0]} strokeWidth={2.5} />
+                  <Text style={[tw`text-xs font-medium ml-1`, { color: batteryColors[0] }]}>{habitType === 'good' ? 'Building' : 'Quitting'}</Text>
+                </View>
+              </View>
+            )}
           </View>
-          <View style={tw`items-center`}>
-            <Text style={tw`text-3xl`}>{getStatusIcon()}</Text>
-            <Text style={tw`text-xs text-gray-500 mt-1`}>Day {daysSinceStart + 1}</Text>
+          <Animated.View style={iconAnimatedStyle}>
+            <View style={[tw`w-16 h-16 rounded-2xl items-center justify-center`, { backgroundColor: batteryColors[0] + '20' }]}>
+              {createElement(StatusIcon, {
+                size: 32,
+                color: batteryColors[0],
+                strokeWidth: 2,
+              })}
+            </View>
+          </Animated.View>
+        </View>
+
+        {/* Current Day Badge */}
+        <View style={tw`mt-4`}>
+          <View style={tw`bg-white/80 rounded-xl px-3 py-2 self-start`}>
+            <View style={tw`flex-row items-center`}>
+              <Clock size={14} color={batteryColors[0]} strokeWidth={2.5} />
+              <Text style={tw`text-sm font-semibold text-gray-900 ml-2`}>
+                Day {daysSinceStart + 1} of {totalDays}
+              </Text>
+            </View>
           </View>
         </View>
       </LinearGradient>
 
       {/* Enhanced Battery Visualization */}
-      <View style={tw`px-5 py-4`}>
+      <View style={tw`px-6 py-6`}>
         <Animated.View style={[successProbability < 40 && animatedContainerStyle]}>
           <View style={tw`relative`}>
             {/* Glow effect for high performance */}
-            {successProbability > 80 && <Animated.View style={[tw`absolute inset-0 rounded-2xl`, glowStyle, { backgroundColor: batteryColors[0] + '20' }]} />}
+            {successProbability > 80 && <Animated.View style={[tw`absolute -inset-2 rounded-3xl blur-xl`, glowStyle, { backgroundColor: batteryColors[0] + '30' }]} />}
 
-            {/* Battery Container */}
-            <View style={tw`bg-gray-100 rounded-2xl h-20 relative overflow-hidden`}>
-              {/* Grid pattern background */}
-              <View style={tw`absolute inset-0 opacity-10`}>
+            {/* Modern Battery Container */}
+            <View style={tw`bg-gray-50 rounded-2xl h-24 relative overflow-hidden border border-gray-200`}>
+              {/* Subtle grid pattern */}
+              <View style={tw`absolute inset-0 opacity-5`}>
                 {[...Array(10)].map((_, i) => (
-                  <View key={i} style={[tw`absolute h-full w-px bg-gray-400`, { left: `${(i + 1) * 10}%` }]} />
+                  <View key={i} style={[tw`absolute h-full w-px bg-gray-600`, { left: `${(i + 1) * 10}%` }]} />
                 ))}
               </View>
 
-              {/* Battery Fill with gradient */}
+              {/* Battery Fill with gradient and animation */}
               <Animated.View style={[tw`absolute inset-y-0 left-0`, animatedFillStyle]}>
-                <LinearGradient colors={batteryColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`h-full`} />
+                <LinearGradient colors={batteryColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`h-full`}>
+                  {/* Animated pattern overlay */}
+                  <View style={tw`absolute inset-0 opacity-20`}>
+                    {successProbability > 70 && (
+                      <View style={tw`flex-row items-center justify-end h-full pr-4`}>
+                        <Zap size={32} color="#ffffff" fill="#ffffff" strokeWidth={1} />
+                      </View>
+                    )}
+                  </View>
+                </LinearGradient>
               </Animated.View>
 
-              {/* Center Content */}
+              {/* Center Content with better typography */}
               <View style={tw`absolute inset-0 items-center justify-center`}>
-                <Text style={tw`text-3xl font-bold text-gray-900`}>{Math.round(successProbability)}%</Text>
-                <Text style={tw`text-xs text-gray-600`}>Success Rate</Text>
+                <View style={tw`items-center`}>
+                  <Text style={tw`text-4xl font-bold text-gray-900`}>{Math.round(successProbability)}%</Text>
+                  <Text style={tw`text-xs font-medium text-gray-600 uppercase tracking-wider mt-1`}>Success Rate</Text>
+                </View>
               </View>
 
-              {/* Lightning bolt for charging */}
-              {successProbability > 70 && (
+              {/* Status indicator on right side */}
+              {successProbability <= 40 && successProbability > 20 && (
                 <View style={tw`absolute right-4 top-1/2 -translate-y-1/2`}>
-                  <Zap size={24} color="#ffffff" fill="#ffffff" strokeWidth={2} />
+                  <View style={tw`w-10 h-10 bg-amber-500/20 rounded-xl items-center justify-center`}>
+                    <AlertTriangle size={24} color="#f59e0b" strokeWidth={2.5} />
+                  </View>
                 </View>
               )}
 
-              {/* Warning icon for low battery */}
-              {successProbability <= 40 && successProbability > 20 && (
+              {successProbability <= 20 && (
                 <View style={tw`absolute right-4 top-1/2 -translate-y-1/2`}>
-                  <AlertTriangle size={24} color="#ffffff" strokeWidth={2} />
+                  <View style={tw`w-10 h-10 bg-red-500/20 rounded-xl items-center justify-center`}>
+                    <AlertOctagon size={24} color="#ef4444" strokeWidth={2.5} />
+                  </View>
                 </View>
               )}
             </View>
           </View>
         </Animated.View>
 
-        {/* Status Message Card */}
+        {/* Modern Status Message Card */}
         <View
           style={[
-            tw`mt-4 p-3 rounded-xl`,
+            tw`mt-6 p-4 rounded-2xl border`,
             status.tone === 'success'
-              ? tw`bg-green-50`
+              ? tw`bg-green-50 border-green-200`
               : status.tone === 'info'
-              ? tw`bg-blue-50`
+              ? tw`bg-blue-50 border-blue-200`
               : status.tone === 'warning'
-              ? tw`bg-amber-50`
+              ? tw`bg-amber-50 border-amber-200`
               : status.tone === 'danger'
-              ? tw`bg-red-50`
-              : tw`bg-red-100`,
+              ? tw`bg-red-50 border-red-200`
+              : tw`bg-red-100 border-red-300`,
           ]}
         >
-          <Text
-            style={[
-              tw`text-sm font-semibold`,
-              status.tone === 'success' ? tw`text-green-900` : status.tone === 'info' ? tw`text-blue-900` : status.tone === 'warning' ? tw`text-amber-900` : tw`text-red-900`,
-            ]}
-          >
-            {status.title}
-          </Text>
-          <Text
-            style={[tw`text-xs mt-1`, status.tone === 'success' ? tw`text-green-700` : status.tone === 'info' ? tw`text-blue-700` : status.tone === 'warning' ? tw`text-amber-700` : tw`text-red-700`]}
-          >
-            {status.message}
-          </Text>
-        </View>
-      </View>
-
-      {/* Enhanced Stats Grid */}
-      <View style={tw`px-5 pb-5`}>
-        <View style={tw`bg-gray-50 rounded-xl p-3`}>
-          <View style={tw`flex-row`}>
-            {/* Days Expected */}
-            <View style={tw`flex-1 items-center`}>
-              <View style={tw`w-12 h-12 rounded-xl bg-gray-100 items-center justify-center mb-2`}>
-                <Target size={20} color="#6b7280" strokeWidth={2} />
-              </View>
-              <Text style={tw`text-lg font-bold text-gray-700`}>{expectedDays}</Text>
-              <Text style={tw`text-xs text-gray-500`}>Expected</Text>
+          <View style={tw`flex-row items-start`}>
+            <View
+              style={[
+                tw`w-10 h-10 rounded-xl items-center justify-center mr-3`,
+                status.tone === 'success' ? tw`bg-green-500/20` : status.tone === 'info' ? tw`bg-blue-500/20` : status.tone === 'warning' ? tw`bg-amber-500/20` : tw`bg-red-500/20`,
+              ]}
+            >
+              {status.tone === 'success' && <Trophy size={20} color="#10b981" strokeWidth={2.5} />}
+              {status.tone === 'info' && <TrendingUp size={20} color="#3b82f6" strokeWidth={2.5} />}
+              {status.tone === 'warning' && <AlertTriangle size={20} color="#f59e0b" strokeWidth={2.5} />}
+              {(status.tone === 'danger' || status.tone === 'critical') && <AlertOctagon size={20} color="#ef4444" strokeWidth={2.5} />}
             </View>
-
-            {/* Completed */}
-            <View style={tw`flex-1 items-center`}>
-              <View style={tw`w-12 h-12 rounded-xl bg-green-100 items-center justify-center mb-2`}>
-                <Text style={tw`text-xl`}>✓</Text>
-              </View>
-              <Text style={tw`text-lg font-bold text-green-600`}>{completedDays}</Text>
-              <Text style={tw`text-xs text-gray-500`}>Complete</Text>
-            </View>
-
-            {/* Missed */}
-            <View style={tw`flex-1 items-center`}>
-              <View style={tw`w-12 h-12 rounded-xl bg-red-100 items-center justify-center mb-2`}>
-                <Text style={tw`text-xl`}>×</Text>
-              </View>
-              <Text style={[tw`text-lg font-bold`, actualMissedDays > 5 ? tw`text-red-600` : tw`text-amber-600`]}>{actualMissedDays}</Text>
-              <Text style={tw`text-xs text-gray-500`}>Missed</Text>
-            </View>
-
-            {/* Days Left */}
-            <View style={tw`flex-1 items-center`}>
-              <View style={tw`w-12 h-12 rounded-xl bg-indigo-100 items-center justify-center mb-2`}>
-                <Text style={tw`text-xl`}>📅</Text>
-              </View>
-              <Text style={tw`text-lg font-bold text-indigo-600`}>{daysRemaining}</Text>
-              <Text style={tw`text-xs text-gray-500`}>Remaining</Text>
+            <View style={tw`flex-1`}>
+              <Text
+                style={[
+                  tw`text-sm font-bold mb-1`,
+                  status.tone === 'success' ? tw`text-green-900` : status.tone === 'info' ? tw`text-blue-900` : status.tone === 'warning' ? tw`text-amber-900` : tw`text-red-900`,
+                ]}
+              >
+                {status.title}
+              </Text>
+              <Text
+                style={[
+                  tw`text-xs leading-relaxed`,
+                  status.tone === 'success' ? tw`text-green-700` : status.tone === 'info' ? tw`text-blue-700` : status.tone === 'warning' ? tw`text-amber-700` : tw`text-red-700`,
+                ]}
+              >
+                {status.message}
+              </Text>
             </View>
           </View>
         </View>
       </View>
 
-      {/* Critical Warning */}
+      {/* Modern Stats Grid with Icons */}
+      <View style={tw`px-6 pb-6`}>
+        <View style={tw`bg-gray-50 rounded-2xl p-4 border border-gray-100`}>
+          <View style={tw`flex-row`}>
+            {/* Days Expected */}
+            <View style={tw`flex-1 items-center`}>
+              <View style={tw`w-14 h-14 rounded-2xl bg-white border border-gray-200 items-center justify-center mb-2`}>
+                <Target size={24} color="#6b7280" strokeWidth={2} />
+              </View>
+              <Text style={tw`text-xl font-bold text-gray-900`}>{expectedDays}</Text>
+              <Text style={tw`text-xs text-gray-500 font-medium`}>Expected</Text>
+            </View>
+
+            {/* Completed */}
+            <View style={tw`flex-1 items-center`}>
+              <View style={tw`w-14 h-14 rounded-2xl bg-green-50 border border-green-200 items-center justify-center mb-2`}>
+                <CheckCircle2 size={24} color="#10b981" strokeWidth={2} />
+              </View>
+              <Text style={tw`text-xl font-bold text-green-600`}>{completedDays}</Text>
+              <Text style={tw`text-xs text-gray-500 font-medium`}>Complete</Text>
+            </View>
+
+            {/* Missed */}
+            <View style={tw`flex-1 items-center`}>
+              <View style={tw`w-14 h-14 rounded-2xl bg-red-50 border border-red-200 items-center justify-center mb-2`}>
+                <XCircle size={24} color="#ef4444" strokeWidth={2} />
+              </View>
+              <Text style={[tw`text-xl font-bold`, actualMissedDays > 5 ? tw`text-red-600` : tw`text-amber-600`]}>{actualMissedDays}</Text>
+              <Text style={tw`text-xs text-gray-500 font-medium`}>Missed</Text>
+            </View>
+
+            {/* Days Left */}
+            <View style={tw`flex-1 items-center`}>
+              <View style={tw`w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-200 items-center justify-center mb-2`}>
+                <Calendar size={24} color="#6366f1" strokeWidth={2} />
+              </View>
+              <Text style={tw`text-xl font-bold text-indigo-600`}>{daysRemaining}</Text>
+              <Text style={tw`text-xs text-gray-500 font-medium`}>Remaining</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      {/* Critical Warning with better design */}
       {successProbability <= 20 && (
-        <View style={tw`mx-5 mb-5 p-3 bg-red-100 rounded-xl border border-red-200`}>
-          <View style={tw`flex-row items-start`}>
-            <AlertTriangle size={16} color="#dc2626" style={tw`mr-2 mt-0.5`} />
-            <View style={tw`flex-1`}>
-              <Text style={tw`text-xs text-red-800 font-semibold mb-1`}>⚠️ Critical Alert</Text>
-              <Text style={tw`text-xs text-red-700 leading-4`}>
-                You've missed {actualMissedDays} days. Each missed day significantly reduces your chance of forming this habit. Take action today to get back on track!
-              </Text>
+        <View style={tw`mx-6 mb-6`}>
+          <View style={tw`bg-red-50 rounded-2xl p-4 border border-red-200`}>
+            <View style={tw`flex-row items-start`}>
+              <View style={tw`w-10 h-10 bg-red-500/20 rounded-xl items-center justify-center mr-3`}>
+                <AlertOctagon size={20} color="#dc2626" strokeWidth={2.5} />
+              </View>
+              <View style={tw`flex-1`}>
+                <Text style={tw`text-sm font-bold text-red-900 mb-1`}>Critical Alert</Text>
+                <Text style={tw`text-xs text-red-700 leading-5`}>
+                  You've missed {actualMissedDays} days. Each missed day significantly reduces your chance of forming this habit. Take action today to get back on track!
+                </Text>
+              </View>
             </View>
           </View>
         </View>
       )}
 
-      {/* Success Celebration */}
+      {/* Success Celebration with better design */}
       {successProbability >= 95 && (
-        <View style={tw`mx-5 mb-5`}>
-          <LinearGradient colors={['#10b981', '#059669']} style={tw`p-3 rounded-xl`}>
+        <View style={tw`mx-6 mb-6`}>
+          <LinearGradient colors={['#10b981', '#059669']} style={tw`rounded-2xl p-4`}>
             <View style={tw`flex-row items-center`}>
-              <View style={tw`w-8 h-8 bg-white/30 rounded-lg items-center justify-center mr-2`}>
-                <TrendingUp size={18} color="#ffffff" strokeWidth={2.5} />
+              <View style={tw`w-10 h-10 bg-white/20 rounded-xl items-center justify-center mr-3`}>
+                <Trophy size={20} color="#ffffff" strokeWidth={2.5} />
               </View>
               <View style={tw`flex-1`}>
-                <Text style={tw`text-xs text-white font-semibold`}>Perfect Performance!</Text>
-                <Text style={tw`text-xs text-white/90 mt-0.5`}>You're on track to achieve your goal!</Text>
+                <Text style={tw`text-sm font-bold text-white mb-0.5`}>Perfect Performance!</Text>
+                <Text style={tw`text-xs text-white/90 leading-4`}>You're on track to achieve your goal! Keep up the amazing work.</Text>
               </View>
+              <Animated.View style={iconAnimatedStyle}>
+                <ChevronUp size={24} color="#ffffff" strokeWidth={2.5} />
+              </Animated.View>
             </View>
           </LinearGradient>
         </View>
