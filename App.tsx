@@ -1,4 +1,4 @@
-// App.tsx - Updated MainTabs with clean design
+// App.tsx - Updated with Achievement System
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -23,11 +23,13 @@ import SettingsScreen from './src/screens/SettingsScreen';
 // Context
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { HabitProvider } from './src/context/HabitContext';
+import { AchievementProvider } from './src/context/AchievementContext';
 
 // Icons Component
 import TabBarIcon from './src/components/TabBarIcon';
 
 import * as Notifications from 'expo-notifications';
+import AchievementsScreen from '@/screens/AchievementScreen';
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -35,6 +37,7 @@ export type RootStackParamList = {
   HabitWizard: undefined;
   MainTabs: undefined;
   HabitDetails: { habitId: string };
+  Achievements: undefined;
 };
 
 export type TabParamList = {
@@ -76,81 +79,6 @@ function MainTabs() {
         },
         tabBarIconStyle: {
           marginTop: 4,
-        },
-      }}
-    >
-      <Tab.Screen
-        name="Dashboard"
-        component={Dashboard}
-        options={{
-          tabBarLabel: 'Home',
-          tabBarIcon: ({ color, focused }) => <TabBarIcon name="home" color={color} focused={focused} />,
-        }}
-      />
-      <Tab.Screen
-        name="Calendar"
-        component={CalendarScreen}
-        options={{
-          tabBarLabel: 'Calendar',
-          tabBarIcon: ({ color, focused }) => <TabBarIcon name="calendar" color={color} focused={focused} />,
-        }}
-      />
-      <Tab.Screen
-        name="Stats"
-        component={StatsScreen}
-        options={{
-          tabBarLabel: 'Stats',
-          tabBarIcon: ({ color, focused }) => <TabBarIcon name="chart" color={color} focused={focused} />,
-        }}
-      />
-      <Tab.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{
-          tabBarLabel: 'Settings',
-          tabBarIcon: ({ color, focused }) => <TabBarIcon name="settings" color={color} focused={focused} />,
-        }}
-      />
-    </Tab.Navigator>
-  );
-}
-
-// Alternative: Premium Floating Tab Bar (Optional)
-export function FloatingTabBar() {
-  return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: '#6366f1',
-        tabBarInactiveTintColor: '#9ca3af',
-        tabBarStyle: {
-          backgroundColor: '#ffffff',
-          borderTopWidth: 0,
-          elevation: 8,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 20,
-          position: 'absolute',
-          bottom: 20,
-          left: 20,
-          right: 20,
-          height: 64,
-          borderRadius: 20,
-          paddingBottom: 8,
-          paddingTop: 8,
-          paddingHorizontal: 8,
-        },
-        tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '600',
-          marginTop: 2,
-        },
-        tabBarIconStyle: {
-          marginTop: 2,
-        },
-        tabBarItemStyle: {
-          borderRadius: 12,
         },
       }}
     >
@@ -267,7 +195,7 @@ function AppNavigator() {
       />
       <Stack.Screen
         name="MainTabs"
-        component={MainTabs} // Or use FloatingTabBar for floating design
+        component={MainTabs}
         options={{
           animation: 'fade',
         }}
@@ -277,6 +205,14 @@ function AppNavigator() {
         component={HabitDetails}
         options={{
           animation: 'slide_from_right',
+        }}
+      />
+      <Stack.Screen
+        name="Achievements"
+        component={AchievementsScreen}
+        options={{
+          animation: 'slide_from_bottom',
+          presentation: 'modal',
         }}
       />
     </Stack.Navigator>
@@ -344,9 +280,11 @@ export default function App(): React.JSX.Element {
       <SafeAreaProvider>
         <AuthProvider>
           <HabitProvider>
-            <NavigationContainer>
-              <AppNavigator />
-            </NavigationContainer>
+            <AchievementProvider>
+              <NavigationContainer>
+                <AppNavigator />
+              </NavigationContainer>
+            </AchievementProvider>
           </HabitProvider>
         </AuthProvider>
       </SafeAreaProvider>
