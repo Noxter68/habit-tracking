@@ -1,13 +1,40 @@
 // src/screens/StatsScreen.tsx
-import React, { useMemo } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import React, { useMemo, useEffect, useState } from 'react';
+import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import tw from '../lib/tailwind';
 import { useHabits } from '../context/HabitContext';
 import { LinearGradient } from 'expo-linear-gradient';
+import { HabitService } from '../services/habitService';
+import { useAuth } from '../context/AuthContext';
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react-native';
 
 const StatsScreen: React.FC = () => {
   const { habits } = useHabits();
+  const { user } = useAuth();
+  const [aggregatedStats, setAggregatedStats] = useState<any>(null);
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'all'>('month');
+
+  useEffect(() => {
+    if (user) {
+      loadAggregatedStats();
+    }
+  }, [user, habits, selectedPeriod]);
+
+  const loadAggregatedStats = async () => {
+    if (!user) return;
+
+    try {
+      setLoadingStats(true);
+      const stats = await HabitService.getAggregatedStats(user.id);
+      setAggregatedStats(stats);
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
 
   // Calculate comprehensive statistics
   const stats = useMemo(() => {
@@ -27,6 +54,7 @@ const StatsScreen: React.FC = () => {
         weeklyAverage: 0,
         monthlyGoal: 0,
         longestHabit: null,
+        trend: 'stable',
       };
     }
 
@@ -69,6 +97,20 @@ const StatsScreen: React.FC = () => {
     const possibleCompletions = habits.length * 30;
     const consistency = possibleCompletions > 0 ? Math.round((completionsLast30 / possibleCompletions) * 100) : 0;
 
+    // Calculate trend (compare last 7 days to previous 7 days)
+    const prev7Days = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (i + 7));
+      return date.toISOString().split('T')[0];
+    });
+    const prevWeekCompletions = prev7Days.reduce((acc, date) => {
+      return acc + habits.filter((h) => h.completedDays.includes(date)).length;
+    }, 0);
+
+    let trend: 'up' | 'down' | 'stable' = 'stable';
+    if (weeklyCompletions > prevWeekCompletions * 1.1) trend = 'up';
+    else if (weeklyCompletions < prevWeekCompletions * 0.9) trend = 'down';
+
     // Find longest running habit
     const longestHabit = habits.reduce((longest, habit) => {
       if (!longest || habit.completedDays.length > longest.completedDays.length) {
@@ -79,11 +121,11 @@ const StatsScreen: React.FC = () => {
 
     return {
       totalActiveHabits: habits.length,
-      totalCompletions: habits.reduce((sum, h) => sum + h.completedDays.length, 0),
+      totalCompletions: aggregatedStats?.totalCompletions || habits.reduce((sum, h) => sum + h.completedDays.length, 0),
       currentMaxStreak: Math.max(...habits.map((h) => h.currentStreak), 0),
       bestOverallStreak: Math.max(...habits.map((h) => h.bestStreak), 0),
-      averageCompletion: Math.round(habits.reduce((sum, h) => sum + (h.completedDays.length / h.totalDays) * 100, 0) / habits.length),
-      totalDaysTracked: allDates.size,
+      averageCompletion: aggregatedStats?.averageCompletionRate || Math.round(habits.reduce((sum, h) => sum + (h.completedDays.length / h.totalDays) * 100, 0) / habits.length),
+      totalDaysTracked: aggregatedStats?.totalDaysTracked || allDates.size,
       perfectDays,
       consistency,
       buildingHabits: habits.filter((h) => h.type === 'good').length,
@@ -92,16 +134,17 @@ const StatsScreen: React.FC = () => {
       weeklyAverage,
       monthlyGoal: Math.round((consistency / 100) * 30),
       longestHabit,
+      trend,
     };
-  }, [habits]);
+  }, [habits, aggregatedStats]);
 
   // Milestone calculation
   const getMilestone = () => {
     const streak = stats.currentMaxStreak;
     const milestones = [
-      { days: 100, message: '🏆 Century Club! 1 Month Free Premium!', reward: true },
-      { days: 66, message: "🧠 Habit Master! Science says it's automatic now!", reward: false },
-      { days: 30, message: '🌟 30 Day Champion! 50% off next month!', reward: true },
+      { days: 100, message: '🏆 Century Club! Legendary Status Achieved!', reward: true },
+      { days: 66, message: "🧠 Habit Master! It's automatic now!", reward: false },
+      { days: 30, message: '🌟 30 Day Champion! You did it!', reward: true },
       { days: 21, message: "💪 3 Weeks Strong! You're unstoppable!", reward: false },
       { days: 14, message: '🔥 Two Week Warrior! Keep pushing!', reward: false },
       { days: 7, message: '✨ One Week Wonder! Great start!', reward: false },
@@ -113,6 +156,16 @@ const StatsScreen: React.FC = () => {
   };
 
   const milestone = getMilestone();
+
+  // Render trend indicator
+  const renderTrendIndicator = () => {
+    if (stats.trend === 'up') {
+      return <TrendingUp size={20} color="#10b981" strokeWidth={2.5} />;
+    } else if (stats.trend === 'down') {
+      return <TrendingDown size={20} color="#ef4444" strokeWidth={2.5} />;
+    }
+    return <Minus size={20} color="#6b7280" strokeWidth={2.5} />;
+  };
 
   // Empty state
   if (habits.length === 0) {
@@ -134,9 +187,65 @@ const StatsScreen: React.FC = () => {
       <ScrollView style={tw`flex-1`} showsVerticalScrollIndicator={false} contentContainerStyle={tw`pb-4`}>
         {/* Header */}
         <View style={tw`px-5 pt-5 pb-3`}>
-          <Text style={tw`text-2xl font-bold text-gray-900`}>Your Progress</Text>
-          <Text style={tw`text-sm text-gray-600 mt-1`}>{stats.totalDaysTracked} days of growth</Text>
+          <View style={tw`flex-row items-center justify-between`}>
+            <View>
+              <Text style={tw`text-2xl font-bold text-gray-900`}>Your Progress</Text>
+              <Text style={tw`text-sm text-gray-600 mt-1`}>{stats.totalDaysTracked} days of growth</Text>
+            </View>
+            <View style={tw`flex-row items-center bg-white rounded-xl px-3 py-2`}>
+              {renderTrendIndicator()}
+              <Text style={tw`ml-2 text-sm font-medium ${stats.trend === 'up' ? 'text-green-600' : stats.trend === 'down' ? 'text-red-600' : 'text-gray-600'}`}>
+                {stats.trend === 'up' ? '+' : stats.trend === 'down' ? '-' : ''}
+                {Math.abs(stats.weeklyAverage - 50)}%
+              </Text>
+            </View>
+          </View>
         </View>
+
+        {/* Period Selector */}
+        <View style={tw`px-5 pb-4`}>
+          <View style={tw`flex-row bg-white rounded-xl p-1`}>
+            {(['week', 'month', 'all'] as const).map((period) => (
+              <Pressable
+                key={period}
+                onPress={() => setSelectedPeriod(period)}
+                style={({ pressed }) => [tw`flex-1 py-2 rounded-lg`, selectedPeriod === period ? tw`bg-indigo-600` : tw`bg-transparent`, pressed && tw`opacity-80`]}
+              >
+                <Text style={[tw`text-center text-sm font-medium`, selectedPeriod === period ? tw`text-white` : tw`text-gray-600`]}>
+                  {period === 'week' ? 'Week' : period === 'month' ? 'Month' : 'All Time'}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
+        {/* Historical Data Card */}
+        {!loadingStats && aggregatedStats && aggregatedStats.streakData.length > 0 && (
+          <View style={tw`px-5 pb-4`}>
+            <View style={tw`bg-white rounded-2xl p-4 shadow-sm`}>
+              <Text style={tw`text-base font-semibold text-gray-900 mb-3`}>Completion Trend</Text>
+              <View style={tw`h-32 flex-row items-end justify-between`}>
+                {aggregatedStats.streakData.slice(-7).map((data: any, index: number) => {
+                  const height = Math.max(10, (data.value / 100) * 100);
+                  return (
+                    <View key={index} style={tw`flex-1 mx-0.5 items-center`}>
+                      <View
+                        style={[
+                          tw`w-full rounded-t`,
+                          {
+                            height: `${height}%`,
+                            backgroundColor: data.value >= 80 ? '#10b981' : data.value >= 50 ? '#3b82f6' : '#f59e0b',
+                          },
+                        ]}
+                      />
+                      <Text style={tw`text-xs text-gray-400 mt-1`}>{new Date(data.date).getDate()}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          </View>
+        )}
 
         {/* Motivational Quote */}
         <View style={tw`px-5 pb-4`}>
@@ -230,7 +339,17 @@ const StatsScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Secondary Stats - 3 Column Grid */}
+        {/* Loading indicator for stats */}
+        {loadingStats && (
+          <View style={tw`px-5 pb-4`}>
+            <View style={tw`bg-white rounded-xl p-4 shadow-sm items-center`}>
+              <ActivityIndicator size="small" color="#6366f1" />
+              <Text style={tw`text-sm text-gray-500 mt-2`}>Loading historical data...</Text>
+            </View>
+          </View>
+        )}
+
+        {/* Secondary Stats */}
         <View style={tw`px-5 pb-4`}>
           <Text style={tw`text-sm font-semibold text-gray-700 mb-2`}>Today's Progress</Text>
           <View style={tw`flex-row -mx-1`}>

@@ -2,6 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, { FadeIn, FadeInDown, useAnimatedStyle, withSpring, useSharedValue } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Calendar as CalendarIcon, TrendingUp, Award, Target, ChevronRight, Sparkles } from 'lucide-react-native';
 import tw from '../lib/tailwind';
 import { useHabits } from '../context/HabitContext';
 import CalendarView from '../components/CalendarView';
@@ -12,15 +15,16 @@ const CalendarScreen: React.FC = () => {
   const { habits, loading, refreshHabits } = useHabits();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
+  const [expandedSection, setExpandedSection] = useState<'battery' | 'tips' | null>(null);
+
+  const scaleAnimation = useSharedValue(1);
 
   // Update selected habit when habits change
   useEffect(() => {
     if (habits.length > 0) {
-      // If no habit selected, select the first one
       if (!selectedHabit) {
         setSelectedHabit(habits[0]);
       } else {
-        // Update the selected habit with new data
         const updatedHabit = habits.find((h) => h.id === selectedHabit.id);
         if (updatedHabit) {
           setSelectedHabit(updatedHabit);
@@ -35,7 +39,15 @@ const CalendarScreen: React.FC = () => {
 
   // Check task completion status for selected date
   const getDateCompletionStatus = () => {
-    if (!selectedHabit) return { completed: false, partial: false, tasks: [], completedCount: 0, totalCount: 0 };
+    if (!selectedHabit)
+      return {
+        completed: false,
+        partial: false,
+        tasks: [],
+        completedCount: 0,
+        totalCount: 0,
+        percentage: 0,
+      };
 
     const dayTasks = selectedHabit.dailyTasks[dateString];
     const totalTasks = selectedHabit.tasks.length;
@@ -47,10 +59,12 @@ const CalendarScreen: React.FC = () => {
         tasks: [],
         completedCount: 0,
         totalCount: totalTasks,
+        percentage: 0,
       };
     }
 
     const completedTasks = dayTasks.completedTasks.length;
+    const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
     return {
       completed: completedTasks === totalTasks && totalTasks > 0,
@@ -58,6 +72,7 @@ const CalendarScreen: React.FC = () => {
       tasks: dayTasks.completedTasks,
       completedCount: completedTasks,
       totalCount: totalTasks,
+      percentage,
     };
   };
 
@@ -93,7 +108,6 @@ const CalendarScreen: React.FC = () => {
         count++;
       }
     });
-    // Also count days in completedDays array for backward compatibility
     habit.completedDays.forEach((date) => {
       if (!habit.dailyTasks[date]) {
         count++;
@@ -116,7 +130,6 @@ const CalendarScreen: React.FC = () => {
       const dateStr = currentDate.toISOString().split('T')[0];
       const dayTasks = habit.dailyTasks[dateStr];
 
-      // Check if this day should be counted based on frequency
       let shouldCount = false;
       if (habit.frequency === 'daily') {
         shouldCount = true;
@@ -139,115 +152,188 @@ const CalendarScreen: React.FC = () => {
     return missedCount;
   };
 
-  return (
-    <SafeAreaView style={tw`flex-1 bg-slate-50`}>
-      <View style={tw`flex-1`}>
-        {/* Header */}
-        <View style={tw`px-6 py-4 bg-white border-b border-slate-200`}>
-          <Text style={tw`text-2xl font-bold text-slate-800`}>Calendar</Text>
-          <Text style={tw`text-slate-600 mt-1`}>Track your progress over time</Text>
-        </View>
+  const animatedCardStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scaleAnimation.value }],
+  }));
 
-        <ScrollView style={tw`flex-1`} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={loading} onRefresh={refreshHabits} tintColor="#14b8a6" />}>
+  const tips = [
+    { icon: '⏰', title: 'Set a specific time', description: 'Link your habit to a daily trigger' },
+    { icon: '🎯', title: 'Start small', description: 'Even 2 minutes counts towards building momentum' },
+    { icon: '🔗', title: 'Stack habits', description: 'Attach new habits to existing routines' },
+    { icon: '🌟', title: 'Prepare your environment', description: 'Make good habits obvious and easy' },
+  ];
+
+  return (
+    <SafeAreaView style={tw`flex-1 bg-gray-50`}>
+      <View style={tw`flex-1`}>
+        {/* Enhanced Header */}
+        <LinearGradient colors={['#ffffff', '#f8fafc']} style={tw`px-6 py-4 border-b border-gray-100`}>
+          <View style={tw`flex-row items-center justify-between`}>
+            <View>
+              <Text style={tw`text-2xl font-bold text-gray-900`}>Calendar</Text>
+              <Text style={tw`text-sm text-gray-600 mt-0.5`}>Track your journey</Text>
+            </View>
+            <View style={tw`bg-indigo-50 p-2 rounded-xl`}>
+              <CalendarIcon size={24} color="#6366f1" strokeWidth={2} />
+            </View>
+          </View>
+        </LinearGradient>
+
+        <ScrollView style={tw`flex-1`} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={loading} onRefresh={refreshHabits} tintColor="#6366f1" />}>
           {habits.length === 0 ? (
-            <View style={tw`flex-1 items-center justify-center py-20`}>
-              <Text style={tw`text-6xl mb-4`}>📅</Text>
-              <Text style={tw`text-xl font-semibold text-slate-700 mb-2`}>No habits yet</Text>
-              <Text style={tw`text-slate-600 text-center px-8`}>Create your first habit to see your progress calendar</Text>
+            // Empty State with better design
+            <View style={tw`flex-1 items-center justify-center py-24`}>
+              <Animated.View entering={FadeIn.duration(400)} style={tw`items-center`}>
+                <View style={tw`w-32 h-32 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-3xl items-center justify-center mb-6`}>
+                  <CalendarIcon size={48} color="#6366f1" strokeWidth={1.5} />
+                </View>
+                <Text style={tw`text-2xl font-bold text-gray-900 mb-2`}>No habits yet</Text>
+                <Text style={tw`text-base text-gray-600 text-center px-8 leading-relaxed`}>Create your first habit to see{'\n'}your progress calendar</Text>
+              </Animated.View>
             </View>
           ) : (
             <>
-              {/* Habit Selector */}
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={tw`px-6 py-4`}>
-                {habits.map((habit) => (
-                  <Pressable
-                    key={habit.id}
-                    onPress={() => setSelectedHabit(habit)}
-                    style={({ pressed }) => [
-                      tw`mr-3 px-4 py-2 rounded-xl border flex-row items-center`,
-                      selectedHabit?.id === habit.id ? tw`bg-teal-50 border-teal-500` : tw`bg-white border-slate-200`,
-                      pressed && tw`opacity-80`,
-                    ]}
-                  >
-                    <Text style={tw`text-lg mr-2`}>{getCategoryIcon(habit.category)}</Text>
-                    <Text style={[tw`font-medium`, selectedHabit?.id === habit.id ? tw`text-teal-700` : tw`text-slate-700`]}>{habit.name}</Text>
-                  </Pressable>
-                ))}
-              </ScrollView>
+              {/* Enhanced Habit Selector */}
+              <View style={tw`px-6 py-4`}>
+                <Text style={tw`text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3`}>Select Habit</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={tw`gap-3`}>
+                  {habits.map((habit, index) => (
+                    <Animated.View key={habit.id} entering={FadeInDown.delay(index * 50).duration(400)}>
+                      <Pressable
+                        onPress={() => {
+                          setSelectedHabit(habit);
+                          scaleAnimation.value = withSpring(0.95);
+                          setTimeout(() => {
+                            scaleAnimation.value = withSpring(1);
+                          }, 100);
+                        }}
+                        style={({ pressed }) => [
+                          tw`px-4 py-3 rounded-xl border flex-row items-center`,
+                          selectedHabit?.id === habit.id ? tw`bg-indigo-50 border-indigo-400` : tw`bg-white border-gray-200`,
+                          pressed && tw`scale-95`,
+                        ]}
+                      >
+                        <View style={tw`w-8 h-8 rounded-lg bg-gray-50 items-center justify-center mr-3`}>
+                          <Text style={tw`text-lg`}>{getCategoryIcon(habit.category)}</Text>
+                        </View>
+                        <View>
+                          <Text style={[tw`font-semibold`, selectedHabit?.id === habit.id ? tw`text-indigo-700` : tw`text-gray-700`]}>{habit.name}</Text>
+                          <Text style={tw`text-xs text-gray-500 mt-0.5`}>{habit.currentStreak} day streak</Text>
+                        </View>
+                        {selectedHabit?.id === habit.id && (
+                          <View style={tw`ml-3`}>
+                            <View style={tw`w-2 h-2 bg-indigo-500 rounded-full`} />
+                          </View>
+                        )}
+                      </Pressable>
+                    </Animated.View>
+                  ))}
+                </ScrollView>
+              </View>
 
-              {/* Goal Battery Component */}
+              {/* Goal Battery Component with Animation */}
               {selectedHabit && (
-                <View style={tw`px-6 mb-4`}>
+                <Animated.View entering={FadeIn.duration(400)} style={[tw`px-6 mb-4`, animatedCardStyle]}>
                   <GoalBattery
                     totalDays={selectedHabit.totalDays}
                     completedDays={calculateActualCompletedDays(selectedHabit)}
                     missedDays={calculateMissedDays(selectedHabit)}
                     startDate={new Date(selectedHabit.createdAt)}
+                    habitName={selectedHabit.name}
+                    habitType={selectedHabit.type}
                   />
-                </View>
+                </Animated.View>
               )}
 
               {/* Calendar Component */}
               {selectedHabit && (
-                <View style={tw`px-6`}>
-                  <CalendarView
-                    key={selectedHabit.id} // Force re-render when habit changes
-                    habit={selectedHabit}
-                    selectedDate={selectedDate}
-                    onDateSelect={setSelectedDate}
-                  />
+                <Animated.View entering={FadeInDown.delay(200).duration(400)} style={tw`px-6`}>
+                  <CalendarView key={selectedHabit.id} habit={selectedHabit} selectedDate={selectedDate} onDateSelect={setSelectedDate} />
 
-                  {/* Selected Date Info */}
-                  <View style={tw`mt-4 p-4 bg-white rounded-xl`}>
-                    <Text style={tw`text-lg font-semibold text-slate-800 mb-2`}>
-                      {selectedDate.toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
-                    </Text>
-
-                    <View style={tw`flex-row items-center`}>
-                      <View
-                        style={[
-                          tw`w-12 h-12 rounded-full items-center justify-center mr-3`,
-                          completionStatus.completed ? tw`bg-teal-500` : completionStatus.partial ? tw`bg-amber-400` : tw`bg-slate-100`,
-                        ]}
-                      >
-                        <Text style={tw`text-2xl`}>{completionStatus.completed ? '✓' : completionStatus.partial ? '◐' : '○'}</Text>
-                      </View>
-                      <View style={tw`flex-1`}>
-                        <Text style={tw`text-slate-700`}>
-                          {completionStatus.completed
-                            ? `All ${completionStatus.totalCount} tasks completed!`
-                            : completionStatus.partial
-                            ? `${completionStatus.completedCount}/${completionStatus.totalCount} tasks completed`
-                            : `No tasks completed for "${selectedHabit.name}"`}
+                  {/* Enhanced Selected Date Info */}
+                  <View style={tw`mt-4`}>
+                    <LinearGradient
+                      colors={completionStatus.completed ? ['#10b981', '#059669'] : completionStatus.partial ? ['#f59e0b', '#d97706'] : ['#f3f4f6', '#e5e7eb']}
+                      style={tw`rounded-2xl p-5`}
+                    >
+                      <View style={tw`flex-row items-center justify-between mb-3`}>
+                        <Text style={[tw`text-lg font-bold`, completionStatus.completed || completionStatus.partial ? tw`text-white` : tw`text-gray-800`]}>
+                          {selectedDate.toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            month: 'long',
+                            day: 'numeric',
+                          })}
                         </Text>
-                        {completionStatus.partial && (
-                          <Text style={tw`text-sm text-amber-600 mt-1`}>
-                            Complete {completionStatus.totalCount - completionStatus.completedCount} more task{completionStatus.totalCount - completionStatus.completedCount > 1 ? 's' : ''} to mark
-                            this day as complete!
-                          </Text>
-                        )}
+                        {completionStatus.completed && <Award size={24} color="#ffffff" strokeWidth={2} />}
                       </View>
-                    </View>
+
+                      <View style={tw`bg-white/20 rounded-xl p-3`}>
+                        <View style={tw`flex-row items-center justify-between`}>
+                          <View style={tw`flex-row items-center`}>
+                            <View
+                              style={[
+                                tw`w-14 h-14 rounded-xl items-center justify-center mr-3`,
+                                completionStatus.completed ? tw`bg-white/30` : completionStatus.partial ? tw`bg-white/20` : tw`bg-gray-100`,
+                              ]}
+                            >
+                              <Text style={tw`text-2xl font-bold ${completionStatus.completed || completionStatus.partial ? 'text-white' : 'text-gray-600'}`}>{completionStatus.percentage}%</Text>
+                            </View>
+                            <View style={tw`flex-1`}>
+                              <Text style={[tw`font-semibold`, completionStatus.completed || completionStatus.partial ? tw`text-white` : tw`text-gray-700`]}>
+                                {completionStatus.completed
+                                  ? 'All tasks completed!'
+                                  : completionStatus.partial
+                                  ? `${completionStatus.completedCount}/${completionStatus.totalCount} tasks done`
+                                  : 'No tasks completed'}
+                              </Text>
+                              {completionStatus.partial && (
+                                <Text style={tw`text-xs text-white/80 mt-1`}>Complete {completionStatus.totalCount - completionStatus.completedCount} more to finish today</Text>
+                              )}
+                            </View>
+                          </View>
+                        </View>
+                      </View>
+                    </LinearGradient>
                   </View>
 
-                  {/* Tips Section (shown when battery is low) */}
+                  {/* Enhanced Tips Section */}
                   {selectedHabit && calculateMissedDays(selectedHabit) > 3 && (
-                    <View style={tw`mt-4 p-4 bg-blue-50 rounded-xl mb-4`}>
-                      <Text style={tw`text-base font-semibold text-blue-900 mb-2`}>💡 Tips to Get Back on Track</Text>
-                      <View style={tw`gap-2`}>
-                        <Text style={tw`text-sm text-blue-800`}>• Set a specific time for your habit</Text>
-                        <Text style={tw`text-sm text-blue-800`}>• Start small - even 2 minutes counts</Text>
-                        <Text style={tw`text-sm text-blue-800`}>• Stack it with an existing habit</Text>
-                        <Text style={tw`text-sm text-blue-800`}>• Prepare your environment for success</Text>
-                      </View>
-                    </View>
+                    <Animated.View entering={FadeInDown.delay(300).duration(400)} style={tw`mt-4 mb-4`}>
+                      <Pressable
+                        onPress={() => setExpandedSection(expandedSection === 'tips' ? null : 'tips')}
+                        style={({ pressed }) => [tw`bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4`, pressed && tw`opacity-90`]}
+                      >
+                        <View style={tw`flex-row items-center justify-between mb-2`}>
+                          <View style={tw`flex-row items-center`}>
+                            <Sparkles size={20} color="#6366f1" style={tw`mr-2`} />
+                            <Text style={tw`text-base font-bold text-indigo-900`}>Tips to Get Back on Track</Text>
+                          </View>
+                          <ChevronRight size={20} color="#6366f1" style={[tw`transform`, expandedSection === 'tips' && tw`rotate-90`]} />
+                        </View>
+
+                        {expandedSection === 'tips' && (
+                          <View style={tw`mt-3 gap-3`}>
+                            {tips.map((tip, index) => (
+                              <Animated.View key={`tip-${index}`} entering={FadeInDown.delay(index * 50).duration(300)} style={tw`flex-row items-start bg-white/50 rounded-xl p-3`}>
+                                <View style={[tw`w-8 h-8 rounded-lg items-center justify-center mr-3`, { backgroundColor: tip.iconColor + '20' }]}>
+                                  {createElement(tip.icon, {
+                                    size: 16,
+                                    color: tip.iconColor,
+                                    strokeWidth: 2,
+                                  })}
+                                </View>
+                                <View style={tw`flex-1`}>
+                                  <Text style={tw`text-sm font-semibold text-indigo-900`}>{tip.title}</Text>
+                                  <Text style={tw`text-xs text-indigo-700 mt-0.5`}>{tip.description}</Text>
+                                </View>
+                              </Animated.View>
+                            ))}
+                          </View>
+                        )}
+                      </Pressable>
+                    </Animated.View>
                   )}
-                </View>
+                </Animated.View>
               )}
             </>
           )}

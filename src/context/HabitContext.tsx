@@ -1,11 +1,9 @@
 // src/context/HabitContext.tsx
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Habit } from '../types';
 import { useAuth } from './AuthContext';
 import { HabitService } from '../services/habitService';
-import { supabase } from '../lib/supabase';
 
 interface HabitContextType {
   habits: Habit[];
@@ -44,7 +42,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setHabits(fetchedHabits);
     } catch (error: any) {
       console.error('Error loading habits:', error);
-      Alert.alert('Error', 'Failed to load habits');
+      Alert.alert('Error', 'Failed to load habits. Please check your connection.');
     } finally {
       setLoading(false);
     }
@@ -63,12 +61,10 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     try {
       setLoading(true);
 
-      // If it's coming from HabitWizard, it already has the structure
-      // Just ensure user_id is set for the database
       const newHabit: Habit = {
         id: habitData.id || Date.now().toString(),
         name: habitData.name || 'New Habit',
-        type: habitData.type || 'build',
+        type: habitData.type || 'good',
         category: habitData.category || 'health',
         tasks: habitData.tasks || [],
         dailyTasks: habitData.dailyTasks || {},
@@ -88,17 +84,11 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       // Create in database using HabitService
       const createdHabit = await HabitService.createHabit(newHabit, user.id);
 
-      // Add to local state
+      // Add to local state for immediate UI update
       setHabits([createdHabit, ...habits]);
-
-      // Store in AsyncStorage for offline support
-      const storedHabits = await AsyncStorage.getItem('habits');
-      const existingHabits = storedHabits ? JSON.parse(storedHabits) : [];
-      await AsyncStorage.setItem('habits', JSON.stringify([createdHabit, ...existingHabits]));
     } catch (error: any) {
       console.error('Error adding habit:', error);
 
-      // More specific error messages based on the error
       if (error.code === '42501') {
         Alert.alert('Permission Error', 'Unable to create habit. Please ensure you are logged in.');
       } else if (error.message?.includes('user_id')) {
@@ -107,7 +97,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         Alert.alert('Error', error.message || 'Failed to create habit. Please try again.');
       }
 
-      throw error; // Re-throw to let HabitWizard handle it
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -117,18 +107,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (!user) return;
 
     try {
-      // Update in Supabase
-      const { error } = await supabase
-        .from('habits')
-        .update({
-          notifications: enabled,
-          notification_time: time,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', habitId)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
+      await HabitService.updateHabitNotification(habitId, user.id, enabled, time);
 
       // Update local state
       setHabits((prevHabits) =>
@@ -142,25 +121,11 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             : habit
         )
       );
-
-      // Update AsyncStorage for offline support
-      const storedHabits = await AsyncStorage.getItem('habits');
-      if (storedHabits) {
-        const parsedHabits = JSON.parse(storedHabits);
-        const updatedHabits = parsedHabits.map((habit: Habit) =>
-          habit.id === habitId
-            ? {
-                ...habit,
-                notifications: enabled,
-                notificationTime: time,
-              }
-            : habit
-        );
-        await AsyncStorage.setItem('habits', JSON.stringify(updatedHabits));
-      }
     } catch (error) {
       console.error('Error updating habit notification:', error);
       Alert.alert('Error', 'Failed to update notification settings');
+      // Reload to ensure consistency
+      await loadHabits();
     }
   };
 
@@ -168,29 +133,11 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (!user) return;
 
     try {
-      // Update locally first for immediate feedback
+      // Optimistically update UI
       setHabits(habits.map((habit) => (habit.id === habitId ? { ...habit, ...updates } : habit)));
 
       // Update in database
-      const { error } = await supabase
-        .from('habits')
-        .update({
-          name: updates.name,
-          type: updates.type,
-          category: updates.category,
-          tasks: updates.tasks,
-          frequency: updates.frequency,
-          custom_days: updates.customDays,
-          notifications: updates.notifications,
-          notification_time: updates.notificationTime,
-          has_end_goal: updates.hasEndGoal,
-          end_goal_days: updates.endGoalDays,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', habitId)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
+      await HabitService.updateHabit(habitId, user.id, updates);
     } catch (error: any) {
       console.error('Error updating habit:', error);
       Alert.alert('Error', 'Failed to update habit');
@@ -233,7 +180,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       const completedTasks = currentDayTasks.completedTasks.includes(taskId) ? currentDayTasks.completedTasks.filter((t) => t !== taskId) : [...currentDayTasks.completedTasks, taskId];
 
-      const allCompleted = completedTasks.length === habit.tasks.length;
+      const allCompleted = completedTasks.length === habit.tasks.length && habit.tasks.length > 0;
 
       // Update daily tasks
       const updatedDailyTasks = {
@@ -251,26 +198,9 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       }
 
       // Calculate streak
-      const today = new Date().toISOString().split('T')[0];
-      const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+      const { currentStreak, bestStreak } = await HabitService.calculateStreaks(habitId, user.id, date, allCompleted);
 
-      let currentStreak = habit.currentStreak;
-      if (date === today) {
-        if (allCompleted) {
-          const yesterdayCompleted = completedDays.includes(yesterday);
-          if (yesterdayCompleted || currentStreak === 0) {
-            currentStreak = currentStreak + 1;
-          } else {
-            currentStreak = 1;
-          }
-        } else {
-          if (habit.completedDays.includes(today)) {
-            currentStreak = Math.max(0, currentStreak - 1);
-          }
-        }
-      }
-
-      // Update local state immediately
+      // Update local state immediately for responsive UI
       setHabits(
         habits.map((h) =>
           h.id === habitId
@@ -279,7 +209,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 dailyTasks: updatedDailyTasks,
                 completedDays,
                 currentStreak,
-                bestStreak: Math.max(currentStreak, h.bestStreak),
+                bestStreak,
               }
             : h
         )
@@ -301,30 +231,24 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       const habit = habits.find((h) => h.id === habitId);
       if (!habit) return;
 
-      const completedDays = habit.completedDays.includes(date) ? habit.completedDays.filter((d) => d !== date) : [...habit.completedDays, date];
+      const isCurrentlyCompleted = habit.completedDays.includes(date);
+      const completedTasks = isCurrentlyCompleted ? [] : habit.tasks;
+      const allCompleted = !isCurrentlyCompleted && habit.tasks.length > 0;
 
-      // Also update daily tasks to reflect all tasks completed/uncompleted
-      const allCompleted = completedDays.includes(date);
+      // Update daily tasks
       const updatedDailyTasks = {
         ...habit.dailyTasks,
         [date]: {
-          completedTasks: allCompleted ? habit.tasks : [],
+          completedTasks,
           allCompleted,
         },
       };
 
-      // Calculate streak
-      const today = new Date().toISOString().split('T')[0];
-      const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+      // Update completed days
+      const completedDays = isCurrentlyCompleted ? habit.completedDays.filter((d) => d !== date) : [...habit.completedDays, date].sort();
 
-      let currentStreak = habit.currentStreak;
-      if (completedDays.includes(today)) {
-        if (completedDays.includes(yesterday) || currentStreak === 0) {
-          currentStreak = currentStreak + 1;
-        }
-      } else {
-        currentStreak = 0;
-      }
+      // Calculate streak
+      const { currentStreak, bestStreak } = await HabitService.calculateStreaks(habitId, user.id, date, allCompleted);
 
       // Update local state
       setHabits(
@@ -335,14 +259,14 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 dailyTasks: updatedDailyTasks,
                 completedDays,
                 currentStreak,
-                bestStreak: Math.max(currentStreak, h.bestStreak),
+                bestStreak,
               }
             : h
         )
       );
 
       // Sync with database
-      await HabitService.updateTaskCompletion(habitId, user.id, date, allCompleted ? habit.tasks : [], habit.tasks.length);
+      await HabitService.updateTaskCompletion(habitId, user.id, date, completedTasks, habit.tasks.length);
     } catch (error: any) {
       console.error('Error toggling habit day:', error);
       Alert.alert('Error', 'Failed to update habit');

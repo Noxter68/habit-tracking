@@ -2,6 +2,14 @@
 import { supabase } from '../lib/supabase';
 import { Habit } from '../types';
 
+export interface StreakHistoryEntry {
+  date: string;
+  streak_value: number;
+  tasks_completed: number;
+  total_tasks: number;
+  completion_rate: number;
+}
+
 export class HabitService {
   // Fetch all habits for the current user
   static async fetchHabits(userId: string): Promise<Habit[]> {
@@ -99,16 +107,63 @@ export class HabitService {
     }
   }
 
+  // Update habit
+  static async updateHabit(habitId: string, userId: string, updates: Partial<Habit>): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('habits')
+        .update({
+          name: updates.name,
+          type: updates.type,
+          category: updates.category,
+          tasks: updates.tasks,
+          frequency: updates.frequency,
+          custom_days: updates.customDays,
+          notifications: updates.notifications,
+          notification_time: updates.notificationTime,
+          has_end_goal: updates.hasEndGoal,
+          end_goal_days: updates.endGoalDays,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', habitId)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating habit:', error);
+      throw error;
+    }
+  }
+
+  // Update notification settings
+  static async updateHabitNotification(habitId: string, userId: string, enabled: boolean, time?: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('habits')
+        .update({
+          notifications: enabled,
+          notification_time: time,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', habitId)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating notification:', error);
+      throw error;
+    }
+  }
+
   // Update task completion
   static async updateTaskCompletion(habitId: string, userId: string, date: string, completedTasks: string[], totalTasks: number): Promise<void> {
     try {
-      const allCompleted = completedTasks.length === totalTasks;
+      const allCompleted = completedTasks.length === totalTasks && totalTasks > 0;
 
-      // First, check if a record exists
+      // Check if a record exists
       const { data: existing, error: fetchError } = await supabase.from('task_completions').select('id').eq('habit_id', habitId).eq('date', date).single();
 
       if (fetchError && fetchError.code !== 'PGRST116') {
-        // PGRST116 means no rows returned, which is fine
         throw fetchError;
       }
 
@@ -119,7 +174,6 @@ export class HabitService {
           .update({
             completed_tasks: completedTasks,
             all_completed: allCompleted,
-            // Don't set updated_at manually - let the trigger handle it
           })
           .eq('id', existing.id);
 
@@ -145,69 +199,84 @@ export class HabitService {
     }
   }
 
-  // Update streak calculation
-  static async updateStreak(habitId: string, userId: string): Promise<void> {
+  // Calculate streaks with better logic
+  static async calculateStreaks(habitId: string, userId: string, date: string, allCompleted: boolean): Promise<{ currentStreak: number; bestStreak: number }> {
     try {
       // Get all completions for this habit
       const { data: completions, error } = await supabase.from('task_completions').select('date, all_completed').eq('habit_id', habitId).eq('all_completed', true).order('date', { ascending: false });
 
       if (error) throw error;
 
-      // Calculate current streak
       let currentStreak = 0;
       let bestStreak = 0;
-      let tempStreak = 0;
 
-      const today = new Date().toISOString().split('T')[0];
-      const dates = completions?.map((c) => c.date) || [];
+      if (completions && completions.length > 0) {
+        const today = new Date().toISOString().split('T')[0];
+        const dates = completions.map((c) => c.date);
 
-      // Check if today is completed
-      if (dates.includes(today)) {
-        currentStreak = 1;
+        // Calculate current streak
+        if (dates.includes(today) || (date === today && allCompleted)) {
+          currentStreak = 1;
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
 
-        // Count consecutive days backwards from today
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
+          for (let i = 1; i < 365; i++) {
+            const checkDate = new Date(yesterday);
+            checkDate.setDate(checkDate.getDate() - (i - 1));
+            const dateStr = checkDate.toISOString().split('T')[0];
 
-        for (let i = 1; i < 365; i++) {
-          const checkDate = new Date(yesterday);
-          checkDate.setDate(checkDate.getDate() - (i - 1));
-          const dateStr = checkDate.toISOString().split('T')[0];
-
-          if (dates.includes(dateStr)) {
-            currentStreak++;
-          } else {
-            break;
+            if (dates.includes(dateStr)) {
+              currentStreak++;
+            } else {
+              break;
+            }
           }
         }
-      }
 
-      // Calculate best streak
-      const sortedDates = [...dates].sort();
-      for (let i = 0; i < sortedDates.length; i++) {
-        if (i === 0) {
-          tempStreak = 1;
-        } else {
-          const prevDate = new Date(sortedDates[i - 1]);
-          const currDate = new Date(sortedDates[i]);
-          const diffTime = Math.abs(currDate.getTime() - prevDate.getTime());
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        // Calculate best streak ever
+        let tempStreak = 0;
+        const sortedDates = [...dates].sort();
 
-          if (diffDays === 1) {
-            tempStreak++;
-          } else {
+        for (let i = 0; i < sortedDates.length; i++) {
+          if (i === 0) {
             tempStreak = 1;
+          } else {
+            const prevDate = new Date(sortedDates[i - 1]);
+            const currDate = new Date(sortedDates[i]);
+            const diffTime = Math.abs(currDate.getTime() - prevDate.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 1) {
+              tempStreak++;
+            } else {
+              tempStreak = 1;
+            }
           }
+          bestStreak = Math.max(bestStreak, tempStreak);
         }
-        bestStreak = Math.max(bestStreak, tempStreak);
       }
+
+      return {
+        currentStreak,
+        bestStreak: Math.max(bestStreak, currentStreak),
+      };
+    } catch (error) {
+      console.error('Error calculating streaks:', error);
+      return { currentStreak: 0, bestStreak: 0 };
+    }
+  }
+
+  // Update streak
+  static async updateStreak(habitId: string, userId: string): Promise<void> {
+    try {
+      const { currentStreak, bestStreak } = await this.calculateStreaks(habitId, userId, new Date().toISOString().split('T')[0], false);
 
       // Update habit with new streaks
       const { error: updateError } = await supabase
         .from('habits')
         .update({
           current_streak: currentStreak,
-          best_streak: Math.max(bestStreak, currentStreak),
+          best_streak: bestStreak,
           updated_at: new Date().toISOString(),
         })
         .eq('id', habitId)
@@ -232,35 +301,87 @@ export class HabitService {
     }
   }
 
-  // Sync local data with database
-  static async syncHabits(habits: Habit[], userId: string): Promise<void> {
+  // Get streak history for a habit
+  static async getStreakHistory(habitId: string, startDate?: string, endDate?: string): Promise<StreakHistoryEntry[]> {
     try {
-      // This is a batch sync operation for offline support
-      for (const habit of habits) {
-        // Check if habit exists
-        const { data: existing } = await supabase.from('habits').select('id').eq('id', habit.id).single();
+      let query = supabase.from('streak_history').select('*').eq('habit_id', habitId).order('date', { ascending: false });
 
-        if (existing) {
-          // Update existing habit
-          await supabase
-            .from('habits')
-            .update({
-              current_streak: habit.currentStreak,
-              best_streak: habit.bestStreak,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', habit.id)
-            .eq('user_id', userId);
-        }
-
-        // Sync task completions
-        for (const [date, tasks] of Object.entries(habit.dailyTasks)) {
-          await this.updateTaskCompletion(habit.id, userId, date, tasks.completedTasks, habit.tasks.length);
-        }
+      if (startDate) {
+        query = query.gte('date', startDate);
       }
+      if (endDate) {
+        query = query.lte('date', endDate);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      return data || [];
     } catch (error) {
-      console.error('Error syncing habits:', error);
-      throw error;
+      console.error('Error fetching streak history:', error);
+      return [];
+    }
+  }
+
+  // Get aggregated stats for all habits
+  static async getAggregatedStats(userId: string): Promise<{
+    totalDaysTracked: number;
+    totalCompletions: number;
+    averageCompletionRate: number;
+    streakData: Array<{ date: string; value: number }>;
+  }> {
+    try {
+      // Get all streak history for user
+      const { data: streakHistory, error: streakError } = await supabase
+        .from('streak_history')
+        .select('date, completion_rate, tasks_completed')
+        .eq('user_id', userId)
+        .order('date', { ascending: true });
+
+      if (streakError) throw streakError;
+
+      // Get unique dates
+      const uniqueDates = new Set(streakHistory?.map((h) => h.date) || []);
+      const totalDaysTracked = uniqueDates.size;
+
+      // Calculate total completions
+      const totalCompletions = streakHistory?.reduce((sum, h) => sum + (h.tasks_completed || 0), 0) || 0;
+
+      // Calculate average completion rate
+      const avgRate = streakHistory?.length ? streakHistory.reduce((sum, h) => sum + (h.completion_rate || 0), 0) / streakHistory.length : 0;
+
+      // Prepare streak data for visualization (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const recentStreaks = streakHistory?.filter((h) => new Date(h.date) >= thirtyDaysAgo) || [];
+
+      // Group by date and get max completion rate
+      const streakMap = new Map<string, number>();
+      recentStreaks.forEach((h) => {
+        const current = streakMap.get(h.date) || 0;
+        streakMap.set(h.date, Math.max(current, h.completion_rate || 0));
+      });
+
+      const streakData = Array.from(streakMap.entries()).map(([date, value]) => ({
+        date,
+        value,
+      }));
+
+      return {
+        totalDaysTracked,
+        totalCompletions,
+        averageCompletionRate: Math.round(avgRate),
+        streakData,
+      };
+    } catch (error) {
+      console.error('Error getting aggregated stats:', error);
+      return {
+        totalDaysTracked: 0,
+        totalCompletions: 0,
+        averageCompletionRate: 0,
+        streakData: [],
+      };
     }
   }
 }
