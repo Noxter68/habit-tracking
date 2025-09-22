@@ -23,6 +23,26 @@ const getLocalDateString = (date: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
+// Category icons configuration - moved outside component to be static
+const CATEGORY_ICONS: Record<string, { icon: any; color: string }> = {
+  fitness: { icon: Dumbbell, color: '#ef4444' },
+  health: { icon: Heart, color: '#ec4899' },
+  nutrition: { icon: Apple, color: '#84cc16' },
+  learning: { icon: BookOpen, color: '#3b82f6' },
+  productivity: { icon: Zap, color: '#f59e0b' },
+  mindfulness: { icon: Brain, color: '#8b5cf6' },
+  sleep: { icon: Moon, color: '#6366f1' },
+  hydration: { icon: Droplets, color: '#06b6d4' },
+  smoking: { icon: Cigarette, color: '#dc2626' },
+  'junk-food': { icon: Ban, color: '#f97316' },
+  shopping: { icon: ShoppingBag, color: '#ec4899' },
+  'screen-time': { icon: Smartphone, color: '#6b7280' },
+  procrastination: { icon: Clock, color: '#f59e0b' },
+  'negative-thinking': { icon: ThumbsDown, color: '#7c3aed' },
+  alcohol: { icon: Beer, color: '#ca8a04' },
+  oversleeping: { icon: Bed, color: '#64748b' },
+};
+
 const CalendarScreen: React.FC = () => {
   const { habits, loading, refreshHabits } = useHabits();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -46,33 +66,16 @@ const CalendarScreen: React.FC = () => {
     }
   }, [habits]);
 
+  // Static function to get category icon
   const getCategoryIcon = (category: string) => {
-    const icons: Record<string, { icon: any; color: string }> = {
-      fitness: { icon: Dumbbell, color: '#ef4444' },
-      health: { icon: Heart, color: '#ec4899' },
-      nutrition: { icon: Apple, color: '#84cc16' },
-      learning: { icon: BookOpen, color: '#3b82f6' },
-      productivity: { icon: Zap, color: '#f59e0b' },
-      mindfulness: { icon: Brain, color: '#8b5cf6' },
-      sleep: { icon: Moon, color: '#6366f1' },
-      hydration: { icon: Droplets, color: '#06b6d4' },
-      smoking: { icon: Cigarette, color: '#dc2626' },
-      'junk-food': { icon: Ban, color: '#f97316' },
-      shopping: { icon: ShoppingBag, color: '#ec4899' },
-      'screen-time': { icon: Smartphone, color: '#6b7280' },
-      procrastination: { icon: Clock, color: '#f59e0b' },
-      'negative-thinking': { icon: ThumbsDown, color: '#7c3aed' },
-      alcohol: { icon: Beer, color: '#ca8a04' },
-      oversleeping: { icon: Bed, color: '#64748b' },
-    };
-    return icons[category] || { icon: Target, color: '#6b7280' };
+    return CATEGORY_ICONS[category] || { icon: Target, color: '#6b7280' };
   };
 
   // Dynamic header height - adjusted for larger text/icons
   const headerHeight = selectedHabit ? 125 : 65;
 
+  // Empty state rendering
   if (habits.length === 0) {
-    // Compact empty state
     return (
       <SafeAreaView style={tw`flex-1 bg-gray-50`}>
         <View style={tw`flex-1 items-center justify-center px-8`}>

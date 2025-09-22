@@ -85,7 +85,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ userTitle, userLevel,
               </View>
 
               {/* Level and Progress Section */}
-              <View style={tw`w-full items-center mb-3`}>
+              <View style={tw`w-full items-center`}>
                 {/* Current Level */}
                 <View style={tw`flex-row items-center mb-2`}>
                   <Trophy size={14} color="#f59e0b" />
@@ -94,22 +94,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ userTitle, userLevel,
                     <Text style={tw`text-xs font-semibold text-amber-700`}>{currentTitle?.title}</Text>
                   </View>
                 </View>
-
-                {/* Progress Bar to Next Level */}
-                {nextTitle && (
-                  <View style={tw`w-full px-4`}>
-                    <View style={tw`flex-row justify-between mb-1`}>
-                      <Text style={tw`text-xs text-gray-500`}>Progress</Text>
-                      <Text style={tw`text-xs text-gray-500 font-medium`}>
-                        {completionsNeeded} more to Level {userLevel + 1}
-                      </Text>
-                    </View>
-
-                    <View style={tw`h-2 bg-gray-200 rounded-full overflow-hidden`}>
-                      <LinearGradient colors={['#fbbf24', '#f59e0b']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[tw`h-full rounded-full`, { width: `${progressToNext}%` }]} />
-                    </View>
-                  </View>
-                )}
               </View>
 
               {/* Next Unlock Preview */}
