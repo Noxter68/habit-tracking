@@ -25,7 +25,7 @@ const getLocalDateString = (date: Date): string => {
 
 const CalendarScreen: React.FC = () => {
   const { habits, loading, refreshHabits } = useHabits();
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // Always default to current day
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
 
   useEffect(() => {
@@ -104,8 +104,8 @@ const CalendarScreen: React.FC = () => {
           refreshControl={<RefreshControl refreshing={loading} onRefresh={refreshHabits} tintColor="#6366f1" progressViewOffset={20} />}
         >
           {selectedHabit && (
-            <Animated.View entering={FadeInDown.delay(100).duration(300)} style={tw`px-4 pt-4 pb-6`}>
-              <CalendarView key={selectedHabit.id} habit={selectedHabit} selectedDate={selectedDate} onDateSelect={setSelectedDate} />
+            <Animated.View key={`calendar-${selectedHabit.id}`} entering={FadeInDown.delay(100).duration(300)} style={tw`px-4 pt-4 pb-6`}>
+              <CalendarView habit={selectedHabit} selectedDate={selectedDate} onDateSelect={setSelectedDate} />
             </Animated.View>
           )}
         </ScrollView>
