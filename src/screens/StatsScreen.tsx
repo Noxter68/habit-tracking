@@ -219,34 +219,6 @@ const StatsScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Historical Data Card */}
-        {!loadingStats && aggregatedStats && aggregatedStats.streakData.length > 0 && (
-          <View style={tw`px-5 pb-4`}>
-            <View style={tw`bg-white rounded-2xl p-4 shadow-sm`}>
-              <Text style={tw`text-base font-semibold text-gray-900 mb-3`}>Completion Trend</Text>
-              <View style={tw`h-32 flex-row items-end justify-between`}>
-                {aggregatedStats.streakData.slice(-7).map((data: any, index: number) => {
-                  const height = Math.max(10, (data.value / 100) * 100);
-                  return (
-                    <View key={index} style={tw`flex-1 mx-0.5 items-center`}>
-                      <View
-                        style={[
-                          tw`w-full rounded-t`,
-                          {
-                            height: `${height}%`,
-                            backgroundColor: data.value >= 80 ? '#10b981' : data.value >= 50 ? '#3b82f6' : '#f59e0b',
-                          },
-                        ]}
-                      />
-                      <Text style={tw`text-xs text-gray-400 mt-1`}>{new Date(data.date).getDate()}</Text>
-                    </View>
-                  );
-                })}
-              </View>
-            </View>
-          </View>
-        )}
-
         {/* Motivational Quote */}
         <View style={tw`px-5 pb-4`}>
           <LinearGradient colors={['#fef3c7', '#fde68a']} style={tw`rounded-2xl p-4`}>

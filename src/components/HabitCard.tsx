@@ -2,7 +2,6 @@
 import React, { useState, createElement } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import Animated, { FadeIn, FadeInDown, useSharedValue, useAnimatedStyle, withSpring, withTiming, interpolate, Extrapolate, withSequence } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
 import {
   Dumbbell,
   Heart,
@@ -33,6 +32,7 @@ import {
 import tw from '../lib/tailwind';
 import { Habit } from '../types';
 import { getTasksForCategory } from '../utils/habitHelpers';
+import { LinearGradient } from 'react-native-svg';
 
 interface HabitCardProps {
   habit: Habit;
@@ -154,12 +154,12 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onToggleDay, onToggleTask,
               {/* Streak & Stats Row */}
               <View style={tw`flex-row items-center gap-2`}>
                 {habit.currentStreak > 0 && (
-                  <View style={tw`bg-gradient-to-r from-orange-50 to-amber-50 px-2.5 py-1 rounded-lg flex-row items-center border border-amber-200`}>
+                  <LinearGradient colors={['#fff7ed', '#fef3c7']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`px-2.5 py-1 rounded-lg flex-row items-center border border-amber-200`}>
                     <Flame size={12} color="#f59e0b" strokeWidth={2.5} />
                     <Text style={tw`text-xs font-bold text-amber-700 ml-1.5`}>
                       {habit.currentStreak} day{habit.currentStreak !== 1 ? 's' : ''}
                     </Text>
-                  </View>
+                  </LinearGradient>
                 )}
                 {totalTasks > 0 && (
                   <View style={tw`flex-row items-center`}>

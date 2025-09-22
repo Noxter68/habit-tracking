@@ -176,7 +176,18 @@ const GoalBattery: React.FC<GoalBatteryProps> = ({ totalDays, completedDays, mis
         <Animated.View style={[successProbability < 40 && animatedContainerStyle]}>
           <View style={tw`relative`}>
             {/* Glow effect for high performance */}
-            {successProbability > 80 && <Animated.View style={[tw`absolute -inset-2 rounded-3xl blur-xl`, glowStyle, { backgroundColor: batteryColors[0] + '30' }]} />}
+            {successProbability > 80 && (
+              <Animated.View
+                style={[
+                  tw`absolute -inset-2 rounded-3xl`,
+                  glowStyle,
+                  {
+                    backgroundColor: batteryColors[0] + '30',
+                    // Remove blur effect as it's not supported in React Native
+                  },
+                ]}
+              />
+            )}
 
             {/* Modern Battery Container */}
             <View style={tw`bg-gray-50 rounded-2xl h-24 relative overflow-hidden border border-gray-200`}>

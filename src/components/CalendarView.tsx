@@ -1,9 +1,8 @@
 // src/components/CalendarView.tsx
 import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable } from 'react-native';
-import Animated, { FadeIn, FadeInDown, useSharedValue, useAnimatedStyle, withSpring, withTiming, interpolate, Extrapolate } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ChevronLeft, ChevronRight, Calendar, TrendingUp } from 'lucide-react-native';
+import Animated, { FadeIn, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import tw from '../lib/tailwind';
 import { Habit } from '../types';
 
@@ -13,339 +12,197 @@ interface CalendarViewProps {
   onDateSelect: (date: Date) => void;
 }
 
+// Helper to get local date string
+const getLocalDateString = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const CalendarView: React.FC<CalendarViewProps> = ({ habit, selectedDate, onDateSelect }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const animatedValue = useSharedValue(0);
 
-  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-  const daysOfWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-
+  // Update month when selected date changes
   useEffect(() => {
-    animatedValue.value = withSpring(1, {
-      damping: 15,
-      stiffness: 100,
-    });
-  }, [currentMonth]);
+    if (selectedDate.getMonth() !== currentMonth.getMonth() || selectedDate.getFullYear() !== currentMonth.getFullYear()) {
+      setCurrentMonth(new Date(selectedDate));
+    }
+  }, [selectedDate]);
 
-  const getDaysInMonth = (date: Date) => {
-    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-  };
+  const getDaysInMonth = () => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
 
-  const getFirstDayOfMonth = (date: Date) => {
-    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-  };
-
-  const generateCalendarDays = () => {
-    const daysInMonth = getDaysInMonth(currentMonth);
-    const firstDay = getFirstDayOfMonth(currentMonth);
     const days = [];
 
     // Add empty cells for days before month starts
-    for (let i = 0; i < firstDay; i++) {
+    for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(null);
     }
 
     // Add all days of the month
     for (let i = 1; i <= daysInMonth; i++) {
-      days.push(i);
+      days.push(new Date(year, month, i));
     }
 
     return days;
   };
 
-  const getDateString = (day: number) => {
-    return `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    const newMonth = new Date(currentMonth);
+    if (direction === 'prev') {
+      newMonth.setMonth(newMonth.getMonth() - 1);
+    } else {
+      newMonth.setMonth(newMonth.getMonth() + 1);
+    }
+    setCurrentMonth(newMonth);
   };
 
-  const isDateCompleted = (day: number) => {
-    const dateString = getDateString(day);
+  const getDayStatus = (date: Date) => {
+    const dateString = getLocalDateString(date);
     const dayTasks = habit.dailyTasks[dateString];
 
-    if (dayTasks && habit.tasks.length > 0) {
-      return dayTasks.completedTasks.length === habit.tasks.length;
-    }
+    if (!dayTasks) return { completed: false, partial: false, percentage: 0 };
 
-    return habit.completedDays.includes(dateString);
+    const totalTasks = habit.tasks.length;
+    const completedTasks = dayTasks.completedTasks.length;
+    const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+    return {
+      completed: dayTasks.allCompleted,
+      partial: completedTasks > 0 && !dayTasks.allCompleted,
+      percentage,
+    };
   };
 
-  const isDatePartiallyCompleted = (day: number) => {
-    const dateString = getDateString(day);
-    const dayTasks = habit.dailyTasks[dateString];
-
-    if (dayTasks && habit.tasks.length > 0) {
-      const completedCount = dayTasks.completedTasks.length;
-      return completedCount > 0 && completedCount < habit.tasks.length;
-    }
-
-    return false;
+  // Check if date is before habit creation
+  const isBeforeHabitCreation = (date: Date) => {
+    const creationDate = new Date(habit.createdAt);
+    creationDate.setHours(0, 0, 0, 0);
+    const checkDate = new Date(date);
+    checkDate.setHours(0, 0, 0, 0);
+    return checkDate < creationDate;
   };
 
-  const getCompletionPercentage = (day: number) => {
-    const dateString = getDateString(day);
-    const dayTasks = habit.dailyTasks[dateString];
-
-    if (dayTasks && habit.tasks.length > 0) {
-      return (dayTasks.completedTasks.length / habit.tasks.length) * 100;
-    }
-
-    return isDateCompleted(day) ? 100 : 0;
-  };
-
-  const isDateMissed = (day: number) => {
-    const dateString = getDateString(day);
-    const date = new Date(dateString);
+  const isToday = (date: Date) => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const habitStart = new Date(habit.createdAt);
-    habitStart.setHours(0, 0, 0, 0);
-
-    return date >= habitStart && date < today && !isDateCompleted(day) && !isDatePartiallyCompleted(day);
+    return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
   };
 
-  const isFutureDate = (day: number) => {
-    const dateString = getDateString(day);
-    const date = new Date(dateString);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return date > today;
+  const isSelected = (date: Date) => {
+    return date.getDate() === selectedDate.getDate() && date.getMonth() === selectedDate.getMonth() && date.getFullYear() === selectedDate.getFullYear();
   };
 
-  const isBeforeHabitStart = (day: number) => {
-    const dateString = getDateString(day);
-    const date = new Date(dateString);
-    const habitStart = new Date(habit.createdAt);
-    habitStart.setHours(0, 0, 0, 0);
-    return date < habitStart;
-  };
-
-  const isToday = (day: number) => {
-    const today = new Date();
-    return day === today.getDate() && currentMonth.getMonth() === today.getMonth() && currentMonth.getFullYear() === today.getFullYear();
-  };
-
-  const isSelected = (day: number) => {
-    return day === selectedDate.getDate() && currentMonth.getMonth() === selectedDate.getMonth() && currentMonth.getFullYear() === selectedDate.getFullYear();
-  };
-
-  const handlePreviousMonth = () => {
-    animatedValue.value = 0;
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
-  };
-
-  const handleNextMonth = () => {
-    animatedValue.value = 0;
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
-  };
-
-  const handleDatePress = (day: number) => {
-    const newDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
-    onDateSelect(newDate);
-  };
-
-  const calendarDays = generateCalendarDays();
-
-  // Calculate month statistics
-  const getMonthStats = () => {
-    let completed = 0;
-    let partial = 0;
-    let missed = 0;
-    let streak = 0;
-    let maxStreak = 0;
-    let currentStreak = 0;
-
-    const daysInMonth = getDaysInMonth(currentMonth);
-    for (let day = 1; day <= daysInMonth; day++) {
-      if (isDateCompleted(day)) {
-        completed++;
-        currentStreak++;
-        maxStreak = Math.max(maxStreak, currentStreak);
-      } else if (isDatePartiallyCompleted(day)) {
-        partial++;
-        currentStreak = 0;
-      } else if (isDateMissed(day)) {
-        missed++;
-        currentStreak = 0;
-      }
-    }
-
-    const total = completed + partial + missed;
-    const successRate = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-    return { completed, partial, missed, successRate, maxStreak };
-  };
-
-  const monthStats = getMonthStats();
-
-  const containerStyle = useAnimatedStyle(() => ({
-    opacity: animatedValue.value,
-    transform: [
-      {
-        scale: interpolate(animatedValue.value, [0, 1], [0.95, 1], Extrapolate.CLAMP),
-      },
-    ],
-  }));
+  const days = getDaysInMonth();
+  const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
   return (
-    <Animated.View style={[containerStyle]}>
-      <View style={tw`bg-white rounded-2xl shadow-sm overflow-hidden`}>
-        {/* Enhanced Header */}
-        <LinearGradient colors={['#f8fafc', '#ffffff']} style={tw`px-5 py-4 border-b border-gray-100`}>
-          <View style={tw`flex-row justify-between items-center`}>
-            <Pressable onPress={handlePreviousMonth} style={({ pressed }) => [tw`p-2 rounded-xl`, pressed && tw`bg-gray-100`]}>
-              <ChevronLeft size={20} color="#64748b" strokeWidth={2.5} />
-            </Pressable>
+    <View style={tw`bg-white rounded-2xl shadow-sm p-4`}>
+      {/* Month Navigation */}
+      <View style={tw`flex-row items-center justify-between mb-4`}>
+        <Pressable onPress={() => navigateMonth('prev')} style={({ pressed }) => [tw`p-2 rounded-lg`, pressed && tw`bg-gray-100`]}>
+          <ChevronLeft size={20} color="#6b7280" />
+        </Pressable>
 
-            <View style={tw`items-center`}>
-              <Text style={tw`text-lg font-bold text-gray-900`}>{monthNames[currentMonth.getMonth()]}</Text>
-              <Text style={tw`text-xs text-gray-500`}>{currentMonth.getFullYear()}</Text>
-            </View>
+        <Text style={tw`text-base font-bold text-gray-800`}>{currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</Text>
 
-            <Pressable onPress={handleNextMonth} style={({ pressed }) => [tw`p-2 rounded-xl`, pressed && tw`bg-gray-100`]}>
-              <ChevronRight size={20} color="#64748b" strokeWidth={2.5} />
-            </Pressable>
+        <Pressable onPress={() => navigateMonth('next')} style={({ pressed }) => [tw`p-2 rounded-lg`, pressed && tw`bg-gray-100`]}>
+          <ChevronRight size={20} color="#6b7280" />
+        </Pressable>
+      </View>
+
+      {/* Week Days Header */}
+      <View style={tw`flex-row mb-2`}>
+        {weekDays.map((day, index) => (
+          <View key={index} style={tw`flex-1 items-center`}>
+            <Text style={tw`text-xs font-medium text-gray-500`}>{day}</Text>
           </View>
-        </LinearGradient>
+        ))}
+      </View>
 
-        {/* Month Stats Bar */}
-        <View style={tw`px-5 py-3 bg-gray-50/50`}>
-          <View style={tw`flex-row justify-between`}>
-            <View style={tw`items-center flex-1`}>
-              <Text style={tw`text-xl font-bold text-green-600`}>{monthStats.completed}</Text>
-              <Text style={tw`text-xs text-gray-500`}>Complete</Text>
-            </View>
+      {/* Calendar Days Grid */}
+      <View style={tw`flex-row flex-wrap`}>
+        {days.map((date, index) => {
+          if (!date) {
+            return <View key={`empty-${index}`} style={tw`w-1/7 h-10`} />;
+          }
 
-            <View style={tw`w-px bg-gray-200 mx-3`} />
+          const status = getDayStatus(date);
+          const selected = isSelected(date);
+          const today = isToday(date);
+          const beforeCreation = isBeforeHabitCreation(date);
 
-            <View style={tw`items-center flex-1`}>
-              <Text style={tw`text-xl font-bold text-amber-600`}>{monthStats.partial}</Text>
-              <Text style={tw`text-xs text-gray-500`}>Partial</Text>
-            </View>
+          // Check if day is in the past (missed) - only after habit creation
+          const isPast = date < new Date() && !today;
+          const isMissed = isPast && !status.completed && !status.partial && !beforeCreation;
 
-            <View style={tw`w-px bg-gray-200 mx-3`} />
+          // Determine if this day should be clickable
+          const isClickable = !beforeCreation; // Only clickable after habit creation
 
-            <View style={tw`items-center flex-1`}>
-              <Text style={tw`text-xl font-bold text-indigo-600`}>{monthStats.successRate}%</Text>
-              <Text style={tw`text-xs text-gray-500`}>Success</Text>
-            </View>
+          return (
+            <Animated.View key={date.toISOString()} entering={FadeIn.delay(index * 10).duration(200)} style={tw`w-1/7 items-center mb-2`}>
+              <Pressable
+                onPress={() => !beforeCreation && onDateSelect(date)}
+                disabled={beforeCreation}
+                style={({ pressed }) => [
+                  tw`w-10 h-10 rounded-xl items-center justify-center relative`,
+                  status.completed && tw`bg-green-500`,
+                  status.partial && tw`bg-yellow-500`,
+                  isMissed && tw`bg-red-50`,
+                  beforeCreation && tw`opacity-30`,
+                  selected && !status.completed && !status.partial && !isMissed && !beforeCreation && tw`bg-indigo-100`,
+                  today && !selected && tw`bg-gray-100`,
+                  pressed && !beforeCreation && tw`opacity-80`,
+                ]}
+              >
+                {/* Selection border with reduced opacity */}
+                {selected && !beforeCreation && <View style={[tw`absolute inset-0 rounded-xl border-2`, { borderColor: 'rgba(99, 102, 241, 0.5)' }]} />}
 
-            <View style={tw`w-px bg-gray-200 mx-3`} />
+                <Text
+                  style={[
+                    tw`text-base font-medium`,
+                    status.completed || status.partial ? tw`text-white` : tw`text-gray-700`,
+                    isMissed && tw`text-red-500`,
+                    beforeCreation && tw`text-gray-400`,
+                    selected && !status.completed && !status.partial && !isMissed && !beforeCreation && tw`text-indigo-600`,
+                  ]}
+                >
+                  {date.getDate()}
+                </Text>
 
-            <View style={tw`items-center flex-1`}>
-              <View style={tw`flex-row items-center`}>
-                <Text style={tw`text-xl font-bold text-orange-600`}>{monthStats.maxStreak}</Text>
-              </View>
-              <Text style={tw`text-xs text-gray-500`}>Streak</Text>
-            </View>
-          </View>
+                {/* Today indicator */}
+                {today && !status.completed && !status.partial && <View style={tw`absolute bottom-0.5 w-1 h-1 bg-indigo-500 rounded-full`} />}
+              </Pressable>
+            </Animated.View>
+          );
+        })}
+      </View>
+
+      {/* Legend */}
+      <View style={tw`flex-row justify-center items-center mt-3 pt-3 border-t border-gray-100`}>
+        <View style={tw`flex-row items-center mr-4`}>
+          <View style={tw`w-3 h-3 bg-green-500 rounded`} />
+          <Text style={tw`text-xs text-gray-600 ml-1`}>Complete</Text>
         </View>
-
-        <View style={tw`p-4`}>
-          {/* Days of Week Header */}
-          <View style={tw`flex-row mb-3`}>
-            {daysOfWeek.map((day, index) => (
-              <View key={`weekday-${index}`} style={tw`flex-1 items-center`}>
-                <Text style={[tw`text-xs font-semibold`, index === 0 || index === 6 ? tw`text-gray-400` : tw`text-gray-600`]}>{day}</Text>
-              </View>
-            ))}
-          </View>
-
-          {/* Calendar Grid */}
-          <View style={tw`flex-row flex-wrap`}>
-            {calendarDays.map((day, index) => (
-              <View key={index} style={tw`w-1/7 p-0.5`}>
-                {day ? (
-                  <Pressable
-                    onPress={() => handleDatePress(day)}
-                    disabled={isFutureDate(day) || isBeforeHabitStart(day)}
-                    style={({ pressed }) => [tw`aspect-square rounded-xl items-center justify-center relative`, pressed && !isFutureDate(day) && !isBeforeHabitStart(day) && tw`scale-95`]}
-                  >
-                    <Animated.View entering={FadeIn.delay(index * 10)} style={tw`absolute inset-0 rounded-xl overflow-hidden`}>
-                      {/* Background based on completion status */}
-                      {isDateCompleted(day) && <LinearGradient colors={habit.type === 'good' ? ['#10b981', '#059669'] : ['#22c55e', '#16a34a']} style={tw`absolute inset-0`} />}
-
-                      {isDatePartiallyCompleted(day) && (
-                        <View style={tw`absolute inset-0 bg-amber-100`}>
-                          <View style={[tw`absolute bottom-0 left-0 right-0 bg-amber-400`, { height: `${getCompletionPercentage(day)}%` }]} />
-                        </View>
-                      )}
-
-                      {isDateMissed(day) && <View style={tw`absolute inset-0 bg-red-50 border border-red-200`} />}
-
-                      {isToday(day) && !isDateCompleted(day) && !isDatePartiallyCompleted(day) && <View style={tw`absolute inset-0 bg-indigo-100 border-2 border-indigo-400`} />}
-
-                      {isSelected(day) && <View style={tw`absolute inset-0 border-2 border-gray-900 rounded-xl`} />}
-                    </Animated.View>
-
-                    {/* Day Number */}
-                    <Text
-                      style={[
-                        tw`text-sm font-medium z-10`,
-                        isDateCompleted(day)
-                          ? tw`text-white`
-                          : isDatePartiallyCompleted(day)
-                          ? tw`text-amber-900`
-                          : isDateMissed(day)
-                          ? tw`text-red-600`
-                          : isToday(day)
-                          ? tw`text-indigo-700 font-bold`
-                          : isFutureDate(day) || isBeforeHabitStart(day)
-                          ? tw`text-gray-300`
-                          : tw`text-gray-700`,
-                      ]}
-                    >
-                      {day}
-                    </Text>
-
-                    {/* Completion Indicator */}
-                    {isDateCompleted(day) && (
-                      <View style={tw`absolute bottom-1`}>
-                        <Text style={tw`text-xs text-white/80`}>✓</Text>
-                      </View>
-                    )}
-
-                    {isDatePartiallyCompleted(day) && (
-                      <View style={tw`absolute bottom-1`}>
-                        <Text style={tw`text-xs text-amber-700 font-bold`}>{Math.round(getCompletionPercentage(day))}%</Text>
-                      </View>
-                    )}
-                  </Pressable>
-                ) : (
-                  <View style={tw`aspect-square`} />
-                )}
-              </View>
-            ))}
-          </View>
+        <View style={tw`flex-row items-center mr-4`}>
+          <View style={tw`w-3 h-3 bg-yellow-500 rounded`} />
+          <Text style={tw`text-xs text-gray-600 ml-1`}>Partial</Text>
         </View>
-
-        {/* Enhanced Legend */}
-        <View style={tw`px-5 pb-4`}>
-          <View style={tw`bg-gray-50 rounded-xl p-3`}>
-            <View style={tw`flex-row flex-wrap gap-3`}>
-              <View style={tw`flex-row items-center`}>
-                <LinearGradient colors={['#10b981', '#059669']} style={tw`w-4 h-4 rounded`} />
-                <Text style={tw`text-xs text-gray-600 ml-1.5 font-medium`}>Complete</Text>
-              </View>
-
-              <View style={tw`flex-row items-center`}>
-                <View style={tw`w-4 h-4 rounded bg-amber-200 border border-amber-400`} />
-                <Text style={tw`text-xs text-gray-600 ml-1.5 font-medium`}>Partial</Text>
-              </View>
-
-              <View style={tw`flex-row items-center`}>
-                <View style={tw`w-4 h-4 rounded bg-red-50 border border-red-200`} />
-                <Text style={tw`text-xs text-gray-600 ml-1.5 font-medium`}>Missed</Text>
-              </View>
-
-              <View style={tw`flex-row items-center`}>
-                <View style={tw`w-4 h-4 rounded bg-indigo-100 border-2 border-indigo-400`} />
-                <Text style={tw`text-xs text-gray-600 ml-1.5 font-medium`}>Today</Text>
-              </View>
-            </View>
-          </View>
+        <View style={tw`flex-row items-center mr-4`}>
+          <View style={tw`w-3 h-3 bg-red-50 rounded`} />
+          <Text style={tw`text-xs text-gray-600 ml-1`}>Missed</Text>
+        </View>
+        <View style={tw`flex-row items-center`}>
+          <View style={[tw`w-3 h-3 rounded border`, { borderColor: 'rgba(99, 102, 241, 0.5)' }]} />
+          <Text style={tw`text-xs text-gray-600 ml-1`}>Selected</Text>
         </View>
       </View>
-    </Animated.View>
+    </View>
   );
 };
 
