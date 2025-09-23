@@ -14,6 +14,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.yourname.mindfulhabits",
+      "usesAppleSignIn": true,
       "buildNumber": "1.0.0"
     },
     "android": {
@@ -23,6 +24,7 @@
       },
       "package": "com.yourname.mindfulhabits",
       "versionCode": 1
-    }
+    },
+    "plugins": ["expo-web-browser", "expo-apple-authentication"]
   }
 }

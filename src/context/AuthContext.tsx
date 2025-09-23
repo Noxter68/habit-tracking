@@ -1,8 +1,12 @@
-// src/context/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
+import * as AuthSession from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
+import * as AppleAuthentication from 'expo-apple-authentication';
+
+WebBrowser.maybeCompleteAuthSession();
 
 interface AuthContextType {
   user: User | null;
@@ -10,6 +14,8 @@ interface AuthContextType {
   loading: boolean;
   signUp: (email: string, password: string, username?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signInWithApple: () => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
 }
@@ -41,11 +47,127 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => subscription.unsubscribe();
   }, []);
 
+  const signInWithGoogle = async () => {
+    try {
+      setLoading(true);
+
+      const redirectUri = AuthSession.makeRedirectUri({
+        scheme: 'yourapp',
+        path: 'auth',
+      });
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUri,
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
+
+        if (result.type === 'success' && result.url) {
+          const params = new URLSearchParams(result.url.split('#')[1]);
+          const access_token = params.get('access_token');
+          const refresh_token = params.get('refresh_token');
+
+          if (access_token && refresh_token) {
+            await supabase.auth.setSession({
+              access_token,
+              refresh_token,
+            });
+          }
+        }
+      }
+    } catch (error: any) {
+      console.error('Google Sign-In Error:', error);
+      Alert.alert('Sign-In Failed', error.message || 'Unable to sign in with Google');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signInWithApple = async () => {
+    try {
+      setLoading(true);
+
+      if (Platform.OS === 'ios') {
+        const credential = await AppleAuthentication.signInAsync({
+          requestedScopes: [AppleAuthentication.AppleAuthenticationScope.FULL_NAME, AppleAuthentication.AppleAuthenticationScope.EMAIL],
+        });
+
+        if (credential.identityToken) {
+          const { data, error } = await supabase.auth.signInWithIdToken({
+            provider: 'apple',
+            token: credential.identityToken,
+          });
+
+          if (error) throw error;
+
+          // Update user profile with Apple data
+          if (data.user && credential.fullName) {
+            const fullName = `${credential.fullName.givenName || ''} ${credential.fullName.familyName || ''}`.trim();
+
+            const { error: profileError } = await supabase.from('profiles').upsert({
+              id: data.user.id,
+              username: fullName || credential.email?.split('@')[0] || 'User',
+              updated_at: new Date().toISOString(),
+            });
+
+            if (profileError) console.error('Profile update error:', profileError);
+          }
+        }
+      } else {
+        // For Android/Web, use OAuth flow
+        const redirectUri = AuthSession.makeRedirectUri({
+          scheme: 'yourapp',
+          path: 'auth',
+        });
+
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'apple',
+          options: {
+            redirectTo: redirectUri,
+            skipBrowserRedirect: true,
+          },
+        });
+
+        if (error) throw error;
+
+        if (data?.url) {
+          const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
+
+          if (result.type === 'success' && result.url) {
+            const params = new URLSearchParams(result.url.split('#')[1]);
+            const access_token = params.get('access_token');
+            const refresh_token = params.get('refresh_token');
+
+            if (access_token && refresh_token) {
+              await supabase.auth.setSession({
+                access_token,
+                refresh_token,
+              });
+            }
+          }
+        }
+      }
+    } catch (error: any) {
+      if (error.code !== 'ERR_CANCELED') {
+        console.error('Apple Sign-In Error:', error);
+        Alert.alert('Sign-In Failed', 'Unable to sign in with Apple');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const signUp = async (email: string, password: string, username?: string) => {
     try {
       setLoading(true);
 
-      // Check if username is already taken
       if (username) {
         const { data: existingUser } = await supabase.from('profiles').select('username').eq('username', username).single();
 
@@ -61,9 +183,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (error) throw error;
 
-      // Update profile with username if provided
       if (data.user && username) {
-        const { error: profileError } = await supabase.from('profiles').update({ username }).eq('id', data.user.id);
+        const { error: profileError } = await supabase.from('profiles').insert({
+          id: data.user.id,
+          username,
+          created_at: new Date().toISOString(),
+        });
 
         if (profileError) throw profileError;
       }
@@ -110,7 +235,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(true);
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'yourapp://reset-password', // Update with your app's deep link
+        redirectTo: 'yourapp://reset-password',
       });
 
       if (error) throw error;
@@ -131,6 +256,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         loading,
         signUp,
         signIn,
+        signInWithGoogle,
+        signInWithApple,
         signOut,
         resetPassword,
       }}
