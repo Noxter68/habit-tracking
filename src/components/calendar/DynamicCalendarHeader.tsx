@@ -6,6 +6,7 @@ import Animated, { FadeIn, FadeInUp, useAnimatedStyle, withSpring } from 'react-
 import { MiniFlameIcon, MiniTrophyIcon, MiniCalendarIcon, MiniCheckIcon, QuestCompleteIcon, KeepGoingIcon, TomorrowStarIcon } from '../icons/MiniIcons';
 import tw from '../../lib/tailwind';
 import { Habit } from '../../types';
+import { StatsIcons } from '../icons/StatsIcons';
 
 interface DynamicCalendarHeaderProps {
   selectedHabit: Habit | null;
@@ -115,7 +116,7 @@ const DynamicCalendarHeader: React.FC<DynamicCalendarHeaderProps> = ({ selectedH
           </View>
           {dateStats.completed && (
             <View style={tw`absolute -bottom-1 -right-1 bg-green-500 rounded-full p-0.5`}>
-              <MiniCheckIcon size={10} color="#ffffff" />
+              <StatsIcons.CheckCircle size={10} color="#ffffff" />
             </View>
           )}
         </Animated.View>
@@ -126,7 +127,7 @@ const DynamicCalendarHeader: React.FC<DynamicCalendarHeaderProps> = ({ selectedH
         <View style={tw`flex-1 bg-white/10 rounded-lg px-3 py-2`}>
           <View style={tw`flex-row items-center justify-between`}>
             <View style={tw`flex-row items-center`}>
-              <MiniFlameIcon size={14} color="#fbbf24" />
+              <StatsIcons.Flame size={14} color="#fbbf24" />
               <Text style={tw`text-white/70 text-sm ml-1.5`}>Streak</Text>
             </View>
             <Text style={tw`text-white text-base font-bold`}>{selectedHabit.currentStreak}</Text>
@@ -136,7 +137,7 @@ const DynamicCalendarHeader: React.FC<DynamicCalendarHeaderProps> = ({ selectedH
         <View style={tw`flex-1 bg-white/10 rounded-lg px-3 py-2`}>
           <View style={tw`flex-row items-center justify-between`}>
             <View style={tw`flex-row items-center`}>
-              <MiniTrophyIcon size={14} color="#34d399" />
+              <StatsIcons.Trophy size={14} color="#34d399" />
               <Text style={tw`text-white/70 text-sm ml-1.5`}>Best</Text>
             </View>
             <Text style={tw`text-white text-base font-bold`}>{selectedHabit.bestStreak}</Text>
@@ -146,7 +147,7 @@ const DynamicCalendarHeader: React.FC<DynamicCalendarHeaderProps> = ({ selectedH
         <View style={tw`flex-1 bg-white/10 rounded-lg px-3 py-2`}>
           <View style={tw`flex-row items-center justify-between`}>
             <View style={tw`flex-row items-center`}>
-              <MiniCalendarIcon size={14} color="#a78bfa" />
+              <StatsIcons.Calendar size={14} color="#a78bfa" />
               <Text style={tw`text-white/70 text-sm ml-1.5`}>Month</Text>
             </View>
             <Text style={tw`text-white text-base font-bold`}>{monthlyAchievements}</Text>
@@ -197,7 +198,7 @@ const DynamicCalendarHeader: React.FC<DynamicCalendarHeaderProps> = ({ selectedH
           {/* Quest Complete Message */}
           {dateStats.completed && (
             <Animated.View entering={FadeInUp.delay(200).duration(400).springify()} style={tw`flex-row items-center justify-center mt-2 bg-green-500/15 rounded-lg py-1.5 px-3`}>
-              <QuestCompleteIcon size={14} />
+              <StatsIcons.Star size={14} />
               <Text style={tw`text-white/90 text-sm ml-2 font-semibold tracking-wide`}>Quest Complete!</Text>
               <View style={tw`ml-2 flex-row`}>
                 {[...Array(3)].map((_, i) => (

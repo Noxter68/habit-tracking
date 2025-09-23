@@ -4,7 +4,7 @@ import { View, Text, ScrollView, Pressable } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import tw from '../../lib/tailwind';
 import { Habit } from '../../types';
-import { MiniFlameIcon } from '../icons/MiniIcons';
+import { StatsIcons } from '../icons/StatsIcons';
 
 interface HabitSelectorProps {
   habits: Habit[];
@@ -42,7 +42,7 @@ const HabitSelector: React.FC<HabitSelectorProps> = ({ habits, selectedHabit, on
                 {/* Streak indicator if has streak */}
                 {habit.currentStreak > 0 && (
                   <View style={tw`flex-row items-center ml-2.5`}>
-                    <MiniFlameIcon size={12} color={isSelected ? '#fbbf24' : '#f59e0b'} />
+                    <StatsIcons.Flame size={12} color={isSelected ? '#fbbf24' : '#f59e0b'} />
                     <Text style={[tw`text-sm ml-1 font-bold`, isSelected ? tw`text-white/90` : tw`text-orange-600`]}>{habit.currentStreak}</Text>
                   </View>
                 )}

@@ -9,6 +9,7 @@ import { Habit } from '../../types';
 import { getTasksForCategory } from '../../utils/habitHelpers';
 import { ProgressCircleIcon, StreakFlameIcon } from '../icons/CustomIcons';
 import { getCategoryIcon } from '../../utils/categoryIcons';
+import { StatsIcons } from '../icons/StatsIcons';
 
 interface EnhancedHabitCardProps {
   habit: Habit;
@@ -76,7 +77,7 @@ const EnhancedHabitCard: React.FC<EnhancedHabitCardProps> = ({ habit, onToggleDa
                   </Text>
                   {habit.currentStreak > 0 && (
                     <View style={tw`flex-row items-center mt-0.5`}>
-                      <StreakFlameIcon size={12} />
+                      <StatsIcons.Flame size={12} />
                       <Text style={tw`text-xs font-medium text-amber-600 ml-1`}>{habit.currentStreak} days</Text>
                     </View>
                   )}

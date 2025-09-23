@@ -1,11 +1,77 @@
 // src/components/icons/CustomIcons.tsx
 import React from 'react';
-import { Svg, Path, Circle, Defs, LinearGradient, Stop, G, Rect, Ellipse } from 'react-native-svg';
+import { Svg, Path, Circle, Defs, LinearGradient, Stop, G, Rect, Ellipse, Line } from 'react-native-svg';
+import Animated, { useAnimatedProps, useSharedValue, withRepeat, withTiming, withSequence } from 'react-native-reanimated';
 
 interface IconProps {
   size?: number;
   color?: string;
 }
+const AnimatedPath = Animated.createAnimatedComponent(Path);
+
+export const FireIcon = ({ size = 24, color = '#FF6B6B', animated = false }) => {
+  const scale = useSharedValue(1);
+
+  React.useEffect(() => {
+    if (animated) {
+      scale.value = withRepeat(withSequence(withTiming(1.1, { duration: 1000 }), withTiming(1, { duration: 1000 })), -1, true);
+    }
+  }, [animated]);
+
+  const animatedProps = useAnimatedProps(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 2C12 2 8.5 6 8.5 10C8.5 11 8.7 12 9.1 12.8C8.4 11.9 8 10.7 8 9.5C8 7 10 4.5 12 2.5C14 4.5 16 7 16 9.5C16 10.7 15.6 11.9 14.9 12.8C15.3 12 15.5 11 15.5 10C15.5 6 12 2 12 2Z"
+        fill={color}
+        opacity={0.3}
+      />
+      <Path d="M12 22C16.4 22 20 18.4 20 14C20 10.5 18 7.5 16 5C16 7 15 9 13 10C13 7 11 4 9 2C7 4 5 7 5 11C5 11 3 14 3 17C3 19.8 5.2 22 8 22H12Z" fill={color} />
+      <Path
+        d="M12 20C14.2 20 16 18.2 16 16C16 14 15 12.5 14 11.5C14 12.5 13.5 13.5 12.5 14C12.5 12.5 11.5 11 10.5 10C9.5 11 8.5 12.5 8.5 14.5C8.5 14.5 7.5 16 7.5 17.5C7.5 19 8.5 20 10 20H12Z"
+        fill="#FFFFFF"
+        opacity={0.9}
+      />
+    </Svg>
+  );
+};
+
+export const CalendarIcon = ({ size = 24, color = '#8B95A6' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Rect x="3" y="6" width="18" height="15" rx="2" stroke={color} strokeWidth="1.5" />
+    <Line x1="3" y1="10" x2="21" y2="10" stroke={color} strokeWidth="1.5" />
+    <Line x1="7" y1="3" x2="7" y2="7" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
+    <Line x1="17" y1="3" x2="17" y2="7" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
+    <Circle cx="8" cy="15" r="1" fill={color} />
+    <Circle cx="12" cy="15" r="1" fill={color} />
+    <Circle cx="16" cy="15" r="1" fill={color} />
+  </Svg>
+);
+
+export const StatsIcon = ({ size = 24, color = '#8B95A6' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Rect x="4" y="14" width="4" height="7" rx="1" fill={color} opacity={0.3} />
+    <Rect x="10" y="8" width="4" height="13" rx="1" fill={color} opacity={0.6} />
+    <Rect x="16" y="11" width="4" height="10" rx="1" fill={color} />
+    <Path d="M4 14L8 10L12 12L20 4" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <Circle cx="20" cy="4" r="2" fill={color} />
+  </Svg>
+);
+
+export const ChevronLeftIcon = ({ size = 20, color = '#8B95A6' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path d="M15 18L9 12L15 6" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
+
+export const ChevronRightIcon = ({ size = 20, color = '#8B95A6' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path d="M9 18L15 12L9 6" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+);
 
 export const StreakFlameIcon: React.FC<IconProps> = ({ size = 24 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
