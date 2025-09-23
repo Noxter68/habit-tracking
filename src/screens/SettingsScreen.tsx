@@ -198,7 +198,7 @@ const SettingsScreen: React.FC = () => {
 
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: '🎯 Test Notification',
+        title: 'Test Notification',
         body: 'Your notifications are working perfectly!',
         sound: soundEnabled,
       },

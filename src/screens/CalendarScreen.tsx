@@ -15,7 +15,7 @@ import { Dumbbell, Heart, Apple, BookOpen, Zap, Brain, Moon, Droplets, Cigarette
 
 const { height: screenHeight } = Dimensions.get('window');
 
-// Helper function to get local date string
+// Static helper function - moved outside component
 const getLocalDateString = (date: Date): string => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -23,7 +23,7 @@ const getLocalDateString = (date: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
-// Category icons configuration - moved outside component to be static
+// Category icons configuration - static
 const CATEGORY_ICONS: Record<string, { icon: any; color: string }> = {
   fitness: { icon: Dumbbell, color: '#ef4444' },
   health: { icon: Heart, color: '#ec4899' },
@@ -41,6 +41,11 @@ const CATEGORY_ICONS: Record<string, { icon: any; color: string }> = {
   'negative-thinking': { icon: ThumbsDown, color: '#7c3aed' },
   alcohol: { icon: Beer, color: '#ca8a04' },
   oversleeping: { icon: Bed, color: '#64748b' },
+};
+
+// Static function to get category icon
+const getCategoryIcon = (category: string) => {
+  return CATEGORY_ICONS[category] || { icon: Target, color: '#6b7280' };
 };
 
 const CalendarScreen: React.FC = () => {
@@ -65,11 +70,6 @@ const CalendarScreen: React.FC = () => {
       setSelectedHabit(null);
     }
   }, [habits]);
-
-  // Static function to get category icon
-  const getCategoryIcon = (category: string) => {
-    return CATEGORY_ICONS[category] || { icon: Target, color: '#6b7280' };
-  };
 
   // Dynamic header height - adjusted for larger text/icons
   const headerHeight = selectedHabit ? 125 : 65;

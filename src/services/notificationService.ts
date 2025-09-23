@@ -26,7 +26,7 @@ export class NotificationService {
         importance: Notifications.AndroidImportance.MAX,
         vibrationPattern: [0, 250, 250, 250],
         lightColor: '#14b8a6',
-        sound: true,
+        sound: 'true',
       });
     }
 
@@ -50,7 +50,7 @@ export class NotificationService {
       await Notifications.scheduleNotificationAsync({
         identifier: habit.id,
         content: {
-          title: `🎯 ${habit.name}`,
+          title: `${habit.name}`,
           body: this.getMotivationalMessage(habit.type),
           data: { habitId: habit.id },
           sound: true,
@@ -81,7 +81,7 @@ export class NotificationService {
           await Notifications.scheduleNotificationAsync({
             identifier: `${habit.id}_${day}`,
             content: {
-              title: `🎯 ${habit.name}`,
+              title: `${habit.name}`,
               body: this.getMotivationalMessage(habit.type),
               data: { habitId: habit.id },
               sound: true,
@@ -161,7 +161,7 @@ export class NotificationService {
 
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: '🎯 Test Notification',
+        title: 'Test Notification',
         body: 'Your notifications are working perfectly!',
         sound: true,
         categoryIdentifier: 'test',
