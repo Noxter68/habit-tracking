@@ -1,393 +1,221 @@
 // src/screens/StatsScreen.tsx
-import React, { useMemo, useEffect, useState } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import React, { useMemo, useEffect, useState, useCallback } from 'react';
+import { View, Text, ScrollView, RefreshControl, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import tw from '../lib/tailwind';
-import { useHabits } from '../context/HabitContext';
 import { LinearGradient } from 'expo-linear-gradient';
-import { HabitService } from '../services/habitService';
+import Animated, { FadeInDown, FadeIn, FadeOut, Layout, SlideInRight, useAnimatedStyle, withSpring, withTiming, useSharedValue, interpolate, Easing } from 'react-native-reanimated';
+import tw from '../lib/tailwind';
+
+// Contexts
+import { useHabits } from '../context/HabitContext';
 import { useAuth } from '../context/AuthContext';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react-native';
+
+// Services
+import { HabitService } from '../services/habitService';
+
+// Utils
+import { calculateStats, getDateRangeForPeriod, formatPercentage } from '../utils/statsUtils';
+
+// Components
+import PeriodSelector from '../components/stats/PeriodSelector';
+import ChampionHabitCard from '../components/stats/ChampionHabitCard';
+import StatCard from '../components/stats/StatCard'; // Fixed: uppercase 'S'
+import ConsistencyChart from '../components/stats/ConsistencyChart';
+
+// Icons
+import { StatsIcons } from '../components/icons/StatsIcons';
+
+const AnimatedStatCard = Animated.createAnimatedComponent(View);
 
 const StatsScreen: React.FC = () => {
   const { habits } = useHabits();
   const { user } = useAuth();
   const [aggregatedStats, setAggregatedStats] = useState<any>(null);
-  const [loadingStats, setLoadingStats] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'all'>('month');
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Animation values
+  const contentOpacity = useSharedValue(1);
 
   useEffect(() => {
     if (user) {
       loadAggregatedStats();
     }
-  }, [user, habits, selectedPeriod]);
+  }, [user, habits]);
 
   const loadAggregatedStats = async () => {
     if (!user) return;
 
     try {
-      setLoadingStats(true);
       const stats = await HabitService.getAggregatedStats(user.id);
       setAggregatedStats(stats);
     } catch (error) {
       console.error('Error loading stats:', error);
-    } finally {
-      setLoadingStats(false);
     }
   };
 
-  // Calculate comprehensive statistics
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadAggregatedStats();
+    setTimeout(() => setRefreshing(false), 800);
+  }, [user]);
+
+  const handlePeriodChange = useCallback((period: 'week' | 'month' | 'all') => {
+    // Simple fade animation without state change to prevent jumps
+    contentOpacity.value = withTiming(0.3, { duration: 150 }, () => {
+      contentOpacity.value = withTiming(1, { duration: 150 });
+    });
+
+    // Change period immediately to prevent layout jumps
+    setSelectedPeriod(period);
+  }, []);
+
+  // Calculate comprehensive statistics based on selected period
   const stats = useMemo(() => {
     if (habits.length === 0) {
+      return calculateStats([], selectedPeriod);
+    }
+
+    const dateRange = getDateRangeForPeriod(selectedPeriod);
+    const filteredHabits = habits.map((habit) => {
+      const filteredCompletedDays =
+        selectedPeriod === 'all'
+          ? habit.completedDays
+          : habit.completedDays.filter((date) => {
+              const completedDate = new Date(date);
+              return completedDate >= dateRange.start && completedDate <= dateRange.end;
+            });
+
       return {
-        totalActiveHabits: 0,
-        totalCompletions: 0,
-        currentMaxStreak: 0,
-        bestOverallStreak: 0,
-        averageCompletion: 0,
-        totalDaysTracked: 0,
-        perfectDays: 0,
-        consistency: 0,
-        buildingHabits: 0,
-        quittingHabits: 0,
-        todayCompleted: 0,
-        weeklyAverage: 0,
-        monthlyGoal: 0,
-        longestHabit: null,
-        trend: 'stable',
+        ...habit,
+        completedDays: filteredCompletedDays,
       };
-    }
-
-    // Get unique dates across all habits
-    const allDates = new Set<string>();
-    habits.forEach((habit) => {
-      habit.completedDays.forEach((date) => allDates.add(date));
     });
 
-    // Calculate perfect days (all habits completed)
-    const perfectDays = Array.from(allDates).filter((date) => {
-      return habits.every((habit) => habit.completedDays.includes(date));
-    }).length;
+    return calculateStats(filteredHabits, selectedPeriod);
+  }, [habits, selectedPeriod]);
 
-    // Today's completions
-    const today = new Date().toISOString().split('T')[0];
-    const todayCompleted = habits.filter((h) => h.completedDays.includes(today)).length;
-
-    // Weekly average
-    const last7Days = Array.from({ length: 7 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      return date.toISOString().split('T')[0];
-    });
-    const weeklyCompletions = last7Days.reduce((acc, date) => {
-      return acc + habits.filter((h) => h.completedDays.includes(date)).length;
-    }, 0);
-    const weeklyAverage = Math.round((weeklyCompletions / (habits.length * 7)) * 100);
-
-    // Calculate consistency score (last 30 days)
-    const last30Days = Array.from({ length: 30 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      return date.toISOString().split('T')[0];
-    });
-
-    const completionsLast30 = last30Days.reduce((acc, date) => {
-      return acc + habits.filter((h) => h.completedDays.includes(date)).length;
-    }, 0);
-    const possibleCompletions = habits.length * 30;
-    const consistency = possibleCompletions > 0 ? Math.round((completionsLast30 / possibleCompletions) * 100) : 0;
-
-    // Calculate trend (compare last 7 days to previous 7 days)
-    const prev7Days = Array.from({ length: 7 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (i + 7));
-      return date.toISOString().split('T')[0];
-    });
-    const prevWeekCompletions = prev7Days.reduce((acc, date) => {
-      return acc + habits.filter((h) => h.completedDays.includes(date)).length;
-    }, 0);
-
-    let trend: 'up' | 'down' | 'stable' = 'stable';
-    if (weeklyCompletions > prevWeekCompletions * 1.1) trend = 'up';
-    else if (weeklyCompletions < prevWeekCompletions * 0.9) trend = 'down';
-
-    // Find longest running habit
-    const longestHabit = habits.reduce((longest, habit) => {
-      if (!longest || habit.completedDays.length > longest.completedDays.length) {
-        return habit;
-      }
-      return longest;
-    }, null as (typeof habits)[0] | null);
-
+  const animatedContentStyle = useAnimatedStyle(() => {
     return {
-      totalActiveHabits: habits.length,
-      totalCompletions: aggregatedStats?.totalCompletions || habits.reduce((sum, h) => sum + h.completedDays.length, 0),
-      currentMaxStreak: Math.max(...habits.map((h) => h.currentStreak), 0),
-      bestOverallStreak: Math.max(...habits.map((h) => h.bestStreak), 0),
-      averageCompletion: aggregatedStats?.averageCompletionRate || Math.round(habits.reduce((sum, h) => sum + (h.completedDays.length / h.totalDays) * 100, 0) / habits.length),
-      totalDaysTracked: aggregatedStats?.totalDaysTracked || allDates.size,
-      perfectDays,
-      consistency,
-      buildingHabits: habits.filter((h) => h.type === 'good').length,
-      quittingHabits: habits.filter((h) => h.type === 'bad').length,
-      todayCompleted,
-      weeklyAverage,
-      monthlyGoal: Math.round((consistency / 100) * 30),
-      longestHabit,
-      trend,
+      opacity: contentOpacity.value,
     };
-  }, [habits, aggregatedStats]);
-
-  // Milestone calculation
-  const getMilestone = () => {
-    const streak = stats.currentMaxStreak;
-    const milestones = [
-      { days: 100, message: '🏆 Century Club! Legendary Status Achieved!', reward: true },
-      { days: 66, message: "🧠 Habit Master! It's automatic now!", reward: false },
-      { days: 30, message: '🌟 30 Day Champion! You did it!', reward: true },
-      { days: 21, message: "💪 3 Weeks Strong! You're unstoppable!", reward: false },
-      { days: 14, message: '🔥 Two Week Warrior! Keep pushing!', reward: false },
-      { days: 7, message: '✨ One Week Wonder! Great start!', reward: false },
-      { days: 5, message: "🚀 5 Day Starter! You're building momentum!", reward: false },
-      { days: 3, message: '🌱 Just Getting Started! Every journey begins with a single step.', reward: false },
-    ];
-
-    return milestones.find((m) => streak >= m.days) || { days: 0, message: 'Start your journey today! 🌅', reward: false };
-  };
-
-  const milestone = getMilestone();
-
-  // Render trend indicator
-  const renderTrendIndicator = () => {
-    if (stats.trend === 'up') {
-      return <TrendingUp size={20} color="#10b981" strokeWidth={2.5} />;
-    } else if (stats.trend === 'down') {
-      return <TrendingDown size={20} color="#ef4444" strokeWidth={2.5} />;
-    }
-    return <Minus size={20} color="#6b7280" strokeWidth={2.5} />;
-  };
-
-  // Empty state
-  if (habits.length === 0) {
-    return (
-      <SafeAreaView style={tw`flex-1 bg-gray-50`}>
-        <View style={tw`flex-1 items-center justify-center px-8`}>
-          <View style={tw`w-28 h-28 bg-gray-100 rounded-3xl items-center justify-center mb-5`}>
-            <Text style={tw`text-5xl`}>📊</Text>
-          </View>
-          <Text style={tw`text-2xl font-semibold text-gray-900 mb-2 text-center`}>No Statistics Yet</Text>
-          <Text style={tw`text-base text-gray-500 text-center leading-relaxed`}>Start tracking your first habit to see your progress and unlock achievements</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  });
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-gray-50`}>
-      <ScrollView style={tw`flex-1`} showsVerticalScrollIndicator={false} contentContainerStyle={tw`pb-4`}>
+    <SafeAreaView style={tw`flex-1 bg-slate-50`}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={tw`pb-6`}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#8b5cf6" colors={['#8b5cf6']} progressBackgroundColor="#ffffff" />}
+      >
         {/* Header */}
-        <View style={tw`px-5 pt-5 pb-3`}>
-          <View style={tw`flex-row items-center justify-between`}>
-            <View>
-              <Text style={tw`text-2xl font-bold text-gray-900`}>Your Progress</Text>
-              <Text style={tw`text-sm text-gray-600 mt-1`}>{stats.totalDaysTracked} days of growth</Text>
-            </View>
-            <View style={tw`flex-row items-center bg-white rounded-xl px-3 py-2`}>
-              {renderTrendIndicator()}
-              <Text style={tw`ml-2 text-sm font-medium ${stats.trend === 'up' ? 'text-green-600' : stats.trend === 'down' ? 'text-red-600' : 'text-gray-600'}`}>
-                {stats.trend === 'up' ? '+' : stats.trend === 'down' ? '-' : ''}
-                {Math.abs(stats.weeklyAverage - 50)}%
-              </Text>
-            </View>
-          </View>
-        </View>
+        <Animated.View entering={FadeInDown.duration(400).springify()} style={tw`px-5 pt-4 pb-3`}>
+          <Text style={tw`text-2xl font-bold text-slate-900`}>Statistics</Text>
+          <Text style={tw`text-sm text-slate-500 mt-1`}>Track your progress and achievements</Text>
+        </Animated.View>
 
         {/* Period Selector */}
-        <View style={tw`px-5 pb-4`}>
-          <View style={tw`flex-row bg-white rounded-xl p-1`}>
-            {(['week', 'month', 'all'] as const).map((period) => (
-              <Pressable
-                key={period}
-                onPress={() => setSelectedPeriod(period)}
-                style={({ pressed }) => [tw`flex-1 py-2 rounded-lg`, selectedPeriod === period ? tw`bg-indigo-600` : tw`bg-transparent`, pressed && tw`opacity-80`]}
-              >
-                <Text style={[tw`text-center text-sm font-medium`, selectedPeriod === period ? tw`text-white` : tw`text-gray-600`]}>
-                  {period === 'week' ? 'Week' : period === 'month' ? 'Month' : 'All Time'}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
+        <Animated.View entering={FadeInDown.delay(100).duration(400).springify()} style={tw`px-5 pb-4`}>
+          <PeriodSelector selectedPeriod={selectedPeriod} onSelectPeriod={handlePeriodChange} />
+        </Animated.View>
 
-        {/* Motivational Quote */}
-        <View style={tw`px-5 pb-4`}>
-          <LinearGradient colors={['#fef3c7', '#fde68a']} style={tw`rounded-2xl p-4`}>
-            <Text style={tw`text-sm font-medium text-amber-900 leading-5`}>"Success is the sum of small efforts repeated day in and day out."</Text>
-            <Text style={tw`text-xs text-amber-700 mt-1`}>— Robert Collier</Text>
-          </LinearGradient>
-        </View>
-
-        {/* Milestone Card */}
-        {milestone.days > 0 && (
+        {/* Animated Content Container */}
+        <Animated.View style={animatedContentStyle}>
+          {/* Primary Stats Grid */}
           <View style={tw`px-5 pb-4`}>
-            <LinearGradient colors={milestone.reward ? ['#10b981', '#059669'] : ['#6366f1', '#4f46e5']} style={tw`rounded-2xl p-4`}>
-              <View style={tw`flex-row items-center justify-between`}>
-                <View style={tw`flex-1`}>
-                  <Text style={tw`text-white font-semibold text-base`}>{milestone.days} Day Milestone!</Text>
-                  <Text style={tw`text-white/90 text-xs mt-1 leading-4`}>{milestone.message.replace(/[🏆🧠🌟💪🔥✨🚀🌱]/g, '')}</Text>
-                </View>
-                <Text style={tw`text-3xl ml-3`}>{milestone.reward ? '🎁' : '⭐'}</Text>
-              </View>
-            </LinearGradient>
-          </View>
-        )}
+            <View style={tw`flex-row flex-wrap -mx-2`}>
+              <Animated.View key={`streak-${selectedPeriod}`} entering={FadeIn.duration(300)} style={tw`w-1/2 px-2 pb-4`}>
+                <StatCard icon={<StatsIcons.Flame />} value={stats.currentMaxStreak} label="Current Streak" color="orange" bgColor="bg-orange-50" />
+              </Animated.View>
 
-        {/* Primary Stats - 2x2 Grid */}
-        <View style={tw`px-5 pb-4`}>
-          <View style={tw`flex-row flex-wrap -mx-1.5`}>
-            <View style={tw`w-1/2 px-1.5 pb-3`}>
-              <Pressable style={tw`bg-white rounded-xl p-4 shadow-sm active:scale-98`}>
-                <View style={tw`flex-row items-center justify-between mb-2`}>
-                  <Text style={tw`text-2xl`}>🔥</Text>
-                  <Text style={tw`text-2xl font-bold text-gray-900`}>{stats.currentMaxStreak}</Text>
-                </View>
-                <Text style={tw`text-xs text-gray-500`}>Current Streak</Text>
-              </Pressable>
-            </View>
+              <Animated.View key={`best-${selectedPeriod}`} entering={FadeIn.duration(300)} style={tw`w-1/2 px-2 pb-4`}>
+                <StatCard icon={<StatsIcons.Trophy />} value={stats.bestOverallStreak} label="Best Streak" color="amber" bgColor="bg-amber-50" />
+              </Animated.View>
 
-            <View style={tw`w-1/2 px-1.5 pb-3`}>
-              <Pressable style={tw`bg-white rounded-xl p-4 shadow-sm active:scale-98`}>
-                <View style={tw`flex-row items-center justify-between mb-2`}>
-                  <Text style={tw`text-2xl`}>🏆</Text>
-                  <Text style={tw`text-2xl font-bold text-gray-900`}>{stats.bestOverallStreak}</Text>
-                </View>
-                <Text style={tw`text-xs text-gray-500`}>Best Streak</Text>
-              </Pressable>
-            </View>
+              <Animated.View key={`completions-${selectedPeriod}`} entering={FadeIn.duration(300)} style={tw`w-1/2 px-2 pb-4`}>
+                <StatCard icon={<StatsIcons.CheckCircle />} value={stats.totalCompletions} label="Completions" color="emerald" bgColor="bg-emerald-50" />
+              </Animated.View>
 
-            <View style={tw`w-1/2 px-1.5 pb-3`}>
-              <Pressable style={tw`bg-white rounded-xl p-4 shadow-sm active:scale-98`}>
-                <View style={tw`flex-row items-center justify-between mb-2`}>
-                  <Text style={tw`text-2xl`}>✅</Text>
-                  <Text style={tw`text-2xl font-bold text-gray-900`}>{stats.totalCompletions}</Text>
-                </View>
-                <Text style={tw`text-xs text-gray-500`}>Total Done</Text>
-              </Pressable>
-            </View>
-
-            <View style={tw`w-1/2 px-1.5 pb-3`}>
-              <Pressable style={tw`bg-white rounded-xl p-4 shadow-sm active:scale-98`}>
-                <View style={tw`flex-row items-center justify-between mb-2`}>
-                  <Text style={tw`text-2xl`}>💎</Text>
-                  <Text style={tw`text-2xl font-bold text-gray-900`}>{stats.perfectDays}</Text>
-                </View>
-                <Text style={tw`text-xs text-gray-500`}>Perfect Days</Text>
-              </Pressable>
+              <Animated.View key={`perfect-${selectedPeriod}`} entering={FadeIn.duration(300)} style={tw`w-1/2 px-2 pb-4`}>
+                <StatCard icon={<StatsIcons.Diamond />} value={stats.perfectDays} label="Perfect Days" color="violet" bgColor="bg-violet-50" />
+              </Animated.View>
             </View>
           </View>
-        </View>
 
-        {/* Consistency Score */}
-        <View style={tw`px-5 pb-4`}>
-          <View style={tw`bg-white rounded-xl p-4 shadow-sm`}>
-            <View style={tw`flex-row items-center justify-between mb-3`}>
-              <View>
-                <Text style={tw`text-base font-semibold text-gray-900`}>30-Day Consistency</Text>
-                <Text style={tw`text-xs text-gray-500 mt-0.5`}>Keep it above 80% for rewards</Text>
-              </View>
-              <Text style={tw`text-2xl font-bold text-indigo-600`}>{stats.consistency}%</Text>
-            </View>
-            <View style={tw`h-2 bg-gray-100 rounded-full overflow-hidden`}>
-              <View
-                style={[
-                  tw`h-full rounded-full`,
-                  {
-                    width: `${stats.consistency}%`,
-                    backgroundColor: stats.consistency >= 80 ? '#10b981' : stats.consistency >= 60 ? '#3b82f6' : stats.consistency >= 40 ? '#f59e0b' : '#ef4444',
-                  },
-                ]}
-              />
-            </View>
-          </View>
-        </View>
+          {/* Consistency Score */}
+          <Animated.View key={`consistency-${selectedPeriod}`} entering={FadeIn.duration(300)} style={tw`px-5 pb-4`}>
+            <ConsistencyChart consistency={stats.consistency} period={selectedPeriod} />
+          </Animated.View>
 
-        {/* Loading indicator for stats */}
-        {loadingStats && (
-          <View style={tw`px-5 pb-4`}>
-            <View style={tw`bg-white rounded-xl p-4 shadow-sm items-center`}>
-              <ActivityIndicator size="small" color="#6366f1" />
-              <Text style={tw`text-sm text-gray-500 mt-2`}>Loading historical data...</Text>
-            </View>
-          </View>
-        )}
-
-        {/* Secondary Stats */}
-        <View style={tw`px-5 pb-4`}>
-          <Text style={tw`text-sm font-semibold text-gray-700 mb-2`}>Today's Progress</Text>
-          <View style={tw`flex-row -mx-1`}>
-            <View style={tw`flex-1 px-1`}>
-              <View style={tw`bg-white rounded-xl p-3 shadow-sm items-center`}>
-                <Text style={tw`text-xl font-bold text-blue-600`}>
-                  {stats.todayCompleted}/{stats.totalActiveHabits}
-                </Text>
-                <Text style={tw`text-xs text-gray-500 mt-1`}>Today</Text>
-              </View>
-            </View>
-
-            <View style={tw`flex-1 px-1`}>
-              <View style={tw`bg-white rounded-xl p-3 shadow-sm items-center`}>
-                <Text style={tw`text-xl font-bold text-green-600`}>{stats.weeklyAverage}%</Text>
-                <Text style={tw`text-xs text-gray-500 mt-1`}>Week Avg</Text>
-              </View>
-            </View>
-
-            <View style={tw`flex-1 px-1`}>
-              <View style={tw`bg-white rounded-xl p-3 shadow-sm items-center`}>
-                <Text style={tw`text-xl font-bold text-purple-600`}>{stats.monthlyGoal}</Text>
-                <Text style={tw`text-xs text-gray-500 mt-1`}>Month Goal</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Habit Types */}
-        <View style={tw`px-5 pb-4`}>
-          <Text style={tw`text-sm font-semibold text-gray-700 mb-2`}>Habit Types</Text>
-          <View style={tw`flex-row gap-2`}>
-            <View style={tw`flex-1 bg-white rounded-xl p-3 shadow-sm`}>
-              <View style={tw`flex-row items-center justify-between`}>
-                <View>
-                  <Text style={tw`text-xl font-bold text-green-600`}>{stats.buildingHabits}</Text>
-                  <Text style={tw`text-xs text-gray-600 mt-0.5`}>Building</Text>
+          {/* Today's Progress */}
+          <Animated.View key={`today-${selectedPeriod}`} entering={FadeIn.duration(300)} style={tw`px-5 pb-4`}>
+            <Text style={tw`text-sm font-semibold text-slate-700 mb-3`}>Today's Progress</Text>
+            <View style={tw`flex-row gap-3`}>
+              <View style={tw`flex-1`}>
+                <View style={tw`bg-white rounded-2xl p-4 shadow-sm border border-slate-100`}>
+                  <View style={tw`w-10 h-10 bg-blue-50 rounded-xl items-center justify-center mb-3`}>
+                    <StatsIcons.Activity />
+                  </View>
+                  <Text style={tw`text-2xl font-bold text-slate-900`}>
+                    {stats.todayCompleted}/{stats.totalActiveHabits}
+                  </Text>
+                  <Text style={tw`text-xs text-slate-500 mt-1`}>Completed Today</Text>
                 </View>
-                <Text style={tw`text-2xl`}>🌱</Text>
               </View>
-            </View>
 
-            <View style={tw`flex-1 bg-white rounded-xl p-3 shadow-sm`}>
-              <View style={tw`flex-row items-center justify-between`}>
-                <View>
-                  <Text style={tw`text-xl font-bold text-red-600`}>{stats.quittingHabits}</Text>
-                  <Text style={tw`text-xs text-gray-600 mt-0.5`}>Quitting</Text>
+              <View style={tw`flex-1`}>
+                <View style={tw`bg-white rounded-2xl p-4 shadow-sm border border-slate-100`}>
+                  <View style={tw`w-10 h-10 bg-indigo-50 rounded-xl items-center justify-center mb-3`}>
+                    <StatsIcons.Target />
+                  </View>
+                  <Text style={tw`text-2xl font-bold text-slate-900`}>{formatPercentage(stats.weeklyAverage)}</Text>
+                  <Text style={tw`text-xs text-slate-500 mt-1`}>Weekly Average</Text>
                 </View>
-                <Text style={tw`text-2xl`}>🚫</Text>
               </View>
             </View>
-          </View>
-        </View>
+          </Animated.View>
 
-        {/* Champion Habit */}
-        {stats.longestHabit && (
-          <View style={tw`px-5 pb-2`}>
-            <View style={tw`bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4`}>
-              <Text style={tw`text-xs font-semibold text-indigo-700 mb-1`}>CHAMPION HABIT</Text>
-              <Text style={tw`text-base font-semibold text-gray-900`}>{stats.longestHabit.name}</Text>
-              <Text style={tw`text-xs text-gray-600 mt-1`}>
-                {stats.longestHabit.completedDays.length} days completed • {stats.longestHabit.currentStreak} day streak
-              </Text>
+          {/* Habit Types */}
+          <Animated.View key={`types-${selectedPeriod}`} entering={FadeIn.duration(300)} style={tw`px-5 pb-4`}>
+            <Text style={tw`text-sm font-semibold text-slate-700 mb-3`}>Habit Types</Text>
+            <View style={tw`flex-row gap-3`}>
+              <View style={tw`flex-1`}>
+                <LinearGradient colors={['#10b981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-2xl p-4`}>
+                  <View style={tw`flex-row items-center justify-between`}>
+                    <View>
+                      <Text style={tw`text-2xl font-bold text-white`}>{stats.buildingHabits}</Text>
+                      <Text style={tw`text-xs text-white/80 mt-1`}>Building</Text>
+                    </View>
+                    <View style={tw`w-10 h-10 bg-white/20 rounded-xl items-center justify-center`}>
+                      <StatsIcons.TrendUp color="#ffffff" />
+                    </View>
+                  </View>
+                </LinearGradient>
+              </View>
+
+              <View style={tw`flex-1`}>
+                <LinearGradient colors={['#ef4444', '#dc2626']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-2xl p-4`}>
+                  <View style={tw`flex-row items-center justify-between`}>
+                    <View>
+                      <Text style={tw`text-2xl font-bold text-white`}>{stats.quittingHabits}</Text>
+                      <Text style={tw`text-xs text-white/80 mt-1`}>Quitting</Text>
+                    </View>
+                    <View style={tw`w-10 h-10 bg-white/20 rounded-xl items-center justify-center`}>
+                      <StatsIcons.TrendDown color="#ffffff" />
+                    </View>
+                  </View>
+                </LinearGradient>
+              </View>
             </View>
-          </View>
-        )}
+          </Animated.View>
+
+          {/* Champion Habit */}
+          {stats.longestHabit && (
+            <Animated.View key={`champion-${selectedPeriod}`} entering={FadeIn.duration(300)} style={tw`px-5 pb-4`}>
+              <ChampionHabitCard habit={stats.longestHabit} />
+            </Animated.View>
+          )}
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );

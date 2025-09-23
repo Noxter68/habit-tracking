@@ -78,6 +78,7 @@ const DynamicCalendarHeader: React.FC<DynamicCalendarHeaderProps> = ({ selectedH
   const isToday = getLocalDateString(selectedDate) === getLocalDateString(new Date());
   const beforeCreation = isBeforeHabitCreation(selectedDate);
   const pastDay = isPastDay(selectedDate);
+  const progressKey = `progress-${getLocalDateString(selectedDate)}-${dateStats.percentage}`;
 
   if (!selectedHabit) {
     return (
@@ -103,7 +104,7 @@ const DynamicCalendarHeader: React.FC<DynamicCalendarHeaderProps> = ({ selectedH
         </View>
 
         {/* Dynamic Progress Circle */}
-        <Animated.View key={`${selectedDate.toISOString()}-${dateStats.percentage}`} entering={FadeInUp.duration(200).springify()} style={tw`relative`}>
+        <Animated.View key={progressKey} entering={FadeInUp.duration(200).springify()} style={tw`relative`}>
           <View style={tw`w-16 h-16 rounded-full bg-white/10 items-center justify-center`}>
             <Text style={tw`text-white font-bold text-lg`}>{dateStats.percentage}%</Text>
             {dateStats.tasksCompleted > 0 && (
