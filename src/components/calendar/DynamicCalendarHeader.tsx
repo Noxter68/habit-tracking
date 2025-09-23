@@ -1,9 +1,8 @@
 // src/components/calendar/DynamicCalendarHeader.tsx
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInUp, useAnimatedStyle, withSpring } from 'react-native-reanimated';
-import { MiniFlameIcon, MiniTrophyIcon, MiniCalendarIcon, MiniCheckIcon, QuestCompleteIcon, KeepGoingIcon, TomorrowStarIcon } from '../icons/MiniIcons';
 import tw from '../../lib/tailwind';
 import { Habit } from '../../types';
 import { StatsIcons } from '../icons/StatsIcons';
@@ -14,34 +13,110 @@ interface DynamicCalendarHeaderProps {
   getLocalDateString: (date: Date) => string;
 }
 
-const DynamicCalendarHeader: React.FC<DynamicCalendarHeaderProps> = ({ selectedHabit, selectedDate, getLocalDateString }) => {
-  // Helper functions for date checks
-  const isBeforeHabitCreation = (date: Date): boolean => {
-    if (!selectedHabit) return false;
-    const creationDate = new Date(selectedHabit.createdAt);
-    creationDate.setHours(0, 0, 0, 0);
-    const checkDate = new Date(date);
-    checkDate.setHours(0, 0, 0, 0);
-    return checkDate < creationDate;
-  };
+interface DateStats {
+  percentage: number;
+  completed: boolean;
+  partial: boolean;
+  tasksCompleted: number;
+  totalTasks: number;
+}
 
-  const isPastDay = (date: Date): boolean => {
+// Separate component for stat item to prevent re-renders
+const StatItem = React.memo(({ icon, iconColor, label, value }: { icon: React.ReactElement; iconColor: string; label: string; value: number }) => (
+  <View style={tw`flex-1 bg-white/10 rounded-lg px-3 py-2`}>
+    <View style={tw`flex-row items-center justify-between`}>
+      <View style={tw`flex-row items-center`}>
+        {icon}
+        <Text style={tw`text-white/70 text-sm ml-1.5`}>{label}</Text>
+      </View>
+      <Text style={tw`text-white text-base font-bold`}>{value}</Text>
+    </View>
+  </View>
+));
+
+StatItem.displayName = 'StatItem';
+
+// Progress indicator component
+const ProgressIndicator = React.memo(({ percentage }: { percentage: number }) => {
+  const animatedStyle = useAnimatedStyle(() => ({
+    width: `${percentage}%`,
+    transform: [
+      {
+        translateX: withSpring(0, {
+          damping: 15,
+          stiffness: 100,
+        }),
+      },
+    ],
+  }));
+
+  return (
+    <View style={tw`h-1.5 bg-white/20 rounded-full overflow-hidden relative`}>
+      <Animated.View
+        style={[
+          tw`h-full rounded-full`,
+          {
+            backgroundColor: percentage === 100 ? '#10b981' : '#fbbf24',
+          },
+          animatedStyle,
+        ]}
+      >
+        <LinearGradient colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.3)', 'rgba(255,255,255,0)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`absolute inset-0`} />
+      </Animated.View>
+
+      <View
+        style={[
+          tw`absolute top-1/2 w-2 h-2 bg-white rounded-full -mt-1`,
+          {
+            left: `${Math.max(0, Math.min(98, percentage - 2))}%`,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.2,
+            shadowRadius: 2,
+          },
+        ]}
+      />
+    </View>
+  );
+});
+
+ProgressIndicator.displayName = 'ProgressIndicator';
+
+const DynamicCalendarHeader: React.FC<DynamicCalendarHeaderProps> = ({ selectedHabit, selectedDate, getLocalDateString }) => {
+  // Memoize date calculations
+  const dateInfo = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const checkDate = new Date(date);
+
+    const checkDate = new Date(selectedDate);
     checkDate.setHours(0, 0, 0, 0);
-    return checkDate < today;
-  };
+
+    const isToday = checkDate.getTime() === today.getTime();
+    const isPastDay = checkDate < today;
+
+    let beforeCreation = false;
+    if (selectedHabit) {
+      const creationDate = new Date(selectedHabit.createdAt);
+      creationDate.setHours(0, 0, 0, 0);
+      beforeCreation = checkDate < creationDate;
+    }
+
+    return { isToday, isPastDay, beforeCreation };
+  }, [selectedDate, selectedHabit?.createdAt]);
 
   // Calculate stats for selected date
-  const getDateStats = () => {
-    if (!selectedHabit) return { percentage: 0, completed: false, partial: false, tasksCompleted: 0, totalTasks: 0 };
+  const dateStats = useMemo((): DateStats => {
+    if (!selectedHabit) {
+      return { percentage: 0, completed: false, partial: false, tasksCompleted: 0, totalTasks: 0 };
+    }
 
     const dateString = getLocalDateString(selectedDate);
     const dayTasks = selectedHabit.dailyTasks[dateString];
     const totalTasks = selectedHabit.tasks.length;
 
-    if (!dayTasks) return { percentage: 0, completed: false, partial: false, tasksCompleted: 0, totalTasks };
+    if (!dayTasks) {
+      return { percentage: 0, completed: false, partial: false, tasksCompleted: 0, totalTasks };
+    }
 
     const tasksCompleted = dayTasks.completedTasks.length;
     const percentage = totalTasks > 0 ? Math.round((tasksCompleted / totalTasks) * 100) : 0;
@@ -53,9 +128,10 @@ const DynamicCalendarHeader: React.FC<DynamicCalendarHeaderProps> = ({ selectedH
       tasksCompleted,
       totalTasks,
     };
-  };
+  }, [selectedHabit, selectedDate, getLocalDateString]);
 
-  const getMonthlyStats = () => {
+  // Calculate monthly stats
+  const monthlyAchievements = useMemo(() => {
     if (!selectedHabit) return 0;
 
     const currentMonth = selectedDate.getMonth();
@@ -72,21 +148,20 @@ const DynamicCalendarHeader: React.FC<DynamicCalendarHeaderProps> = ({ selectedH
     });
 
     return monthlyCompleted;
-  };
+  }, [selectedHabit, selectedDate]);
 
-  const dateStats = getDateStats();
-  const monthlyAchievements = getMonthlyStats();
-  const isToday = getLocalDateString(selectedDate) === getLocalDateString(new Date());
-  const beforeCreation = isBeforeHabitCreation(selectedDate);
-  const pastDay = isPastDay(selectedDate);
-  const progressKey = `progress-${getLocalDateString(selectedDate)}-${dateStats.percentage}`;
+  // Format date display
+  const dateDisplay = useMemo(() => {
+    return selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }, [selectedDate]);
 
+  // Empty habit state
   if (!selectedHabit) {
     return (
       <LinearGradient colors={['#6366f1', '#8b5cf6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`px-4 py-3`}>
         <View style={tw`flex-row items-center justify-between`}>
           <Text style={tw`text-base font-bold text-white`}>Quest Calendar</Text>
-          <Text style={tw`text-xs text-white/70`}>{selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</Text>
+          <Text style={tw`text-xs text-white/70`}>{dateDisplay}</Text>
         </View>
       </LinearGradient>
     );
@@ -94,18 +169,18 @@ const DynamicCalendarHeader: React.FC<DynamicCalendarHeaderProps> = ({ selectedH
 
   return (
     <LinearGradient colors={['#6366f1', '#8b5cf6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`px-4 pt-3.5 pb-3.5`}>
-      {/* Compact Title Bar with Dynamic Date Progress */}
+      {/* Title Bar with Progress */}
       <View style={tw`flex-row items-center justify-between mb-2.5`}>
         <View style={tw`flex-1`}>
           <Text style={tw`text-lg font-bold text-white`}>{selectedHabit.name}</Text>
           <Text style={tw`text-sm text-white/60`}>
-            {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-            {isToday && ' • Today'}
+            {dateDisplay}
+            {dateInfo.isToday && ' • Today'}
           </Text>
         </View>
 
-        {/* Dynamic Progress Circle */}
-        <Animated.View key={progressKey} entering={FadeInUp.duration(200).springify()} style={tw`relative`}>
+        {/* Progress Circle */}
+        <Animated.View entering={FadeInUp.duration(200).springify()} style={tw`relative`}>
           <View style={tw`w-16 h-16 rounded-full bg-white/10 items-center justify-center`}>
             <Text style={tw`text-white font-bold text-lg`}>{dateStats.percentage}%</Text>
             {dateStats.tasksCompleted > 0 && (
@@ -124,117 +199,47 @@ const DynamicCalendarHeader: React.FC<DynamicCalendarHeaderProps> = ({ selectedH
 
       {/* Stats Row */}
       <Animated.View entering={FadeIn.duration(200)} style={tw`flex-row gap-2`}>
-        <View style={tw`flex-1 bg-white/10 rounded-lg px-3 py-2`}>
-          <View style={tw`flex-row items-center justify-between`}>
-            <View style={tw`flex-row items-center`}>
-              <StatsIcons.Flame size={14} color="#fbbf24" />
-              <Text style={tw`text-white/70 text-sm ml-1.5`}>Streak</Text>
-            </View>
-            <Text style={tw`text-white text-base font-bold`}>{selectedHabit.currentStreak}</Text>
-          </View>
-        </View>
-
-        <View style={tw`flex-1 bg-white/10 rounded-lg px-3 py-2`}>
-          <View style={tw`flex-row items-center justify-between`}>
-            <View style={tw`flex-row items-center`}>
-              <StatsIcons.Trophy size={14} color="#34d399" />
-              <Text style={tw`text-white/70 text-sm ml-1.5`}>Best</Text>
-            </View>
-            <Text style={tw`text-white text-base font-bold`}>{selectedHabit.bestStreak}</Text>
-          </View>
-        </View>
-
-        <View style={tw`flex-1 bg-white/10 rounded-lg px-3 py-2`}>
-          <View style={tw`flex-row items-center justify-between`}>
-            <View style={tw`flex-row items-center`}>
-              <StatsIcons.Calendar size={14} color="#a78bfa" />
-              <Text style={tw`text-white/70 text-sm ml-1.5`}>Month</Text>
-            </View>
-            <Text style={tw`text-white text-base font-bold`}>{monthlyAchievements}</Text>
-          </View>
-        </View>
+        <StatItem icon={<StatsIcons.Flame size={14} color="#fbbf24" />} iconColor="#fbbf24" label="Streak" value={selectedHabit.currentStreak} />
+        <StatItem icon={<StatsIcons.Trophy size={14} color="#34d399" />} iconColor="#34d399" label="Best" value={selectedHabit.bestStreak} />
+        <StatItem icon={<StatsIcons.Calendar size={14} color="#a78bfa" />} iconColor="#a78bfa" label="Month" value={monthlyAchievements} />
       </Animated.View>
 
-      {/* Progress Bar and Motivational Messages */}
+      {/* Progress Bar Section */}
       {dateStats.percentage > 0 && (
         <Animated.View entering={FadeIn.duration(300)} style={tw`mt-2.5`}>
-          <View style={tw`h-1.5 bg-white/20 rounded-full overflow-hidden relative`}>
-            <Animated.View
-              style={[
-                tw`h-full rounded-full`,
-                {
-                  width: `${dateStats.percentage}%`,
-                  backgroundColor: dateStats.completed ? '#10b981' : '#fbbf24',
-                },
-                useAnimatedStyle(() => ({
-                  transform: [
-                    {
-                      translateX: withSpring(0, {
-                        damping: 15,
-                        stiffness: 100,
-                      }),
-                    },
-                  ],
-                })),
-              ]}
-            >
-              <LinearGradient colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.3)', 'rgba(255,255,255,0)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`absolute inset-0`} />
-            </Animated.View>
+          <ProgressIndicator percentage={dateStats.percentage} />
 
-            <Animated.View
-              style={[
-                tw`absolute top-1/2 w-2 h-2 bg-white rounded-full -mt-1`,
-                {
-                  left: `${Math.max(0, Math.min(98, dateStats.percentage - 2))}%`,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 2,
-                },
-              ]}
-            />
-          </View>
-
-          {/* Quest Complete Message */}
+          {/* Status Messages */}
           {dateStats.completed && (
             <Animated.View entering={FadeInUp.delay(200).duration(400).springify()} style={tw`flex-row items-center justify-center mt-2 bg-green-500/15 rounded-lg py-1.5 px-3`}>
-              <StatsIcons.Star size={14} />
+              <StatsIcons.Star size={14} color="#ffffff" />
               <Text style={tw`text-white/90 text-sm ml-2 font-semibold tracking-wide`}>Quest Complete!</Text>
               <View style={tw`ml-2 flex-row`}>
-                {[...Array(3)].map((_, i) => (
-                  <Animated.View key={i} entering={FadeIn.delay(400 + i * 100).duration(300)} style={tw`w-1 h-1 bg-yellow-400 rounded-full mx-0.5`} />
+                {[0, 1, 2].map((i) => (
+                  <Animated.View key={`star-${i}`} entering={FadeIn.delay(400 + i * 100).duration(300)} style={tw`w-1 h-1 bg-yellow-400 rounded-full mx-0.5`} />
                 ))}
               </View>
             </Animated.View>
           )}
 
-          {/* Partial Progress Message */}
           {dateStats.partial && (
             <Animated.View entering={FadeInUp.delay(200).duration(400).springify()} style={tw`flex-row items-center justify-center mt-2 bg-yellow-500/15 rounded-lg py-1.5 px-3`}>
-              <KeepGoingIcon size={14} />
+              <StatsIcons.Target size={14} color="#ffffff" />
               <Text style={tw`text-white/90 text-sm ml-2 font-semibold tracking-wide`}>
                 Keep Going! {dateStats.tasksCompleted} of {dateStats.totalTasks} done
               </Text>
-              <View style={tw`ml-2`}>
-                <Animated.View entering={FadeIn.delay(400).duration(600)} style={tw`w-2 h-2 bg-yellow-400/60 rounded-full`} />
-              </View>
             </Animated.View>
           )}
         </Animated.View>
       )}
 
       {/* Missed Day Message */}
-      {dateStats.percentage === 0 && !beforeCreation && pastDay && (
+      {dateStats.percentage === 0 && !dateInfo.beforeCreation && dateInfo.isPastDay && (
         <Animated.View entering={FadeInUp.delay(200).duration(400).springify()} style={tw`mt-2.5`}>
           <View style={tw`bg-red-500/10 rounded-lg py-1.5 px-3`}>
             <View style={tw`flex-row items-center justify-center`}>
-              <TomorrowStarIcon size={14} />
+              <StatsIcons.Star size={14} color="#ffffff" />
               <Text style={tw`text-white/80 text-sm ml-2 font-medium tracking-wide`}>Tomorrow is a new day!</Text>
-              <View style={tw`ml-2 flex-row`}>
-                {[...Array(2)].map((_, i) => (
-                  <Animated.View key={i} entering={FadeIn.delay(400 + i * 150).duration(400)} style={tw`w-0.5 h-3 bg-red-400/40 rounded-full mx-0.5`} />
-                ))}
-              </View>
             </View>
           </View>
         </Animated.View>
@@ -243,4 +248,4 @@ const DynamicCalendarHeader: React.FC<DynamicCalendarHeaderProps> = ({ selectedH
   );
 };
 
-export default DynamicCalendarHeader;
+export default React.memo(DynamicCalendarHeader);
