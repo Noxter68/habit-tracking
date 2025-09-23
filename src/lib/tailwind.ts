@@ -5,6 +5,30 @@ const tw = create({
   theme: {
     extend: {
       colors: {
+        achievement: {
+          // Base colors for achievements
+          amber: {
+            50: '#fef3c7',
+            100: '#fde68a',
+            200: '#fcd34d',
+            300: '#fbbf24',
+            400: '#fdba74',
+            500: '#fb923c',
+            600: '#f59e0b',
+            700: '#d97706',
+            800: '#b45309',
+            900: '#92400e',
+          },
+          // Neutral colors for locked states
+          neutral: {
+            light: '#fafaf9',
+            medium: '#f5f5f4',
+            dark: '#e7e5e4',
+            darker: '#d6d3d1',
+            darkest: '#a8a29e',
+            stone: '#78716c',
+          },
+        },
         // Calm, peaceful colors palette
         primary: {
           50: '#f0fdf4',
@@ -58,5 +82,40 @@ const tw = create({
     },
   },
 });
+
+// Export gradient configurations
+export const achievementGradients = {
+  // Tier-specific gradients
+  tiers: {
+    Novice: ['#fef3c7', '#fde68a'],
+    'Rising Hero': ['#fed7aa', '#fdba74'],
+    'Mastery Awakens': ['#fde68a', '#fb923c'],
+    'Legendary Ascent': ['#fbbf24', '#f59e0b'],
+    'Epic Mastery': ['#f59e0b', '#d97706'],
+    'Mythic Glory': ['#d97706', '#92400e'],
+  },
+
+  // State-based gradients
+  unlocked: {
+    border: ['#d97706', '#b45309', '#92400e'],
+    header: ['#fef3c7', '#fde68a', '#fcd34d'],
+    progress: ['#fed7aa', '#fdba74', '#fb923c'],
+    button: ['#d97706', '#b45309', '#92400e'],
+    progressBar: ['#d97706', '#b45309'],
+  },
+
+  locked: {
+    border: ['#fef3c7', '#fde68a', '#fcd34d'],
+    header: ['#fafaf9', '#f5f5f4', '#e7e5e4'],
+    card: ['#fafaf9', '#f5f5f4'],
+    progress: ['#fef3c7', '#fde68a', '#fcd34d'],
+    button: ['#d6d3d1', '#a8a29e', '#78716c'],
+  },
+
+  // Common gradients
+  hero: ['#fef3c7', '#fde68a'],
+  levelProgress: ['#fbbf24', '#d97706'],
+  overlay: ['rgba(254, 243, 199, 0.2)', 'rgba(255, 255, 255, 0)'],
+};
 
 export default tw;
