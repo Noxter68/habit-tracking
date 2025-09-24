@@ -83,7 +83,7 @@ const Dashboard: React.FC = () => {
     setRefreshTrigger((prev) => prev + 1);
     setRefreshing(false);
   };
-
+  // console.log('userStats', userStats);
   const handleXPCollected = (amount: number) => {
     // Update local state optimistically
     setUserStats((prev) => {

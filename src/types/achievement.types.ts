@@ -26,6 +26,8 @@ export interface BackendData {
   currentStreak: number;
   perfectDays: number;
   totalHabits: number;
+  levelProgress: number;
+  currentLevel: number;
 }
 
 export type FilterType = 'all' | 'unlocked' | 'locked';

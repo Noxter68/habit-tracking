@@ -46,6 +46,8 @@ const AchievementsScreen: React.FC = () => {
     currentStreak: 0,
     perfectDays: 0,
     totalHabits: 0,
+    currentLevel: 1,
+    levelProgress: 0,
   });
 
   // Effects
@@ -76,6 +78,8 @@ const AchievementsScreen: React.FC = () => {
         currentStreak: habitStats.totalDaysTracked || 0,
         perfectDays,
         totalHabits: habits.length,
+        levelProgress: xpStats?.level_progress || 0,
+        currentLevel: xpStats?.current_level || achievementsContext.currentLevel,
       });
 
       await checkAndUnlockNewAchievements({
@@ -125,7 +129,7 @@ const AchievementsScreen: React.FC = () => {
   const currentLevel = achievementsContext.currentLevel;
   const currentTitle = getAchievementByLevel(currentLevel);
   const nextTitle = getAchievementByLevel(currentLevel + 1);
-  const levelProgress = ((backendData.totalCompletions % 10) / 10) * 100;
+  const levelProgress = backendData.levelProgress || 0;
 
   const isAchievementUnlocked = (achievement: Achievement): boolean => {
     if (achievement.level <= currentLevel) return true;

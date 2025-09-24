@@ -46,8 +46,12 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
               <Text style={tw`text-amber-800 font-bold text-xs`}>{Math.round(levelProgress)}%</Text>
             </View>
 
-            <View style={tw`h-5 rounded-full overflow-hidden`}>
-              <ImageBackground source={require('../../../assets/interface/rope.png')} style={[tw`h-full rounded-full`, { width: `${levelProgress}%` }]} />
+            <View style={tw`h-5 bg-achievement-amber-200 rounded-full overflow-hidden`}>
+              {levelProgress > 0 ? (
+                <ImageBackground source={require('../../../assets/interface/rope.png')} style={[tw`h-full rounded-full`, { width: `${levelProgress}%` }]} />
+              ) : (
+                <View style={tw`h-full w-full bg-achievement-amber-200 rounded-full`} />
+              )}
             </View>
           </View>
         )}
