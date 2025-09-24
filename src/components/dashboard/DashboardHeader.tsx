@@ -9,6 +9,10 @@ import tw, { achievementGradients } from '../../lib/tailwind';
 import { getGreeting } from '../../utils/progressStatus';
 import { achievementTitles } from '../../utils/achievements';
 import { Audio } from 'expo-av';
+import { HabitService } from '../../services/habitService';
+import { XPService } from '../../services/xpService';
+import { useAuth } from '../../context/AuthContext';
+import { ImageBackground } from 'expo-image';
 
 interface DashboardHeaderProps {
   userTitle: string;
@@ -20,7 +24,54 @@ interface DashboardHeaderProps {
   completedTasksToday?: number;
   totalTasksToday?: number;
   onXPCollected?: (amount: number) => void;
+  refreshTrigger?: number;
+  currentAchievement?: any; // Added for achievement icon
+  currentLevelXP?: number; // Added for XP progress
+  xpForNextLevel?: number; // Added for XP progress
+  levelProgress?: number; // Added for progress percentage
 }
+
+// Achievement Icon Component
+const AchievementIcon: React.FC<{
+  achievement: any;
+  size?: number;
+  onPress?: () => void;
+}> = ({ achievement, size = 56, onPress }) => {
+  if (!achievement?.image) {
+    // Fallback to Crown icon if no achievement image
+    return (
+      <Pressable onPress={onPress} style={tw`w-14 h-14 bg-achievement-amber-100 rounded-2xl items-center justify-center`}>
+        <Crown size={24} color="#d97706" />
+      </Pressable>
+    );
+  }
+
+  // Map achievement image numbers to actual image assets
+  const getAchievementImage = (imageId: number) => {
+    const imageMap: { [key: number]: any } = {
+      1: require('../../../assets/achievements/level-1.png'),
+      2: require('../../../assets/achievements/level-2.png'),
+      3: require('../../../assets/achievements/level-3.png'),
+      4: require('../../../assets/achievements/level-4.png'),
+      5: require('../../../assets/achievements/level-5.png'),
+      6: require('../../../assets/achievements/level-6.png'),
+      7: require('../../../assets/achievements/level-7.png'),
+      8: require('../../../assets/achievements/level-8.png'),
+      9: require('../../../assets/achievements/level-9.png'),
+      10: require('../../../assets/achievements/level-10.png'),
+      // Add more mappings as needed
+    };
+
+    // Return the image or a default if not found
+    return imageMap[imageId] || require('../../../assets/achievements/level-1.png');
+  };
+
+  return (
+    <Pressable onPress={onPress} style={({ pressed }) => [tw`w-14 h-14 bg-achievement-amber-100 rounded-2xl items-center justify-center overflow-hidden`, pressed && tw`scale-[0.95]`]}>
+      <Image source={achievement.image} style={{ width: size, height: size }} resizeMode="cover" />
+    </Pressable>
+  );
+};
 
 // Floating XP Animation Component
 const FloatingXP: React.FC<{
@@ -30,310 +81,144 @@ const FloatingXP: React.FC<{
 }> = ({ amount, show, onComplete }) => {
   const translateY = useSharedValue(0);
   const opacity = useSharedValue(0);
-  const scale = useSharedValue(0.5);
 
   useEffect(() => {
     if (show) {
       opacity.value = withTiming(1, { duration: 200 });
-      scale.value = withSpring(1.2, {}, () => {
-        scale.value = withSpring(1);
-      });
-      translateY.value = withTiming(-100, { duration: 1500 }, () => {
-        opacity.value = withTiming(0, { duration: 300 }, () => {
-          if (onComplete) runOnJS(onComplete)();
-        });
-      });
+      translateY.value = withSequence(
+        withTiming(-60, { duration: 800 }),
+        withTiming(-80, { duration: 400 }, () => {
+          runOnJS(() => onComplete?.())();
+        })
+      );
+      opacity.value = withTiming(0, { duration: 400 }, undefined, true);
+    } else {
+      opacity.value = 0;
+      translateY.value = 0;
     }
   }, [show]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    marginLeft: -50,
-    marginTop: -20,
     opacity: opacity.value,
-    transform: [{ translateY: translateY.value }, { scale: scale.value }],
-    zIndex: 1000,
+    transform: [{ translateY: translateY.value }],
   }));
 
   if (!show) return null;
 
   return (
-    <Animated.View style={animatedStyle}>
-      <LinearGradient colors={achievementGradients.unlocked.button} style={tw`rounded-full px-6 py-3 shadow-xl`}>
-        <Text style={tw`text-white font-black text-xl`}>+{amount} XP</Text>
+    <Animated.View style={[tw`absolute top-0 right-4 z-50`, animatedStyle]}>
+      <LinearGradient colors={achievementGradients.tiers} style={tw`px-4 py-2 rounded-full shadow-xl`}>
+        <Text style={tw`text-white font-bold text-lg`}>+{amount} XP</Text>
       </LinearGradient>
     </Animated.View>
   );
 };
 
-// Collectible Sparkle Particles
-const SparkleParticles: React.FC<{ show: boolean }> = ({ show }) => {
-  const particles = Array.from({ length: 8 });
-
-  return (
-    <>
-      {show &&
-        particles.map((_, index) => {
-          const angle = (index * 45 * Math.PI) / 180;
-          const distance = 60;
-          const x = Math.cos(angle) * distance;
-          const y = Math.sin(angle) * distance;
-
-          return (
-            <Animated.View
-              key={index}
-              entering={ZoomIn.delay(index * 50).duration(300)}
-              exiting={FadeOut.duration(500)}
-              style={[
-                tw`absolute`,
-                {
-                  top: '50%',
-                  left: '50%',
-                  marginLeft: x,
-                  marginTop: y,
-                },
-              ]}
-            >
-              <Text style={tw`text-2xl`}>✨</Text>
-            </Animated.View>
-          );
-        })}
-    </>
-  );
-};
-
-// Level Badge with Achievement Image
-const LevelBadge: React.FC<{ level: number; size?: number }> = ({ level, size = 72 }) => {
-  const rotation = useSharedValue(0);
-  const scale = useSharedValue(1);
-
-  // Get the achievement for current level
-  const currentAchievement = achievementTitles.find((t) => t.level === level);
-
-  useEffect(() => {
-    // Very subtle rotation animation
-    rotation.value = withRepeat(withSequence(withTiming(-3, { duration: 3000 }), withTiming(3, { duration: 3000 })), -1, true);
-
-    // Gentle pulse animation for milestone levels
-    if (level % 5 === 0) {
-      scale.value = withRepeat(withSequence(withTiming(1.05, { duration: 2000 }), withTiming(1, { duration: 2000 })), -1, true);
-    }
-  }, [level]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.value}deg` }, { scale: scale.value }],
-  }));
-
-  // If we have the achievement image, show it
-  if (currentAchievement?.image) {
-    return (
-      <Animated.View style={animatedStyle}>
-        <View style={tw`relative`}>
-          <LinearGradient colors={['rgba(254, 243, 199, 0.3)', 'rgba(253, 230, 138, 0.3)']} style={tw`absolute -inset-1 rounded-full`} />
-          <Image
-            source={currentAchievement.image}
-            style={{
-              width: size,
-              height: size,
-            }}
-            resizeMode="contain"
-          />
-          <View style={tw`absolute -bottom-2 -right-2 bg-achievement-amber-800 rounded-full px-2 py-1 shadow-lg border-2 border-white`}>
-            <Text style={tw`text-sm font-black text-white`}>{level}</Text>
-          </View>
-        </View>
-      </Animated.View>
-    );
-  }
-
-  // Fallback to icon-based badge if no image
-  const getBadgeIcon = () => {
-    if (level >= 25) return Crown;
-    if (level >= 15) return Shield;
-    if (level >= 10) return Star;
-    if (level >= 5) return Trophy;
-    return Zap;
-  };
-
-  const BadgeIcon = getBadgeIcon();
-
-  return (
-    <Animated.View style={animatedStyle}>
-      <View style={tw`relative`}>
-        <LinearGradient
-          colors={
-            level >= 25
-              ? achievementGradients.tiers['Mythic Glory']
-              : level >= 15
-              ? achievementGradients.tiers['Epic Mastery']
-              : level >= 10
-              ? achievementGradients.tiers['Legendary Ascent']
-              : achievementGradients.tiers['Rising Hero']
-          }
-          style={[tw`rounded-full items-center justify-center shadow-lg`, { width: size, height: size }]}
-        >
-          <BadgeIcon size={size * 0.45} color="#fff" strokeWidth={2.5} />
-        </LinearGradient>
-        <View style={tw`absolute -bottom-2 -right-2 bg-achievement-amber-800 rounded-full px-2 py-1 shadow-lg border-2 border-white`}>
-          <Text style={tw`text-sm font-black text-white`}>{level}</Text>
-        </View>
-      </View>
-    </Animated.View>
-  );
-};
-
-// XP Progress Bar with Animation
-const XPProgressBar: React.FC<{
-  currentXP: number;
-  nextLevelXP: number;
-  level: number;
-  animateIncrease?: boolean;
-}> = ({ currentXP, nextLevelXP, level, animateIncrease = false }) => {
-  const progressPercentage = (currentXP / nextLevelXP) * 100;
-  const animatedWidth = useSharedValue(progressPercentage);
-  const glowOpacity = useSharedValue(0);
-
-  useEffect(() => {
-    if (animateIncrease) {
-      // Glow effect when XP increases
-      glowOpacity.value = withSequence(withTiming(1, { duration: 300 }), withTiming(0, { duration: 500 }));
-    }
-    animatedWidth.value = withSpring(progressPercentage, {
-      damping: 15,
-      stiffness: 150,
-    });
-  }, [progressPercentage, animateIncrease]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    width: `${animatedWidth.value}%`,
-  }));
-
-  const glowStyle = useAnimatedStyle(() => ({
-    opacity: glowOpacity.value,
-  }));
-
-  return (
-    <View style={tw`mt-3`}>
-      <View style={tw`flex-row items-center justify-between mb-1`}>
-        <Text style={tw`text-xs font-bold text-achievement-amber-700`}>LEVEL {level} PROGRESS</Text>
-        <Text style={tw`text-xs font-bold text-achievement-amber-800`}>
-          {currentXP}/{nextLevelXP} XP
-        </Text>
-      </View>
-      <View style={tw`h-3 bg-achievement-amber-100 rounded-full overflow-hidden relative`}>
-        <Animated.View style={animatedStyle}>
-          <LinearGradient colors={achievementGradients.levelProgress} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`h-full rounded-full`} />
-        </Animated.View>
-        {/* Glow overlay */}
-        <Animated.View style={[tw`absolute inset-0 rounded-full`, glowStyle]}>
-          <LinearGradient colors={['rgba(217, 119, 6, 0.5)', 'rgba(245, 158, 11, 0.5)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`h-full rounded-full`} />
-        </Animated.View>
-      </View>
-      {progressPercentage >= 80 && (
-        <Text style={tw`text-xs text-achievement-amber-700 font-medium mt-1 text-center`}>
-          🎯 {nextLevelXP - currentXP} XP to Level {level + 1}!
-        </Text>
-      )}
-    </View>
-  );
-};
-
-// Daily Challenge Card - Collectible
+// Daily Challenge Component with Backend Integration
 const DailyChallenge: React.FC<{
   completedToday: number;
   totalTasksToday: number;
-  onCollect: () => void;
-}> = ({ completedToday, totalTasksToday, onCollect }) => {
+  onCollect: (amount: number) => void;
+  userId: string;
+}> = ({ completedToday, totalTasksToday, onCollect, userId }) => {
+  const [isComplete, setIsComplete] = useState(false);
   const [isCollected, setIsCollected] = useState(false);
-  const [showFloatingXP, setShowFloatingXP] = useState(false);
-  const [showSparkles, setShowSparkles] = useState(false);
-
-  const bounceScale = useSharedValue(1);
-  const glowOpacity = useSharedValue(0);
+  const [loading, setLoading] = useState(false);
+  const bounceAnim = useSharedValue(1);
+  const shimmerAnim = useSharedValue(0);
 
   const completionPercentage = totalTasksToday > 0 ? Math.round((completedToday / totalTasksToday) * 100) : 0;
-  const isComplete = completionPercentage === 100 && !isCollected;
-  const canCollect = completionPercentage === 100;
+
+  useEffect(() => {
+    setIsComplete(completionPercentage >= 100);
+    if (userId) {
+      checkIfCollected();
+    }
+  }, [completionPercentage, userId]);
 
   useEffect(() => {
     if (isComplete && !isCollected) {
-      // Gentle breathing pulse animation for collectible state
-      bounceScale.value = withRepeat(withSequence(withTiming(1.02, { duration: 1500 }), withTiming(0.98, { duration: 1500 })), -1, true);
-
-      // Subtle glow effect
-      glowOpacity.value = withRepeat(withSequence(withTiming(0.5, { duration: 1500 }), withTiming(0.2, { duration: 1500 })), -1, true);
+      bounceAnim.value = withRepeat(withSequence(withTiming(1.05, { duration: 600 }), withTiming(0.98, { duration: 600 })), -1, true);
+      shimmerAnim.value = withRepeat(withTiming(1, { duration: 2000 }), -1);
     }
   }, [isComplete, isCollected]);
 
-  const playCollectSound = async () => {
+  const checkIfCollected = async () => {
+    if (!userId) return;
+
     try {
-      const { sound } = await Audio.Sound.createAsync({ uri: 'https://www.soundjay.com/misc/coin-drop-1.wav' }, { shouldPlay: true });
-      await sound.playAsync();
+      const today = new Date().toISOString().split('T')[0];
+      if (XPService.getDailyChallenge) {
+        const dailyChallenge = await XPService.getDailyChallenge(userId, today);
+        if (dailyChallenge && typeof dailyChallenge === 'object') {
+          setIsCollected(dailyChallenge.collected || dailyChallenge.xp_collected || false);
+        }
+      }
     } catch (error) {
-      // Fallback to vibration if sound fails
-      Vibration.vibrate(100);
+      console.error('Error checking daily challenge:', error);
     }
   };
 
-  const handleCollect = async () => {
-    if (!canCollect || isCollected) return;
+  const handlePress = async () => {
+    if (!isComplete || isCollected || loading || !userId) return;
 
-    // Play sound effect
-    await playCollectSound();
+    setLoading(true);
+    try {
+      let success = false;
 
-    // Trigger animations
-    setShowSparkles(true);
-    setShowFloatingXP(true);
+      if (XPService.collectDailyChallenge) {
+        try {
+          const today = new Date().toISOString().split('T')[0];
+          success = await XPService.collectDailyChallenge(userId, today);
+        } catch (serviceError) {
+          console.warn('XPService.collectDailyChallenge failed, using fallback:', serviceError);
+          if (XPService.addXP) {
+            await XPService.addXP(userId, 20, 'daily_challenge');
+            success = true;
+          }
+        }
+      } else if (XPService.addXP) {
+        await XPService.addXP(userId, 20, 'daily_challenge');
+        success = true;
+      } else {
+        success = true;
+      }
 
-    // Gentle collection animation
-    bounceScale.value = withSpring(1.08, {}, () => {
-      bounceScale.value = withSpring(0.97, {}, () => {
-        bounceScale.value = withSpring(1);
-      });
-    });
-
-    // Mark as collected
-    setTimeout(() => {
+      if (success) {
+        await playCollectSound();
+        Vibration.vibrate([0, 50, 100, 50]);
+        setIsCollected(true);
+        onCollect(20);
+      }
+    } catch (error) {
+      console.error('Error collecting daily challenge:', error);
       setIsCollected(true);
-      onCollect();
-    }, 500);
-
-    // Clean up animations
-    setTimeout(() => {
-      setShowSparkles(false);
-    }, 1000);
-
-    setTimeout(() => {
-      setShowFloatingXP(false);
-    }, 2000);
+      onCollect(20);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: bounceScale.value }],
+  const playCollectSound = async () => {
+    try {
+      const { sound } = await Audio.Sound.createAsync(require('../../../assets/sounds/collect.mp3'));
+      await sound.playAsync();
+    } catch (error) {
+      console.log('Sound playback failed:', error);
+    }
+  };
+
+  const bounceStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: bounceAnim.value }],
   }));
 
-  const glowStyle = useAnimatedStyle(() => ({
-    opacity: glowOpacity.value,
+  const shimmerStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(shimmerAnim.value, [0, 0.5, 1], [0, 0.3, 0]),
   }));
 
   return (
-    <Pressable onPress={handleCollect} disabled={!canCollect || isCollected} style={({ pressed }) => [pressed && canCollect && !isCollected && tw`scale-95`]}>
-      <Animated.View style={[tw`relative`, animatedStyle]}>
-        {/* Glow effect for collectible state */}
-        {isComplete && !isCollected && (
-          <Animated.View style={[tw`absolute inset-0 rounded-2xl`, glowStyle]}>
-            <LinearGradient colors={['rgba(217, 119, 6, 0.3)', 'rgba(245, 158, 11, 0.3)']} style={tw`absolute inset-0 rounded-2xl blur-xl`} />
-          </Animated.View>
-        )}
-
-        {/* Sparkle particles */}
-        <SparkleParticles show={showSparkles} />
-
-        {/* Floating XP */}
-        <FloatingXP amount={20} show={showFloatingXP} />
-
+    <Pressable onPress={handlePress} disabled={!isComplete || isCollected || loading}>
+      <Animated.View style={isComplete && !isCollected ? bounceStyle : undefined}>
         <LinearGradient
           colors={isCollected ? ['#e7e5e4', '#d6d3d1'] : isComplete ? achievementGradients.unlocked.button : ['#ffffff', '#fef3c7']}
           style={tw`rounded-2xl p-3 border ${isCollected ? 'border-gray-300' : isComplete ? 'border-achievement-amber-400' : 'border-achievement-amber-200'} ${
@@ -365,13 +250,19 @@ const DailyChallenge: React.FC<{
               </View>
             </View>
           )}
+
+          {isComplete && !isCollected && (
+            <Animated.View style={[tw`absolute inset-0 rounded-2xl`, shimmerStyle]}>
+              <LinearGradient colors={['transparent', 'rgba(255,255,255,0.3)', 'transparent']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`flex-1 rounded-2xl`} />
+            </Animated.View>
+          )}
         </LinearGradient>
       </Animated.View>
     </Pressable>
   );
 };
 
-// Main Dashboard Header Component
+// Main Dashboard Header Component with Backend Integration
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   userTitle,
   userLevel,
@@ -382,29 +273,60 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   completedTasksToday = 0,
   totalTasksToday = 0,
   onXPCollected,
+  refreshTrigger = 0,
+  currentAchievement,
+  currentLevelXP = 0,
+  xpForNextLevel = 100,
+  levelProgress = 0,
 }) => {
   const navigation = useNavigation();
+  const { user } = useAuth();
   const greeting = getGreeting();
+
   const [collectedXP, setCollectedXP] = useState(0);
   const [animateProgress, setAnimateProgress] = useState(false);
+  const [realTimeStats, setRealTimeStats] = useState({
+    totalXP: 0,
+    weeklyXP: 0,
+    dailyStreak: totalStreak,
+  });
 
-  // XP-based leveling system (100 XP per level)
-  const baseXP = totalCompletions * 10;
-  const totalXP = baseXP + collectedXP;
-  const currentLevel = Math.floor(totalXP / 100) + 1;
-  const currentLevelXP = totalXP % 100;
-  const nextLevelXP = 100;
+  const [showFloatingXP, setShowFloatingXP] = useState(false);
+  const [floatingXPAmount, setFloatingXPAmount] = useState(0);
 
-  // Get current and next achievement titles
-  const currentTitle = achievementTitles.find((t) => t.level === currentLevel);
+  // Fetch real-time stats from backend
+  useEffect(() => {
+    fetchRealTimeStats();
+  }, [refreshTrigger, user?.id]);
+
+  const fetchRealTimeStats = async () => {
+    if (!user?.id) return;
+
+    try {
+      const xpStats = await XPService.getUserXPStats(user.id);
+      const habitStats = await HabitService.getAggregatedStats(user.id);
+
+      setRealTimeStats({
+        totalXP: xpStats?.totalXP || 0,
+        weeklyXP: xpStats?.weeklyXP || 0,
+        dailyStreak: habitStats?.totalDaysTracked || totalStreak,
+      });
+    } catch (error) {
+      console.error('Error fetching real-time stats:', error);
+    }
+  };
+
+  // Use the actual XP values from props
+  const currentLevel = userLevel;
   const nextTitle = achievementTitles.find((t) => t.level === currentLevel + 1);
+  const xpToNextLevel = xpForNextLevel - currentLevelXP;
 
-  // Streak fire animation
+  // Animation for fire streak
   const fireScale = useSharedValue(1);
 
   useEffect(() => {
     if (totalStreak >= 7) {
-      fireScale.value = withRepeat(withSequence(withTiming(1.3, { duration: 500 }), withTiming(1, { duration: 500 })), -1, true);
+      fireScale.value = withRepeat(withSequence(withTiming(1.1, { duration: 1000 }), withTiming(1, { duration: 1000 })), -1, true);
     }
   }, [totalStreak]);
 
@@ -412,62 +334,93 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     transform: [{ scale: fireScale.value }],
   }));
 
-  const handleXPCollect = useCallback(() => {
-    setCollectedXP((prev) => prev + 20);
-    setAnimateProgress(true);
-    setTimeout(() => setAnimateProgress(false), 1000);
-    if (onXPCollected) {
-      onXPCollected(20);
-    }
-  }, [onXPCollected]);
+  const handleXPCollect = async (amount: number) => {
+    setFloatingXPAmount(amount);
+    setShowFloatingXP(true);
 
+    if (user?.id) {
+      await XPService.addXP(user.id, amount, 'daily_challenge');
+      await fetchRealTimeStats();
+    }
+
+    setTimeout(() => {
+      setCollectedXP((prev) => prev + amount);
+      setAnimateProgress(true);
+      onXPCollected?.(amount);
+    }, 800);
+  };
+
+  // Navigate to achievements screen when icon is pressed
+  const handleAchievementPress = () => {
+    navigation.navigate('Achievements' as never);
+  };
+
+  console.log(currentAchievement);
   return (
-    <View>
-      {/* Main Header Section */}
-      <Animated.View entering={FadeInUp.duration(600)}>
-        <View style={tw`flex-row items-start justify-between mb-4`}>
-          {/* User Greeting & Title - Left Side */}
-          <View style={tw`flex-1 pr-4`}>
-            <Text style={tw`text-xl text-achievement-amber-700 font-bold mb-0.5`}>{greeting}</Text>
-            <View style={tw`mb-1`}>
-              <Text style={tw`text-2xl font-black text-gray-900 mb-1`}>{userTitle}</Text>
-              <View style={tw`flex-row items-center`}>
-                {currentLevel >= 10 && (
-                  <LinearGradient colors={achievementGradients.unlocked.button} style={tw`rounded-full px-2.5 py-1 mr-2`}>
-                    <Text style={tw`text-xs font-bold text-white`}>PRO</Text>
-                  </LinearGradient>
-                )}
-                <View style={tw`bg-achievement-amber-100 rounded-full px-2.5 py-1`}>
-                  <Text style={tw`text-xs text-achievement-amber-800 font-bold`}>{totalXP} XP</Text>
+    <View style={tw`relative`}>
+      <FloatingXP amount={floatingXPAmount} show={showFloatingXP} onComplete={() => setShowFloatingXP(false)} />
+
+      <Animated.View entering={FadeIn}>
+        {/* Greeting and Level with Achievement Icon */}
+        <View style={tw`mb-4`}>
+          <Text style={tw`text-lg font-medium text-achievement-amber-700`}>{greeting}</Text>
+          <View style={tw`flex-row items-center justify-between mt-1`}>
+            <View>
+              <Text style={tw`text-2xl font-black text-achievement-amber-00`}>{userTitle}</Text>
+              <View style={tw`flex-row items-center mt-1`}>
+                <View style={tw`bg-achievement-amber-800 rounded-full px-2 py-0.5 mr-2`}>
+                  <Text style={tw`text-xs font-bold text-white`}>LEVEL {currentLevel}</Text>
                 </View>
+                <Text style={tw`text-xs text-achievement-amber-600`}>{currentLevelXP + collectedXP} Total XP</Text>
               </View>
             </View>
-          </View>
-
-          {/* Level Badge - Top Right with better positioning */}
-          <View style={tw`items-center`}>
-            <LevelBadge level={currentLevel} />
-            <Text style={tw`text-xs text-achievement-amber-600 font-medium mt-1`}>Rank {currentLevel}</Text>
+            {/* Display Achievement Icon instead of Crown */}
+            <AchievementIcon achievement={currentAchievement} onPress={handleAchievementPress} />
           </View>
         </View>
 
-        {/* XP Progress with animation */}
-        <XPProgressBar currentXP={currentLevelXP} nextLevelXP={nextLevelXP} level={currentLevel} animateIncrease={animateProgress} />
+        {/* Level Progress Bar with correct XP values */}
+        <View style={tw`mb-4`}>
+          {/* Header */}
+          <View style={tw`flex-row justify-between mb-1`}>
+            <Text style={tw`text-xs font-semibold text-achievement-amber-700`}>Progress to Level {currentLevel + 1}</Text>
+            <Text style={tw`text-xs font-bold text-achievement-amber-800`}>
+              {currentLevelXP}/{xpForNextLevel} XP
+            </Text>
+          </View>
 
-        {/* Stats Row */}
-        <View style={tw`flex-row gap-2 mt-4`}>
+          {/* Rope Progress Bar */}
+          <View style={tw`h-5 rounded-full overflow-hidden`}>
+            <Animated.View
+              style={[
+                tw`h-full`,
+                {
+                  width: withSpring(`${levelProgress}%`, { damping: 15 }),
+                },
+              ]}
+            >
+              <ImageBackground source={require('../../../assets/interface/rope.png')} style={[tw`h-full rounded-full`, { width: `${levelProgress}%` }]} />
+            </Animated.View>
+          </View>
+
+          {/* XP Remaining */}
+          {xpToNextLevel > 0 && <Text style={tw`text-xs text-achievement-amber-600 mt-1`}>{xpToNextLevel} XP to next level</Text>}
+        </View>
+
+        {/* Stats Grid */}
+        <View style={tw`flex-row gap-3 mb-4`}>
           {/* Streak Card */}
           <LinearGradient
-            colors={totalStreak >= 7 ? achievementGradients.tiers['Legendary Ascent'] : ['#ffffff', '#fef3c7']}
+            colors={totalStreak >= 30 ? achievementGradients.tiers['Legendary Ascent'] : totalStreak >= 7 ? achievementGradients.tiers['Epic Mastery'] : ['#ffffff', '#fef3c7']}
             style={tw`flex-1 rounded-2xl p-3 ${totalStreak >= 7 ? '' : 'border border-achievement-amber-200'}`}
           >
             <View style={tw`flex-row items-center justify-between`}>
               <View>
                 <Text style={tw`text-xs font-medium ${totalStreak >= 7 ? 'text-white/90' : 'text-achievement-amber-700'}`}>Streak</Text>
-                <Text style={tw`text-xl font-black ${totalStreak >= 7 ? 'text-white' : 'text-gray-900'}`}>{totalStreak}</Text>
+                <Text style={tw`text-xl font-black ${totalStreak >= 7 ? 'text-white' : 'text-gray-900'}`}>{realTimeStats.dailyStreak}</Text>
               </View>
               <Animated.View style={totalStreak >= 7 ? fireAnimatedStyle : undefined}>
-                <Image source={require('../../../assets/interface/streak.png')} style={{ width: 60, height: 60 }} resizeMode="cover" />
+                <Image source={require('../../../assets/interface/streak-2.png')} style={{ width: 60, height: 60 }} resizeMode="cover" />
               </Animated.View>
             </View>
             {totalStreak >= 7 && <Text style={tw`text-xs font-bold text-white/90 mt-1`}>{totalStreak >= 30 ? 'LEGENDARY!' : 'ON FIRE!'}</Text>}
@@ -488,10 +441,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           </LinearGradient>
         </View>
 
-        {/* Collectible Daily Challenge - with more spacing */}
-        <View style={tw`mt-6`}>
-          <DailyChallenge completedToday={completedTasksToday} totalTasksToday={totalTasksToday} onCollect={handleXPCollect} />
-        </View>
+        {/* Daily Challenge with Backend Integration */}
+        <View style={tw`mt-6`}>{user?.id && <DailyChallenge completedToday={completedTasksToday} totalTasksToday={totalTasksToday} onCollect={handleXPCollect} userId={user.id} />}</View>
 
         {/* Next Achievement Preview */}
         {nextTitle && (
@@ -506,7 +457,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                     <View style={tw`flex-1`}>
                       <Text style={tw`text-xs font-bold text-achievement-amber-800`}>NEXT: {nextTitle.title.toUpperCase()}</Text>
                       <View style={tw`flex-row items-center mt-0.5`}>
-                        <Text style={tw`text-xs text-achievement-amber-700`}>{100 - currentLevelXP} XP needed</Text>
+                        <Text style={tw`text-xs text-achievement-amber-700`}>{xpToNextLevel} XP needed</Text>
                       </View>
                     </View>
                   </View>

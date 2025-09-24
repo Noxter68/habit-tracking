@@ -15,7 +15,8 @@
       "@components/*": ["src/components/*"],
       "@screens/*": ["src/screens/*"],
       "@utils/*": ["src/utils/*"],
-      "@types/*": ["src/types/*"]
+      "@types/*": ["src/types/*"],
+      "@assets/*": ["src/assets/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "app.d.ts"],

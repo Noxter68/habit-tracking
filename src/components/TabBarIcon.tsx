@@ -1,8 +1,7 @@
 // src/components/TabBarIcon.tsx
 import React from 'react';
-import { View } from 'react-native';
-import { Home, Calendar, BarChart3, Settings } from 'lucide-react-native';
-import Animated, { useAnimatedStyle, withSpring, withTiming, interpolate } from 'react-native-reanimated';
+import { View, Image } from 'react-native';
+import Animated, { useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
 import tw from '../lib/tailwind';
 
 interface TabBarIconProps {
@@ -12,48 +11,90 @@ interface TabBarIconProps {
   size?: number;
 }
 
-export const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, focused, size = 22 }) => {
+export const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, focused, size = 28 }) => {
   // Animated styles for smooth transitions
   const animatedIconStyle = useAnimatedStyle(() => {
     return {
       transform: [
         {
-          scale: withSpring(focused ? 1 : 0.9, {
+          scale: withSpring(focused ? 1.2 : 1, {
             damping: 15,
             stiffness: 200,
           }),
         },
         {
-          translateY: withTiming(focused ? -2 : 0, {
+          translateY: withTiming(focused ? -3 : 0, {
             duration: 200,
           }),
         },
       ],
-      opacity: withTiming(focused ? 1 : 0.6, {
+      opacity: withTiming(focused ? 1 : 0.5, {
         duration: 200,
       }),
     };
   });
 
-  // Get the appropriate icon
+  // Get the appropriate icon image
   const getIcon = () => {
-    const iconProps = {
-      size: size,
-      color: color,
-      strokeWidth: focused ? 2.5 : 2,
-    };
+    // Dynamic size based on focus state
+    const iconSize = focused ? 70 : 80;
 
     switch (name) {
       case 'home':
-        return <Home {...iconProps} />;
+        return (
+          <Image
+            source={require('../../assets/interface/home.png')}
+            style={{
+              width: 60,
+              height: iconSize,
+            }}
+            resizeMode="contain"
+          />
+        );
       case 'calendar':
-        return <Calendar {...iconProps} />;
+        return (
+          <Image
+            source={require('../../assets/interface/calendar.png')}
+            style={{
+              width: 80,
+              height: iconSize,
+            }}
+            resizeMode="contain"
+          />
+        );
       case 'chart':
-        return <BarChart3 {...iconProps} />;
+        return (
+          <Image
+            source={require('../../assets/interface/stats.png')}
+            style={{
+              width: 80,
+              height: iconSize,
+            }}
+            resizeMode="contain"
+          />
+        );
       case 'settings':
-        return <Settings {...iconProps} />;
+        return (
+          <Image
+            source={require('../../assets/interface/settings.png')}
+            style={{
+              width: 70,
+              height: iconSize,
+            }}
+            resizeMode="contain"
+          />
+        );
       default:
-        return null;
+        return (
+          <Image
+            source={require('../../assets/interface/home.png')}
+            style={{
+              width: iconSize,
+              height: iconSize,
+            }}
+            resizeMode="contain"
+          />
+        );
     }
   };
 
@@ -61,21 +102,21 @@ export const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, focused, si
     <View style={tw`items-center justify-center`}>
       <Animated.View style={animatedIconStyle}>{getIcon()}</Animated.View>
 
-      {/* Active Indicator Dot */}
+      {/* Elegant Active Indicator - using the passed color */}
       <Animated.View
         style={[
-          tw`mt-1 w-1 h-1 rounded-full`,
-          { backgroundColor: color },
+          tw`mt-1.5 rounded-full`,
+          {
+            backgroundColor: focused ? '#f59e0b' : 'transparent',
+            width: focused ? 18 : 4,
+            height: 3,
+          },
           useAnimatedStyle(() => ({
             opacity: withTiming(focused ? 1 : 0, { duration: 200 }),
-            transform: [
-              {
-                scale: withSpring(focused ? 1 : 0, {
-                  damping: 15,
-                  stiffness: 200,
-                }),
-              },
-            ],
+            width: withSpring(focused ? 18 : 4, {
+              damping: 15,
+              stiffness: 200,
+            }),
           })),
         ]}
       />

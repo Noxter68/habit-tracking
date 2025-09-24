@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { XPService, UserXPStats } from '../services/xpService';
 import { achievementTitles, getAchievementByLevel } from '../utils/achievements';
+import { HabitService } from '@/services/habitService';
 
 interface AchievementContextType {
   // XP Stats
@@ -11,6 +12,7 @@ interface AchievementContextType {
   currentLevelXP: number;
   xpForNextLevel: number;
   levelProgress: number;
+  totalCompletions: number;
 
   // User Info
   userTitle: string;
@@ -50,6 +52,7 @@ export const AchievementProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [dailyTasksCompleted, setDailyTasksCompleted] = useState(0);
   const [dailyTasksTotal, setDailyTasksTotal] = useState(0);
   const [dailyChallengeCollected, setDailyChallengeCollected] = useState(false);
+  const [totalCompletions, setTotalCompletions] = useState(0);
 
   // Load XP stats on mount and user change
   useEffect(() => {
@@ -61,6 +64,7 @@ export const AchievementProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   // Update achievement titles when level changes
   useEffect(() => {
+    console.log('CURRENT_LEVEL', currentLevel);
     const achievement = getAchievementByLevel(currentLevel);
     const next = getAchievementByLevel(currentLevel + 1);
 
@@ -72,7 +76,8 @@ export const AchievementProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const loadXPStats = async () => {
     if (!user) return;
 
-    const stats = await XPService.getUserXPStats(user.id);
+    const [stats, habitStats] = await Promise.all([XPService.getUserXPStats(user.id), HabitService.getAggregatedStats(user.id)]);
+
     if (stats) {
       setTotalXP(stats.total_xp);
       setCurrentLevel(stats.current_level);
@@ -82,6 +87,7 @@ export const AchievementProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setDailyTasksCompleted(stats.daily_tasks_completed || 0);
       setDailyTasksTotal(stats.daily_tasks_total || 0);
       setDailyChallengeCollected(stats.daily_challenge_collected || false);
+      setTotalCompletions(habitStats?.totalCompletions || 0);
     }
 
     // Load daily challenge
@@ -157,6 +163,7 @@ export const AchievementProvider: React.FC<{ children: React.ReactNode }> = ({ c
     currentLevelXP,
     xpForNextLevel,
     levelProgress,
+    totalCompletions,
 
     // User Info
     userTitle,

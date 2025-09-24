@@ -87,12 +87,12 @@ const tw = create({
 export const achievementGradients = {
   // Tier-specific gradients
   tiers: {
-    Novice: ['#fef3c7', '#fde68a'],
-    'Rising Hero': ['#fed7aa', '#fdba74'],
-    'Mastery Awakens': ['#fde68a', '#fb923c'],
-    'Legendary Ascent': ['#fbbf24', '#f59e0b'],
-    'Epic Mastery': ['#f59e0b', '#d97706'],
-    'Mythic Glory': ['#d97706', '#92400e'],
+    Novice: ['#fef3c7', '#fde68a'], // amber-50 → amber-100
+    'Rising Hero': ['#fed7aa', '#fdba74'], // warm amber/orange
+    'Mastery Awakens': ['#fde68a', '#fb923c'], // amber-100 → amber-500
+    'Legendary Ascent': ['#fbbf24', '#f59e0b'], // amber-300 → amber-600
+    'Epic Mastery': ['#f59e0b', '#d97706'], // amber-600 → amber-700
+    'Mythic Glory': ['#d97706', '#92400e'], // amber-700 → amber-900
   },
 
   // State-based gradients
@@ -101,7 +101,7 @@ export const achievementGradients = {
     header: ['#fef3c7', '#fde68a', '#fcd34d'],
     progress: ['#fed7aa', '#fdba74', '#fb923c'],
     button: ['#d97706', '#b45309', '#92400e'],
-    progressBar: ['#d97706', '#b45309'],
+    progressBar: ['#fbbf24', '#d97706'], // brighter amber
   },
 
   locked: {

@@ -4,7 +4,7 @@ export interface Achievement {
   title: string;
   tier: string;
   color: string;
-  image: any;
+  image: number;
 }
 
 // Achievement titles data with images
@@ -232,5 +232,7 @@ export const LOCKED_BADGE_IMAGE = require('../../assets/achievements/locked.png'
 
 // Helper function to get achievement by level
 export const getAchievementByLevel = (level: number): Achievement | undefined => {
-  return achievementTitles.find((a) => a.level === level);
+  const currentLevel = achievementTitles.find((a) => a.level === level);
+  console.log('getAchievementByLevel', currentLevel);
+  return currentLevel;
 };

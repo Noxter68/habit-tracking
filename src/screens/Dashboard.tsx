@@ -1,5 +1,5 @@
 // src/screens/Dashboard.tsx
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, RefreshControl, Alert, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInUp, FadeInDown, useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
@@ -80,14 +80,37 @@ const SwipeableHabitCard: React.FC<{
 // Main Dashboard Component with Achievement Theme
 const Dashboard: React.FC = () => {
   const navigation = useNavigation();
-  const { habits, loading, refreshHabits, toggleHabitDay, toggleTask, deleteHabit } = useHabits();
-  const { userTitle, totalCompletions, checkAchievements } = useAchievements();
+
+  // Get habits context with null checks
+  const habitContext = useHabits();
+  const habits = habitContext?.habits || [];
+  const loading = habitContext?.loading || false;
+  const refreshHabits = habitContext?.refreshHabits || (async () => {});
+  const toggleHabitDay = habitContext?.toggleHabitDay || (async () => {});
+  const toggleTask = habitContext?.toggleTask || (async () => {});
+  const deleteHabit = habitContext?.deleteHabit || (async () => {});
+
+  // Get achievements context with null checks
+  const achievementContext = useAchievements();
+  const userTitle = achievementContext?.userTitle || 'Newcomer';
+  const totalCompletions = achievementContext?.totalCompletions || 0;
+  const checkAchievements = achievementContext?.checkAchievements || (async () => {});
 
   const [refreshing, setRefreshing] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  console.log(achievementContext);
+  // Safe navigation check
+  useEffect(() => {
+    if (!navigation) {
+      console.error('Navigation is not available');
+    }
+  }, [navigation]);
 
-  // Calculate stats
+  // Calculate stats with null safety
   const stats = getDashboardStats(habits);
   const progressStatus = getProgressStatus(stats.completionRate, stats.todayCompleted, stats.totalActive);
+
+  console.log(achievementContext);
 
   // Calculate total tasks for today across all habits
   const calculateTodayTasks = () => {
@@ -95,23 +118,25 @@ const Dashboard: React.FC = () => {
     let totalTasks = 0;
     let completedTasks = 0;
 
-    habits.forEach((habit) => {
-      // Count tasks for habits with tasks
-      if (habit.tasks && habit.tasks.length > 0) {
-        totalTasks += habit.tasks.length;
-        const todayData = habit.dailyTasks?.[today];
-        if (todayData?.completedTasks) {
-          completedTasks += todayData.completedTasks.length;
+    if (Array.isArray(habits)) {
+      habits.forEach((habit) => {
+        // Count tasks for habits with tasks
+        if (habit?.tasks && habit.tasks.length > 0) {
+          totalTasks += habit.tasks.length;
+          const todayData = habit.dailyTasks?.[today];
+          if (todayData?.completedTasks) {
+            completedTasks += todayData.completedTasks.length;
+          }
+        } else if (habit) {
+          // For habits without tasks, count the habit itself
+          totalTasks += 1;
+          const todayData = habit.dailyTasks?.[today];
+          if (todayData?.allCompleted || habit.completedDays?.includes(today)) {
+            completedTasks += 1;
+          }
         }
-      } else {
-        // For habits without tasks, count the habit itself
-        totalTasks += 1;
-        const todayData = habit.dailyTasks?.[today];
-        if (todayData?.allCompleted || habit.completedDays.includes(today)) {
-          completedTasks += 1;
-        }
-      }
-    });
+      });
+    }
 
     return { totalTasks, completedTasks };
   };
@@ -120,20 +145,38 @@ const Dashboard: React.FC = () => {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await refreshHabits();
-    await checkAchievements();
-    setRefreshing(false);
+    try {
+      await refreshHabits();
+      await checkAchievements();
+      setRefreshTrigger((prev) => prev + 1);
+    } catch (error) {
+      console.error('Error refreshing:', error);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const handleAddHabit = () => {
-    navigation.navigate('HabitWizard' as never);
+    if (navigation) {
+      navigation.navigate('HabitWizard' as never);
+    }
   };
 
   const handleDeleteHabit = async (habitId: string) => {
-    await deleteHabit(habitId);
-    await checkAchievements();
+    try {
+      await deleteHabit(habitId);
+      await checkAchievements();
+      setRefreshTrigger((prev) => prev + 1);
+    } catch (error) {
+      console.error('Error deleting habit:', error);
+    }
   };
-  console.log(userTitle);
+
+  const handleXPCollected = (amount: number) => {
+    console.log('XP Collected:', amount);
+    setRefreshTrigger((prev) => prev + 1);
+  };
+
   return (
     <SafeAreaView style={tw`flex-1 bg-achievement-amber-50`}>
       <ScrollView
@@ -146,48 +189,35 @@ const Dashboard: React.FC = () => {
         <LinearGradient colors={achievementGradients.hero} style={tw`px-5 pt-2 pb-6`}>
           <DashboardHeader
             userTitle={userTitle}
-            userLevel={Math.floor(totalCompletions / 10) + 1}
-            totalStreak={stats.totalStreak}
-            weekProgress={stats.weekProgress}
+            userLevel={achievementContext.currentLevel}
+            totalStreak={stats.currentStreak}
+            weekProgress={stats.weeklyProgress}
             activeHabits={stats.totalActive}
             totalCompletions={totalCompletions}
             completedTasksToday={todayTasksData.completedTasks}
             totalTasksToday={todayTasksData.totalTasks}
+            onXPCollected={handleXPCollected}
+            refreshTrigger={refreshTrigger}
+            currentAchievement={achievementContext?.currentAchievement}
+            currentLevelXP={achievementContext?.currentLevelXP || 0}
+            xpForNextLevel={achievementContext?.xpForNextLevel || 100}
+            levelProgress={achievementContext?.levelProgress || 0}
           />
         </LinearGradient>
 
-        {/* Daily Progress Card with Gamified Design */}
-        {habits.length > 0 && (
+        {/* Progress Card - only show if there are active habits */}
+        {stats.totalActive > 0 && stats.completionRate < 100 && (
           <Animated.View entering={FadeInDown.delay(200)} style={tw`px-5 -mt-3 mb-4`}>
-            <LinearGradient colors={['#ffffff', '#fef3c7']} style={tw`rounded-3xl p-5 shadow-lg border border-achievement-amber-200`}>
-              <View style={tw`flex-row items-center justify-between mb-3`}>
+            <LinearGradient colors={['#ffffff', '#fef3c7']} style={tw`rounded-2xl p-4 border border-achievement-amber-200`}>
+              <View style={tw`flex-row items-center justify-between`}>
                 <View style={tw`flex-row items-center`}>
-                  <View style={tw`w-12 h-12 bg-achievement-amber-300/30 rounded-2xl items-center justify-center mr-3`}>
-                    <Trophy size={24} color="#d97706" />
+                  <View style={tw`w-10 h-10 bg-achievement-amber-100 rounded-xl items-center justify-center mr-3`}>
+                    <Sparkles size={20} color="#d97706" />
                   </View>
                   <View>
-                    <Text style={tw`text-lg font-bold text-gray-900`}>Daily Quest</Text>
-                    <Text style={tw`text-xs text-achievement-amber-700 font-semibold`}>{progressStatus.message}</Text>
+                    <Text style={tw`text-sm font-bold text-gray-900`}>Today's Progress</Text>
+                    <Text style={tw`text-xs text-achievement-amber-600`}>{stats.completionRate >= 100 ? 'Perfect Day!' : `${100 - stats.completionRate}% to Perfect Day`}</Text>
                   </View>
-                </View>
-                <View style={tw`items-end`}>
-                  <Text style={tw`text-2xl font-black text-achievement-amber-800`}>
-                    {stats.todayCompleted}/{stats.totalActive}
-                  </Text>
-                  <Text style={tw`text-xs text-achievement-amber-600 font-semibold`}>Completed</Text>
-                </View>
-              </View>
-
-              {/* Progress Bar with Gradient */}
-              <View style={tw`h-3 bg-achievement-amber-100 rounded-full overflow-hidden`}>
-                <LinearGradient colors={achievementGradients.levelProgress} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[tw`h-full rounded-full`, { width: `${stats.completionRate}%` }]} />
-              </View>
-
-              {/* Reward Preview */}
-              <View style={tw`flex-row items-center justify-between mt-3`}>
-                <View style={tw`flex-row items-center`}>
-                  <Sparkles size={14} color="#d97706" />
-                  <Text style={tw`text-xs text-achievement-amber-700 ml-1 font-medium`}>{stats.completionRate >= 100 ? 'Perfect Day!' : `${100 - stats.completionRate}% to Perfect Day`}</Text>
                 </View>
                 {stats.completionRate >= 100 && (
                   <View style={tw`bg-achievement-amber-800 rounded-full px-3 py-1`}>
@@ -201,7 +231,7 @@ const Dashboard: React.FC = () => {
 
         {/* Habits Section with Achievement Theme */}
         <View style={tw`px-5`}>
-          {habits.length === 0 ? (
+          {!habits || habits.length === 0 ? (
             <EmptyState onAddHabit={handleAddHabit} />
           ) : (
             <>
@@ -216,7 +246,7 @@ const Dashboard: React.FC = () => {
                     </View>
                   </LinearGradient>
                 </View>
-                <Pressable onPress={() => navigation.navigate('Achievements' as never)} style={tw`flex-row items-center`}>
+                <Pressable onPress={() => navigation && navigation.navigate('Achievements' as never)} style={tw`flex-row items-center`}>
                   <Text style={tw`text-xs text-achievement-amber-600 font-semibold mr-1`}>View Rewards</Text>
                   <TrendingUp size={14} color="#d97706" />
                 </Pressable>
@@ -225,20 +255,17 @@ const Dashboard: React.FC = () => {
               {/* Habit Cards with Gamified Style */}
               {habits.map((habit, index) => (
                 <SwipeableHabitCard
-                  key={habit.id}
+                  key={habit?.id || index}
                   habit={habit}
                   index={index}
                   onDelete={handleDeleteHabit}
                   onToggleDay={toggleHabitDay}
                   onToggleTask={toggleTask}
-                  onPress={() =>
-                    navigation.navigate(
-                      'HabitDetails' as never,
-                      {
-                        habitId: habit.id,
-                      } as never
-                    )
-                  }
+                  onPress={() => {
+                    if (navigation && habit?.id) {
+                      navigation.navigate('HabitDetails' as never, { habitId: habit.id } as never);
+                    }
+                  }}
                 />
               ))}
 
