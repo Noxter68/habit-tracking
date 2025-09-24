@@ -30,6 +30,7 @@ import TabBarIcon from './src/components/TabBarIcon';
 
 import * as Notifications from 'expo-notifications';
 import AchievementsScreen from '@/screens/AchievementScreen';
+import { AppConfig } from '@/config/appConfig';
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -53,6 +54,13 @@ const Tab = createBottomTabNavigator<TabParamList>();
 // Clean Tab Navigator with modern design
 function MainTabs() {
   const tabBarHeight = Platform.OS === 'ios' ? 88 : 68;
+  useEffect(() => {
+    // Only log in debug mode
+    if (AppConfig.debug.enabled) {
+      console.log('🚀 App started in', AppConfig.env.name, 'mode');
+      console.log('📝 Debug features:', AppConfig.debug);
+    }
+  }, []);
 
   return (
     <Tab.Navigator

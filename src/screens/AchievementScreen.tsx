@@ -162,7 +162,7 @@ const AchievementsScreen: React.FC = () => {
   return (
     <SafeAreaView style={tw`flex-1 bg-achievement-amber-50`}>
       {/* Header */}
-      <View style={tw`bg-gradient-to-b from-achievement-amber-50 to-achievement-amber-100 border-b border-achievement-amber-200`}>
+      <View style={tw`from-achievement-amber-50 to-achievement-amber-100 border-b border-achievement-amber-200`}>
         <View style={tw`px-5 py-4`}>
           {/* Navigation */}
           <View style={tw`flex-row items-center justify-between mb-3`}>

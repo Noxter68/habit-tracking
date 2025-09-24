@@ -1,51 +1,108 @@
 // src/components/dashboard/FloatingXP.tsx
 import React, { useEffect } from 'react';
 import { Text, View } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSequence, withDelay, runOnJS } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
-import tw from '../../lib/tailwind';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSpring, runOnJS } from 'react-native-reanimated';
 
 interface FloatingXPProps {
-  amount: number;
+  amount?: number;
   show: boolean;
   onComplete?: () => void;
+  type?: 'xp' | 'level-up';
+  message?: string;
 }
 
-const FloatingXP: React.FC<FloatingXPProps> = ({ amount, show, onComplete }) => {
+const FloatingXP: React.FC<FloatingXPProps> = ({ amount = 20, show, onComplete, type = 'xp', message }) => {
   const translateY = useSharedValue(0);
   const opacity = useSharedValue(0);
+  const scale = useSharedValue(0.5);
+
+  const isLevelUp = type === 'level-up';
+  const displayText = message || (isLevelUp ? 'LEVEL UP!' : `+${amount} XP`);
 
   useEffect(() => {
     if (show) {
-      opacity.value = withTiming(1, { duration: 200 });
-      translateY.value = withSequence(
-        withTiming(-60, { duration: 800 }),
-        withTiming(-80, { duration: 400 }, () => {
-          if (onComplete) {
-            runOnJS(onComplete)();
-          }
-        })
-      );
-      opacity.value = withSequence(withTiming(1, { duration: 200 }), withDelay(800, withTiming(0, { duration: 400 })));
-    } else {
-      opacity.value = 0;
+      console.log('FloatingXP: Starting animation for type:', type);
+
+      // Reset values
       translateY.value = 0;
+      opacity.value = 0;
+      scale.value = 0.5;
+
+      // Fade in and scale up
+      opacity.value = withTiming(1, { duration: 300 });
+      scale.value = withSpring(1);
+
+      // Move up
+      translateY.value = withTiming(-80, { duration: 1500 }, (finished) => {
+        if (finished) {
+          console.log('FloatingXP: Animation finished');
+          // Fade out
+          opacity.value = withTiming(0, { duration: 300 }, (finished) => {
+            if (finished && onComplete) {
+              runOnJS(onComplete)();
+            }
+          });
+        }
+      });
+    } else {
+      // Reset when not showing
+      translateY.value = 0;
+      opacity.value = 0;
+      scale.value = 0.5;
     }
-  }, [show]);
+  }, [show, type]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
-    transform: [{ translateY: translateY.value }],
+    transform: [{ translateY: translateY.value }, { scale: scale.value }],
   }));
 
-  if (!show) return null;
+  if (!show) {
+    console.log('FloatingXP: Not showing (show=false)');
+    return null;
+  }
+
+  console.log('FloatingXP: Rendering with text:', displayText);
 
   return (
-    <Animated.View style={[tw`absolute top-0 right-4 z-50`, animatedStyle]}>
-      <LinearGradient colors={['#f59e0b', '#d97706']} style={tw`px-4 py-2 rounded-full shadow-xl`}>
-        <Text style={tw`text-white font-bold text-lg`}>+{amount} XP</Text>
-      </LinearGradient>
-    </Animated.View>
+    <View
+      style={{
+        position: 'absolute',
+        top: -50,
+        left: 0,
+        right: 0,
+        zIndex: 9999,
+        elevation: 999,
+        alignItems: 'center',
+      }}
+      pointerEvents="none"
+    >
+      <Animated.View style={animatedStyle}>
+        <View
+          style={{
+            backgroundColor: isLevelUp ? '#7c3aed' : '#f59e0b',
+            paddingHorizontal: 24,
+            paddingVertical: 12,
+            borderRadius: 999,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.25,
+            shadowRadius: 4,
+            elevation: 5,
+          }}
+        >
+          <Text
+            style={{
+              color: 'white',
+              fontWeight: 'bold',
+              fontSize: isLevelUp ? 20 : 18,
+            }}
+          >
+            {displayText}
+          </Text>
+        </View>
+      </Animated.View>
+    </View>
   );
 };
 

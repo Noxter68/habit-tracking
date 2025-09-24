@@ -1,5 +1,5 @@
 // src/screens/Dashboard.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ScrollView, RefreshControl, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import tw from '../lib/tailwind';
@@ -11,7 +11,7 @@ import DashboardHeader from '../components/dashboard/DashboardHeader';
 import { useAuth } from '../context/AuthContext';
 import { HabitService } from '../services/habitService';
 import { XPService } from '../services/xpService';
-import { achievementTitles, getAchievementByLevel } from '../utils/achievements';
+import { getAchievementByLevel } from '../utils/achievements';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -29,41 +29,47 @@ const Dashboard: React.FC = () => {
     activeHabits: 0,
     completedTasksToday: 0,
     totalTasksToday: 0,
-    currentAchievement: null,
+    currentAchievement: null as any,
   });
 
-  useEffect(() => {
-    fetchUserStats();
-  }, [user?.id, refreshTrigger]);
-
-  const fetchUserStats = async () => {
+  const fetchUserStats = useCallback(async () => {
     if (!user?.id) return;
 
     try {
-      // Fetch XP stats
+      console.log('Dashboard: Fetching user stats...');
+
+      // Fetch XP stats from backend
       const xpStats = await XPService.getUserXPStats(user.id);
       const level = xpStats?.current_level || 1;
       const currentXP = xpStats?.current_level_xp || 0;
       const nextLevelXP = xpStats?.xp_for_next_level || 100;
+
+      console.log('Dashboard: XP Stats -', {
+        level,
+        currentXP,
+        nextLevelXP,
+        totalXP: xpStats?.total_xp,
+      });
+
+      // Ensure XP doesn't exceed the level requirement (handle overflow)
+      const adjustedCurrentXP = currentXP % nextLevelXP;
 
       // Fetch habit stats
       const habitStats = await HabitService.getAggregatedStats(user.id);
       const activeHabitsCount = await HabitService.getActiveHabitsCount(user.id);
       const todayStats = await HabitService.getTodayStats(user.id);
 
-      // Calculate level progress
-      const progress = nextLevelXP > 0 ? (currentXP / nextLevelXP) * 100 : 0;
+      // Calculate level progress (as percentage)
+      const progress = nextLevelXP > 0 ? (adjustedCurrentXP / nextLevelXP) * 100 : 0;
 
-      // Get user title and achievement from achievementTitles
+      // Get user title and achievement
       const currentAchievement = getAchievementByLevel(level);
       const title = currentAchievement?.title || 'Novice';
-
-      console.log('Current achievement:', currentAchievement); // Debug log
 
       setUserStats({
         title,
         level,
-        currentLevelXP: currentXP,
+        currentLevelXP: adjustedCurrentXP,
         xpForNextLevel: nextLevelXP,
         levelProgress: progress,
         totalStreak: habitStats?.totalDaysTracked || 0,
@@ -75,7 +81,11 @@ const Dashboard: React.FC = () => {
     } catch (error) {
       console.error('Error fetching user stats:', error);
     }
-  };
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchUserStats();
+  }, [fetchUserStats, refreshTrigger]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -83,23 +93,23 @@ const Dashboard: React.FC = () => {
     setRefreshTrigger((prev) => prev + 1);
     setRefreshing(false);
   };
-  // console.log('userStats', userStats);
-  const handleXPCollected = (amount: number) => {
-    // Update local state optimistically
-    setUserStats((prev) => {
-      const newXP = prev.currentLevelXP + amount;
-      const newProgress = prev.xpForNextLevel > 0 ? (newXP / prev.xpForNextLevel) * 100 : 0;
 
-      return {
-        ...prev,
-        currentLevelXP: newXP,
-        levelProgress: newProgress,
-      };
-    });
-
-    // Refresh stats
+  const handleStatsRefresh = useCallback(() => {
+    console.log('Dashboard: Stats refresh triggered');
+    // Just fetch fresh data from backend
+    fetchUserStats();
     setRefreshTrigger((prev) => prev + 1);
-  };
+  }, [fetchUserStats]);
+
+  const handleXPCollected = useCallback(
+    (amount: number) => {
+      console.log('Dashboard: XP collected, amount:', amount);
+      // Don't update local state, just refresh from backend
+      // This prevents double counting
+      handleStatsRefresh();
+    },
+    [handleStatsRefresh]
+  );
 
   return (
     <SafeAreaView style={tw`flex-1 bg-amber-50`}>
@@ -117,6 +127,7 @@ const Dashboard: React.FC = () => {
           completedTasksToday={userStats.completedTasksToday}
           totalTasksToday={userStats.totalTasksToday}
           onXPCollected={handleXPCollected}
+          onStatsRefresh={handleStatsRefresh}
           refreshTrigger={refreshTrigger}
           currentAchievement={userStats.currentAchievement}
           currentLevelXP={userStats.currentLevelXP}

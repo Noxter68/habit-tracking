@@ -7,7 +7,6 @@ import { Flame, Target } from 'lucide-react-native';
 import tw from '../../lib/tailwind';
 
 // Components
-import FloatingXP from './FloatingXp';
 import AchievementBadge from './AchievementBadge';
 import DailyChallenge from './DailyChallenge';
 import LevelProgress from './LevelProgress';
@@ -34,6 +33,7 @@ interface DashboardHeaderProps {
   currentLevelXP?: number;
   xpForNextLevel?: number;
   levelProgress?: number;
+  onStatsRefresh?: () => void;
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -49,14 +49,12 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   currentLevelXP = 0,
   xpForNextLevel = 100,
   levelProgress = 0,
+  onStatsRefresh,
 }) => {
   const navigation = useNavigation();
   const { user } = useAuth();
   const greeting = getGreeting();
 
-  const [showFloatingXP, setShowFloatingXP] = useState(false);
-  const [floatingXPAmount, setFloatingXPAmount] = useState(0);
-  const [collectedXP, setCollectedXP] = useState(0);
   const [realTimeStats, setRealTimeStats] = useState({
     totalXP: 0,
     dailyStreak: totalStreak,
@@ -83,66 +81,91 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   };
 
   const handleXPCollect = async (amount: number) => {
-    setFloatingXPAmount(amount);
-    setShowFloatingXP(true);
+    console.log('DashboardHeader: handleXPCollect called with amount:', amount);
 
-    if (user?.id) {
-      await XPService.awardXP(user.id, { amount: amount, source_type: 'daily_challenge' });
+    // Wait a bit for the backend to update, then refresh stats
+    setTimeout(async () => {
+      if (onStatsRefresh) {
+        onStatsRefresh(); // Tell parent to refresh from backend
+      } else if (onXPCollected) {
+        onXPCollected(amount); // Fallback to old behavior
+      }
+
+      // Also refresh local stats
       await fetchRealTimeStats();
-    }
-
-    setTimeout(() => {
-      setCollectedXP((prev) => prev + amount);
-      onXPCollected?.(amount);
-    }, 800);
+    }, 1000);
   };
 
   const handleAchievementPress = () => {
     navigation.navigate('Achievements' as never);
   };
 
+  const handleLevelUp = () => {
+    console.log('DashboardHeader: Level up triggered');
+    // Refresh everything after level up
+    setTimeout(() => {
+      if (onStatsRefresh) {
+        onStatsRefresh();
+      }
+      fetchRealTimeStats();
+    }, 500);
+  };
+
   // Get next achievement title
   const nextTitle = achievementTitles?.find((t) => t.level === userLevel + 1);
   const xpToNextLevel = xpForNextLevel - currentLevelXP;
 
+  // Display the correct XP (should never exceed xpForNextLevel)
+  const displayXP = Math.min(currentLevelXP, xpForNextLevel);
+  const displayProgress = xpForNextLevel > 0 ? (displayXP / xpForNextLevel) * 100 : 0;
+
   return (
-    <View style={tw`relative`}>
-      <FloatingXP amount={floatingXPAmount} show={showFloatingXP} onComplete={() => setShowFloatingXP(false)} />
-
-      <Animated.View entering={FadeIn}>
-        {/* Greeting and Level with Achievement Icon */}
-        <View style={tw`mb-4`}>
-          <Text style={tw`text-lg font-medium text-amber-700`}>{greeting}</Text>
-          <View style={tw`flex-row items-center justify-between mt-1`}>
-            <View>
-              <Text style={tw`text-2xl font-black text-amber-900`}>{userTitle}</Text>
-              <View style={tw`flex-row items-center mt-1`}>
-                <View style={tw`bg-amber-800 rounded-full px-2 py-0.5 mr-2`}>
-                  <Text style={tw`text-xs font-bold text-white`}>LEVEL {userLevel}</Text>
-                </View>
-                <Text style={tw`text-xs text-amber-600`}>{currentLevelXP + collectedXP} Total XP</Text>
+    <Animated.View entering={FadeIn} style={tw`relative`}>
+      {/* Greeting and Level with Achievement Icon */}
+      <View style={tw`mb-4`}>
+        <Text style={tw`text-lg font-medium text-amber-700`}>{greeting}</Text>
+        <View style={tw`flex-row items-center justify-between mt-1`}>
+          <View>
+            <Text style={tw`text-2xl font-black text-amber-900`}>{userTitle}</Text>
+            <View style={tw`flex-row items-center mt-1`}>
+              <View style={tw`bg-amber-800 rounded-full px-2 py-0.5 mr-2`}>
+                <Text style={tw`text-xs font-bold text-white`}>LEVEL {userLevel}</Text>
               </View>
+              <Text style={tw`text-xs text-amber-600`}>{realTimeStats.totalXP} Total XP</Text>
             </View>
-            <AchievementBadge achievement={currentAchievement} onPress={handleAchievementPress} />
           </View>
+          <AchievementBadge achievement={currentAchievement} onPress={handleAchievementPress} />
         </View>
+      </View>
 
-        {/* Level Progress Bar */}
-        <LevelProgress currentLevel={userLevel} currentLevelXP={currentLevelXP + collectedXP} xpForNextLevel={xpForNextLevel} levelProgress={levelProgress} />
+      {/* Level Progress Bar - with corrected display */}
+      <LevelProgress currentLevel={userLevel} currentLevelXP={displayXP} xpForNextLevel={xpForNextLevel} levelProgress={displayProgress} />
 
-        {/* Stats Grid */}
-        <View style={tw`flex-row gap-3 mb-4`}>
-          <StatsCard label="Streak" value={realTimeStats.dailyStreak} icon={Flame} subtitle="days" isStreak={true} streakValue={totalStreak} />
-          <StatsCard label="Active" value={activeHabits} icon={Target} subtitle="Quests" />
-        </View>
+      {/* Stats Grid */}
+      <View style={tw`flex-row gap-3 mb-4`}>
+        <StatsCard label="Streak" value={realTimeStats.dailyStreak} icon={Flame} subtitle="days" isStreak={true} streakValue={totalStreak} />
+        <StatsCard label="Active" value={activeHabits} icon={Target} subtitle="Quests" />
+      </View>
 
-        {/* Daily Challenge */}
-        <View style={tw`mt-6`}>{user?.id && <DailyChallenge completedToday={completedTasksToday} totalTasksToday={totalTasksToday} onCollect={handleXPCollect} userId={user.id} />}</View>
+      {/* Daily Challenge */}
+      <View style={tw`mt-6`}>
+        {user?.id && (
+          <DailyChallenge
+            completedToday={completedTasksToday}
+            totalTasksToday={totalTasksToday}
+            onCollect={handleXPCollect}
+            userId={user.id}
+            currentLevelXP={currentLevelXP}
+            xpForNextLevel={xpForNextLevel}
+            onLevelUp={handleLevelUp}
+            debugMode={__DEV__}
+          />
+        )}
+      </View>
 
-        {/* Next Achievement Preview */}
-        <NextAchievement nextTitle={nextTitle} xpToNextLevel={xpToNextLevel} />
-      </Animated.View>
-    </View>
+      {/* Next Achievement Preview */}
+      <NextAchievement nextTitle={nextTitle} xpToNextLevel={xpToNextLevel} />
+    </Animated.View>
   );
 };
 
