@@ -233,6 +233,5 @@ export const LOCKED_BADGE_IMAGE = require('../../assets/achievements/locked.png'
 // Helper function to get achievement by level
 export const getAchievementByLevel = (level: number): Achievement | undefined => {
   const currentLevel = achievementTitles.find((a) => a.level === level);
-  console.log('getAchievementByLevel', currentLevel);
   return currentLevel;
 };

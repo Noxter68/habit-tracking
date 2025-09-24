@@ -384,4 +384,166 @@ export class HabitService {
       };
     }
   }
+
+  // Get count of active habits for a user
+  static async getActiveHabitsCount(userId: string): Promise<number> {
+    try {
+      const { count, error } = await supabase.from('habits').select('*', { count: 'exact', head: true }).eq('user_id', userId);
+
+      if (error) throw error;
+
+      return count || 0;
+    } catch (error) {
+      console.error('Error getting active habits count:', error);
+      // If is_active field doesn't exist, get all habits
+      try {
+        const { count, error } = await supabase.from('habits').select('*', { count: 'exact', head: true }).eq('user_id', userId);
+
+        if (error) throw error;
+        return count || 0;
+      } catch (fallbackError) {
+        console.error('Error getting habits count:', fallbackError);
+        return 0;
+      }
+    }
+  }
+
+  // Get today's completion stats for a user
+  static async getTodayStats(userId: string): Promise<{
+    completed: number;
+    total: number;
+    completionRate: number;
+  }> {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+
+      // Get all habits for the user
+      const { data: habits, error: habitsError } = await supabase.from('habits').select('id, tasks').eq('user_id', userId);
+
+      if (habitsError) throw habitsError;
+
+      if (!habits || habits.length === 0) {
+        return { completed: 0, total: 0, completionRate: 0 };
+      }
+
+      // Get today's completions
+      const habitIds = habits.map((h) => h.id);
+      const { data: completions, error: completionsError } = await supabase
+        .from('task_completions')
+        .select('habit_id, completed_tasks, all_completed')
+        .eq('user_id', userId)
+        .eq('date', today)
+        .in('habit_id', habitIds);
+
+      if (completionsError) throw completionsError;
+
+      // Calculate totals
+      let totalTasks = 0;
+      let completedTasks = 0;
+
+      habits.forEach((habit) => {
+        const taskCount = Array.isArray(habit.tasks) ? habit.tasks.length : 0;
+        totalTasks += taskCount;
+
+        const completion = completions?.find((c) => c.habit_id === habit.id);
+        if (completion && completion.completed_tasks) {
+          completedTasks += Array.isArray(completion.completed_tasks) ? completion.completed_tasks.length : 0;
+        }
+      });
+
+      const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+      return {
+        completed: completedTasks,
+        total: totalTasks,
+        completionRate,
+      };
+    } catch (error) {
+      console.error('Error getting today stats:', error);
+      return { completed: 0, total: 0, completionRate: 0 };
+    }
+  }
+
+  // Get weekly stats for a user
+  static async getWeeklyStats(userId: string): Promise<{
+    daysActive: number;
+    totalCompletions: number;
+    averageCompletionRate: number;
+    streakDays: number;
+  }> {
+    try {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      const weekAgoStr = weekAgo.toISOString().split('T')[0];
+      const today = new Date().toISOString().split('T')[0];
+
+      // Get completions for the past week
+      const { data: completions, error } = await supabase.from('task_completions').select('date, all_completed, completed_tasks').eq('user_id', userId).gte('date', weekAgoStr).lte('date', today);
+
+      if (error) throw error;
+
+      if (!completions || completions.length === 0) {
+        return {
+          daysActive: 0,
+          totalCompletions: 0,
+          averageCompletionRate: 0,
+          streakDays: 0,
+        };
+      }
+
+      // Calculate stats
+      const uniqueDates = new Set(completions.map((c) => c.date));
+      const daysActive = uniqueDates.size;
+
+      const totalCompletions = completions.reduce((sum, c) => {
+        return sum + (Array.isArray(c.completed_tasks) ? c.completed_tasks.length : 0);
+      }, 0);
+
+      // Count days with all tasks completed
+      const streakDays = completions.filter((c) => c.all_completed).length;
+
+      // Calculate average completion rate
+      const { data: habits, error: habitsError } = await supabase.from('habits').select('id, tasks').eq('user_id', userId);
+
+      if (habitsError) throw habitsError;
+
+      let totalPossibleTasks = 0;
+      uniqueDates.forEach((date) => {
+        habits?.forEach((habit) => {
+          totalPossibleTasks += Array.isArray(habit.tasks) ? habit.tasks.length : 0;
+        });
+      });
+
+      const averageCompletionRate = totalPossibleTasks > 0 ? Math.round((totalCompletions / totalPossibleTasks) * 100) : 0;
+
+      return {
+        daysActive,
+        totalCompletions,
+        averageCompletionRate,
+        streakDays,
+      };
+    } catch (error) {
+      console.error('Error getting weekly stats:', error);
+      return {
+        daysActive: 0,
+        totalCompletions: 0,
+        averageCompletionRate: 0,
+        streakDays: 0,
+      };
+    }
+  }
+
+  // Check if user has any habits
+  static async hasHabits(userId: string): Promise<boolean> {
+    try {
+      const { count, error } = await supabase.from('habits').select('*', { count: 'exact', head: true }).eq('user_id', userId).limit(1);
+
+      if (error) throw error;
+
+      return (count || 0) > 0;
+    } catch (error) {
+      console.error('Error checking if user has habits:', error);
+      return false;
+    }
+  }
 }
