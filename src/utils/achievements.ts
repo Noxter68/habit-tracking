@@ -1,4 +1,5 @@
-// src/utils/achievements.ts
+import { achievementGradients } from '../lib/tailwind';
+
 export interface Achievement {
   level: number;
   title: string;
@@ -226,6 +227,13 @@ export const achievementTitles: Achievement[] = [
   //   image: require('../../assets/achievements/level-30.png'),
   // },
 ];
+
+export const getTierGradient = (tierName: string, isCompleted: boolean): string[] => {
+  if (isCompleted) {
+    return achievementGradients.tiers[tierName] || ['#fbbf24', '#d97706', '#92400e'];
+  }
+  return achievementGradients.locked.card;
+};
 
 // Locked badge image
 export const LOCKED_BADGE_IMAGE = require('../../assets/achievements/locked.png');
