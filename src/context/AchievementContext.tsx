@@ -1,148 +1,186 @@
 // src/context/AchievementContext.tsx
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Alert } from 'react-native';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import { useHabits } from './HabitContext';
-import { AchievementService, Achievement, UserAchievement } from '../services/AchievementService';
+import { XPService, UserXPStats } from '../services/xpService';
+import { achievementTitles, getAchievementByLevel } from '../utils/achievements';
 
 interface AchievementContextType {
-  achievements: Achievement[];
-  userAchievements: UserAchievement[];
+  // XP Stats
+  totalXP: number;
+  currentLevel: number;
+  currentLevelXP: number;
+  xpForNextLevel: number;
+  levelProgress: number;
+
+  // User Info
   userTitle: string;
-  streak: number;
-  totalCompletions: number;
-  loading: boolean;
+  currentAchievement: any;
+  nextAchievement: any;
+
+  // Daily Challenge
+  dailyTasksCompleted: number;
+  dailyTasksTotal: number;
+  dailyChallengeCollected: boolean;
+
+  // Methods
+  collectDailyChallenge: () => Promise<boolean>;
+  awardHabitXP: (habitId: string, habitType: 'good' | 'bad', tasksCompleted: number, streak: number) => Promise<number>;
+  refreshXPStats: () => Promise<void>;
   checkAchievements: () => Promise<void>;
-  refreshAchievements: () => Promise<void>;
 }
 
 const AchievementContext = createContext<AchievementContextType | undefined>(undefined);
 
-export const AchievementProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [achievements, setAchievements] = useState<Achievement[]>([]);
-  const [userAchievements, setUserAchievements] = useState<UserAchievement[]>([]);
-  const [userTitle, setUserTitle] = useState<string>('Newcomer');
-  const [streak, setStreak] = useState(0);
-  const [totalCompletions, setTotalCompletions] = useState(0);
-  const [loading, setLoading] = useState(false);
-
+export const AchievementProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const { habits } = useHabits();
 
+  // XP Stats
+  const [totalXP, setTotalXP] = useState(0);
+  const [currentLevel, setCurrentLevel] = useState(1);
+  const [currentLevelXP, setCurrentLevelXP] = useState(0);
+  const [xpForNextLevel, setXpForNextLevel] = useState(100);
+  const [levelProgress, setLevelProgress] = useState(0);
+
+  // User Info
+  const [userTitle, setUserTitle] = useState('Beginner');
+  const [currentAchievement, setCurrentAchievement] = useState<any>(null);
+  const [nextAchievement, setNextAchievement] = useState<any>(null);
+
+  // Daily Challenge
+  const [dailyTasksCompleted, setDailyTasksCompleted] = useState(0);
+  const [dailyTasksTotal, setDailyTasksTotal] = useState(0);
+  const [dailyChallengeCollected, setDailyChallengeCollected] = useState(false);
+
+  // Load XP stats on mount and user change
   useEffect(() => {
     if (user) {
-      loadAchievements();
+      loadXPStats();
+      subscribeToUpdates();
     }
   }, [user]);
 
+  // Update achievement titles when level changes
   useEffect(() => {
-    if (user && habits.length > 0) {
-      checkAchievements();
-    }
-  }, [habits]);
+    const achievement = getAchievementByLevel(currentLevel);
+    const next = getAchievementByLevel(currentLevel + 1);
 
-  const loadAchievements = async () => {
+    setCurrentAchievement(achievement);
+    setNextAchievement(next);
+    setUserTitle(achievement?.title || 'Beginner');
+  }, [currentLevel]);
+
+  const loadXPStats = async () => {
     if (!user) return;
 
-    try {
-      setLoading(true);
-
-      // Load all achievements
-      const allAchievements = await AchievementService.getAllAchievements();
-      setAchievements(allAchievements);
-
-      // Load user achievements
-      const userAchs = await AchievementService.getUserAchievements(user.id);
-      setUserAchievements(userAchs);
-
-      // Set current title
-      if (userAchs.length > 0) {
-        const latestAchievement = userAchs.sort((a, b) => new Date(b.unlockedAt).getTime() - new Date(a.unlockedAt).getTime())[0];
-        setUserTitle(latestAchievement.title);
-      }
-    } catch (error) {
-      console.error('Error loading achievements:', error);
-    } finally {
-      setLoading(false);
+    const stats = await XPService.getUserXPStats(user.id);
+    if (stats) {
+      setTotalXP(stats.total_xp);
+      setCurrentLevel(stats.current_level);
+      setCurrentLevelXP(stats.current_level_xp);
+      setXpForNextLevel(stats.xp_for_next_level);
+      setLevelProgress(stats.level_progress);
+      setDailyTasksCompleted(stats.daily_tasks_completed || 0);
+      setDailyTasksTotal(stats.daily_tasks_total || 0);
+      setDailyChallengeCollected(stats.daily_challenge_collected || false);
     }
+
+    // Load daily challenge
+    const challenge = await XPService.getDailyChallenge(user.id);
+    if (challenge) {
+      setDailyTasksCompleted(challenge.completed_tasks);
+      setDailyTasksTotal(challenge.total_tasks);
+      setDailyChallengeCollected(challenge.xp_collected);
+    }
+  };
+
+  const subscribeToUpdates = () => {
+    if (!user) return;
+
+    return XPService.subscribeToXPUpdates(user.id, (stats) => {
+      setTotalXP(stats.total_xp);
+      setCurrentLevel(stats.current_level);
+      setCurrentLevelXP(stats.current_level_xp);
+      setXpForNextLevel(stats.xp_for_next_level);
+      setLevelProgress(stats.level_progress);
+    });
+  };
+
+  const collectDailyChallenge = async (): Promise<boolean> => {
+    if (!user) return false;
+
+    const success = await XPService.collectDailyChallenge(user.id);
+    if (success) {
+      setDailyChallengeCollected(true);
+      // Refresh stats to show new XP
+      await loadXPStats();
+
+      // Show level up notification if needed
+      const newLevel = XPService.calculateLevelFromXP(totalXP + 20);
+      if (newLevel > currentLevel) {
+        // Trigger level up animation/notification
+        console.log('LEVEL UP! You are now level', newLevel);
+      }
+    }
+    return success;
+  };
+
+  const awardHabitXP = async (habitId: string, habitType: 'good' | 'bad', tasksCompleted: number, streak: number): Promise<number> => {
+    if (!user) return 0;
+
+    const xpEarned = await XPService.completeHabit(user.id, habitId, habitType, tasksCompleted, streak);
+
+    if (xpEarned > 0) {
+      // Update daily progress
+      await XPService.updateDailyProgress(user.id, dailyTasksCompleted + (tasksCompleted || 1), dailyTasksTotal);
+
+      // Refresh stats
+      await loadXPStats();
+    }
+
+    return xpEarned;
+  };
+
+  const refreshXPStats = async () => {
+    await loadXPStats();
   };
 
   const checkAchievements = async () => {
-    if (!user || !habits || habits.length === 0) return;
-
-    try {
-      // Calculate user stats
-      const maxStreak = Math.max(...habits.map((h) => h.currentStreak || 0), 0);
-      const completions = habits.reduce((sum, h) => sum + (h.completedDays?.length || 0), 0);
-      const perfectDays = calculatePerfectDays();
-      const totalHabits = habits.length;
-
-      setStreak(maxStreak);
-      setTotalCompletions(completions);
-
-      // Check for new achievements
-      const newAchievements = await AchievementService.checkAndUnlockAchievements(user.id, {
-        streak: maxStreak,
-        totalCompletions: completions,
-        perfectDays,
-        totalHabits,
-      });
-
-      if (newAchievements.length > 0) {
-        // Show notification for each new achievement
-        newAchievements.forEach((achievement) => {
-          Alert.alert('🎉 Achievement Unlocked!', `You've earned the title: ${achievement.title}\n${achievement.description}`, [{ text: 'Awesome!', style: 'default' }]);
-        });
-
-        // Update user title to the latest achievement
-        const latestTitle = newAchievements[newAchievements.length - 1].title;
-        setUserTitle(latestTitle);
-
-        // Reload achievements
-        await loadAchievements();
-      }
-    } catch (error) {
-      console.error('Error checking achievements:', error);
-    }
+    // This can be extended to check for special achievements
+    // For now, just refresh stats
+    await loadXPStats();
   };
 
-  const calculatePerfectDays = () => {
-    if (habits.length === 0) return 0;
+  const value: AchievementContextType = {
+    // XP Stats
+    totalXP,
+    currentLevel,
+    currentLevelXP,
+    xpForNextLevel,
+    levelProgress,
 
-    const allDates = new Set<string>();
-    habits.forEach((habit) => {
-      habit.completedDays?.forEach((date) => allDates.add(date));
-    });
+    // User Info
+    userTitle,
+    currentAchievement,
+    nextAchievement,
 
-    return Array.from(allDates).filter((date) => habits.every((habit) => habit.completedDays?.includes(date))).length;
+    // Daily Challenge
+    dailyTasksCompleted,
+    dailyTasksTotal,
+    dailyChallengeCollected,
+
+    // Methods
+    collectDailyChallenge,
+    awardHabitXP,
+    refreshXPStats,
+    checkAchievements,
   };
 
-  const refreshAchievements = async () => {
-    await loadAchievements();
-    await checkAchievements();
-  };
-
-  return (
-    <AchievementContext.Provider
-      value={{
-        achievements,
-        userAchievements,
-        userTitle,
-        streak,
-        totalCompletions,
-        loading,
-        checkAchievements,
-        refreshAchievements,
-      }}
-    >
-      {children}
-    </AchievementContext.Provider>
-  );
+  return <AchievementContext.Provider value={value}>{children}</AchievementContext.Provider>;
 };
 
 export const useAchievements = () => {
   const context = useContext(AchievementContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useAchievements must be used within an AchievementProvider');
   }
   return context;
