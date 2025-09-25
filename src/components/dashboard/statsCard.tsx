@@ -1,22 +1,25 @@
 // src/components/dashboard/StatsCard.tsx
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, Image, ImageSourcePropType } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { LucideIcon } from 'lucide-react-native';
+import { HomeIcon, LucideIcon } from 'lucide-react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import tw from '../../lib/tailwind';
+import { getImage } from '@/utils/images';
 
-interface StatsCardProps {
+// Define props with proper typing - use EITHER icon OR image, not both
+type StatsCardProps = {
   label: string;
   value: number | string;
-  icon?: LucideIcon;
   subtitle?: string;
   highlight?: boolean;
   isStreak?: boolean;
   streakValue?: number;
-}
+} & ({ icon: LucideIcon; image?: never } | { icon?: never; image: ImageSourcePropType | string } | { icon?: never; image?: never });
 
-const StatsCard: React.FC<StatsCardProps> = ({ label, value, icon: Icon, subtitle, highlight = false, isStreak = false, streakValue = 0 }) => {
+const StatsCard: React.FC<StatsCardProps> = (props) => {
+  const { label, value, subtitle, highlight = false, isStreak = false, streakValue = 0 } = props;
+
   const fireScale = useSharedValue(1);
 
   React.useEffect(() => {
@@ -46,25 +49,67 @@ const StatsCard: React.FC<StatsCardProps> = ({ label, value, icon: Icon, subtitl
     return 'text-amber-600';
   };
 
-  return (
-    <LinearGradient colors={getGradientColors()} style={[tw`flex-1 rounded-2xl p-3`, (!isStreak || streakValue < 7) && tw`border border-amber-200`]}>
-      <View style={tw`flex-row items-center justify-between`}>
-        <View>
-          <Text style={tw`text-xs font-medium ${isStreak && streakValue >= 7 ? 'text-white opacity-90' : 'text-amber-700'}`}>{label}</Text>
-          <Text style={tw`text-xl font-black ${getTextColors()}`}>{value}</Text>
-        </View>
-        {Icon && (
-          <Animated.View style={isStreak && streakValue >= 7 ? fireAnimatedStyle : undefined}>
-            <View style={tw`w-10 h-10 ${isStreak && streakValue >= 7 ? 'bg-white bg-opacity-20' : 'bg-amber-200 bg-opacity-50'} rounded-xl items-center justify-center`}>
-              <Icon size={24} color={isStreak && streakValue >= 7 ? '#fff' : '#d97706'} />
+  const isOnFire = isStreak && streakValue >= 7;
+  const containerBg = isOnFire ? 'bg-white bg-opacity-20' : 'bg-amber-200 bg-opacity-50';
+
+  const renderVisual = () => {
+    // Check if we have an icon prop
+    if ('icon' in props && props.icon) {
+      const Icon = props.icon;
+      return (
+        <Animated.View style={isOnFire ? fireAnimatedStyle : undefined}>
+          <View style={tw`w-10 h-10 ${containerBg} rounded-xl items-center justify-center`}>
+            <Icon size={24} color={isOnFire ? '#fff' : '#d97706'} />
+          </View>
+        </Animated.View>
+      );
+    }
+
+    // Check if we have an image prop
+    if ('image' in props && props.image) {
+      const imageSource = typeof props.image === 'string' ? getImageSource(props.image) : props.image;
+
+      // If no valid image source found, show default icon
+      if (!imageSource) {
+        return (
+          <Animated.View style={isOnFire ? fireAnimatedStyle : undefined}>
+            <View style={tw`w-10 h-10 ${containerBg} rounded-xl items-center justify-center`}>
+              <HomeIcon size={24} color={isOnFire ? '#fff' : '#d97706'} />
             </View>
           </Animated.View>
-        )}
+        );
+      }
+
+      return (
+        <Animated.View style={isOnFire ? fireAnimatedStyle : undefined}>
+          <View style={tw`w-10 h-10 ${containerBg} rounded-xl items-center justify-center`}>
+            <Image source={imageSource} style={tw`w-8 h-8`} resizeMode="contain" />
+          </View>
+        </Animated.View>
+      );
+    }
+
+    return null;
+  };
+
+  return (
+    <LinearGradient colors={getGradientColors()} style={[tw`flex-1 rounded-2xl p-3`, !isOnFire && tw`border border-amber-200`]}>
+      <View style={tw`flex-row items-center justify-between`}>
+        <View>
+          <Text style={tw`text-xs font-medium ${isOnFire ? 'text-white opacity-90' : 'text-amber-700'}`}>{label}</Text>
+          <Text style={tw`text-xl font-black ${getTextColors()}`}>{value}</Text>
+        </View>
+        {renderVisual()}
       </View>
       {subtitle && <Text style={tw`text-xs ${getSubtextColors()} mt-1`}>{subtitle}</Text>}
-      {isStreak && streakValue >= 7 && <Text style={tw`text-xs font-bold text-white opacity-90 mt-1`}>{streakValue >= 30 ? 'LEGENDARY!' : 'ON FIRE!'}</Text>}
+      {isOnFire && <Text style={tw`text-xs font-bold text-white opacity-90 mt-1`}>{streakValue >= 30 ? 'LEGENDARY!' : 'ON FIRE!'}</Text>}
     </LinearGradient>
   );
+};
+
+// Helper function to get image source from string
+const getImageSource = (imageName: string): ImageSourcePropType | null => {
+  return getImage(imageName);
 };
 
 export default StatsCard;

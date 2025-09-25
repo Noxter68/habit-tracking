@@ -143,8 +143,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
       {/* Stats Grid */}
       <View style={tw`flex-row gap-3 mb-4`}>
-        <StatsCard label="Streak" value={realTimeStats.dailyStreak} icon={Flame} subtitle="days" isStreak={true} streakValue={totalStreak} />
-        <StatsCard label="Active" value={activeHabits} icon={Target} subtitle="Quests" />
+        <StatsCard label="Streak" value={realTimeStats.dailyStreak} image="streak" subtitle="days" isStreak={true} streakValue={totalStreak} />
+        <StatsCard label="Active" value={activeHabits} image="active" subtitle="Quests" />
       </View>
 
       {/* Daily Challenge */}
