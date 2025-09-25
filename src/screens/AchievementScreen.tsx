@@ -1,19 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ScrollView, Pressable, ActivityIndicator, RefreshControl, View, Text, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import tw from '../lib/tailwind';
 
-// Context & Services
-import { useAuth } from '../context/AuthContext';
+// Context
 import { useAchievements } from '../context/AchievementContext';
-import { AchievementService } from '../services/AchievementService';
-import { HabitService } from '../services/habitService';
-import { XPService } from '../services/xpService';
 
 // Types
-import { Achievement, BackendData, FilterType, TIER_NAMES } from '../types/achievement.types';
+import { Achievement, FilterType, TIER_NAMES } from '../types/achievement.types';
 
 // Components
 import { AchievementStats } from '../components/achievements/AchievementStats';
@@ -24,130 +20,33 @@ import { AchievementDetailModal } from '../components/achievements/AchievementDe
 import { ZoomModal } from '../components/achievements/ZoomModal';
 
 // Utils
-import { achievementTitles, getAchievementByLevel } from '../utils/achievements';
+import { achievementTitles } from '../utils/achievements';
 
 const AchievementsScreen: React.FC = () => {
   const navigation = useNavigation();
-  const { user } = useAuth();
-  const achievementsContext = useAchievements();
-  const contextCompletions = achievementsContext?.totalCompletions || 0;
+  const { achievements, totalCompletions, totalXP, currentLevel, levelProgress, streak, perfectDays, totalHabits, loading, currentTitle, nextTitle, refreshAchievements } = useAchievements();
 
-  // State
+  // Local UI state
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showZoomModal, setShowZoomModal] = useState(false);
   const [filter, setFilter] = useState<FilterType>('all');
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [backendData, setBackendData] = useState<BackendData>({
-    totalCompletions: 0,
-    totalXP: 0,
-    userAchievements: [],
-    currentStreak: 0,
-    perfectDays: 0,
-    totalHabits: 0,
-    currentLevel: 1,
-    levelProgress: 0,
-  });
 
-  // Effects
-  useEffect(() => {
-    fetchAchievementData();
-  }, [user?.id]);
-
-  // Data fetching
-  const fetchAchievementData = async () => {
-    if (!user?.id) return;
-
-    try {
-      setLoading(true);
-
-      const [xpStats, habitStats, userAchievements, habits] = await Promise.all([
-        XPService.getUserXPStats(user.id),
-        HabitService.getAggregatedStats(user.id),
-        AchievementService.getUserAchievements(user.id),
-        HabitService.fetchHabits(user.id),
-      ]);
-
-      const perfectDays = habitStats.streakData?.filter((day: any) => day.value === 100).length || 0;
-
-      setBackendData({
-        totalCompletions: habitStats.totalCompletions || contextCompletions,
-        totalXP: xpStats?.total_xp || 0,
-        userAchievements: userAchievements || [],
-        currentStreak: habitStats.totalDaysTracked || 0,
-        perfectDays,
-        totalHabits: habits.length,
-        levelProgress: xpStats?.level_progress || 0,
-        currentLevel: xpStats?.current_level || achievementsContext.currentLevel,
-      });
-
-      await checkAndUnlockNewAchievements({
-        streak: habitStats.totalDaysTracked || 0,
-        totalCompletions: habitStats.totalCompletions || 0,
-        perfectDays,
-        totalHabits: habits.length,
-      });
-    } catch (error) {
-      console.error('Error fetching achievement data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const checkAndUnlockNewAchievements = async (stats: any) => {
-    if (!user?.id) return;
-
-    try {
-      const newAchievements = await AchievementService.checkAndUnlockAchievements(user.id, stats);
-
-      if (newAchievements && newAchievements.length > 0) {
-        console.log('New achievements unlocked:', newAchievements);
-        const updatedAchievements = await AchievementService.getUserAchievements(user.id);
-        setBackendData((prev) => ({
-          ...prev,
-          userAchievements: updatedAchievements || [],
-        }));
-      }
-    } catch (error) {
-      console.error('Error checking achievements:', error);
-    }
-  };
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchAchievementData();
-    setRefreshing(false);
-  };
-
-  const handleAchievementPress = (achievement: Achievement) => {
-    setSelectedAchievement(achievement);
-    setShowModal(true);
-  };
-
-  // Calculations
-  const currentLevel = achievementsContext.currentLevel;
-  const currentTitle = getAchievementByLevel(currentLevel);
-  const nextTitle = getAchievementByLevel(currentLevel + 1);
-  const levelProgress = backendData.levelProgress || 0;
-
+  // Helpers
   const isAchievementUnlocked = (achievement: Achievement): boolean => {
     if (achievement.level <= currentLevel) return true;
-    if (!Array.isArray(backendData.userAchievements)) return false;
-    return backendData.userAchievements.some((ua) => ua?.title === achievement.title || ua?.achievementId === achievement.id);
+    return achievements.some((ua) => ua?.title === achievement.title || ua?.achievementId === achievement.id);
   };
 
-  const filteredAchievements = Array.isArray(achievementTitles)
-    ? achievementTitles.filter((achievement) => {
-        const isUnlocked = isAchievementUnlocked(achievement);
-        if (filter === 'unlocked') return isUnlocked;
-        if (filter === 'locked') return !isUnlocked;
-        return true;
-      })
-    : [];
+  const filteredAchievements = achievementTitles.filter((achievement) => {
+    const isUnlocked = isAchievementUnlocked(achievement);
+    if (filter === 'unlocked') return isUnlocked;
+    if (filter === 'locked') return !isUnlocked;
+    return true;
+  });
 
-  const unlockedCount = Array.isArray(achievementTitles) ? achievementTitles.filter((a) => isAchievementUnlocked(a)).length : 0;
-  const totalCount = Array.isArray(achievementTitles) ? achievementTitles.length : 0;
+  const unlockedCount = achievementTitles.filter((a) => isAchievementUnlocked(a)).length;
+  const totalCount = achievementTitles.length;
 
   // Loading state
   if (loading) {
@@ -174,14 +73,14 @@ const AchievementsScreen: React.FC = () => {
           </View>
 
           {/* Stats */}
-          <AchievementStats unlockedCount={unlockedCount} totalCount={totalCount} totalCompletions={backendData.totalCompletions} totalXP={backendData.totalXP} />
+          <AchievementStats unlockedCount={unlockedCount} totalCount={totalCount} totalCompletions={totalCompletions} totalXP={totalXP} />
         </View>
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 20 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#d97706']} tintColor="#d97706" />}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={refreshAchievements} colors={['#d97706']} tintColor="#d97706" />}
       >
         {/* Current Level Hero */}
         <View style={tw`px-4 pt-4`}>
@@ -190,9 +89,9 @@ const AchievementsScreen: React.FC = () => {
             currentTitle={currentTitle}
             nextTitle={nextTitle}
             levelProgress={levelProgress}
-            currentStreak={backendData.currentStreak}
-            perfectDays={backendData.perfectDays}
-            totalHabits={backendData.totalHabits}
+            currentStreak={streak}
+            perfectDays={perfectDays}
+            totalHabits={totalHabits}
             onPress={() => setShowZoomModal(true)}
           />
         </View>
@@ -212,9 +111,12 @@ const AchievementsScreen: React.FC = () => {
                 tierName={tierName}
                 tierIndex={tierIndex}
                 achievements={tierAchievements}
-                userAchievements={backendData.userAchievements}
+                userAchievements={achievements}
                 isAchievementUnlocked={isAchievementUnlocked}
-                onAchievementPress={handleAchievementPress}
+                onAchievementPress={(ach) => {
+                  setSelectedAchievement(ach);
+                  setShowModal(true);
+                }}
               />
             );
           })}
@@ -222,7 +124,7 @@ const AchievementsScreen: React.FC = () => {
       </ScrollView>
 
       {/* Modals */}
-      <AchievementDetailModal visible={showModal} onClose={() => setShowModal(false)} achievement={selectedAchievement} currentLevel={currentLevel} totalCompletions={backendData.totalCompletions} />
+      <AchievementDetailModal visible={showModal} onClose={() => setShowModal(false)} achievement={selectedAchievement} currentLevel={currentLevel} totalCompletions={totalCompletions} />
 
       <ZoomModal visible={showZoomModal} onClose={() => setShowZoomModal(false)} currentLevel={currentLevel} currentTitle={currentTitle} />
     </SafeAreaView>

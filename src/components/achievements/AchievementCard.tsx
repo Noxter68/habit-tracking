@@ -16,7 +16,7 @@ interface AchievementCardProps {
 
 export const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, isUnlocked, isFromBackend, index, onPress }) => {
   return (
-    <Animated.View entering={FadeIn.delay(index * 50)} style={tw`w-[31%] mb-3`}>
+    <Animated.View entering={FadeIn.delay(index * 50)} style={tw`mb-3`}>
       <Pressable onPress={() => onPress(achievement)} style={({ pressed }) => pressed && tw`scale-[0.95]`}>
         <LinearGradient
           colors={isUnlocked ? achievementGradients?.unlocked?.card || ['#fef3c7', '#fde68a'] : achievementGradients?.locked?.card || ['#e5e5e5', '#d4d4d4']}

@@ -58,7 +58,6 @@ const FloatingXP: React.FC<FloatingXPProps> = ({ amount = 20, show, onComplete, 
   }));
 
   if (!show) {
-    console.log('FloatingXP: Not showing (show=false)');
     return null;
   }
 

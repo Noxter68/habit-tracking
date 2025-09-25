@@ -45,7 +45,7 @@ export interface Habit {
   name: string;
   type: HabitType;
   category: string;
-  tasks: string[]; // Task IDs that need to be completed
+  tasks: any[]; // Task IDs that need to be completed
   dailyTasks: DailyTaskCompletion; // Track which tasks are completed each day
   frequency: Frequency;
   customDays?: string[];

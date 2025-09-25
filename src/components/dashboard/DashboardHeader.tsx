@@ -1,5 +1,5 @@
 // src/components/dashboard/DashboardHeader.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
@@ -60,11 +60,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     dailyStreak: totalStreak,
   });
 
-  useEffect(() => {
-    fetchRealTimeStats();
-  }, [refreshTrigger, user?.id]);
-
-  const fetchRealTimeStats = async () => {
+  // FIX 1: Make fetchRealTimeStats stable with useCallback
+  const fetchRealTimeStats = useCallback(async () => {
     if (!user?.id) return;
 
     try {
@@ -78,38 +75,74 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
-  };
+  }, [user?.id, totalStreak]);
 
-  const handleXPCollect = async (amount: number) => {
-    console.log('DashboardHeader: handleXPCollect called with amount:', amount);
+  // FIX 2: Remove refreshTrigger dependency - it can cause loops
+  // Only fetch when user changes or component mounts
+  useEffect(() => {
+    fetchRealTimeStats();
+  }, [user?.id]); // Removed refreshTrigger
 
-    // Wait a bit for the backend to update, then refresh stats
-    setTimeout(async () => {
-      if (onStatsRefresh) {
-        onStatsRefresh(); // Tell parent to refresh from backend
-      } else if (onXPCollected) {
-        onXPCollected(amount); // Fallback to old behavior
+  // FIX 3: Prevent rapid calls with useCallback and refs
+  const isCollecting = React.useRef(false);
+
+  const handleXPCollect = useCallback(
+    async (amount: number) => {
+      // Prevent multiple simultaneous calls
+      if (isCollecting.current) {
+        console.log('Already collecting XP, skipping...');
+        return;
       }
 
-      // Also refresh local stats
-      await fetchRealTimeStats();
-    }, 1000);
-  };
+      isCollecting.current = true;
+      console.log('DashboardHeader: handleXPCollect called with amount:', amount);
 
-  const handleAchievementPress = () => {
-    navigation.navigate('Achievements' as never);
-  };
+      try {
+        // Call the parent's refresh function
+        if (onStatsRefresh) {
+          onStatsRefresh();
+        } else if (onXPCollected) {
+          onXPCollected(amount);
+        }
 
-  const handleLevelUp = () => {
+        // Wait for backend to update, then fetch local stats
+        setTimeout(async () => {
+          await fetchRealTimeStats();
+          isCollecting.current = false;
+        }, 1000);
+      } catch (error) {
+        console.error('Error collecting XP:', error);
+        isCollecting.current = false;
+      }
+    },
+    [onStatsRefresh, onXPCollected, fetchRealTimeStats]
+  );
+
+  // FIX 4: Debounce level up handling
+  const isLevelingUp = React.useRef(false);
+
+  const handleLevelUp = useCallback(() => {
+    if (isLevelingUp.current) {
+      console.log('Already processing level up, skipping...');
+      return;
+    }
+
+    isLevelingUp.current = true;
     console.log('DashboardHeader: Level up triggered');
-    // Refresh everything after level up
+
+    // Refresh everything after level up with delay
     setTimeout(() => {
       if (onStatsRefresh) {
         onStatsRefresh();
       }
       fetchRealTimeStats();
+      isLevelingUp.current = false;
     }, 500);
-  };
+  }, [onStatsRefresh, fetchRealTimeStats]);
+
+  const handleAchievementPress = useCallback(() => {
+    navigation.navigate('Achievements' as never);
+  }, [navigation]);
 
   // Get next achievement title
   const nextTitle = achievementTitles?.find((t) => t.level === userLevel + 1);

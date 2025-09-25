@@ -2,8 +2,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Sparkles, Trophy } from 'lucide-react-native';
-import tw from '../../lib/tailwind';
+import { Award, Trophy } from 'lucide-react-native';
 import { Achievement, TierName, UserAchievement } from '../../types/achievement.types';
 import { AchievementCard } from './AchievementCard';
 import { getTierGradient } from '../../utils/achievements';
@@ -24,41 +23,94 @@ export const TierSection: React.FC<TierSectionProps> = ({ tierName, tierIndex, a
   const isCompleted = tierUnlockedCount === tierTotalCount;
 
   return (
-    <Animated.View entering={FadeInDown.delay(tierIndex * 100).springify()} style={tw`mb-6`}>
+    <Animated.View entering={FadeInDown.delay(tierIndex * 100).springify()} style={{ marginBottom: 24 }}>
       {/* Tier Header */}
       <LinearGradient
         colors={getTierGradient(tierName, isCompleted)}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        style={tw`mx-2 rounded-2xl p-4 mb-3 border ${isCompleted ? 'border-achievement-amber-300' : 'border-gray-200'}`}
+        style={{
+          marginHorizontal: 8,
+          borderRadius: 16,
+          padding: 16,
+          marginBottom: 12,
+          borderWidth: 1,
+          borderColor: isCompleted ? '#b5bfb5' : '#e1e5e9',
+        }}
       >
-        <View style={tw`flex-row items-center justify-between mb-2`}>
-          <View style={tw`flex-row items-center gap-2`}>
-            {isCompleted && <Sparkles size={18} color="#92400e" />}
-            <Text style={tw`text-base font-bold ${isCompleted ? 'text-achievement-amber-900' : 'text-gray-700'}`}>{tierName}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            {isCompleted && <Award size={18} color="#5a6b5a" />}
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: '700',
+                color: isCompleted ? '#3e463e' : '#566070',
+              }}
+            >
+              {tierName}
+            </Text>
           </View>
 
-          <View style={tw`flex-row items-center gap-2`}>
-            <Text style={tw`text-sm font-semibold ${isCompleted ? 'text-achievement-amber-800' : 'text-gray-600'}`}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text
+              style={{
+                fontSize: 14,
+                fontWeight: '600',
+                color: isCompleted ? '#4a564a' : '#6b7889',
+              }}
+            >
               {tierUnlockedCount}/{tierTotalCount}
             </Text>
-            {isCompleted && <Trophy size={16} color="#d97706" />}
+            {isCompleted && <Trophy size={16} color="#738573" />}
           </View>
         </View>
 
         {/* Progress Bar */}
-        <View style={tw`h-1.5 bg-black/10 rounded-full overflow-hidden`}>
-          <View style={[tw`h-full ${isCompleted ? 'bg-white' : 'bg-gray-400'} rounded-full`, { width: `${progress}%` }]} />
+        <View
+          style={{
+            height: 6,
+            backgroundColor: 'rgba(0, 0, 0, 0.1)',
+            borderRadius: 3,
+            overflow: 'hidden',
+          }}
+        >
+          <View
+            style={{
+              height: '100%',
+              backgroundColor: isCompleted ? '#91a091' : '#a8b4c1',
+              borderRadius: 3,
+              width: `${progress}%`,
+            }}
+          />
         </View>
       </LinearGradient>
 
-      {/* Achievement Cards */}
-      <View style={tw`flex-row flex-wrap justify-between px-2`}>
+      {/* Achievement Grid - Fixed Layout */}
+      <View
+        style={{
+          paddingHorizontal: 8,
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          marginHorizontal: -4, // Negative margin to compensate for card padding
+        }}
+      >
         {achievements.map((achievement, index) => {
           const isUnlocked = isAchievementUnlocked(achievement);
           const isFromBackend = userAchievements.some((ua) => ua?.title === achievement.title);
 
-          return <AchievementCard key={achievement.title} achievement={achievement} isUnlocked={isUnlocked} isFromBackend={isFromBackend} index={index} onPress={onAchievementPress} />;
+          return (
+            <View
+              key={`${achievement.id}=${achievement.title}`}
+              style={{
+                width: '49%', // Exactly 2 columns
+                paddingHorizontal: 4, // Horizontal spacing between cards
+                paddingVertical: 4, // Vertical spacing between rows
+              }}
+            >
+              <AchievementCard achievement={achievement} isUnlocked={isUnlocked} isFromBackend={isFromBackend} index={index} onPress={onAchievementPress} />
+            </View>
+          );
         })}
       </View>
     </Animated.View>
