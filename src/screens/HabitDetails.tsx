@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
+
 import Animated, { FadeIn, FadeInDown, FadeInUp, useAnimatedStyle, withSpring, useSharedValue, interpolate, Extrapolate, useAnimatedScrollHandler, withTiming } from 'react-native-reanimated';
 import { ArrowLeft, Trophy, Flame, TrendingUp, Calendar, Target, Award, Sparkles, Star, Clock, CheckCircle2, Circle, BarChart3, Activity, Zap, Shield, Crown, Medal } from 'lucide-react-native';
 import tw from '@/lib/tailwind';

@@ -1,13 +1,5 @@
 // src/utils/habitHelpers.ts
-import { HabitType } from '../types';
-
-export interface Task {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  duration?: string;
-}
+import { HabitType, Task } from '../types';
 
 // Auto-generate habit name based on category and type
 export const getCategoryName = (category: string, type: HabitType): string => {
@@ -57,79 +49,78 @@ export const getTasksForCategory = (category: string, type: HabitType): Task[] =
         { id: 'deep-breathing', name: 'Deep Breathing', description: '5 minutes of breathing exercises', icon: '💨', duration: '5 min' },
         { id: 'cold-shower', name: 'Cold Shower', description: 'Take a cold shower', icon: '🚿', duration: '5 min' },
         { id: 'vitamins', name: 'Take Vitamins', description: 'Daily vitamin supplements', icon: '💊', duration: '1 min' },
-        { id: 'skincare', name: 'Skincare Routine', description: 'Complete skincare routine', icon: '🧴', duration: '10 min' },
-        { id: 'floss', name: 'Floss Teeth', description: 'Dental hygiene', icon: '🦷', duration: '2 min' },
+        { id: 'skincare', name: 'Skincare Routine', description: 'Morning/evening skincare', icon: '🧴', duration: '10 min' },
+        { id: 'health-checkup', name: 'Health Check', description: 'Monitor vital signs', icon: '🩺', duration: '5 min' },
       ],
       bad: [
-        { id: 'no-stress', name: 'Stress Management', description: 'Avoid stressful situations', icon: '😤', duration: 'All day' },
+        { id: 'no-stress', name: 'Stress Management', description: 'Avoid stressful situations', icon: '😌', duration: 'All day' },
         { id: 'no-late-nights', name: 'No Late Nights', description: 'Sleep before midnight', icon: '🌙', duration: 'Evening' },
-        { id: 'no-skipping-meals', name: "Don't Skip Meals", description: 'Eat regular meals', icon: '🍽️', duration: 'Meal times' },
+        { id: 'no-overwork', name: 'Avoid Overworking', description: 'Take regular breaks', icon: '⏸️', duration: 'All day' },
       ],
     },
     nutrition: {
       good: [
-        { id: 'healthy-breakfast', name: 'Healthy Breakfast', description: 'Nutritious morning meal', icon: '🥞', duration: '20 min' },
-        { id: 'vegetables', name: '5 Servings Veggies', description: 'Eat 5 servings of vegetables', icon: '🥦', duration: 'All day' },
-        { id: 'fruits', name: '2 Fruits Daily', description: 'Eat at least 2 fruits', icon: '🍎', duration: 'All day' },
-        { id: 'protein', name: 'Protein Goals', description: 'Meet daily protein target', icon: '🥚', duration: 'All day' },
-        { id: 'meal-prep', name: 'Meal Prep', description: 'Prepare healthy meals', icon: '🥗', duration: '1 hour' },
-        { id: 'smoothie', name: 'Green Smoothie', description: 'Make a healthy smoothie', icon: '🥤', duration: '10 min' },
+        { id: 'healthy-breakfast', name: 'Healthy Breakfast', description: 'Nutritious morning meal', icon: '🥗', duration: '20 min' },
+        { id: 'fruit-serving', name: 'Eat Fruits', description: '2-3 servings of fruit', icon: '🍎', duration: '5 min' },
+        { id: 'vegetables', name: 'Eat Vegetables', description: '5 servings of vegetables', icon: '🥦', duration: 'Meals' },
+        { id: 'meal-prep', name: 'Meal Prep', description: 'Prepare healthy meals', icon: '🍱', duration: '30 min' },
+        { id: 'protein-intake', name: 'Protein Goals', description: 'Meet protein targets', icon: '🥚', duration: 'Meals' },
+        { id: 'whole-grains', name: 'Whole Grains', description: 'Choose whole grains', icon: '🌾', duration: 'Meals' },
       ],
       bad: [
-        { id: 'no-sugar', name: 'No Added Sugar', description: 'Avoid sugary foods', icon: '🍬', duration: 'All day' },
-        { id: 'no-fast-food', name: 'Skip Fast Food', description: 'Avoid fast food restaurants', icon: '🍔', duration: 'All day' },
-        { id: 'no-soda', name: 'No Soda', description: 'Avoid carbonated drinks', icon: '🥤', duration: 'All day' },
+        { id: 'no-fast-food', name: 'No Fast Food', description: 'Avoid fast food', icon: '🍔', duration: 'All day' },
+        { id: 'no-sugar', name: 'Limit Sugar', description: 'Reduce sugar intake', icon: '🍬', duration: 'All day' },
+        { id: 'no-late-snacks', name: 'No Late Snacking', description: 'No eating after 8pm', icon: '🚫', duration: 'Evening' },
       ],
     },
     learning: {
       good: [
-        { id: 'read-book', name: 'Read 30 Pages', description: 'Read from a book', icon: '📚', duration: '30 min' },
+        { id: 'read-book', name: 'Read Book', description: 'Read for knowledge', icon: '📚', duration: '30 min' },
         { id: 'online-course', name: 'Online Course', description: 'Complete course module', icon: '💻', duration: '45 min' },
-        { id: 'podcast', name: 'Educational Podcast', description: 'Listen to learning content', icon: '🎧', duration: '30 min' },
-        { id: 'practice-skill', name: 'Practice New Skill', description: 'Work on a new skill', icon: '🎯', duration: '30 min' },
-        { id: 'journal', name: 'Learning Journal', description: 'Write what you learned', icon: '📝', duration: '15 min' },
-        { id: 'language', name: 'Language Practice', description: 'Practice new language', icon: '🗣️', duration: '20 min' },
+        { id: 'practice-skill', name: 'Practice Skill', description: 'Skill development', icon: '🎯', duration: '30 min' },
+        { id: 'language-study', name: 'Language Study', description: 'Learn new language', icon: '🗣️', duration: '20 min' },
+        { id: 'write-journal', name: 'Journal Writing', description: 'Reflect and write', icon: '📝', duration: '15 min' },
+        { id: 'watch-tutorial', name: 'Watch Tutorial', description: 'Educational videos', icon: '🎥', duration: '20 min' },
       ],
       bad: [
-        { id: 'no-mindless-scrolling', name: 'No Mindless Scrolling', description: 'Avoid social media', icon: '📱', duration: 'All day' },
-        { id: 'no-multitasking', name: 'Focus on One Thing', description: 'Avoid multitasking', icon: '🎯', duration: 'All day' },
-        { id: 'no-distractions', name: 'Remove Distractions', description: 'Study without interruptions', icon: '🚫', duration: 'Study time' },
+        { id: 'no-distractions', name: 'Avoid Distractions', description: 'Focus on learning', icon: '🎯', duration: 'Study time' },
+        { id: 'no-multitask', name: 'No Multitasking', description: 'One task at a time', icon: '🧠', duration: 'Study time' },
+        { id: 'no-cramming', name: 'No Cramming', description: 'Regular study schedule', icon: '📅', duration: 'Daily' },
       ],
     },
     productivity: {
       good: [
-        { id: 'morning-routine', name: 'Morning Routine', description: 'Complete morning ritual', icon: '🌅', duration: '30 min' },
-        { id: 'todo-list', name: 'Complete To-Do List', description: 'Finish daily tasks', icon: '✅', duration: 'All day' },
-        { id: 'deep-work', name: 'Deep Work Session', description: 'Focused work time', icon: '🎯', duration: '90 min' },
-        { id: 'time-blocking', name: 'Time Blocking', description: 'Plan your day', icon: '📅', duration: '15 min' },
-        { id: 'inbox-zero', name: 'Inbox Zero', description: 'Clear email inbox', icon: '📧', duration: '30 min' },
-        { id: 'review-day', name: 'Daily Review', description: 'Review accomplishments', icon: '📊', duration: '10 min' },
+        { id: 'morning-routine', name: 'Morning Routine', description: 'Start day right', icon: '🌅', duration: '30 min' },
+        { id: 'time-blocking', name: 'Time Blocking', description: 'Schedule tasks', icon: '📅', duration: '15 min' },
+        { id: 'pomodoro', name: 'Pomodoro Session', description: '25min focused work', icon: '🍅', duration: '25 min' },
+        { id: 'daily-review', name: 'Daily Review', description: 'Review progress', icon: '📊', duration: '10 min' },
+        { id: 'priority-tasks', name: 'Top 3 Tasks', description: 'Complete priorities', icon: '⭐', duration: 'Variable' },
+        { id: 'inbox-zero', name: 'Inbox Zero', description: 'Clear all emails', icon: '📧', duration: '20 min' },
       ],
       bad: [
-        { id: 'no-procrastination', name: 'Start Immediately', description: "Don't delay tasks", icon: '⏰', duration: 'All day' },
-        { id: 'no-perfectionism', name: 'Done Over Perfect', description: 'Avoid perfectionism', icon: '✨', duration: 'All day' },
-        { id: 'no-meetings', name: 'Limit Meetings', description: 'Avoid unnecessary meetings', icon: '👥', duration: 'Work hours' },
+        { id: 'no-social-media', name: 'No Social Media', description: 'During work hours', icon: '📱', duration: 'Work hours' },
+        { id: 'no-procrastination', name: 'Start Tasks', description: "Don't delay tasks", icon: '⏳', duration: 'All day' },
+        { id: 'no-perfectionism', name: 'Done > Perfect', description: 'Ship work regularly', icon: '✅', duration: 'All day' },
       ],
     },
     mindfulness: {
       good: [
-        { id: 'gratitude', name: 'Gratitude Practice', description: 'Write 3 things grateful for', icon: '🙏', duration: '5 min' },
-        { id: 'mindful-eating', name: 'Mindful Eating', description: 'Eat without distractions', icon: '🍽️', duration: 'Meal times' },
-        { id: 'nature-walk', name: 'Nature Walk', description: 'Mindful walk outdoors', icon: '🌳', duration: '20 min' },
-        { id: 'body-scan', name: 'Body Scan', description: 'Body awareness meditation', icon: '🧘', duration: '15 min' },
-        { id: 'breathing', name: 'Breathing Exercise', description: 'Conscious breathing', icon: '💨', duration: '10 min' },
-        { id: 'affirmations', name: 'Positive Affirmations', description: 'Repeat affirmations', icon: '💭', duration: '5 min' },
+        { id: 'meditation', name: 'Meditation', description: 'Mindful meditation', icon: '🧘', duration: '15 min' },
+        { id: 'gratitude', name: 'Gratitude Practice', description: 'List 3 things', icon: '🙏', duration: '5 min' },
+        { id: 'breathing', name: 'Breathing Exercise', description: 'Deep breathing', icon: '💨', duration: '5 min' },
+        { id: 'nature-walk', name: 'Nature Walk', description: 'Mindful walking', icon: '🌳', duration: '20 min' },
+        { id: 'body-scan', name: 'Body Scan', description: 'Body awareness', icon: '👤', duration: '10 min' },
+        { id: 'visualization', name: 'Visualization', description: 'Positive imagery', icon: '🌈', duration: '10 min' },
       ],
       bad: [
-        { id: 'no-rushing', name: "Don't Rush", description: 'Slow down and be present', icon: '⏸️', duration: 'All day' },
-        { id: 'no-multitasking', name: 'Single-Tasking', description: 'Focus on one thing', icon: '1️⃣', duration: 'All day' },
-        { id: 'no-negative-self-talk', name: 'Positive Self-Talk', description: 'Avoid negative thoughts', icon: '🚫', duration: 'All day' },
+        { id: 'no-rushing', name: 'Slow Down', description: "Don't rush tasks", icon: '🐢', duration: 'All day' },
+        { id: 'no-negativity', name: 'Positive Thinking', description: 'Avoid negative thoughts', icon: '☀️', duration: 'All day' },
+        { id: 'no-overthinking', name: 'Stop Overthinking', description: 'Be present', icon: '🎯', duration: 'All day' },
       ],
     },
     sleep: {
       good: [
-        { id: 'bedtime-routine', name: 'Bedtime Routine', description: 'Calming pre-sleep ritual', icon: '🛏️', duration: '30 min' },
-        { id: 'no-screens', name: 'No Screens Before Bed', description: 'Digital detox', icon: '📵', duration: '1 hour' },
+        { id: 'bedtime-routine', name: 'Bedtime Routine', description: 'Wind down ritual', icon: '🛏️', duration: '30 min' },
         { id: 'sleep-8hrs', name: '8 Hours Sleep', description: 'Get full rest', icon: '😴', duration: '8 hours' },
         { id: 'wake-same-time', name: 'Consistent Wake Time', description: 'Wake at same time', icon: '⏰', duration: 'Morning' },
         { id: 'bedroom-prep', name: 'Prepare Bedroom', description: 'Cool, dark, quiet room', icon: '🌙', duration: '10 min' },
