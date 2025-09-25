@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { XPService } from '../../services/xpService';
 import FloatingXP from './FloatingXp';
+import { Image } from 'expo-image';
 
 interface DailyChallengeProps {
   completedToday: number;
@@ -179,7 +180,13 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
                   backgroundColor: isCollected ? '#d1d5db' : isComplete ? 'rgba(255, 255, 255, 0.3)' : '#fed7aa',
                 }}
               >
-                {isCollected ? <Check size={24} color="#6b7280" strokeWidth={3} /> : isComplete ? <Gift size={24} color="#fff" strokeWidth={2.5} /> : <Sparkles size={24} color="#d97706" />}
+                {isCollected ? (
+                  <Image source={require('../../../assets/interface/chest-reward-opened.png')} style={{ width: 40, height: 40 }} />
+                ) : isComplete ? (
+                  <Image source={require('../../../assets/interface/chest-reward.png')} style={{ width: 40, height: 40 }} />
+                ) : (
+                  <Image source={require('../../../assets/interface/challenge.png')} style={{ width: 40, height: 40 }} />
+                )}
               </View>
 
               <View style={{ marginLeft: 12, flex: 1 }}>

@@ -22,8 +22,8 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
   return (
     <Pressable onPress={onPress}>
       <LinearGradient colors={getTierGradient(currentTitle?.tier || 'Novice', true)} style={tw`rounded-3xl p-5 mb-4`}>
-        <View style={tw`flex-row items-center justify-between mb-3`}>
-          <View style={tw`flex-1`}>
+        <View style={tw`flex-row items-center justify-between mb-3 relative`}>
+          <View style={tw`flex-1 pr-20`}>
             <Text style={tw`text-achievement-amber-600 text-xs font-semibold uppercase tracking-wider`}>Current Achievement</Text>
             <Text style={tw`text-achievement-amber-800 text-2xl font-black mt-1`}>{currentTitle?.title || 'Newcomer'}</Text>
             <View style={tw`flex-row items-center gap-2 mt-2`}>
@@ -35,7 +35,16 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
               </View>
             </View>
           </View>
-          <AchievementBadge level={currentLevel} achievement={currentTitle} isUnlocked={true} size={80} showLock={false} />
+          <View
+            style={{
+              position: 'absolute',
+              right: -40,
+              top: '10%',
+              transform: [{ translateY: -60 }],
+            }}
+          >
+            <AchievementBadge level={currentLevel} achievement={currentTitle} isUnlocked={true} size={180} showLock={false} />
+          </View>
         </View>
 
         {/* Progress to next level */}
