@@ -64,7 +64,6 @@ export const AchievementProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   // Update achievement titles when level changes
   useEffect(() => {
-    console.log('CURRENT_LEVEL', currentLevel);
     const achievement = getAchievementByLevel(currentLevel);
     const next = getAchievementByLevel(currentLevel + 1);
 
@@ -124,7 +123,6 @@ export const AchievementProvider: React.FC<{ children: React.ReactNode }> = ({ c
       const newLevel = XPService.calculateLevelFromXP(totalXP + 20);
       if (newLevel > currentLevel) {
         // Trigger level up animation/notification
-        console.log('LEVEL UP! You are now level', newLevel);
       }
     }
     return success;

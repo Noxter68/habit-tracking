@@ -36,20 +36,11 @@ const Dashboard: React.FC = () => {
     if (!user?.id) return;
 
     try {
-      console.log('Dashboard: Fetching user stats...');
-
       // Fetch XP stats from backend
       const xpStats = await XPService.getUserXPStats(user.id);
       const level = xpStats?.current_level || 1;
       const currentXP = xpStats?.current_level_xp || 0;
       const nextLevelXP = xpStats?.xp_for_next_level || 100;
-
-      console.log('Dashboard: XP Stats -', {
-        level,
-        currentXP,
-        nextLevelXP,
-        totalXP: xpStats?.total_xp,
-      });
 
       // Ensure XP doesn't exceed the level requirement (handle overflow)
       const adjustedCurrentXP = currentXP % nextLevelXP;
@@ -95,7 +86,6 @@ const Dashboard: React.FC = () => {
   };
 
   const handleStatsRefresh = useCallback(() => {
-    console.log('Dashboard: Stats refresh triggered');
     // Just fetch fresh data from backend
     fetchUserStats();
     setRefreshTrigger((prev) => prev + 1);
@@ -103,9 +93,6 @@ const Dashboard: React.FC = () => {
 
   const handleXPCollected = useCallback(
     (amount: number) => {
-      console.log('Dashboard: XP collected, amount:', amount);
-      // Don't update local state, just refresh from backend
-      // This prevents double counting
       handleStatsRefresh();
     },
     [handleStatsRefresh]

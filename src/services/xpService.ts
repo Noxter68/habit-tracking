@@ -20,12 +20,15 @@ export interface UserXPStats {
   daily_tasks_total: number;
 }
 
-export interface DailyChallenge {
+interface DailyChallenge {
+  id: string;
+  user_id: string;
   date: string;
   total_tasks: number;
   completed_tasks: number;
   xp_collected: boolean;
-  collected_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export class XPService {
@@ -121,87 +124,6 @@ export class XPService {
     });
 
     return success ? xpEarned : 0;
-  }
-
-  /**
-   * Get daily challenge status
-   */
-  static async getDailyChallenge(userId: string): Promise<DailyChallenge | null> {
-    try {
-      const today = new Date().toISOString().split('T')[0];
-
-      const { data, error } = await supabase.from('daily_challenges').select('*').eq('user_id', userId).eq('date', today).single();
-
-      if (error && error.code !== 'PGRST116') {
-        // Not found error
-        console.error('Error fetching daily challenge:', error);
-        return null;
-      }
-
-      // If no record exists, create one
-      if (!data) {
-        return await this.createDailyChallenge(userId);
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error in getDailyChallenge:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Create daily challenge for user
-   */
-  static async createDailyChallenge(userId: string): Promise<DailyChallenge | null> {
-    try {
-      const today = new Date().toISOString().split('T')[0];
-
-      // Get total tasks for today
-      const { data: habits } = await supabase.from('habits').select('id, tasks').eq('user_id', userId);
-
-      let totalTasks = 0;
-      if (habits) {
-        habits.forEach((habit) => {
-          totalTasks += habit.tasks ? habit.tasks.length : 1;
-        });
-      }
-
-      // Get completed tasks for today
-      const { data: completions } = await supabase.from('task_completions').select('completed_tasks, all_completed').eq('user_id', userId).eq('date', today);
-
-      let completedTasks = 0;
-      if (completions) {
-        completions.forEach((completion) => {
-          if (completion.all_completed) {
-            completedTasks += completion.completed_tasks?.length || 1;
-          }
-        });
-      }
-
-      // Create daily challenge record
-      const { data, error } = await supabase
-        .from('daily_challenges')
-        .insert({
-          user_id: userId,
-          date: today,
-          total_tasks: totalTasks,
-          completed_tasks: completedTasks,
-          xp_collected: false,
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating daily challenge:', error);
-        return null;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error in createDailyChallenge:', error);
-      return null;
-    }
   }
 
   /**
@@ -431,5 +353,192 @@ export class XPService {
         }
       )
       .subscribe();
+  }
+
+  static async createDailyChallenge(userId: string): Promise<DailyChallenge | null> {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+
+      // First check if a challenge already exists for today
+      const { data: existingChallenge, error: checkError } = await supabase.from('daily_challenges').select('*').eq('user_id', userId).eq('date', today).single();
+
+      // If challenge exists, update it with fresh data
+      if (existingChallenge && !checkError) {
+        return await this.updateDailyChallenge(userId, today);
+      }
+
+      // Calculate stats for new challenge
+      const stats = await this.calculateDailyStats(userId, today);
+
+      // Create new daily challenge record
+      const { data, error } = await supabase
+        .from('daily_challenges')
+        .insert({
+          user_id: userId,
+          date: today,
+          total_tasks: stats.totalTasks,
+          completed_tasks: stats.completedTasks,
+          xp_collected: false,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        // If it's a duplicate key error, fetch the existing record
+        if (error.code === '23505') {
+          console.log('Challenge already exists, fetching...');
+          return await this.getDailyChallenge(userId, today);
+        }
+        console.error('Error creating daily challenge:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error in createDailyChallenge:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get or create daily challenge (preferred method)
+   */
+  static async getOrCreateDailyChallenge(userId: string): Promise<DailyChallenge | null> {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+
+      // Calculate current stats
+      const stats = await this.calculateDailyStats(userId, today);
+
+      // Upsert: insert if not exists, update if exists
+      const { data, error } = await supabase
+        .from('daily_challenges')
+        .upsert(
+          {
+            user_id: userId,
+            date: today,
+            total_tasks: stats.totalTasks,
+            completed_tasks: stats.completedTasks,
+            xp_collected: false, // Only set false on creation, not update
+          },
+          {
+            onConflict: 'user_id,date',
+            ignoreDuplicates: false, // This will update existing records
+          }
+        )
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error upserting daily challenge:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error in getOrCreateDailyChallenge:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Update existing daily challenge with fresh stats
+   */
+  static async updateDailyChallenge(userId: string, date?: string): Promise<DailyChallenge | null> {
+    try {
+      const targetDate = date || new Date().toISOString().split('T')[0];
+      const stats = await this.calculateDailyStats(userId, targetDate);
+
+      const { data, error } = await supabase
+        .from('daily_challenges')
+        .update({
+          total_tasks: stats.totalTasks,
+          completed_tasks: stats.completedTasks,
+          // Don't update xp_collected here - preserve existing value
+        })
+        .eq('user_id', userId)
+        .eq('date', targetDate)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating daily challenge:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error in updateDailyChallenge:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get existing daily challenge
+   */
+  static async getDailyChallenge(userId: string, date?: string): Promise<DailyChallenge | null> {
+    try {
+      const targetDate = date || new Date().toISOString().split('T')[0];
+
+      const { data, error } = await supabase.from('daily_challenges').select('*').eq('user_id', userId).eq('date', targetDate).single();
+
+      if (error && error.code !== 'PGRST116') {
+        // PGRST116 = no rows returned
+        console.error('Error fetching daily challenge:', error);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error in getDailyChallenge:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Calculate daily stats (extracted for reusability)
+   */
+  private static async calculateDailyStats(userId: string, date: string) {
+    // Get total tasks for today
+    const { data: habits } = await supabase.from('habits').select('id, tasks').eq('user_id', userId);
+
+    let totalTasks = 0;
+    if (habits) {
+      habits.forEach((habit) => {
+        totalTasks += habit.tasks ? habit.tasks.length : 1;
+      });
+    }
+
+    // Get completed tasks for today
+    const { data: completions } = await supabase.from('task_completions').select('completed_tasks, all_completed').eq('user_id', userId).eq('date', date);
+
+    let completedTasks = 0;
+    if (completions) {
+      completions.forEach((completion) => {
+        if (completion.all_completed) {
+          completedTasks += completion.completed_tasks?.length || 1;
+        } else {
+          // If not all completed, count the actual completed tasks
+          completedTasks += completion.completed_tasks?.length || 0;
+        }
+      });
+    }
+
+    return { totalTasks, completedTasks };
+  }
+
+  /**
+   * Mark XP as collected for today's challenge
+   */
+  static async collectDailyXP(userId: string): Promise<boolean> {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+
+      const { error } = await supabase.from('daily_challenges').update({ xp_collected: true }).eq('user_id', userId).eq('date', today).eq('xp_collected', false); // Only update if not already collected
+
+      return !error;
+    } catch (error) {
+      console.error('Error collecting daily XP:', error);
+      return false;
+    }
   }
 }

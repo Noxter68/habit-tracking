@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ImageBackground } from 'expo-image';
+import { Image, ImageBackground } from 'expo-image';
 import tw from '../../lib/tailwind';
 import { Achievement } from '../../types/achievement.types';
 import { AchievementBadge } from './AchievementBadge';
@@ -43,12 +43,24 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
           <View style={tw`mt-2`}>
             <View style={tw`flex-row justify-between mb-1`}>
               <Text style={tw`text-amber-800/80 text-xs`}>Progress to {nextTitle.title}</Text>
-              <Text style={tw`text-amber-800 font-bold text-xs`}>{Math.round(levelProgress)}%</Text>
+              <Text style={tw`text-amber-800 font-bold text-xs`}>{levelProgress}%</Text>
             </View>
 
-            <View style={tw`h-5 bg-achievement-amber-200 rounded-full overflow-hidden`}>
+            <View style={tw`h-5 rounded-full overflow-hidden`}>
               {levelProgress > 0 ? (
-                <ImageBackground source={require('../../../assets/interface/rope.png')} style={[tw`h-full rounded-full`, { width: `${levelProgress}%` }]} />
+                <View style={[tw`h-full rounded-full  flex-row`, { width: `${levelProgress}%`, overflow: 'hidden' }]}>
+                  {Array.from({ length: Math.ceil(levelProgress / 5) }).map((_, i) => (
+                    <Image
+                      key={i}
+                      source={require('../../../assets/interface/rope.png')}
+                      style={{
+                        height: '100%',
+                        width: 250,
+                        resizeMode: 'cover',
+                      }}
+                    />
+                  ))}
+                </View>
               ) : (
                 <View style={tw`h-full w-full bg-achievement-amber-200 rounded-full`} />
               )}

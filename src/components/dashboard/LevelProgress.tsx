@@ -14,7 +14,6 @@ interface LevelProgressProps {
 
 const LevelProgress: React.FC<LevelProgressProps> = ({ currentLevel, currentLevelXP, xpForNextLevel, levelProgress }) => {
   const xpToNextLevel = xpForNextLevel - currentLevelXP;
-  console.log('LevelProgressProps', currentLevel, currentLevelXP, xpForNextLevel, levelProgress);
   return (
     <View style={tw`mb-4`}>
       <View style={tw`flex-row justify-between mb-1`}>
