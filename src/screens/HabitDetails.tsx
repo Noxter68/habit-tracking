@@ -81,9 +81,19 @@ const HabitDetails: React.FC = () => {
   const taskProgress = totalTasks > 0 ? (completedTasksToday / totalTasks) * 100 : 0;
   const overallProgress = (habit.completedDays.length / habit.totalDays) * 100;
 
+  // In HabitDetailScreen, update the calculateHabitXP callback:
+
   const calculateHabitXP = useCallback((): number => {
-    return XPService.calculateHabitXP(habit.type, completedTasksToday, habit.currentStreak);
-  }, [habit.type, completedTasksToday, habit.currentStreak]);
+    // Now returns the breakdown object, so we need to get the total
+    const breakdown = XPService.calculateHabitXP(
+      habit.type,
+      completedTasksToday,
+      totalTasks, // Add this parameter
+      habit.currentStreak,
+      1.0 // Default tier multiplier for now
+    );
+    return breakdown.total; // Return just the total number
+  }, [habit.type, completedTasksToday, totalTasks, habit.currentStreak]);
 
   const currentXP = useMemo(() => calculateHabitXP(), [calculateHabitXP]);
   const totalXPEarned = habit.completedDays.length * 50; // Simplified calculation

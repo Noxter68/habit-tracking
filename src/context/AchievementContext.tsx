@@ -1,7 +1,7 @@
 // src/context/AchievementContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import { XPService, UserXPStats } from '../services/xpService';
+import { XPService, UserXPStats, XPBreakdown } from '../services/xpService';
 import { achievementTitles, getAchievementByLevel } from '../utils/achievements';
 import { HabitService } from '@/services/habitService';
 
@@ -24,11 +24,19 @@ interface AchievementContextType {
   dailyTasksTotal: number;
   dailyChallengeCollected: boolean;
 
-  // Methods
+  // Methods - Enhanced versions
   collectDailyChallenge: () => Promise<boolean>;
-  awardHabitXP: (habitId: string, habitType: 'good' | 'bad', tasksCompleted: number, streak: number) => Promise<number>;
+  awardHabitXP: (
+    habitId: string,
+    habitType: 'good' | 'bad',
+    tasksCompleted: number,
+    totalTasks: number,
+    streak: number,
+    tierMultiplier?: number
+  ) => Promise<{ xpEarned: number; breakdown: XPBreakdown }>;
   refreshXPStats: () => Promise<void>;
   checkAchievements: () => Promise<void>;
+  getXPPreview: (habitType: 'good' | 'bad', tasksToComplete: number, totalTasks: number, currentStreak: number, wouldCompleteDay: boolean, tierMultiplier?: number) => number;
 }
 
 const AchievementContext = createContext<AchievementContextType | undefined>(undefined);
@@ -89,8 +97,8 @@ export const AchievementProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setTotalCompletions(habitStats?.totalCompletions || 0);
     }
 
-    // Load daily challenge
-    const challenge = await XPService.getDailyChallenge(user.id);
+    // Load or create daily challenge
+    const challenge = await XPService.getOrCreateDailyChallenge(user.id);
     if (challenge) {
       setDailyTasksCompleted(challenge.completed_tasks);
       setDailyTasksTotal(challenge.total_tasks);
@@ -107,6 +115,9 @@ export const AchievementProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setCurrentLevelXP(stats.current_level_xp);
       setXpForNextLevel(stats.xp_for_next_level);
       setLevelProgress(stats.level_progress);
+      setDailyTasksCompleted(stats.daily_tasks_completed || dailyTasksCompleted);
+      setDailyTasksTotal(stats.daily_tasks_total || dailyTasksTotal);
+      setDailyChallengeCollected(stats.daily_challenge_collected || dailyChallengeCollected);
     });
   };
 
@@ -119,29 +130,49 @@ export const AchievementProvider: React.FC<{ children: React.ReactNode }> = ({ c
       // Refresh stats to show new XP
       await loadXPStats();
 
-      // Show level up notification if needed
+      // Check for level up
       const newLevel = XPService.calculateLevelFromXP(totalXP + 20);
       if (newLevel > currentLevel) {
         // Trigger level up animation/notification
+        // This could trigger a toast or modal in your UI
+        console.log(`Level up! You're now level ${newLevel}!`);
       }
     }
     return success;
   };
 
-  const awardHabitXP = async (habitId: string, habitType: 'good' | 'bad', tasksCompleted: number, streak: number): Promise<number> => {
-    if (!user) return 0;
+  const awardHabitXP = async (
+    habitId: string,
+    habitType: 'good' | 'bad',
+    tasksCompleted: number,
+    totalTasks: number,
+    streak: number,
+    tierMultiplier: number = 1.0
+  ): Promise<{ xpEarned: number; breakdown: XPBreakdown }> => {
+    if (!user) return { xpEarned: 0, breakdown: { base: 0, tasks: 0, streak: 0, tier: 0, milestone: 0, total: 0 } };
 
-    const xpEarned = await XPService.completeHabit(user.id, habitId, habitType, tasksCompleted, streak);
+    const result = await XPService.completeHabitWithBreakdown(user.id, habitId, habitType, tasksCompleted, totalTasks, streak, tierMultiplier);
 
-    if (xpEarned > 0) {
-      // Update daily progress
-      await XPService.updateDailyProgress(user.id, dailyTasksCompleted + (tasksCompleted || 1), dailyTasksTotal);
-
-      // Refresh stats
+    if (result.xpEarned > 0) {
+      // Update daily progress is now handled in HabitContext
+      // Just refresh our stats
       await loadXPStats();
+
+      // Check for level up
+      const previousLevel = currentLevel;
+      const newLevel = XPService.calculateLevelFromXP(totalXP + result.xpEarned);
+
+      if (newLevel > previousLevel) {
+        console.log(`Level up! You're now level ${newLevel}!`);
+        // You could emit an event here for UI components to listen to
+      }
     }
 
-    return xpEarned;
+    return result;
+  };
+
+  const getXPPreview = (habitType: 'good' | 'bad', tasksToComplete: number, totalTasks: number, currentStreak: number, wouldCompleteDay: boolean, tierMultiplier: number = 1.0): number => {
+    return XPService.getXPPreview(habitType, tasksToComplete, totalTasks, currentStreak, wouldCompleteDay, tierMultiplier);
   };
 
   const refreshXPStats = async () => {
@@ -178,6 +209,7 @@ export const AchievementProvider: React.FC<{ children: React.ReactNode }> = ({ c
     awardHabitXP,
     refreshXPStats,
     checkAchievements,
+    getXPPreview,
   };
 
   return <AchievementContext.Provider value={value}>{children}</AchievementContext.Provider>;
