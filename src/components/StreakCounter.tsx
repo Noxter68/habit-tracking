@@ -2,7 +2,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming, withSpring, FadeIn } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSpring, FadeIn, interpolate } from 'react-native-reanimated';
 import { Flame } from 'lucide-react-native';
 import tw from '../lib/tailwind';
 
@@ -14,132 +14,146 @@ interface StreakCounterProps {
 }
 
 const StreakCounter: React.FC<StreakCounterProps> = ({ streak = 0, isActive = false, size = 'small', showLabel = false }) => {
-  const fireScale = useSharedValue(1);
-  const fireRotation = useSharedValue(0);
+  const pulseAnimation = useSharedValue(0);
 
-  // Determine streak level
+  // Determine streak level for styling
   const isEpic = streak >= 7 && streak < 30;
   const isLegendary = streak >= 30;
   const hasStreak = streak > 0;
 
-  // Size configurations
+  // Size configurations - cleaner, more minimal
   const sizeConfig = {
     small: {
       container: 'w-12 h-12',
-      innerContainer: 'w-10 h-10',
-      icon: 20,
-      text: 'text-xs',
+      icon: 18,
+      text: 'text-[11px]',
       label: 'text-[10px]',
       padding: 'p-2',
     },
     medium: {
-      container: 'w-16 h-16',
-      innerContainer: 'w-14 h-14',
-      icon: 24,
+      container: 'w-14 h-14',
+      icon: 22,
       text: 'text-sm',
       label: 'text-xs',
-      padding: 'p-3',
+      padding: 'p-2.5',
     },
     large: {
-      container: 'w-20 h-20',
-      innerContainer: 'w-18 h-18',
-      icon: 28,
+      container: 'w-18 h-18',
+      icon: 26,
       text: 'text-base',
       label: 'text-sm',
-      padding: 'p-4',
+      padding: 'p-3',
     },
   };
 
   const config = sizeConfig[size];
 
-  // Animate fire for epic/legendary streaks
+  // Simple pulse animation for active streaks
   React.useEffect(() => {
-    if (isEpic || isLegendary) {
-      // Pulsing animation
-      fireScale.value = withRepeat(withSequence(withTiming(1.15, { duration: 1200 }), withTiming(1, { duration: 1200 })), -1, true);
-
-      // Subtle rotation for legendary
-      if (isLegendary) {
-        fireRotation.value = withRepeat(withSequence(withTiming(-5, { duration: 2000 }), withTiming(5, { duration: 2000 })), -1, true);
-      }
+    if (hasStreak && (isEpic || isLegendary)) {
+      // Gentle pulse for epic/legendary streaks
+      pulseAnimation.value = withRepeat(withTiming(1, { duration: 2000 }), -1, true);
     } else {
-      fireScale.value = withSpring(1);
-      fireRotation.value = withSpring(0);
+      pulseAnimation.value = 0;
     }
-  }, [isEpic, isLegendary]);
+  }, [hasStreak, isEpic, isLegendary]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: fireScale.value }, { rotate: `${fireRotation.value}deg` }],
-  }));
+  const animatedContainerStyle = useAnimatedStyle(() => {
+    const scale = interpolate(pulseAnimation.value, [0, 1], [1, isLegendary ? 1.08 : 1.05]);
 
-  // Gradient colors based on streak level
-  const getGradientColors = (): string[] => {
-    if (isLegendary) return ['#dc2626', '#991b1b', '#7f1d1d']; // Red gradient
-    if (isEpic) return ['#f59e0b', '#d97706', '#b45309']; // Orange gradient
-    if (hasStreak) return ['#fbbf24', '#f59e0b', '#d97706']; // Amber gradient
-    return ['#e5e7eb', '#d1d5db', '#9ca3af']; // Gray gradient
+    return {
+      transform: [{ scale }],
+    };
+  });
+
+  // Subtle glow animation for the background
+  const animatedGlowStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(pulseAnimation.value, [0, 1], [0.3, 0.6]);
+
+    return {
+      opacity: hasStreak && isEpic ? opacity : 0,
+    };
+  });
+
+  // Gradient colors - more subtle and elegant
+  const getGradientColors = (): [string, string, ...string[]] => {
+    if (isLegendary) return ['#f59e0b', '#d97706', '#b45309']; // Deep amber-orange
+    if (isEpic) return ['#fbbf24', '#f59e0b', '#d97706']; // Warm amber
+    if (hasStreak) return ['#fde68a', '#fcd34d', '#fbbf24']; // Light amber
+    return ['#f5f5f4', '#e7e5e4', '#d6d3d1']; // Neutral gray
   };
 
-  // Icon color based on streak
+  // Border styling - minimal and clean
+  const getBorderStyle = (): string => {
+    if (isLegendary) return 'border-amber-600/50';
+    if (isEpic) return 'border-amber-500/40';
+    if (hasStreak) return 'border-amber-400/30';
+    return 'border-gray-200/50';
+  };
+
+  // Icon and text colors
   const getIconColor = (): string => {
-    if (isLegendary) return '#ffffff';
-    if (isEpic) return '#ffffff';
-    if (hasStreak) return '#ffffff';
-    return '#6b7280';
+    if (isLegendary || isEpic) return '#ffffff';
+    if (hasStreak) return '#d97706';
+    return '#9ca3af';
   };
 
-  // Text color based on streak
   const getTextColor = (): string => {
-    if (hasStreak) return 'text-white';
-    return 'text-gray-500';
+    if (isLegendary || isEpic) return 'text-white';
+    if (hasStreak) return 'text-amber-800';
+    return 'text-gray-400';
   };
 
   return (
-    <Animated.View entering={FadeIn.springify()}>
+    <Animated.View entering={FadeIn.duration(300)}>
       <View style={tw`items-center`}>
-        <Animated.View style={animatedStyle}>
-          <View style={tw`${config.container} relative`}>
-            {/* Outer glow for epic/legendary */}
+        {/* Main container with subtle animations */}
+        <Animated.View style={animatedContainerStyle}>
+          <View style={tw`relative`}>
+            {/* Subtle glow effect for epic/legendary - very minimal */}
             {(isEpic || isLegendary) && (
-              <View style={tw`absolute inset-0 rounded-full`}>
-                <LinearGradient
-                  colors={isLegendary ? ['rgba(220, 38, 38, 0.3)', 'rgba(220, 38, 38, 0.1)', 'transparent'] : ['rgba(245, 158, 11, 0.3)', 'rgba(245, 158, 11, 0.1)', 'transparent']}
-                  style={tw`w-full h-full rounded-full`}
-                />
-              </View>
+              <Animated.View style={[tw`absolute inset-0 ${config.container} rounded-xl`, animatedGlowStyle]} pointerEvents="none">
+                <LinearGradient colors={isLegendary ? ['rgba(217, 119, 6, 0.2)', 'transparent'] : ['rgba(251, 191, 36, 0.15)', 'transparent']} style={tw`w-full h-full rounded-xl scale-110`} />
+              </Animated.View>
             )}
 
-            {/* Main container */}
+            {/* Main rounded square container */}
             <LinearGradient
               colors={getGradientColors()}
-              style={tw`${config.container} rounded-full items-center justify-center border-2 ${
-                isLegendary ? 'border-red-600' : isEpic ? 'border-amber-600' : hasStreak ? 'border-amber-500' : 'border-gray-300'
-              }`}
+              style={[
+                tw`${config.container} rounded-xl items-center justify-center border ${getBorderStyle()} ${config.padding}`,
+                {
+                  shadowColor: hasStreak ? '#f59e0b' : '#000000',
+                  shadowOffset: { width: 0, height: hasStreak ? 2 : 1 },
+                  shadowOpacity: hasStreak ? 0.1 : 0.05,
+                  shadowRadius: hasStreak ? 4 : 2,
+                  elevation: hasStreak ? 3 : 1,
+                },
+              ]}
             >
-              {/* Inner container with icon and number */}
-              <View style={tw`items-center justify-center`}>
-                <Flame size={config.icon} color={getIconColor()} strokeWidth={2} fill={hasStreak ? getIconColor() : 'none'} />
-                {streak > 0 && <Text style={tw`${config.text} font-black ${getTextColor()} absolute`}>{streak}</Text>}
+              {/* Icon and number stacked vertically */}
+              <View style={tw`items-center justify-center relative`}>
+                <Flame size={config.icon} color={getIconColor()} strokeWidth={2} fill={hasStreak && (isEpic || isLegendary) ? getIconColor() : 'none'} />
               </View>
             </LinearGradient>
 
-            {/* Legendary sparkles */}
-            {isLegendary && (
-              <>
-                <View style={tw`absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full`} />
-                <View style={tw`absolute -bottom-1 -left-1 w-2 h-2 bg-yellow-400 rounded-full`} />
-                <View style={tw`absolute top-1/2 -left-1 w-1.5 h-1.5 bg-yellow-300 rounded-full`} />
-                <View style={tw`absolute top-1/2 -right-1 w-1.5 h-1.5 bg-yellow-300 rounded-full`} />
-              </>
+            {/* Badge indicator for any streak > 0 */}
+            {streak > 0 && (
+              <View style={tw`absolute -top-1 -right-1`}>
+                <View style={tw`w-5 h-5 ${isLegendary ? 'bg-amber-500' : isEpic ? 'bg-amber-400' : 'bg-amber-300'} rounded-full flex items-center justify-center`}>
+                  {isLegendary && <View style={tw`absolute inset-0 bg-amber-500 rounded-full animate-ping`} />}
+                  <Text style={tw`text-[9px] font-bold text-white`}>{streak}</Text>
+                </View>
+              </View>
             )}
           </View>
         </Animated.View>
 
-        {/* Label */}
+        {/* Minimal label */}
         {showLabel && (
-          <View style={tw`mt-1`}>
-            <Text style={tw`${config.label} font-semibold ${hasStreak ? 'text-gray-700' : 'text-gray-400'}`}>
-              {isLegendary ? 'Legendary!' : isEpic ? 'Epic Streak!' : hasStreak ? 'Streak' : 'No Streak'}
+          <View style={tw`mt-2`}>
+            <Text style={tw`${config.label} font-medium ${hasStreak ? 'text-gray-600' : 'text-gray-400'}`}>
+              {isLegendary ? 'Legendary' : isEpic ? 'Epic' : hasStreak ? `${streak} days` : 'No streak'}
             </Text>
           </View>
         )}
