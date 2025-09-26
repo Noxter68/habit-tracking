@@ -1,6 +1,6 @@
 // src/screens/HabitDetails.tsx
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, Dimensions, StatusBar, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Pressable, Dimensions, StatusBar, ActivityIndicator, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
@@ -19,6 +19,10 @@ import { Habit, Task, DailyTaskProgress } from '@/types';
 import { HabitProgressionService, TierInfo, HabitMilestone } from '@/services/habitProgressionService';
 import { HabitService } from '@/services/habitService';
 import { useStats } from '@/context/StatsContext';
+import { getTierGradient } from '@/utils/achievements';
+import { ImageBackground } from 'expo-image';
+import { GameProgressBar } from '@/components/GameProgressBar';
+import ProgressBar from '@/components/ui/ProgressBar';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'HabitDetails'>;
 type RouteProps = RouteProp<RootStackParamList, 'HabitDetails'>;
@@ -320,7 +324,11 @@ const HabitDetails: React.FC = () => {
 
       {/* Hero Header with Backend Tier Data */}
       <Animated.View style={[headerAnimatedStyle, tw`absolute top-0 left-0 right-0 z-10`]}>
-        <LinearGradient colors={['rgba(254, 243, 199, 0.95)', 'rgba(253, 230, 138, 0.85)', 'rgba(252, 211, 77, 0.6)', 'transparent']} style={[tw`pb-6`, { height: headerHeight.value }]}>
+        <LinearGradient
+          // ✅ use dynamic gradient instead of hardcoded amber tones
+          colors={getTierGradient(tierInfo?.name || 'Novice', true)}
+          style={[tw`pb-10`, { height: headerHeight.value }]}
+        >
           <SafeAreaView edges={['top']}>
             {/* Navigation Header */}
             <View style={tw`px-5 py-3 flex-row items-center justify-between`}>
@@ -332,12 +340,11 @@ const HabitDetails: React.FC = () => {
             </View>
 
             {/* Hero Card with Real Tier Data */}
-            <Animated.View entering={FadeInDown.delay(100).springify()} style={tw`px-5 mt-2`}>
+            <Animated.View entering={FadeInDown.delay(100).springify()} style={tw`px-5 mt-[-30]`}>
               <LinearGradient colors={[tierInfo.color, tierInfo.color + '99']} style={tw`rounded-3xl p-5 relative overflow-hidden`}>
                 <View style={tw`absolute inset-0 opacity-10`}>
                   <LinearGradient colors={['transparent', 'rgba(255,255,255,0.2)', 'transparent']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`w-full h-full`} />
                 </View>
-
                 <View style={tw`flex-row items-center justify-between`}>
                   <View style={tw`flex-1 pr-4`}>
                     <Text style={tw`text-white/80 text-xs font-bold uppercase tracking-wider`}>{habit.type === 'good' ? 'Building' : 'Breaking'}</Text>
@@ -379,8 +386,10 @@ const HabitDetails: React.FC = () => {
                       <Text style={tw`text-white/80 text-xs font-semibold`}>Progress to {nextTier.name}</Text>
                       <Text style={tw`text-white font-bold text-xs`}>{Math.round(tierProgress)}%</Text>
                     </View>
-                    <View style={tw`h-5 bg-white/20 rounded-full overflow-hidden`}>
-                      <View style={[tw`h-full bg-white rounded-full`, { width: `${tierProgress}%` }]} />
+
+                    {/* Container with safe max width (avoid overlap with CategoryIcon) */}
+                    <View style={tw``}>
+                      <ProgressBar progress={tierProgress} overlay="crackle" theme="potion" height={20} width={200} />
                     </View>
                   </View>
                 )}
