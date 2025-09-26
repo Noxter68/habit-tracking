@@ -1,6 +1,7 @@
 // src/services/habitService.ts
 import { supabase } from '../lib/supabase';
 import { Habit, HabitProgression } from '../types';
+import { HabitProgressionService } from './habitProgressionService';
 
 export interface StreakHistoryEntry {
   date: string;
@@ -151,16 +152,11 @@ export class HabitService {
    */
   static async handleDayCompletion(habitId: string, userId: string, date: string, currentStreakFromHabit: number): Promise<number> {
     try {
-      // Calculate the new streak based on completed days
-      const { currentStreak, bestStreak } = await this.calculateStreaks(
-        habitId,
-        userId,
-        date,
-        true // allCompleted is true when this is called
-      );
+      // Calculate streaks
+      const { currentStreak, bestStreak } = await this.calculateStreaks(habitId, userId, date, true);
 
-      // Update habit record with new streaks
-      const { error: updateError } = await supabase
+      // Update streaks in habits table
+      await supabase
         .from('habits')
         .update({
           current_streak: currentStreak,
@@ -171,31 +167,21 @@ export class HabitService {
         .eq('id', habitId)
         .eq('user_id', userId);
 
-      if (updateError) {
-        console.error('Error updating habit streaks:', updateError);
-        throw updateError;
-      }
+      // Determine new tier
+      const { tier, progress } = HabitProgressionService.calculateTierFromStreak(currentStreak);
 
-      // Update habit progression tier if needed
-      const { data: progression } = await supabase.from('habit_progression').select('*').eq('habit_id', habitId).eq('user_id', userId).single();
-
-      if (progression) {
-        // Calculate new tier based on streak
-        const newTier = this.getTierFromStreak(currentStreak);
-        const tierMultiplier = this.getTierMultiplier(newTier);
-
-        await supabase
-          .from('habit_progression')
-          .update({
-            current_tier: newTier,
-            xp_multiplier: tierMultiplier,
-            tier_progress: this.calculateTierProgress(currentStreak, newTier),
-            perfect_days: progression.perfect_days + 1, // Increment perfect days
-            updated_at: new Date().toISOString(),
-          })
-          .eq('habit_id', habitId)
-          .eq('user_id', userId);
-      }
+      // Update habit progression
+      await supabase
+        .from('habit_progression')
+        .update({
+          current_tier: tier.name, // "Crystal" | "Ruby" | "Amethyst"
+          xp_multiplier: tier.multiplier,
+          tier_progress: progress,
+          perfect_days: supabase.rpc('increment_perfect_days', { p_habit_id: habitId, p_user_id: userId }), // optional helper function
+          updated_at: new Date().toISOString(),
+        })
+        .eq('habit_id', habitId)
+        .eq('user_id', userId);
 
       return currentStreak;
     } catch (error) {
@@ -274,128 +260,93 @@ export class HabitService {
     }
   }
 
-  // Fetch all habits for the current user
+  /**
+   * Fetch all habits
+   */
   static async fetchHabits(userId: string): Promise<Habit[]> {
     try {
-      const { data: habitsData, error: habitsError } = await supabase.from('habits').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+      const { data: habitsData, error } = await supabase.from('habits').select('*').eq('user_id', userId).order('created_at', { ascending: false });
 
-      if (habitsError) throw habitsError;
+      if (error) throw error;
+      if (!habitsData) return [];
 
-      // Fetch task completions for all habits
-      const habitIds = habitsData?.map((h) => h.id) || [];
-      const { data: completions, error: completionsError } = await supabase.from('task_completions').select('*').in('habit_id', habitIds);
+      const habitIds = habitsData.map((h) => h.id);
+      const { data: completions } = await supabase.from('task_completions').select('*').in('habit_id', habitIds);
 
-      if (completionsError) throw completionsError;
+      return habitsData.map((habit) => {
+        const habitCompletions = completions?.filter((c) => c.habit_id === habit.id) || [];
+        const dailyTasks: any = {};
+        const completedDays: string[] = [];
 
-      // Transform to Habit type with daily tasks
-      const habits: Habit[] =
-        habitsData?.map((habit) => {
-          const habitCompletions = completions?.filter((c) => c.habit_id === habit.id) || [];
-
-          const dailyTasks: any = {};
-          const completedDays: string[] = [];
-
-          habitCompletions.forEach((completion) => {
-            dailyTasks[completion.date] = {
-              completedTasks: completion.completed_tasks,
-              allCompleted: completion.all_completed,
-            };
-            if (completion.all_completed) {
-              completedDays.push(completion.date);
-            }
-          });
-
-          return {
-            id: habit.id,
-            name: habit.name,
-            type: habit.type,
-            category: habit.category,
-            tasks: habit.tasks,
-            dailyTasks,
-            frequency: habit.frequency,
-            customDays: habit.custom_days,
-            notifications: habit.notifications,
-            notificationTime: habit.notification_time,
-            hasEndGoal: habit.has_end_goal,
-            endGoalDays: habit.end_goal_days,
-            totalDays: habit.total_days,
-            currentStreak: habit.current_streak,
-            bestStreak: habit.best_streak,
-            completedDays,
-            createdAt: new Date(habit.created_at),
+        habitCompletions.forEach((c) => {
+          dailyTasks[c.date] = {
+            completedTasks: c.completed_tasks,
+            allCompleted: c.all_completed,
           };
-        }) || [];
+          if (c.all_completed) completedDays.push(c.date);
+        });
 
-      return habits;
+        return {
+          ...habit,
+          dailyTasks,
+          completedDays,
+          createdAt: new Date(habit.created_at),
+        };
+      });
     } catch (error) {
       console.error('Error fetching habits:', error);
       throw error;
     }
   }
 
-  // Create a new habit
+  /**
+   * Create a new habit
+   */
   static async createHabit(habit: Habit, userId: string): Promise<Habit> {
-    try {
-      const { data, error } = await supabase
-        .from('habits')
-        .insert({
-          user_id: userId,
-          name: habit.name,
-          type: habit.type,
-          category: habit.category,
-          tasks: habit.tasks,
-          frequency: habit.frequency,
-          custom_days: habit.customDays,
-          notifications: habit.notifications,
-          notification_time: habit.notificationTime,
-          has_end_goal: habit.hasEndGoal,
-          end_goal_days: habit.endGoalDays,
-          total_days: habit.totalDays,
-          current_streak: habit.currentStreak,
-          best_streak: habit.bestStreak,
-        })
-        .select()
-        .single();
+    const { data, error } = await supabase
+      .from('habits')
+      .insert({
+        user_id: userId,
+        name: habit.name,
+        type: habit.type,
+        category: habit.category,
+        tasks: habit.tasks,
+        frequency: habit.frequency,
+        custom_days: habit.customDays,
+        notifications: habit.notifications,
+        notification_time: habit.notificationTime,
+        has_end_goal: habit.hasEndGoal,
+        end_goal_days: habit.endGoalDays,
+        total_days: habit.totalDays,
+        current_streak: habit.currentStreak,
+        best_streak: habit.bestStreak,
+      })
+      .select()
+      .single();
 
-      if (error) throw error;
+    if (error) throw error;
 
-      return {
-        ...habit,
-        id: data.id,
-        createdAt: new Date(data.created_at),
-      };
-    } catch (error) {
-      console.error('Error creating habit:', error);
-      throw error;
-    }
+    return {
+      ...habit,
+      id: data.id,
+      createdAt: new Date(data.created_at),
+    };
   }
 
-  // Update habit
+  /**
+   * Update habit
+   */
   static async updateHabit(habitId: string, userId: string, updates: Partial<Habit>): Promise<void> {
-    try {
-      const { error } = await supabase
-        .from('habits')
-        .update({
-          name: updates.name,
-          type: updates.type,
-          category: updates.category,
-          tasks: updates.tasks,
-          frequency: updates.frequency,
-          custom_days: updates.customDays,
-          notifications: updates.notifications,
-          notification_time: updates.notificationTime,
-          has_end_goal: updates.hasEndGoal,
-          end_goal_days: updates.endGoalDays,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', habitId)
-        .eq('user_id', userId);
+    const { error } = await supabase
+      .from('habits')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', habitId)
+      .eq('user_id', userId);
 
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error updating habit:', error);
-      throw error;
-    }
+    if (error) throw error;
   }
 
   // Update notification settings
@@ -529,13 +480,14 @@ export class HabitService {
     }
   }
 
-  // Update streak
+  /**
+   * Update streak in habits table
+   */
   static async updateStreak(habitId: string, userId: string): Promise<void> {
     try {
       const { currentStreak, bestStreak } = await this.calculateStreaks(habitId, userId, new Date().toISOString().split('T')[0], false);
 
-      // Update habit with new streaks
-      const { error: updateError } = await supabase
+      await supabase
         .from('habits')
         .update({
           current_streak: currentStreak,
@@ -544,24 +496,17 @@ export class HabitService {
         })
         .eq('id', habitId)
         .eq('user_id', userId);
-
-      if (updateError) throw updateError;
     } catch (error) {
       console.error('Error updating streak:', error);
-      throw error;
     }
   }
 
-  // Delete habit
+  /**
+   * Delete habit
+   */
   static async deleteHabit(habitId: string, userId: string): Promise<void> {
-    try {
-      const { error } = await supabase.from('habits').delete().eq('id', habitId).eq('user_id', userId);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error deleting habit:', error);
-      throw error;
-    }
+    const { error } = await supabase.from('habits').delete().eq('id', habitId).eq('user_id', userId);
+    if (error) throw error;
   }
 
   // Get streak history for a habit
@@ -759,8 +704,7 @@ export class HabitService {
       const today = new Date().toISOString().split('T')[0];
       const todayStats = await this.getTodayStats(userId);
 
-      const allComplete = todayStats.totalTasks > 0 && todayStats.completedTasks === todayStats.totalTasks;
-
+      const allComplete = (todayStats.totalTasks ?? 0) > 0 && (todayStats.completedTasks ?? 0) === (todayStats.totalTasks ?? 0);
       // Daily challenge gives 100 XP bonus
       return {
         allComplete,

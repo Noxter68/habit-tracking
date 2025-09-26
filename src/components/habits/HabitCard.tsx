@@ -6,8 +6,9 @@ import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withSpring, withSeq
 import { CheckCircle2, Circle, Sparkles, Trophy } from 'lucide-react-native';
 import tw from '@/lib/tailwind';
 import { ColorValue } from 'react-native';
+import { TierInfo, HabitProgressionService, HabitTier } from '@/services/habitProgressionService';
 
-import { Habit, DailyTaskProgress, HabitTier } from '@/types';
+import { Habit, DailyTaskProgress } from '@/types';
 import { getCategoryIcon } from '@/utils/categoryIcons';
 import StreakCounter from '../StreakCounter';
 
@@ -20,66 +21,13 @@ interface HabitCardProps {
 }
 
 // Type-safe tier names
-export type TierName = 'Beginner' | 'Novice' | 'Adept' | 'Expert' | 'Master' | 'Legendary';
+export type TierName = HabitTier; // 'Crystal' | 'Ruby' | 'Amethyst'
 
 // Achievement gradients configuration with proper typing
-const achievementGradients = {
-  tiers: {
-    Beginner: ['#fffbeb', '#fef3c7', '#fde68a'] as readonly [ColorValue, ColorValue, ...ColorValue[]],
-    Novice: ['#fef3c7', '#fde68a', '#fcd34d'] as readonly [ColorValue, ColorValue, ...ColorValue[]],
-    Adept: ['#fed7aa', '#fdba74', '#fb923c'] as readonly [ColorValue, ColorValue, ...ColorValue[]],
-    Expert: ['#fde68a', '#fbbf24', '#f59e0b'] as readonly [ColorValue, ColorValue, ...ColorValue[]],
-    Master: ['#fbbf24', '#f59e0b', '#d97706'] as readonly [ColorValue, ColorValue, ...ColorValue[]],
-    Legendary: ['#f59e0b', '#d97706', '#92400e'] as readonly [ColorValue, ColorValue, ...ColorValue[]],
-  } as const,
-  completed: {
-    Beginner: ['#fef3c7', '#fde68a', '#fcd34d'] as readonly [ColorValue, ColorValue, ...ColorValue[]],
-    Novice: ['#fcd34d', '#fbbf24', '#f59e0b'] as readonly [ColorValue, ColorValue, ...ColorValue[]],
-    Adept: ['#fb923c', '#f97316', '#ea580c'] as readonly [ColorValue, ColorValue, ...ColorValue[]],
-    Expert: ['#f59e0b', '#d97706', '#b45309'] as readonly [ColorValue, ColorValue, ...ColorValue[]],
-    Master: ['#d97706', '#b45309', '#92400e'] as readonly [ColorValue, ColorValue, ...ColorValue[]],
-    Legendary: ['#b45309', '#92400e', '#78350f'] as readonly [ColorValue, ColorValue, ...ColorValue[]],
-  } as const,
-  locked: {
-    card: ['#fffbeb', '#fef3c7', '#fde68a'] as readonly [ColorValue, ColorValue, ...ColorValue[]],
-  } as const,
-};
-
-// Helper function to get tier gradient with proper typing
-const getTierGradient = (tierName: TierName, isCompleted: boolean): readonly [ColorValue, ColorValue, ...ColorValue[]] => {
-  if (isCompleted) {
-    return achievementGradients.completed[tierName] || achievementGradients.completed.Novice;
-  }
-  return achievementGradients.tiers[tierName] || achievementGradients.locked.card;
-};
-
-// Helper to calculate tier from streak
-const getTierFromStreak = (streak: number): TierName => {
-  if (streak >= 100) return 'Legendary';
-  if (streak >= 60) return 'Master';
-  if (streak >= 30) return 'Expert';
-  if (streak >= 14) return 'Adept';
-  if (streak >= 7) return 'Novice';
-  return 'Beginner';
-};
-
-// Helper to get tier progress
-const getTierProgress = (streak: number, currentTier: TierName): number => {
-  const tierThresholds: Record<TierName, { min: number; max: number }> = {
-    Beginner: { min: 0, max: 7 },
-    Novice: { min: 7, max: 14 },
-    Adept: { min: 14, max: 30 },
-    Expert: { min: 30, max: 60 },
-    Master: { min: 60, max: 100 },
-    Legendary: { min: 100, max: 200 },
-  };
-
-  const threshold = tierThresholds[currentTier];
-  if (!threshold) return 0;
-
-  const range = threshold.max - threshold.min;
-  const progress = streak - threshold.min;
-  return Math.min(100, Math.round((progress / range) * 100));
+const achievementGradients: Record<HabitTier, readonly [ColorValue, ColorValue, ColorValue]> = {
+  Crystal: ['#60a5fa', '#3b82f6', '#1e3a8a'],
+  Ruby: ['#ef4444', '#b91c1c', '#7f1d1d'],
+  Amethyst: ['#8b5cf6', '#6d28d9', '#4c1d95'],
 };
 
 const HabitCard: React.FC<HabitCardProps> = ({ habit, onToggleDay, onToggleTask, onPress, index = 0 }) => {
@@ -107,21 +55,11 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onToggleDay, onToggleTask,
   const allTasksCompleted = totalTasks > 0 && completedTasksCount === totalTasks;
   const isCompleted = todayTasks.allCompleted || (totalTasks === 0 && todayTasks.allCompleted);
 
-  // Calculate tier and XP
-  const currentTier = getTierFromStreak(habit.currentStreak);
-  const tierProgressPercent = getTierProgress(habit.currentStreak, currentTier);
+  const { tier, progress } = HabitProgressionService.calculateTierFromStreak(habit.currentStreak);
+  const currentTier = tier.name; // 'Crystal' | 'Ruby' | 'Amethyst'
+  const tierProgressPercent = progress; // 0–
 
-  // Calculate current XP with tier multiplier
-  const tierMultipliers: Record<TierName, number> = {
-    Beginner: 1.0,
-    Novice: 1.2,
-    Adept: 1.5,
-    Expert: 1.8,
-    Master: 2.0,
-    Legendary: 2.5,
-  };
-
-  const multiplier = tierMultipliers[currentTier];
+  const multiplier = tier.multiplier;
   const currentXP = useMemo(() => {
     const baseXP = totalTasks > 0 ? completedTasksCount * 10 : isCompleted ? 20 : 0;
     const streakBonus = habit.currentStreak > 7 ? Math.floor(habit.currentStreak / 7) * 5 : 0;
@@ -207,20 +145,7 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onToggleDay, onToggleTask,
       </Animated.View>
 
       <Pressable onPress={onPress} onPressIn={handlePressIn} onPressOut={handlePressOut}>
-        <LinearGradient
-          colors={getTierGradient(currentTier, isCompleted)}
-          style={[
-            tw`rounded-3xl overflow-hidden border`,
-            isCompleted ? tw`border-amber-400/50` : tw`border-amber-200/30`,
-            {
-              shadowColor: isCompleted ? '#d97706' : '#f59e0b',
-              shadowOffset: { width: 0, height: isCompleted ? 6 : 3 },
-              shadowOpacity: isCompleted ? 0.15 : 0.08,
-              shadowRadius: isCompleted ? 14 : 10,
-              elevation: isCompleted ? 8 : 4,
-            },
-          ]}
-        >
+        <LinearGradient colors={achievementGradients[currentTier]} style={[tw`rounded-3xl overflow-hidden border`]}>
           <View style={tw`p-5`}>
             {/* Header Row */}
             <View style={tw`flex-row items-start justify-between mb-3`}>

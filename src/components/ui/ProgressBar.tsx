@@ -28,8 +28,8 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ progress, theme, width = 300,
 
   // textures
   const woodUri = RNImage.resolveAssetSource(require('../../../assets/interface/progressBar/wood-seamless.png')).uri;
-  const potionUri = RNImage.resolveAssetSource(require('../../../assets/interface/progressBar/potion.png')).uri;
-  const crystalUri = RNImage.resolveAssetSource(require('../../../assets/interface/progressBar/crystal.png')).uri;
+  const potionUri = RNImage.resolveAssetSource(require('../../../assets/interface/progressBar/potion-texture.png')).uri;
+  const crystalUri = RNImage.resolveAssetSource(require('../../../assets/interface/progressBar/crystal-texture.png')).uri;
   const stoneUri = RNImage.resolveAssetSource(require('../../../assets/interface/progressBar/stone.png')).uri;
 
   const themeTexture = theme === 'potion' ? potionUri : theme === 'crystal' ? crystalUri : stoneUri;
