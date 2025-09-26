@@ -141,11 +141,21 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onToggleDay, onToggleTask,
     <Animated.View entering={FadeIn.delay(index * 80).springify()} style={[containerStyle, tw`mb-4`]}>
       {/* Glow effect for completion */}
       <Animated.View style={[tw`absolute inset-0 rounded-3xl`, glowStyle]} pointerEvents="none">
-        <LinearGradient colors={['rgba(251, 191, 36, 0.3)', 'rgba(245, 158, 11, 0.2)', 'transparent']} style={tw`w-full h-full rounded-3xl`} />
+        <LinearGradient
+          colors={['#fbbf24', '#f59e0b', '#d97706']} // ✅ amber as before
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[tw`rounded-3xl overflow-hidden border`]}
+        />
       </Animated.View>
 
       <Pressable onPress={onPress} onPressIn={handlePressIn} onPressOut={handlePressOut}>
-        <LinearGradient colors={achievementGradients[currentTier]} style={[tw`rounded-3xl overflow-hidden border`]}>
+        <LinearGradient
+          colors={['#fbbf24', '#f59e0b', '#d97706']} // 🔥 Amber gradient (same as before)
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[tw`rounded-3xl overflow-hidden border`]}
+        >
           <View style={tw`p-5`}>
             {/* Header Row */}
             <View style={tw`flex-row items-start justify-between mb-3`}>

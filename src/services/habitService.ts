@@ -76,6 +76,9 @@ export class HabitService {
         // ... existing streak handling code ...
       }
 
+      console.log('Debug toggleTask:', { habitId, date, taskId });
+      console.log('Toggle result:', result);
+
       return {
         success: result.success,
         xpEarned: result.xp_earned || 0,

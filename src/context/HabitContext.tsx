@@ -5,6 +5,7 @@ import { Habit } from '../types';
 import { useAuth } from './AuthContext';
 import { HabitService } from '../services/habitService';
 import { HabitProgressionService } from '@/services/habitProgressionService';
+import { useStats } from './StatsContext';
 
 interface ToggleTaskResult {
   success: boolean;
@@ -40,6 +41,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [xpEarnedTasks, setXpEarnedTasks] = useState<Set<string>>(new Set());
 
   const { user } = useAuth();
+  const { refreshStats } = useStats();
 
   // Load habits when user logs in
   useEffect(() => {
@@ -192,7 +194,6 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     [user, loadHabits]
   );
 
-  // context/HabitContext.tsx - Fixed toggleTask method
   // context/HabitContext.tsx - Update the toggleTask method
   const toggleTask = useCallback(
     async (habitId: string, date: string, taskId: string) => {
@@ -203,7 +204,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       const taskKey = `${habitId}-${date}-${taskId}`;
 
-      // Check if already processing
+      // prevent double processing
       if (processingTasks.has(taskKey)) {
         console.log('Task already being processed');
         return;
@@ -217,13 +218,12 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setProcessingTasks((prev) => new Set(prev).add(taskKey));
 
       try {
-        // 1. Optimistic update (keep your existing code)
+        // --- 1. Optimistic update
         const isCurrentlyCompleted = currentDayTasks.completedTasks.includes(taskId);
         const optimisticCompletedTasks = isCurrentlyCompleted ? currentDayTasks.completedTasks.filter((t) => t !== taskId) : [...currentDayTasks.completedTasks, taskId];
 
         const optimisticAllCompleted = optimisticCompletedTasks.length === habit.tasks.length && habit.tasks.length > 0;
 
-        // Update UI immediately
         setHabits(
           habits.map((h) =>
             h.id === habitId
@@ -241,41 +241,38 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           )
         );
 
-        // 2. Call protected backend
+        // --- 2. Persist to backend
         const result = await HabitService.toggleTask(habitId, user.id, date, taskId);
 
-        // Update progression with the new streak
+        if (!result.success) {
+          throw new Error('Failed to update task');
+        }
+
+        // --- 3. Update streaks & progression
         if (result.streakUpdated !== undefined) {
           await HabitProgressionService.updateProgression(habitId, user.id, {
             overrideStreak: result.streakUpdated,
             allTasksCompleted: result.allTasksComplete,
           });
 
-          // Check for milestone unlock
           const milestoneRes = await HabitProgressionService.checkMilestoneUnlock(habitId, user.id, {
             overrideStreak: result.streakUpdated,
           });
 
           if (milestoneRes.unlocked) {
-            Alert.alert('🎉 Milestone Reached!', `Congratulations! You've unlocked: ${milestoneRes.unlocked.title}`);
+            Alert.alert('🎉 Milestone Reached!', `You've unlocked: ${milestoneRes.unlocked.title}`);
           }
         }
 
-        if (!result.success) {
-          throw new Error('Failed to update task');
+        // --- 4. Update XP cache
+        if (result.xpEarned > 0) {
+          setXpEarnedTasks((prev) => new Set(prev).add(taskKey));
         }
 
-        // 3. Update with REAL data from backend (THE KEY FIX)
+        // --- 5. Update local state with backend truth
         const actualCompletedTasks = result.completedTasks || optimisticCompletedTasks;
         const actualAllCompleted = result.allTasksComplete;
 
-        // Update XP tracking if XP was earned
-        if (result.xpEarned > 0) {
-          setXpEarnedTasks((prev) => new Set(prev).add(taskKey));
-          console.log(`Earned ${result.xpEarned} XP!`);
-        }
-
-        // 4. Update with backend data
         const updatedCompletedDays = actualAllCompleted ? [...habit.completedDays, date].filter((v, i, a) => a.indexOf(v) === i).sort() : habit.completedDays.filter((d) => d !== date);
 
         setHabits(
@@ -286,8 +283,8 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                   dailyTasks: {
                     ...h.dailyTasks,
                     [date]: {
-                      completedTasks: actualCompletedTasks, // Use backend data
-                      allCompleted: actualAllCompleted, // Use backend data
+                      completedTasks: actualCompletedTasks,
+                      allCompleted: actualAllCompleted,
                     },
                   },
                   completedDays: updatedCompletedDays,
@@ -298,16 +295,14 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           )
         );
 
-        // 5. Show milestone feedback
-        if (result.milestoneReached) {
-          Alert.alert('🎉 Milestone Reached!', `Congratulations! You've unlocked: ${result.milestoneReached}`);
-        }
+        // --- 6. Auto-refresh global stats
+        await refreshStats(true);
 
         return result;
       } catch (error) {
         console.error('Error toggling task:', error);
 
-        // Revert optimistic update
+        // rollback optimistic update
         setHabits(
           habits.map((h) =>
             h.id === habitId
@@ -331,9 +326,8 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         });
       }
     },
-    [user, habits, processingTasks]
+    [user, habits, processingTasks, refreshStats]
   );
-
   const toggleHabitDay = useCallback(
     async (habitId: string, date: string) => {
       if (!user) return;

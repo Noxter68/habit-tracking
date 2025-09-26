@@ -321,13 +321,18 @@ export class HabitProgressionService {
 
       if (!error && data) return data as HabitProgression;
 
+      const { data: habitRow } = await supabase.from('habits').select('current_streak').eq('id', habitId).single();
+
+      const streak = habitRow?.current_streak ?? 0;
+      const { tier } = this.calculateTierFromStreak(streak);
+
       // If not found, insert a fresh row
       const { data: created, error: createError } = await supabase
         .from('habit_progression')
         .insert({
           habit_id: habitId,
           user_id: userId,
-          current_tier: 'Crystal', // always start at Crystal
+          current_tier: tier.name, // always start at Crystal
           habit_xp: 0,
           milestones_unlocked: [],
           last_milestone_date: null,

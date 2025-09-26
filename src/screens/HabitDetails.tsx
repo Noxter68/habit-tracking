@@ -38,7 +38,7 @@ type TabType = 'overview' | 'calendar' | 'tiers';
 const HabitDetails: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
-  const { habits, toggleTask, processingTasks, xpEarnedTasks, checkTaskXPStatus } = useHabits();
+  const { habits, toggleTask, processingTasks, xpEarnedTasks, checkTaskXPStatus, refreshHabits } = useHabits();
   const { user } = useAuth();
   const { refreshStats } = useStats();
 
@@ -103,32 +103,49 @@ const HabitDetails: React.FC = () => {
       <StatusBar barStyle="dark-content" />
 
       <ScrollView contentContainerStyle={tw`pb-8`} showsVerticalScrollIndicator={false}>
-        <LinearGradient colors={getTierGradient(tierInfo?.name || 'Novice', true)} style={tw`pb-10`}>
+        {/* Big gradient hero background */}
+        <LinearGradient colors={tierThemes[safeTierInfo.name].gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`pb-10`}>
           <SafeAreaView edges={['top']}>
             {/* Navigation Header */}
             <View style={tw`px-5 py-3 flex-row items-center justify-between`}>
-              <Pressable onPress={() => navigation.goBack()} style={({ pressed }) => [tw`w-11 h-11 rounded-2xl items-center justify-center bg-white/90 shadow-sm`, pressed && tw`scale-95`]}>
-                <ArrowLeft size={22} color="#1f2937" strokeWidth={2.5} />
+              <Pressable onPress={() => navigation.goBack()} style={({ pressed }) => [tw`w-11 h-11 rounded-2xl items-center justify-center bg-white/20`, pressed && tw`scale-95`]}>
+                <ArrowLeft size={22} color="#fff" strokeWidth={2.5} />
               </Pressable>
-              <Text style={tw`text-lg font-black text-gray-900`}>Habit Journey</Text>
+
+              <Text style={tw`text-lg font-black text-white`}>Habit Journey</Text>
+
               <View style={tw`w-11`} />
             </View>
 
-            {/* Hero Card with Real Tier Data */}
-            <Animated.View entering={FadeInDown.delay(100).springify()} style={tw`px-5 mt-6`}>
-              <HabitHero
-                habitName={habit.name}
-                habitType={habit.type}
-                category={habit.category}
-                currentStreak={habit.currentStreak}
-                bestStreak={habit.bestStreak}
-                tierInfo={safeTierInfo}
-                nextTier={nextTier}
-                tierProgress={tierProgress}
-                tierMultiplier={tierMultiplier}
-                totalXPEarned={totalXPEarned}
-                completionRate={completionRate}
-              />
+            {/* Hero Card inside the big gradient block */}
+            <Animated.View
+              entering={FadeInDown.delay(100).springify()}
+              style={[
+                tw`px-5 mt-6`,
+                {
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 8 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 12,
+                  elevation: 6, // Android
+                },
+              ]}
+            >
+              <View style={[tw`rounded-3xl overflow-hidden border`, { borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1.5 }]}>
+                <HabitHero
+                  habitName={habit.name}
+                  habitType={habit.type}
+                  category={habit.category}
+                  currentStreak={performanceMetrics?.currentStreak ?? 0}
+                  bestStreak={performanceMetrics?.bestStreak ?? 0}
+                  tierInfo={safeTierInfo}
+                  nextTier={nextTier}
+                  tierProgress={Number.isFinite(tierProgress) ? tierProgress : 0}
+                  tierMultiplier={tierMultiplier}
+                  totalXPEarned={totalXPEarned}
+                  completionRate={completionRate ?? 0}
+                />
+              </View>
             </Animated.View>
           </SafeAreaView>
         </LinearGradient>
@@ -150,11 +167,7 @@ const HabitDetails: React.FC = () => {
                     todayTasks={todayTasks}
                     habitId={habit.id}
                     today={today}
-                    onToggleTask={async (taskId) => {
-                      await toggleTask(habit.id, today, taskId);
-                      refreshStats(true);
-                      refreshProgression();
-                    }}
+                    onToggleTask={toggleTask}
                     processingTasks={processingTasks}
                     xpEarnedTasks={xpEarnedTasks}
                     tier={tierInfo?.name || 'Crystal'}

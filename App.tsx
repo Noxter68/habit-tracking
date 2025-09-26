@@ -326,15 +326,15 @@ export default function App(): React.JSX.Element {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <AuthProvider>
-          <HabitProvider>
-            <AchievementProvider>
-              <StatsProvider>
+          <StatsProvider>
+            <HabitProvider>
+              <AchievementProvider>
                 <NavigationContainer>
                   <AppNavigator />
                 </NavigationContainer>
-              </StatsProvider>
-            </AchievementProvider>
-          </HabitProvider>
+              </AchievementProvider>
+            </HabitProvider>
+          </StatsProvider>
         </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
