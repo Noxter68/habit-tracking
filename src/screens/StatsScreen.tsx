@@ -24,6 +24,7 @@ import ConsistencyChart from '../components/stats/ConsistencyChart';
 
 // Icons
 import { StatsIcons } from '../components/icons/StatsIcons';
+import { useFocusEffect } from '@react-navigation/native';
 
 const AnimatedStatCard = Animated.createAnimatedComponent(View);
 
@@ -41,7 +42,16 @@ const StatsScreen: React.FC = () => {
     if (user) {
       loadAggregatedStats();
     }
-  }, [user, habits]);
+  }, [user?.id]); // Only re-run when user changes
+
+  // Use useFocusEffect for habit-dependent updates
+  useFocusEffect(
+    useCallback(() => {
+      if (habits.length > 0) {
+        loadAggregatedStats();
+      }
+    }, [habits.length]) // Only when count changes
+  );
 
   const loadAggregatedStats = async () => {
     if (!user) return;

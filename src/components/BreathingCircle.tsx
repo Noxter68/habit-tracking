@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming, Easing, SharedValue, AnimatedStyleProp, ViewStyle } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming, Easing, SharedValue, AnimatedStyleProp, ViewStyle, cancelAnimation } from 'react-native-reanimated';
 import tw from '../lib/tailwind';
 
 const BreathingCircle: React.FC = () => {
@@ -8,10 +8,17 @@ const BreathingCircle: React.FC = () => {
   const opacity: SharedValue<number> = useSharedValue(0.3);
 
   useEffect(() => {
-    scale.value = withRepeat(withSequence(withTiming(1.2, { duration: 3000, easing: Easing.inOut(Easing.ease) }), withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.ease) })), -1, false);
+    const scaleAnimation = withRepeat(withSequence(withTiming(1.2, { duration: 3000 }), withTiming(1, { duration: 3000 })), -1, false);
 
+    scale.value = scaleAnimation;
     opacity.value = withRepeat(withSequence(withTiming(0.6, { duration: 3000, easing: Easing.inOut(Easing.ease) }), withTiming(0.3, { duration: 3000, easing: Easing.inOut(Easing.ease) })), -1, false);
-  }, []);
+
+    return () => {
+      // Cancel animations on unmount
+      cancelAnimation(scale);
+      cancelAnimation(opacity);
+    };
+  }, []); // Empty dependency
 
   const animatedStyle: AnimatedStyleProp<ViewStyle> = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],

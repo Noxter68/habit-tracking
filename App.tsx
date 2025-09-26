@@ -5,9 +5,9 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { View, ActivityIndicator, Text, Platform } from 'react-native';
+import { View, ActivityIndicator, Text, Platform, LogBox } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Animated, { useAnimatedStyle, withSpring, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, withSpring, useSharedValue, withTiming, configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
 import tw from './src/lib/tailwind';
 
 // Screens
@@ -31,6 +31,8 @@ import TabBarIcon from './src/components/TabBarIcon';
 import * as Notifications from 'expo-notifications';
 import AchievementsScreen from '@/screens/AchievementScreen';
 import { AppConfig } from '@/config/appConfig';
+import { PerformanceMonitor } from '@/utils/performanceMonitor';
+import { StatsProvider } from '@/context/StatsContext';
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -48,6 +50,15 @@ export type TabParamList = {
   Settings: undefined;
 };
 
+LogBox.ignoreLogs([
+  '[Reanimated]', // Replace with actual warning text
+  "It looks like you might be using shared value's", // Example: React Native require cycle warning
+]);
+configureReanimatedLogger({
+  level: ReanimatedLogLevel.error, // only show errors
+  strict: false, // disable strict warnings
+});
+
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
 
@@ -59,6 +70,34 @@ function MainTabs() {
     if (AppConfig.debug.enabled) {
       console.log('🚀 App started in', AppConfig.env.name, 'mode');
       console.log('📝 Debug features:', AppConfig.debug);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Enable performance monitoring in development
+    if (__DEV__) {
+      // Log performance report every 30 seconds
+      const interval = setInterval(() => {
+        console.log('📊 Performance Report:');
+        PerformanceMonitor.getReport();
+      }, 30000);
+
+      // Warn if app is sluggish
+      const checkPerformance = () => {
+        const report = PerformanceMonitor.getReport();
+        const slowOps = Object.entries(report.avgTimes).filter(([_, time]) => time > 500);
+
+        if (slowOps.length > 0) {
+          console.warn('🐌 Slow operations detected:', slowOps);
+        }
+      };
+
+      const perfInterval = setInterval(checkPerformance, 10000);
+
+      return () => {
+        clearInterval(interval);
+        clearInterval(perfInterval);
+      };
     }
   }, []);
 
@@ -289,9 +328,11 @@ export default function App(): React.JSX.Element {
         <AuthProvider>
           <HabitProvider>
             <AchievementProvider>
-              <NavigationContainer>
-                <AppNavigator />
-              </NavigationContainer>
+              <StatsProvider>
+                <NavigationContainer>
+                  <AppNavigator />
+                </NavigationContainer>
+              </StatsProvider>
             </AchievementProvider>
           </HabitProvider>
         </AuthProvider>
