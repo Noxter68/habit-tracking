@@ -57,9 +57,14 @@ export const HabitHero: React.FC<HabitHeroProps> = ({ habitName, habitType, cate
         <View style={tw`mt-4`}>
           <View style={tw`flex-row justify-between mb-1.5`}>
             <Text style={tw`text-white/80 text-xs font-semibold`}>Progress to {nextTier.name}</Text>
-            <Text style={tw`text-white font-bold text-xs`}>{Math.round(tierProgress)}%</Text>
+            <Text style={tw`text-white font-bold text-xs`}>{Math.round(currentStreak)}%</Text>
           </View>
-          <ProgressBar progress={currentStreak} theme="crystal" height={20} width={200} />
+          <ProgressBar
+            progress={currentStreak}
+            height={20}
+            width={200}
+            tier={tierInfo.name.toLowerCase() as 'crystal' | 'ruby' | 'amethyst'} // 👈 always matches UI instantly
+          />
         </View>
       )}
       {/* Stats */}

@@ -1,11 +1,10 @@
-// src/screens/HabitDetails.tsx
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, Dimensions, StatusBar, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeInUp, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import { ArrowLeft, Target, Sparkles, Clock, CheckCircle2, Circle, Trophy, Star, Activity, Calendar } from 'lucide-react-native';
 
 import tw from '@/lib/tailwind';
@@ -28,6 +27,7 @@ import { TierCard } from '@/components/habits/TierCard';
 import { JourneyCard } from '@/components/habits/JourneyCard';
 import { tierThemes } from '@/utils/tierTheme';
 import { ImageBackground } from 'expo-image';
+import { TierCelebration } from '@/components/habits/TierCelebration';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'HabitDetails'>;
 type RouteProps = RouteProp<RootStackParamList, 'HabitDetails'>;
@@ -44,6 +44,12 @@ const HabitDetails: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState<TabType>('overview');
   const [isLoadingXPStatus, setIsLoadingXPStatus] = useState(false);
   const [prevTier, setPrevTier] = useState<string | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationTier, setCelebrationTier] = useState<any>(null);
+
+  const [debugStreak, setDebugStreak] = useState<number | null>(null);
+
+  const heroScale = useSharedValue(1);
 
   const habit = habits.find((h: Habit) => h.id === route.params.habitId);
 
@@ -54,6 +60,27 @@ const HabitDetails: React.FC = () => {
       </SafeAreaView>
     );
   }
+
+  // ✅ Calculate tier reactively based on current habit data
+  const currentTierData = useMemo(() => {
+    const streak = debugStreak !== null ? debugStreak : habit.currentStreak || 0;
+
+    // ✅ USE 'streak' HERE, not 'habit.currentStreak'!
+    const { tier, progress } = HabitProgressionService.calculateTierFromStreak(streak);
+    return { tier, progress };
+  }, [habit.currentStreak, debugStreak]);
+
+  // ✅ Detect tier changes and trigger animations
+  useEffect(() => {
+    if (prevTier && prevTier !== currentTierData.tier.name) {
+      console.log(`🎉 TIER UP! ${prevTier} → ${currentTierData.tier.name}`);
+
+      // Show celebration modal
+      setCelebrationTier(currentTierData.tier);
+      setShowCelebration(true);
+    }
+    setPrevTier(currentTierData.tier.name);
+  }, [currentTierData.tier.name]);
 
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
   const todayTasks: DailyTaskProgress = habit.dailyTasks?.[today] || {
@@ -76,15 +103,24 @@ const HabitDetails: React.FC = () => {
   const totalXPEarned = performanceMetrics?.totalXPEarned || 0;
   const completionRate = performanceMetrics?.consistency || 0;
 
-  const theme = tierThemes[tierInfo?.name || 'Crystal'];
+  const theme = tierThemes[currentTierData.tier.name];
 
-  // ✅ Simple wrapper that just calls the existing toggleTask with the right params
+  const animatedGradientStyle = useAnimatedStyle(() => {
+    const scale = 1 + heroScale.value * 0.1;
+    return {
+      transform: [{ scale }],
+      opacity: 1 - heroScale.value * 0.1,
+    };
+  });
+
+  const animatedHeroStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: heroScale.value }],
+  }));
+
   const handleToggleTask = useCallback(
     async (taskId: string): Promise<void> => {
       const result = await toggleTask(habit.id, today, taskId);
 
-      // The context already updates the habit state
-      // We just need to trigger a refresh of the progression data
       if (result?.success) {
         await refreshProgression();
       }
@@ -113,89 +149,82 @@ const HabitDetails: React.FC = () => {
     loadTaskXPStatus();
   }, [habit?.id, user?.id, completedTasksToday]);
 
-  // ✅ Calculate tier reactively based on current habit data
-  const currentTierData = useMemo(() => {
-    const { tier, progress } = HabitProgressionService.calculateTierFromStreak(habit.currentStreak || 0);
-    return { tier, progress };
-  }, [habit.currentStreak]);
-
-  // ✅ Detect tier changes and trigger animations
-  useEffect(() => {
-    if (prevTier && prevTier !== currentTierData.tier.name) {
-      // Tier changed! Trigger celebration animation
-      console.log(`🎉 TIER UP! ${prevTier} → ${currentTierData.tier.name}`);
-
-      // Trigger a bounce animation
-      tierTransition.value = withSequence(
-        withTiming(1, { duration: 300 }),
-        withSpring(0, {
-          damping: 3,
-          stiffness: 200,
-          mass: 0.5,
-        })
-      );
-
-      // Optional: Show a celebration modal or toast
-      // You could add a celebration component here
-    }
-    setPrevTier(currentTierData.tier.name);
-  }, [currentTierData.tier.name]);
   return (
     <View style={tw`flex-1 bg-gray-50`}>
       <StatusBar barStyle="dark-content" />
 
       <ScrollView contentContainerStyle={tw`pb-8`} showsVerticalScrollIndicator={false}>
-        {/* Big gradient hero background */}
-        <LinearGradient colors={tierThemes[safeTierInfo.name].gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`pb-10`}>
-          <SafeAreaView edges={['top']}>
-            {/* Navigation Header */}
-            <View style={tw`px-5 py-3 flex-row items-center justify-between`}>
-              <Pressable onPress={() => navigation.goBack()} style={({ pressed }) => [tw`w-11 h-11 rounded-2xl items-center justify-center bg-white/20`, pressed && tw`scale-95`]}>
-                <ArrowLeft size={22} color="#fff" strokeWidth={2.5} />
-              </Pressable>
+        <Animated.View style={animatedGradientStyle}>
+          {/* Big gradient hero background */}
+          <LinearGradient colors={tierThemes[currentTierData.tier.name].gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`pb-10`}>
+            <SafeAreaView edges={['top']}>
+              {/* Navigation Header */}
+              <View style={tw`px-8 py-5 flex-row items-center justify-between`}>
+                <Pressable onPress={() => navigation.goBack()} style={({ pressed }) => [tw`w-11 h-11 rounded-2xl items-center justify-center bg-white/20`, pressed && tw`scale-95`]}>
+                  <ArrowLeft size={22} color="#fff" strokeWidth={2.5} />
+                </Pressable>
 
-              <Text style={tw`text-lg font-black text-white`}>Habit Journey</Text>
+                <Text style={tw`text-lg font-black text-white`}>Habit Journey</Text>
 
-              <View style={tw`w-11`} />
-            </View>
+                {/* 🔧 DEBUG: Test tier changes */}
+                {__DEV__ && (
+                  <Pressable
+                    onPress={() => {
+                      // Cycle through test values: 10 → 49 → 50 → 100 → 149 → 150 → reset
+                      const testValues = [10, 49, 50, 100, 149, 150];
+                      const currentDebug = debugStreak !== null ? debugStreak : habit.currentStreak || 0;
+                      const currentIndex = testValues.findIndex((v) => v >= currentDebug);
+                      const nextIndex = (currentIndex + 1) % testValues.length;
+                      setDebugStreak(testValues[nextIndex]);
+                    }}
+                    style={({ pressed }) => [tw`w-11 h-11 rounded-2xl items-center justify-center bg-white/20`, pressed && tw`scale-95`]}
+                  >
+                    <Text style={tw`text-white text-xs font-bold`}>{debugStreak !== null ? debugStreak : '🔧'}</Text>
+                  </Pressable>
+                )}
 
-            {/* Hero Card inside the big gradient block */}
-            <Animated.View
-              entering={FadeInDown.delay(100).springify()}
-              style={[
-                tw`px-5 mt-6`,
-                {
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 8 },
-                  shadowOpacity: 0.15,
-                  shadowRadius: 12,
-                  elevation: 6, // Android
-                },
-              ]}
-            >
-              <View style={[tw`rounded-3xl overflow-hidden border`, { borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1.5 }]}>
-                <HabitHero
-                  habitName={habit.name}
-                  habitType={habit.type}
-                  category={habit.category}
-                  currentStreak={performanceMetrics?.currentStreak ?? habit.currentStreak} // ✅ Use metrics first, fallback to habit
-                  bestStreak={performanceMetrics?.bestStreak ?? habit.bestStreak}
-                  tierInfo={safeTierInfo}
-                  nextTier={nextTier}
-                  tierProgress={Number.isFinite(tierProgress) ? tierProgress : 0}
-                  tierMultiplier={tierMultiplier}
-                  totalXPEarned={totalXPEarned}
-                  completionRate={completionRate ?? 0}
-                />
+                {/* Show empty view if not in dev mode */}
+                {!__DEV__ && <View style={tw`w-11`} />}
               </View>
-            </Animated.View>
-          </SafeAreaView>
-        </LinearGradient>
+
+              {/* Hero Card inside the big gradient block */}
+              <Animated.View
+                entering={FadeInDown.delay(100).springify()}
+                style={[
+                  tw`px-8 mt-6`,
+                  {
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 8 },
+                    shadowOpacity: 0.15,
+                    shadowRadius: 12,
+                    elevation: 6,
+                  },
+                ]}
+              >
+                <View style={[tw`rounded-3xl overflow-hidden border`, { borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1.5 }]}>
+                  <HabitHero
+                    habitName={habit.name}
+                    habitType={habit.type}
+                    category={habit.category}
+                    currentStreak={performanceMetrics?.currentStreak ?? habit.currentStreak}
+                    bestStreak={performanceMetrics?.bestStreak ?? habit.bestStreak}
+                    tierInfo={currentTierData.tier}
+                    nextTier={nextTier}
+                    tierProgress={currentTierData.progress}
+                    tierMultiplier={tierMultiplier}
+                    totalXPEarned={totalXPEarned}
+                    completionRate={completionRate ?? 0}
+                  />
+                </View>
+              </Animated.View>
+            </SafeAreaView>
+          </LinearGradient>
+        </Animated.View>
 
         <ScrollView contentContainerStyle={[tw`pb-8 pt-5`]} showsVerticalScrollIndicator={false}>
           {/* Tab Selector */}
-          <Animated.View entering={FadeInUp.delay(200).springify()} style={tw`px-5 mb-5`}>
-            <TabSelector tier={tierInfo?.name || 'Crystal'} selected={selectedTab} onChange={setSelectedTab} />
+          <Animated.View entering={FadeInUp.delay(200).springify()} style={tw`px-5 mb-5 mt-2`}>
+            <TabSelector tier={currentTierData.tier.name} selected={selectedTab} onChange={setSelectedTab} />
           </Animated.View>
 
           {/* Tab Content */}
@@ -209,22 +238,17 @@ const HabitDetails: React.FC = () => {
                     todayTasks={todayTasks}
                     habitId={habit.id}
                     today={today}
-                    onToggleTask={handleToggleTask} // ✅ Simple wrapper
+                    onToggleTask={handleToggleTask}
                     processingTasks={processingTasks}
                     xpEarnedTasks={xpEarnedTasks}
-                    tier={tierInfo?.name || 'Crystal'}
+                    tier={currentTierData.tier.name}
                   />
                 )}
 
                 {/* Achievement Status with Real Tier - DARKER AMBER */}
                 <ImageBackground source={theme.texture} style={tw`rounded-3xl p-5 mb-4 overflow-hidden`} imageStyle={tw`rounded-3xl opacity-90`} resizeMode="cover">
-                  <LinearGradient
-                    colors={theme.gradient.map((c) => c + 'cc')} // semi-transparent overlay
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={tw`absolute inset-0 rounded-3xl`}
-                  />
-                  <TierCard tierInfo={tierInfo} currentStreak={habit.currentStreak} nextMilestone={milestoneStatus.next} />
+                  <LinearGradient colors={theme.gradient.map((c) => c + 'cc')} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`absolute inset-0 rounded-3xl`} />
+                  <TierCard tierInfo={currentTierData.tier} currentStreak={debugStreak !== null ? debugStreak : habit.currentStreak} nextMilestone={milestoneStatus.next} />
                 </ImageBackground>
 
                 {/* Overall Progress Card - IMPROVED COLORS */}
@@ -236,7 +260,7 @@ const HabitDetails: React.FC = () => {
                     bestStreak={habit.bestStreak}
                     perfectDays={performanceMetrics?.perfectDayRate || 0}
                     consistency={completionRate}
-                    tier={tierInfo?.name || 'Crystal'} // 🔹 Pass the current tier
+                    tier={currentTierData.tier.name}
                   />
                 </View>
               </Animated.View>
@@ -245,7 +269,7 @@ const HabitDetails: React.FC = () => {
             {selectedTab === 'tiers' && (
               <Animated.View entering={FadeInDown.duration(300)}>
                 {/* Milestones from Backend - Using Component */}
-                <MilestonesCard milestones={milestoneStatus?.all || []} currentStreak={habit.currentStreak} unlockedMilestones={milestoneStatus?.unlocked || []} />
+                <MilestonesCard milestones={milestoneStatus?.all || []} currentStreak={debugStreak !== null ? debugStreak : habit.currentStreak} unlockedMilestones={milestoneStatus?.unlocked || []} />
               </Animated.View>
             )}
 
@@ -266,6 +290,8 @@ const HabitDetails: React.FC = () => {
           </View>
         </ScrollView>
       </ScrollView>
+      {/* Tier Celebration Modal */}
+      {celebrationTier && <TierCelebration visible={showCelebration} newTier={celebrationTier} onClose={() => setShowCelebration(false)} />}
     </View>
   );
 };
