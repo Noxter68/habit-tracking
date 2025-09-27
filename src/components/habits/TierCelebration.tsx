@@ -2,11 +2,13 @@
 
 import React, { useEffect } from 'react';
 import { View, Text, Modal, Pressable, ImageBackground } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming, FadeIn, ZoomIn, Easing } from 'react-native-reanimated';
-import { Trophy, Sparkles, Star } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming, FadeIn, Easing } from 'react-native-reanimated';
+import { Star } from 'lucide-react-native';
 import tw from '@/lib/tailwind';
 import { TierInfo } from '@/services/habitProgressionService';
-import { Image as RNImage } from 'react-native';
+import { Image } from 'expo-image';
+import { tierThemes } from '@/utils/tierTheme';
 
 interface TierCelebrationProps {
   visible: boolean;
@@ -15,30 +17,27 @@ interface TierCelebrationProps {
 }
 
 export const TierCelebration: React.FC<TierCelebrationProps> = ({ visible, newTier, onClose }) => {
-  const scale = useSharedValue(0);
+  const scale = useSharedValue(0.5);
   const opacity = useSharedValue(0);
-  const confettiRef = React.useRef<any>(null);
 
   useEffect(() => {
     if (visible) {
-      scale.value = 0.5;
+      // Smooth scale from 0.7 to 1
+      scale.value = 0.7;
       scale.value = withTiming(1, {
-        duration: 400,
+        duration: 350,
         easing: Easing.out(Easing.cubic),
       });
 
-      opacity.value = withTiming(1, { duration: 300 });
+      // Fade in
+      opacity.value = withTiming(1, { duration: 250 });
 
+      // Auto close after 3 seconds
       setTimeout(() => {
-        confettiRef.current?.startConfetti?.();
-      }, 200);
-
-      setTimeout(() => {
-        confettiRef.current?.stopConfetti?.();
         onClose();
-      }, 4000);
+      }, 3000);
     } else {
-      scale.value = withTiming(0.5, { duration: 200 });
+      scale.value = withTiming(0.7, { duration: 200 });
       opacity.value = withTiming(0, { duration: 200 });
     }
   }, [visible]);
@@ -48,78 +47,88 @@ export const TierCelebration: React.FC<TierCelebrationProps> = ({ visible, newTi
     opacity: opacity.value,
   }));
 
-  // textures
-  const crystalUri = RNImage.resolveAssetSource(require('../../../assets/interface/progressBar/crystal.png')).uri;
-  const rubyUri = RNImage.resolveAssetSource(require('../../../assets/interface/progressBar/ruby-texture.png')).uri;
-  const amethystUri = RNImage.resolveAssetSource(require('../../../assets/interface/progressBar/amethyst-texture.png')).uri;
+  const theme = tierThemes[newTier.name];
 
-  const themeTexture = newTier.name === 'Amethyst' ? amethystUri : newTier.name === 'Ruby' ? rubyUri : crystalUri;
+  // Get the correct gem icon based on tier
+  const getGemIcon = () => {
+    switch (newTier.name) {
+      case 'Ruby':
+        return require('../../../assets/interface/gems/ruby-gem.png');
+      case 'Amethyst':
+        return require('../../../assets/interface/gems/amethyst-gem.png');
+      case 'Crystal':
+      default:
+        return require('../../../assets/interface/gems/crystal-gem.png');
+    }
+  };
+
+  // Get the correct texture based on tier
+  const getTexture = () => {
+    switch (newTier.name) {
+      case 'Ruby':
+        return require('../../../assets/interface/progressBar/ruby-texture.png');
+      case 'Amethyst':
+        return require('../../../assets/interface/progressBar/amethyst-texture.png');
+      case 'Crystal':
+      default:
+        return require('../../../assets/interface/progressBar/crystal.png');
+    }
+  };
 
   return (
-    <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
-      <View style={tw`flex-1 bg-black/80 items-center justify-center px-6`}>
-        <Animated.View style={animatedCardStyle}>
-          <Pressable onPress={onClose}>
-            <ImageBackground
-              source={{ uri: themeTexture }}
-              resizeMode="cover"
-              style={tw`rounded-3xl p-8 items-center overflow-hidden`}
-              imageStyle={tw`rounded-3xl opacity-80`} // dim texture a bit
-            >
-              {/* Floating sparkles */}
-              <View style={tw`absolute inset-0`}>
-                {[...Array(6)].map((_, i) => (
-                  <Animated.View
-                    key={i}
-                    entering={FadeIn.delay(i * 100).duration(500)}
-                    style={[
-                      tw`absolute`,
-                      {
-                        top: Math.random() * 200,
-                        left: Math.random() * 250,
-                      },
-                    ]}
-                  >
-                    <Sparkles size={20} color="rgba(255,255,255,0.6)" />
-                  </Animated.View>
-                ))}
+    <Modal transparent visible={visible} animationType="none" onRequestClose={onClose}>
+      <Pressable onPress={onClose} style={tw`flex-1 bg-black/70 items-center justify-center px-6`}>
+        <Animated.View style={[animatedCardStyle, tw`w-full max-w-sm`]}>
+          <View style={tw`bg-white rounded-3xl overflow-hidden shadow-2xl`}>
+            {/* Gradient Header with Texture */}
+            <ImageBackground source={getTexture()} resizeMode="cover" style={tw`overflow-hidden`}>
+              <LinearGradient
+                colors={[...theme.gradient.map((c) => c + 'dd')]} // Semi-transparent to show texture
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={tw`px-10 pt-12 pb-10 items-center`}
+              >
+                {/* Gem Icon */}
+                <Animated.View entering={FadeIn.delay(100).duration(400)} style={tw`mb-5`}>
+                  <Image source={getGemIcon()} style={tw`w-24 h-24`} contentFit="contain" />
+                </Animated.View>
+
+                {/* Tier Name */}
+                <Animated.Text entering={FadeIn.delay(200)} style={tw`text-white text-3xl font-black tracking-wider mb-2`}>
+                  {newTier.name.toUpperCase()}
+                </Animated.Text>
+
+                {/* Subtle Description */}
+                <Animated.Text entering={FadeIn.delay(300)} style={tw`text-white/90 text-base font-medium`}>
+                  Tier Unlocked
+                </Animated.Text>
+              </LinearGradient>
+            </ImageBackground>
+
+            {/* Content Section */}
+            <View style={tw`px-10 py-8 bg-gray-50`}>
+              {/* Achievement Text */}
+              <Text style={tw`text-gray-900 text-center text-lg font-semibold mb-6`}>{newTier.description}</Text>
+
+              {/* Benefits Row - No icons, just clean text */}
+              <View style={tw`flex-row items-center justify-center gap-4`}>
+                <View style={tw`bg-white rounded-2xl px-5 py-3 flex-1`}>
+                  <Text style={tw`text-gray-500 text-xs font-medium text-center mb-1`}>STREAK</Text>
+                  <Text style={tw`text-gray-900 font-black text-center text-base`}>{newTier.minDays}+ Days</Text>
+                </View>
+
+                <View style={tw`bg-white rounded-2xl px-5 py-3 flex-1`}>
+                  <Text style={tw`text-gray-500 text-xs font-medium text-center mb-1`}>MULTIPLIER</Text>
+                  <Text style={tw`text-gray-900 font-black text-center text-base`}>{newTier.multiplier}x XP</Text>
+                </View>
               </View>
 
-              {/* Trophy Icon */}
-              <Animated.View entering={ZoomIn.delay(200).springify()} style={tw`w-24 h-24 bg-black/30 rounded-full items-center justify-center mb-4`}>
-                <Trophy size={50} color="#fff" strokeWidth={2} />
-              </Animated.View>
-
-              {/* Tier Up Text */}
-              <Animated.Text entering={FadeIn.delay(300)} style={tw`text-white text-3xl font-black mb-2`}>
-                TIER UP!
-              </Animated.Text>
-
-              {/* New Tier Name */}
-              <Animated.View entering={FadeIn.delay(400)} style={tw`flex-row items-center gap-2 mb-4`}>
-                <Text style={tw`text-white text-5xl`}>{newTier.icon}</Text>
-                <Text style={tw`text-white text-2xl font-bold`}>{newTier.name}</Text>
-              </Animated.View>
-
-              {/* Description */}
-              <Animated.Text entering={FadeIn.delay(500)} style={tw`text-white/90 text-center text-base mb-4`}>
-                {newTier.description}
-              </Animated.Text>
-
-              {/* Benefits */}
-              <Animated.View entering={FadeIn.delay(600)} style={tw`bg-black/40 rounded-2xl px-4 py-2 flex-row items-center gap-2`}>
-                <Star size={16} color="#fff" />
-                <Text style={tw`text-white font-bold`}>{newTier.multiplier}x XP Multiplier</Text>
-              </Animated.View>
-
-              {/* Tap to continue */}
-              <Animated.Text entering={FadeIn.delay(800)} style={tw`text-white/60 text-xs mt-6`}>
-                Tap to continue
-              </Animated.Text>
-            </ImageBackground>
-          </Pressable>
+              {/* Continue Hint */}
+              <Text style={tw`text-gray-400 text-center text-xs mt-8`}>Tap anywhere to continue</Text>
+            </View>
+          </View>
         </Animated.View>
-      </View>
+      </Pressable>
     </Modal>
   );
 };
