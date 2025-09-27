@@ -40,10 +40,10 @@ const HabitDetails: React.FC = () => {
   const route = useRoute<RouteProps>();
   const { habits, toggleTask, processingTasks, xpEarnedTasks, checkTaskXPStatus, refreshHabits } = useHabits();
   const { user } = useAuth();
-  const { refreshStats } = useStats();
 
   const [selectedTab, setSelectedTab] = useState<TabType>('overview');
   const [isLoadingXPStatus, setIsLoadingXPStatus] = useState(false);
+  const [prevTier, setPrevTier] = useState<string | null>(null);
 
   const habit = habits.find((h: Habit) => h.id === route.params.habitId);
 
@@ -55,13 +55,6 @@ const HabitDetails: React.FC = () => {
     );
   }
 
-  // ✅ Replace local fetching logic with centralized hook
-  const { tierInfo, tierProgress, nextTier, milestoneStatus, performanceMetrics, refreshProgression, loading } = useHabitDetails(habit.id, user.id, habit.currentStreak);
-
-  // fallback to lowest tier from service if null
-  const safeTierInfo = tierInfo ?? HabitProgressionService.TIERS[0];
-
-  // Calculations using backend data
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
   const todayTasks: DailyTaskProgress = habit.dailyTasks?.[today] || {
     completedTasks: [],
@@ -69,6 +62,13 @@ const HabitDetails: React.FC = () => {
   };
   const completedTasksToday = todayTasks.completedTasks?.length || 0;
   const totalTasks = habit.tasks?.length || 0;
+
+  // The hook will re-fetch when these values change
+  const { tierInfo, tierProgress, nextTier, milestoneStatus, performanceMetrics, refreshProgression, loading } = useHabitDetails(habit.id, user.id, habit.currentStreak, completedTasksToday);
+
+  // Safe tier info with fallback
+  const safeTierInfo = tierInfo ?? HabitProgressionService.TIERS[0];
+
   const taskProgress = totalTasks > 0 ? (completedTasksToday / totalTasks) * 100 : 0;
   const overallProgress = (habit.completedDays.length / habit.totalDays) * 100;
 
@@ -78,13 +78,28 @@ const HabitDetails: React.FC = () => {
 
   const theme = tierThemes[tierInfo?.name || 'Crystal'];
 
+  // ✅ Simple wrapper that just calls the existing toggleTask with the right params
+  const handleToggleTask = useCallback(
+    async (taskId: string): Promise<void> => {
+      const result = await toggleTask(habit.id, today, taskId);
+
+      // The context already updates the habit state
+      // We just need to trigger a refresh of the progression data
+      if (result?.success) {
+        await refreshProgression();
+      }
+
+      // Don't return anything - TasksCard expects Promise<void>
+    },
+    [habit.id, today, toggleTask, refreshProgression]
+  );
+
   useEffect(() => {
     const loadTaskXPStatus = async () => {
       if (!habit || !user || isLoadingXPStatus) return;
 
       setIsLoadingXPStatus(true);
       try {
-        // Use Promise.all for parallel execution
         const promises = (habit.tasks || []).map((task) => {
           const taskId = typeof task === 'string' ? task : (task as any).id;
           return checkTaskXPStatus(habit.id, today, taskId);
@@ -96,8 +111,35 @@ const HabitDetails: React.FC = () => {
     };
 
     loadTaskXPStatus();
-  }, [habit?.id, user?.id]);
+  }, [habit?.id, user?.id, completedTasksToday]);
 
+  // ✅ Calculate tier reactively based on current habit data
+  const currentTierData = useMemo(() => {
+    const { tier, progress } = HabitProgressionService.calculateTierFromStreak(habit.currentStreak || 0);
+    return { tier, progress };
+  }, [habit.currentStreak]);
+
+  // ✅ Detect tier changes and trigger animations
+  useEffect(() => {
+    if (prevTier && prevTier !== currentTierData.tier.name) {
+      // Tier changed! Trigger celebration animation
+      console.log(`🎉 TIER UP! ${prevTier} → ${currentTierData.tier.name}`);
+
+      // Trigger a bounce animation
+      tierTransition.value = withSequence(
+        withTiming(1, { duration: 300 }),
+        withSpring(0, {
+          damping: 3,
+          stiffness: 200,
+          mass: 0.5,
+        })
+      );
+
+      // Optional: Show a celebration modal or toast
+      // You could add a celebration component here
+    }
+    setPrevTier(currentTierData.tier.name);
+  }, [currentTierData.tier.name]);
   return (
     <View style={tw`flex-1 bg-gray-50`}>
       <StatusBar barStyle="dark-content" />
@@ -136,8 +178,8 @@ const HabitDetails: React.FC = () => {
                   habitName={habit.name}
                   habitType={habit.type}
                   category={habit.category}
-                  currentStreak={performanceMetrics?.currentStreak ?? 0}
-                  bestStreak={performanceMetrics?.bestStreak ?? 0}
+                  currentStreak={performanceMetrics?.currentStreak ?? habit.currentStreak} // ✅ Use metrics first, fallback to habit
+                  bestStreak={performanceMetrics?.bestStreak ?? habit.bestStreak}
                   tierInfo={safeTierInfo}
                   nextTier={nextTier}
                   tierProgress={Number.isFinite(tierProgress) ? tierProgress : 0}
@@ -167,7 +209,7 @@ const HabitDetails: React.FC = () => {
                     todayTasks={todayTasks}
                     habitId={habit.id}
                     today={today}
-                    onToggleTask={toggleTask}
+                    onToggleTask={handleToggleTask} // ✅ Simple wrapper
                     processingTasks={processingTasks}
                     xpEarnedTasks={xpEarnedTasks}
                     tier={tierInfo?.name || 'Crystal'}

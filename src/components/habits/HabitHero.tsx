@@ -59,7 +59,7 @@ export const HabitHero: React.FC<HabitHeroProps> = ({ habitName, habitType, cate
             <Text style={tw`text-white/80 text-xs font-semibold`}>Progress to {nextTier.name}</Text>
             <Text style={tw`text-white font-bold text-xs`}>{Math.round(tierProgress)}%</Text>
           </View>
-          <ProgressBar progress={tierProgress} theme="crystal" height={20} width={200} />
+          <ProgressBar progress={currentStreak} theme="crystal" height={20} width={200} />
         </View>
       )}
       {/* Stats */}

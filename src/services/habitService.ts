@@ -59,7 +59,7 @@ export class HabitService {
       const result = data[0];
 
       // The key fix: ensure completed_tasks is an array
-      const completedTasks = Array.isArray(result.completed_tasks) ? result.completed_tasks : [];
+      const completedTasks = Array.isArray(result.completed_tasks) ? result.completed_tasks : result.completed_tasks ? [result.completed_tasks] : [];
 
       console.log('Toggle result:', {
         success: result.success,
@@ -84,7 +84,7 @@ export class HabitService {
         xpEarned: result.xp_earned || 0,
         allTasksComplete: result.all_completed || false,
         alreadyEarnedXP: result.already_earned || false,
-        completedTasks, // Return the updated tasks array
+        completedTasks: completedTasks,
         milestoneReached,
         streakUpdated,
       };
@@ -94,8 +94,7 @@ export class HabitService {
         success: false,
         xpEarned: 0,
         allTasksComplete: false,
-        alreadyEarnedXP: false,
-        completedTasks: [],
+        completedTasks: [], // Return empty array on error
       };
     }
   }
@@ -293,6 +292,8 @@ export class HabitService {
           ...habit,
           dailyTasks,
           completedDays,
+          currentStreak: habit.current_streak || 0, // ✅ EXPLICITLY MAP THIS
+          bestStreak: habit.best_streak || 0,
           createdAt: new Date(habit.created_at),
         };
       });

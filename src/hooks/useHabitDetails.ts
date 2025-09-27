@@ -18,12 +18,19 @@ interface UseHabitDetailsResult {
     tierProgress: number;
     consistency: number;
     totalXPEarned: number;
+    currentStreak?: number;
+    bestStreak?: number;
   } | null;
   refreshProgression: () => Promise<void>;
   loading: boolean;
 }
 
-export function useHabitDetails(habitId: string, userId: string, currentStreak: number): UseHabitDetailsResult {
+export function useHabitDetails(
+  habitId: string,
+  userId: string,
+  currentStreak: number,
+  completedTasksToday?: number // ✅ Add this parameter to trigger refresh
+): UseHabitDetailsResult {
   const [tierInfo, setTierInfo] = useState<TierInfo | null>(null);
   const [tierProgress, setTierProgress] = useState(0);
   const [nextTier, setNextTier] = useState<TierInfo | null>(null);
@@ -31,7 +38,8 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
     unlocked: HabitMilestone[];
     next: HabitMilestone | null;
     upcoming: HabitMilestone[];
-  }>({ unlocked: [], next: null, upcoming: [] });
+    all: HabitMilestone[];
+  }>({ unlocked: [], next: null, upcoming: [], all: [] });
   const [performanceMetrics, setPerformanceMetrics] = useState<UseHabitDetailsResult['performanceMetrics']>(null);
   const [loading, setLoading] = useState(true);
 
@@ -56,7 +64,14 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
 
       // 3. Performance metrics
       const metrics = await HabitProgressionService.getPerformanceMetrics(habitId, userId);
-      setPerformanceMetrics(metrics);
+      if (metrics) {
+        // Add streak data to metrics
+        setPerformanceMetrics({
+          ...metrics,
+          currentStreak,
+          bestStreak: metrics.bestStreak || currentStreak,
+        });
+      }
     } catch (err) {
       console.error('useHabitDetails error', err);
     } finally {
@@ -66,7 +81,7 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, [habitId, userId, currentStreak, completedTasksToday]);
 
   return {
     tierInfo,

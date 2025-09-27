@@ -14,7 +14,7 @@ interface ProgressBarProps {
 const ProgressBar: React.FC<ProgressBarProps> = ({ progress, theme, width = 300, height = 50 }) => {
   const radius = height / 2;
   const stroke = Math.max(2, height * 0.08);
-
+  console.log(progress);
   // normalize progress
   let normalized = 0;
   if (typeof progress === 'string' && progress.includes('%')) {

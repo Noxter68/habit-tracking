@@ -172,6 +172,8 @@ export class HabitProgressionService {
     tierProgress: number;
     consistency: number;
     totalXPEarned: number;
+    currentStreak: number;
+    bestStreak: number;
   } | null> {
     try {
       const { data: completions, error } = await supabase.from('task_completions').select('completed_tasks, all_completed, xp_earned').eq('habit_id', habitId).eq('user_id', userId);
@@ -187,23 +189,32 @@ export class HabitProgressionService {
       const totalXP = completions?.reduce((s, c) => s + (c.xp_earned ?? 0), 0) ?? 0;
 
       // streak from habits
-      const { data: habit, error: streakError } = await supabase.from('habits').select('current_streak').eq('id', habitId).single();
+      const { data: habit, error: streakError } = await supabase
+        .from('habits')
+        .select('current_streak, best_streak') // ✅ Also get best_streak!
+        .eq('id', habitId)
+        .single();
 
       if (streakError) {
         console.error('getPerformanceMetrics streak error', streakError);
         return null;
       }
 
-      const streak = habit?.current_streak ?? 0;
-      const { tier, progress } = this.calculateTierFromStreak(streak);
+      const currentStreak = habit?.current_streak ?? 0;
+      const bestStreak = habit?.best_streak ?? 0;
+      const { tier, progress } = this.calculateTierFromStreak(currentStreak);
+
+      const consistency = await this.calculateConsistencyScore(habitId, userId);
 
       return {
         avgTasksPerDay: totalDays > 0 ? totalTasks / totalDays : 0,
         perfectDayRate: totalDays > 0 ? (perfectDays / totalDays) * 100 : 0,
         currentTier: tier,
         tierProgress: progress,
-        consistency: 0, // call calculateConsistencyScore separately if needed
+        consistency: consistency,
         totalXPEarned: totalXP,
+        currentStreak: currentStreak, // ✅ NOW INCLUDED
+        bestStreak: bestStreak,
       };
     } catch (e) {
       console.error('getPerformanceMetrics fatal', e);
