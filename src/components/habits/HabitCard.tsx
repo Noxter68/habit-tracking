@@ -1,16 +1,13 @@
 // src/components/habits/HabitCard.tsx
 import React, { useCallback, useEffect, useMemo } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, ImageBackground, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withSpring, withSequence, withTiming, interpolate } from 'react-native-reanimated';
-import { CheckCircle2, Circle, Sparkles, Trophy } from 'lucide-react-native';
+import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withSpring, withSequence, withTiming } from 'react-native-reanimated';
 import tw from '@/lib/tailwind';
-import { ColorValue } from 'react-native';
-import { TierInfo, HabitProgressionService, HabitTier } from '@/services/habitProgressionService';
+import { HabitProgressionService, HabitTier } from '@/services/habitProgressionService';
+import { tierThemes } from '@/utils/tierTheme';
 
 import { Habit, DailyTaskProgress } from '@/types';
-import { getCategoryIcon } from '@/utils/categoryIcons';
-import StreakCounter from '../StreakCounter';
 
 interface HabitCardProps {
   habit: Habit;
@@ -20,26 +17,11 @@ interface HabitCardProps {
   index?: number;
 }
 
-// Type-safe tier names
-export type TierName = HabitTier;
-
-// Quartz-themed achievement gradients
-const achievementGradients: Record<HabitTier, readonly [ColorValue, ColorValue, ColorValue]> = {
-  Crystal: ['#E5E7EB', '#D1D5DB', '#9CA3AF'], // Light grays
-  Ruby: ['#9CA3AF', '#6B7280', '#4B5563'], // Medium grays
-  Amethyst: ['#6B7280', '#4B5563', '#374151'], // Dark grays
-};
-
 const HabitCard: React.FC<HabitCardProps> = ({ habit, onToggleDay, onToggleTask, onPress, index = 0 }) => {
   const scale = useSharedValue(1);
-  const buttonScale = useSharedValue(1);
   const glowOpacity = useSharedValue(0);
   const progressAnimation = useSharedValue(0);
-  const xpOpacity = useSharedValue(1);
   const completeStateScale = useSharedValue(1);
-
-  const categoryData = getCategoryIcon(habit.category, habit.type);
-  const CategoryIcon = categoryData.icon;
 
   // Get today's progress
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
@@ -52,193 +34,168 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onToggleDay, onToggleTask,
   const completedTasksCount = todayTasks.completedTasks?.length || 0;
   const totalTasks = habit.tasks?.length || 0;
   const taskProgress = totalTasks > 0 ? (completedTasksCount / totalTasks) * 100 : 0;
-  const allTasksCompleted = totalTasks > 0 && completedTasksCount === totalTasks;
   const isCompleted = todayTasks.allCompleted || (totalTasks === 0 && todayTasks.allCompleted);
 
   const { tier, progress } = HabitProgressionService.calculateTierFromStreak(habit.currentStreak);
   const currentTier = tier.name;
   const tierProgressPercent = progress;
 
+  // Get theme for current tier
+  const theme = tierThemes[currentTier];
+
+  // Get gem icon based on tier
+  const getGemIcon = () => {
+    switch (currentTier) {
+      case 'Ruby':
+        return require('../../../assets/interface/gems/ruby-gem.png');
+      case 'Amethyst':
+        return require('../../../assets/interface/gems/amethyst-gem.png');
+      case 'Crystal':
+      default:
+        return require('../../../assets/interface/gems/crystal-gem.png');
+    }
+  };
+
   const multiplier = tier.multiplier;
   const currentXP = useMemo(() => {
     const baseXP = totalTasks > 0 ? completedTasksCount * 10 : isCompleted ? 20 : 0;
     const streakBonus = habit.currentStreak > 7 ? 10 : habit.currentStreak > 3 ? 5 : 0;
     const totalXP = (baseXP + streakBonus) * multiplier;
-    return Math.round(totalXP);
+    return totalXP;
   }, [completedTasksCount, totalTasks, isCompleted, habit.currentStreak, multiplier]);
 
   // Animations
   useEffect(() => {
-    progressAnimation.value = withSpring(taskProgress, { damping: 15 });
+    scale.value = withSpring(1, {
+      damping: 15,
+      stiffness: 100,
+    });
+  }, []);
+
+  useEffect(() => {
+    progressAnimation.value = withTiming(taskProgress, { duration: 300 });
   }, [taskProgress]);
 
   useEffect(() => {
-    if (allTasksCompleted) {
-      completeStateScale.value = withSequence(withTiming(0.95, { duration: 100 }), withSpring(1, { damping: 8, stiffness: 200 }));
+    if (isCompleted) {
+      glowOpacity.value = withSequence(withTiming(1, { duration: 200 }), withTiming(0.3, { duration: 300 }));
+      completeStateScale.value = withSequence(withSpring(1.02, { damping: 10 }), withSpring(1, { damping: 15 }));
+    } else {
+      glowOpacity.value = withTiming(0, { duration: 200 });
+      completeStateScale.value = withSpring(1);
     }
-  }, [allTasksCompleted]);
+  }, [isCompleted]);
 
-  const handleToggle = useCallback(async () => {
-    buttonScale.value = withSequence(withTiming(0.9, { duration: 50 }), withSpring(1, { damping: 8, stiffness: 200 }));
+  const handlePress = useCallback(() => {
+    scale.value = withSequence(withSpring(0.98, { damping: 15 }), withSpring(1, { damping: 15 }));
+    onPress?.();
+  }, [onPress]);
 
-    await onToggleDay(habit.id, today);
-
-    if (isCompleted && currentXP > 0) {
-      xpOpacity.value = withSequence(withTiming(0.5, { duration: 200 }), withTiming(1, { duration: 200 }));
+  const handleToggle = useCallback(() => {
+    const date = today;
+    if (totalTasks > 0 && !isCompleted) {
+      return; // Don't toggle if tasks aren't complete
     }
-  }, [habit.id, today, isCompleted, currentXP, onToggleDay]);
+    onToggleDay(habit.id, date);
+  }, [today, habit.id, onToggleDay, totalTasks, isCompleted]);
 
-  const cardStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  const buttonAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: buttonScale.value }],
+  const animatedCardStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value * completeStateScale.value }],
   }));
 
   const glowStyle = useAnimatedStyle(() => ({
     opacity: glowOpacity.value,
   }));
 
-  const progressBarWidth = useAnimatedStyle(() => ({
+  const progressBarStyle = useAnimatedStyle(() => ({
     width: `${progressAnimation.value}%`,
   }));
 
-  const xpBadgeStyle = useAnimatedStyle(() => ({
-    opacity: xpOpacity.value,
-    transform: [{ scale: interpolate(xpOpacity.value, [0.5, 1], [1.1, 1]) }],
-  }));
-
-  const completeStateStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: completeStateScale.value }],
-  }));
-
   return (
-    <Animated.View entering={FadeIn.delay(index * 50).springify()} style={[cardStyle]}>
-      <Pressable onPress={onPress}>
-        {/* Card Container with Quartz gradient */}
-        <LinearGradient
-          colors={isCompleted ? achievementGradients[currentTier] : ['#ffffff', '#F3F4F6', '#E5E7EB']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={tw`rounded-3xl p-4 border ${isCompleted ? 'border-quartz-400' : 'border-quartz-200'}`}
-        >
-          {/* Header Row */}
-          <View style={tw`flex-row items-center justify-between mb-3`}>
-            <View style={tw`flex-row items-center gap-3 flex-1`}>
-              {/* Category Icon */}
-              <View style={tw`w-12 h-12 bg-white bg-opacity-50 rounded-2xl items-center justify-center`}>
-                <CategoryIcon size={24} color={isCompleted ? '#4B5563' : '#6B7280'} />
-              </View>
-
-              {/* Habit Info */}
-              <View style={tw`flex-1`}>
-                <Text style={tw`text-base font-bold ${isCompleted ? 'text-white' : 'text-quartz-700'}`}>{habit.name}</Text>
-                <View style={tw`flex-row items-center gap-2 mt-0.5`}>
-                  <StreakCounter streak={habit.currentStreak} compact lightMode={isCompleted} />
-                  {currentXP > 0 && (
-                    <Animated.View style={xpBadgeStyle}>
-                      <View style={tw`bg-white bg-opacity-25 px-2 py-0.5 rounded-full`}>
-                        <Text style={tw`text-xs font-bold text-white`}>+{currentXP} XP</Text>
-                      </View>
-                    </Animated.View>
-                  )}
-                </View>
-              </View>
+    <Animated.View entering={FadeIn.delay(index * 50)} style={animatedCardStyle}>
+      <Pressable onPress={handlePress}>
+        <ImageBackground source={theme.texture} style={tw`rounded-2xl overflow-hidden`} imageStyle={tw`rounded-2xl opacity-70`} resizeMode="cover">
+          <LinearGradient
+            colors={[
+              theme.gradient[0] + 'e6', // Slightly more opaque
+              theme.gradient[1] + 'dd',
+              theme.gradient[2] + 'cc',
+            ]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={tw`p-4`}
+          >
+            {/* Gem Icon - Absolute Position Top Right */}
+            <View style={tw`absolute top-3 right-3 z-10`}>
+              <Image source={getGemIcon()} style={tw`w-12 h-12`} resizeMode="contain" />
             </View>
 
-            {/* Complete Button */}
-            <Animated.View style={buttonAnimatedStyle}>
-              <Pressable onPress={handleToggle}>
-                <View style={tw`p-1`}>{isCompleted ? <CheckCircle2 size={28} color="#ffffff" strokeWidth={2.5} /> : <Circle size={28} color="#9CA3AF" strokeWidth={2} />}</View>
-              </Pressable>
-            </Animated.View>
-          </View>
+            {/* Header - Title and Building Type */}
+            <View style={tw`mb-3 pr-14`}>
+              <Text numberOfLines={1} style={tw`text-xl font-bold text-white mb-0.5`}>
+                {habit.name}
+              </Text>
+              <Text style={tw`text-xs text-white/70 font-medium`}>Building</Text>
+            </View>
 
-          {/* Progress Section */}
-          <View>
-            {totalTasks > 0 &&
-              (allTasksCompleted ? (
-                <Animated.View style={completeStateStyle}>
-                  <LinearGradient colors={['#6B7280', '#4B5563', '#374151']} style={tw`rounded-2xl p-3`}>
-                    <View style={tw`flex-row items-center justify-between`}>
-                      <View style={tw`flex-row items-center gap-2`}>
-                        <View>
-                          <Text style={tw`text-sm font-black text-white`}>Perfect Day!</Text>
-                          <Text style={tw`text-[10px] text-white/80`}>All {totalTasks} tasks completed</Text>
-                        </View>
-                      </View>
-                      <View style={tw`bg-white/20 px-3 py-1.5 rounded-xl`}>
-                        <Text style={tw`text-sm font-bold text-white`}>100%</Text>
-                      </View>
-                    </View>
-                  </LinearGradient>
-                </Animated.View>
-              ) : (
-                <View style={tw`flex-row items-center gap-3`}>
-                  <View style={tw`flex-1`}>
-                    <View style={tw`h-3 bg-white/30 rounded-full overflow-hidden`}>
-                      <Animated.View style={progressBarWidth}>
-                        <LinearGradient
-                          colors={progressAnimation.value >= 75 ? ['#4B5563', '#374151'] : progressAnimation.value >= 50 ? ['#6B7280', '#4B5563'] : ['#9CA3AF', '#6B7280']}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 0 }}
-                          style={tw`h-full`}
-                        />
-                      </Animated.View>
-                    </View>
-                    <View style={tw`flex-row justify-between mt-1.5`}>
-                      <Text style={tw`text-[10px] text-quartz-500`}>
-                        {completedTasksCount}/{totalTasks} tasks
-                      </Text>
-                      <Text style={tw`text-[10px] font-bold text-quartz-600`}>{Math.round(taskProgress)}%</Text>
-                    </View>
-                  </View>
-                </View>
-              ))}
-          </View>
+            {/* Streak Info */}
+            <View style={tw`mb-3`}>
+              <View style={tw`flex-row items-baseline gap-1`}>
+                <Text style={tw`text-3xl font-black text-white`}>{habit.currentStreak}</Text>
+                <Text style={tw`text-sm text-white/80 font-medium`}>day streak</Text>
+              </View>
 
-          {/* Gamified Stats Row */}
-          <View style={tw`flex-row items-center justify-between mt-3`}>
-            <View style={tw`flex-row gap-2`}>
-              {/* Tier Badge */}
-              <LinearGradient colors={['rgba(255, 255, 255, 0.3)', 'rgba(255, 255, 255, 0.1)']} style={tw`px-3 py-2 rounded-xl border border-white/20`}>
-                <View style={tw`flex-row items-center gap-1.5`}>
-                  <View>
-                    <Text style={tw`text-[10px] text-quartz-600 font-medium`}>Tier</Text>
-                    <Text style={tw`text-xs font-bold ${habit.currentStreak > 7 ? 'text-quartz-700' : 'text-quartz-500'}`}>{currentTier}</Text>
-                  </View>
-                  <Trophy size={16} color={habit.currentStreak > 7 ? '#4B5563' : '#9CA3AF'} />
-                </View>
-              </LinearGradient>
-
-              {/* XP Multiplier if active */}
-              {multiplier > 1 && (
-                <View style={tw`bg-quartz-100 px-3 py-2 rounded-xl border border-quartz-200`}>
-                  <View style={tw`flex-row items-center gap-1`}>
-                    <Sparkles size={14} color="#6B7280" />
-                    <Text style={tw`text-xs font-bold text-quartz-600`}>{multiplier}x XP</Text>
-                  </View>
+              {/* XP if earned */}
+              {currentXP > 0 && isCompleted && (
+                <View style={tw`mt-1`}>
+                  <Text style={tw`text-xs text-white/90 font-bold`}>+{currentXP} XP earned</Text>
                 </View>
               )}
             </View>
 
-            {/* Tier Progress */}
-            <View style={tw`flex-row items-center gap-2`}>
-              <View style={tw`w-16 h-1.5 bg-quartz-100 rounded-full overflow-hidden`}>
-                <View style={[tw`h-full bg-quartz-400 rounded-full`, { width: `${tierProgressPercent}%` }]} />
-              </View>
-              <Text style={tw`text-[10px] text-quartz-500 font-medium`}>{Math.round(tierProgressPercent)}%</Text>
-            </View>
-          </View>
+            {/* Tasks Progress (if any) */}
+            {totalTasks > 0 && (
+              <View style={tw`mb-3`}>
+                <View style={tw`flex-row justify-between items-center mb-1.5`}>
+                  <Text style={tw`text-xs text-white/90 font-medium`}>Daily Progress</Text>
+                  <Text style={tw`text-xs text-white font-bold`}>{Math.round(taskProgress)}%</Text>
+                </View>
 
-          {/* Glow Effect for completed state */}
-          {isCompleted && (
-            <Animated.View style={[tw`absolute inset-0 rounded-3xl`, glowStyle]} pointerEvents="none">
-              <LinearGradient colors={['rgba(107, 114, 128, 0.1)', 'transparent']} style={tw`w-full h-full rounded-3xl`} />
-            </Animated.View>
-          )}
-        </LinearGradient>
+                <View style={tw`h-1.5 bg-white/20 rounded-full overflow-hidden`}>
+                  <Animated.View style={progressBarStyle}>
+                    <View style={tw`h-full bg-white/50 rounded-full`} />
+                  </Animated.View>
+                </View>
+
+                <Text style={tw`text-[10px] text-white/70 mt-1`}>
+                  {completedTasksCount} of {totalTasks} tasks completed
+                </Text>
+              </View>
+            )}
+
+            {/* Bottom Row - Tier Info and Completion */}
+            <View style={tw`flex-row items-center justify-between`}>
+              {/* Tier Progress */}
+              <View style={tw`flex-1 mr-3`}>
+                <View style={tw`flex-row items-center justify-between mb-1`}>
+                  <Text style={tw`text-[10px] text-white/70 font-medium uppercase tracking-wider`}>{currentTier} Tier</Text>
+                  <Text style={tw`text-[10px] text-white/90 font-bold`}>{Math.round(tierProgressPercent)}%</Text>
+                </View>
+                <View style={tw`h-1 bg-white/20 rounded-full overflow-hidden`}>
+                  <View style={[tw`h-full bg-white/40 rounded-full`, { width: `${tierProgressPercent}%` }]} />
+                </View>
+                {multiplier > 1 && <Text style={tw`text-[10px] text-white/90 font-bold mt-1`}>{multiplier}x XP Multiplier</Text>}
+              </View>
+            </View>
+
+            {/* Glow Effect for completed state */}
+            {isCompleted && (
+              <Animated.View style={[tw`absolute inset-0 rounded-2xl`, glowStyle]} pointerEvents="none">
+                <LinearGradient colors={['rgba(255,255,255,0.15)', 'transparent']} style={tw`w-full h-full rounded-2xl`} />
+              </Animated.View>
+            )}
+          </LinearGradient>
+        </ImageBackground>
       </Pressable>
     </Animated.View>
   );
