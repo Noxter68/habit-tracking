@@ -7,7 +7,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, w
 import tw from '../../lib/tailwind';
 import { getImage } from '@/utils/images';
 
-// Define props with proper typing - use EITHER icon OR image, not both
+// Define props with proper typing
 type StatsCardProps = {
   label: string;
   value: number | string;
@@ -33,24 +33,24 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
   }));
 
   const getGradientColors = () => {
-    if (isStreak && streakValue >= 30) return ['#dc2626', '#991b1b']; // Legendary
-    if (isStreak && streakValue >= 7) return ['#f59e0b', '#d97706']; // Epic
-    if (highlight) return ['#fef3c7', '#fed7aa'];
-    return ['#ffffff', '#fef3c7'];
+    if (isStreak && streakValue >= 30) return ['#4B5563', '#374151']; // Legendary - darker grays
+    if (isStreak && streakValue >= 7) return ['#6B7280', '#4B5563']; // Epic - medium grays
+    if (highlight) return ['#F3F4F6', '#E5E7EB']; // Light quartz
+    return ['#ffffff', '#F3F4F6']; // White to light quartz
   };
 
   const getTextColors = () => {
     if (isStreak && streakValue >= 7) return 'text-white';
-    return 'text-gray-900';
+    return 'text-quartz-700';
   };
 
   const getSubtextColors = () => {
     if (isStreak && streakValue >= 7) return 'text-white opacity-90';
-    return 'text-amber-600';
+    return 'text-quartz-500';
   };
 
   const isOnFire = isStreak && streakValue >= 7;
-  const containerBg = isOnFire ? 'bg-white bg-opacity-20' : 'bg-amber-200 bg-opacity-50';
+  const containerBg = isOnFire ? 'bg-white bg-opacity-20' : 'bg-quartz-200 bg-opacity-50';
 
   const renderVisual = () => {
     // Check if we have an icon prop
@@ -59,7 +59,7 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
       return (
         <Animated.View style={isOnFire ? fireAnimatedStyle : undefined}>
           <View style={tw`w-10 h-10 ${containerBg} rounded-xl items-center justify-center`}>
-            <Icon size={24} color={isOnFire ? '#fff' : '#d97706'} />
+            <Icon size={24} color={isOnFire ? '#fff' : '#6B7280'} />
           </View>
         </Animated.View>
       );
@@ -74,7 +74,7 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
         return (
           <Animated.View style={isOnFire ? fireAnimatedStyle : undefined}>
             <View style={tw`w-10 h-10 ${containerBg} rounded-xl items-center justify-center`}>
-              <HomeIcon size={24} color={isOnFire ? '#fff' : '#d97706'} />
+              <HomeIcon size={24} color={isOnFire ? '#fff' : '#6B7280'} />
             </View>
           </Animated.View>
         );
@@ -82,34 +82,46 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
 
       return (
         <Animated.View style={isOnFire ? fireAnimatedStyle : undefined}>
-          <View style={tw`w-10 h-10 ${containerBg} rounded-xl items-center justify-center`}>
-            <Image source={imageSource} style={tw`w-8 h-8`} resizeMode="contain" />
+          <View style={tw`w-10 h-10 ${containerBg} rounded-xl items-center justify-center p-1.5`}>
+            <Image source={imageSource} style={tw`w-7 h-7`} resizeMode="contain" />
           </View>
         </Animated.View>
       );
     }
 
-    return null;
+    // Default case - no icon or image provided
+    return (
+      <View style={tw`w-10 h-10 ${containerBg} rounded-xl items-center justify-center`}>
+        <HomeIcon size={24} color="#6B7280" />
+      </View>
+    );
   };
 
   return (
-    <LinearGradient colors={getGradientColors()} style={[tw`flex-1 rounded-2xl p-3`, !isOnFire && tw`border border-amber-200`]}>
+    <LinearGradient colors={getGradientColors()} style={tw`flex-1 rounded-2xl p-4 border border-quartz-200`}>
       <View style={tw`flex-row items-center justify-between`}>
-        <View>
-          <Text style={tw`text-xs font-medium ${isOnFire ? 'text-white opacity-90' : 'text-amber-700'}`}>{label}</Text>
-          <Text style={tw`text-xl font-black ${getTextColors()}`}>{value}</Text>
-        </View>
         {renderVisual()}
+        <View style={tw`flex-1 ml-3`}>
+          <Text style={tw`text-xs ${getSubtextColors()} font-medium`}>{label}</Text>
+          <View style={tw`flex-row items-baseline gap-1`}>
+            <Text style={tw`text-2xl font-black ${getTextColors()}`}>{value}</Text>
+            {subtitle && <Text style={tw`text-xs ${getSubtextColors()} font-medium`}>{subtitle}</Text>}
+          </View>
+        </View>
       </View>
-      {subtitle && <Text style={tw`text-xs ${getSubtextColors()} mt-1`}>{subtitle}</Text>}
-      {isOnFire && <Text style={tw`text-xs font-bold text-white opacity-90 mt-1`}>{streakValue >= 30 ? 'LEGENDARY!' : 'ON FIRE!'}</Text>}
     </LinearGradient>
   );
 };
 
-// Helper function to get image source from string
+// Helper function to map string to image source
 const getImageSource = (imageName: string): ImageSourcePropType | null => {
-  return getImage(imageName);
+  const imageMap: Record<string, ImageSourcePropType> = {
+    streak: require('../../../assets/interface/streak.png'),
+    active: require('../../../assets/interface/streak.png'),
+    // Add more mappings as needed
+  };
+
+  return imageMap[imageName] || null;
 };
 
 export default StatsCard;

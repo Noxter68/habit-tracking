@@ -2,7 +2,7 @@ import React from 'react';
 import { Modal, View, Text, Pressable, Image, Dimensions } from 'react-native';
 import Animated, { SlideInDown, FadeInDown } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import tw, { achievementGradients } from '../../lib/tailwind';
+import tw, { quartzGradients } from '../../lib/tailwind';
 import { Achievement } from '../../utils/achievements';
 
 interface AchievementDetailModalProps {
@@ -29,11 +29,11 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
         <Animated.View entering={SlideInDown.duration(400).springify()} style={tw`w-full max-w-sm`}>
           <Pressable onPress={(e) => e.stopPropagation()}>
             {/* Outer gradient border */}
-            <LinearGradient colors={isUnlocked ? achievementGradients.unlocked.border : achievementGradients.locked.border} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-0.5`}>
+            <LinearGradient colors={isUnlocked ? quartzGradients.unlocked.border : quartzGradients.locked.border} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-0.5`}>
               <View style={tw`bg-white rounded-3xl overflow-hidden`}>
                 {/* Header with gradient background */}
                 <LinearGradient
-                  colors={isUnlocked ? achievementGradients.unlocked.header : achievementGradients.locked.header}
+                  colors={isUnlocked ? quartzGradients.unlocked.header : quartzGradients.locked.header}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 0.5, y: 1 }}
                   style={tw`px-6 pt-8 pb-12 items-center relative`}
@@ -80,13 +80,13 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
                 </LinearGradient>
 
                 {/* Content Section with subtle gradient overlay */}
-                <LinearGradient colors={achievementGradients.overlay} style={tw`px-6 pb-6 -mt-6`}>
+                <LinearGradient colors={quartzGradients.overlay} style={tw`px-6 pb-6 -mt-6`}>
                   {/* Title Card */}
                   <View style={tw`bg-white rounded-2xl shadow-sm p-4 mb-4 border border-achievement-amber-100`}>
                     <Text style={tw`text-xl font-bold text-gray-800 text-center mb-3`}>{achievement.title}</Text>
 
                     <View style={tw`flex-row gap-2 justify-center`}>
-                      <LinearGradient colors={achievementGradients.unlocked.progressBar} style={tw`rounded-full px-3.5 py-1.5`}>
+                      <LinearGradient colors={quartzGradients.unlocked.progressBar} style={tw`rounded-full px-3.5 py-1.5`}>
                         <Text style={tw`text-sm font-bold text-white`}>Level {achievement.level}</Text>
                       </LinearGradient>
 
@@ -98,7 +98,7 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
 
                   {/* Progress Card */}
                   <LinearGradient
-                    colors={isUnlocked ? achievementGradients.unlocked.progress : achievementGradients.locked.progress}
+                    colors={isUnlocked ? quartzGradients.unlocked.progress : quartzGradients.locked.progress}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={tw`rounded-2xl p-4 mb-4`}
@@ -114,7 +114,7 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
                     {!isUnlocked && (
                       <>
                         <View style={tw`mt-3 bg-white/50 rounded-full h-2.5 overflow-hidden`}>
-                          <LinearGradient colors={achievementGradients.unlocked.progressBar} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[tw`h-full rounded-full`, { width: `${progress}%` }]} />
+                          <LinearGradient colors={quartzGradients.unlocked.progressBar} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[tw`h-full rounded-full`, { width: `${progress}%` }]} />
                         </View>
                         <Text style={tw`text-xs text-achievement-amber-600 text-center mt-2 font-medium`}>
                           {remaining} more needed • {Math.round(progress)}% complete
@@ -125,7 +125,7 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
 
                   {/* Action Button */}
                   <Pressable onPress={onClose} style={({ pressed }) => [tw`overflow-hidden rounded-2xl`, pressed && tw`scale-95`]}>
-                    <LinearGradient colors={isUnlocked ? achievementGradients.unlocked.button : achievementGradients.locked.button} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`py-3.5`}>
+                    <LinearGradient colors={isUnlocked ? quartzGradients.unlocked.button : quartzGradients.locked.button} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`py-3.5`}>
                       <Text style={tw`font-bold text-center text-base text-white`}>{isUnlocked ? 'Awesome!' : 'Keep Going!'}</Text>
                     </LinearGradient>
                   </Pressable>

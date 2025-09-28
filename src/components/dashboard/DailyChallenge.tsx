@@ -1,267 +1,120 @@
 // src/components/dashboard/DailyChallenge.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, Vibration } from 'react-native';
-import { Gift, Check, Sparkles } from 'lucide-react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, Text, Pressable, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { CheckCircle2 } from 'lucide-react-native';
+import tw from '../../lib/tailwind';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { XPService } from '../../services/xpService';
-import FloatingXP from './FloatingXp';
-import { Image } from 'expo-image';
 
 interface DailyChallengeProps {
   completedToday: number;
   totalTasksToday: number;
   onCollect: (amount: number) => void;
   userId: string;
-  debugMode?: boolean;
-  currentLevelXP?: number;
-  xpForNextLevel?: number;
+  currentLevelXP: number;
+  xpForNextLevel: number;
   onLevelUp?: () => void;
+  debugMode?: boolean;
 }
 
-const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTasksToday, onCollect, userId, debugMode = false, currentLevelXP = 0, xpForNextLevel = 100, onLevelUp }) => {
+const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTasksToday, onCollect, userId, currentLevelXP, xpForNextLevel, onLevelUp, debugMode = false }) => {
   const [isCollected, setIsCollected] = useState(false);
-  const [showFloatingXP, setShowFloatingXP] = useState(false);
-  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
-  const completionPercentage = totalTasksToday > 0 ? Math.round((completedToday / totalTasksToday) * 100) : 0;
+  const isComplete = completedToday >= totalTasksToday && totalTasksToday > 0;
+  const completionPercentage = totalTasksToday > 0 ? Math.min(100, Math.round((completedToday / totalTasksToday) * 100)) : 0;
 
-  const isComplete = completionPercentage >= 100;
-
+  // Check if already collected today
   useEffect(() => {
-    checkIfCollected();
+    checkCollectionStatus();
   }, [userId]);
 
-  const checkIfCollected = async () => {
-    if (!userId) return;
-
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      const collectedKey = `daily_challenge_${userId}_${today}`;
-      const localCollected = await AsyncStorage.getItem(collectedKey);
-
-      if (localCollected === 'true') {
-        setIsCollected(true);
-      }
-    } catch (error) {
-      console.error('Error checking daily challenge:', error);
-    }
+  const checkCollectionStatus = async () => {
+    const today = new Date().toISOString().split('T')[0];
+    const key = `daily_challenge_${userId}_${today}`;
+    const collected = await AsyncStorage.getItem(key);
+    setIsCollected(collected === 'true');
   };
 
-  const handlePress = async () => {
-    console.log('DailyChallenge: handlePress called');
-    console.log('isComplete:', isComplete, 'isCollected:', isCollected, 'userId:', userId);
-    console.log('Current XP:', currentLevelXP, 'XP for next level:', xpForNextLevel);
+  const handleCollect = async () => {
+    if (!isComplete || isCollected || isAnimating) return;
 
-    if (!isComplete || isCollected || !userId) {
-      console.log('DailyChallenge: Cannot collect - conditions not met');
-      return;
-    }
-
-    // Haptic feedback
-    Vibration.vibrate(50);
-
-    // Calculate if this will cause a level up
-    const xpReward = 20;
-    const newTotalXP = currentLevelXP + xpReward;
-    const willLevelUp = newTotalXP >= xpForNextLevel;
-
-    console.log('Will level up?', willLevelUp, 'New XP:', newTotalXP);
-
-    // Show XP animation immediately
-    console.log('DailyChallenge: Showing XP animation');
-    setShowFloatingXP(true);
-
-    // Mark as collected immediately to prevent double-tap
-    setIsCollected(true);
+    setIsAnimating(true);
+    const today = new Date().toISOString().split('T')[0];
+    const key = `daily_challenge_${userId}_${today}`;
 
     try {
-      // Save to local storage
-      const today = new Date().toISOString().split('T')[0];
-      const collectedKey = `daily_challenge_${userId}_${today}`;
-      await AsyncStorage.setItem(collectedKey, 'true');
+      // Award XP
+      await XPService.awardXP(userId, 20, 'daily_challenge', 'Daily Challenge Completed!');
 
-      // Update backend ONCE
-      await XPService.awardXP(userId, {
-        amount: xpReward,
-        source_type: 'daily_challenge',
-        description: 'Daily challenge reward',
-      });
+      // Mark as collected
+      await AsyncStorage.setItem(key, 'true');
+      setIsCollected(true);
 
-      // Call parent callback to update UI
-      // The parent should handle fetching updated stats from backend
-      onCollect(xpReward);
+      // Trigger callback
+      onCollect(20);
 
-      // Show level up animation if needed
-      if (willLevelUp) {
-        console.log('DailyChallenge: Level up detected!');
-        // Wait for XP animation to finish, then show level up
+      // Check for level up
+      if (currentLevelXP + 20 >= xpForNextLevel && onLevelUp) {
         setTimeout(() => {
-          setShowFloatingXP(false);
-          setShowLevelUp(true);
-          if (onLevelUp) onLevelUp();
-
-          // Hide level up after animation
-          setTimeout(() => {
-            setShowLevelUp(false);
-          }, 3000);
-        }, 2000);
-      } else {
-        // Just hide XP animation after duration
-        setTimeout(() => {
-          setShowFloatingXP(false);
-        }, 2000);
+          onLevelUp();
+        }, 500);
       }
     } catch (error) {
       console.error('Error collecting daily challenge:', error);
-      // Revert on error
-      setIsCollected(false);
+    } finally {
+      setIsAnimating(false);
     }
   };
 
   const handleDebugReset = async () => {
-    if (!debugMode || !userId) return;
-
     const today = new Date().toISOString().split('T')[0];
-    const collectedKey = `daily_challenge_${userId}_${today}`;
-    await AsyncStorage.removeItem(collectedKey);
+    const key = `daily_challenge_${userId}_${today}`;
+    await AsyncStorage.removeItem(key);
     setIsCollected(false);
-    console.log('Debug: Reset daily challenge');
-  };
-
-  const getGradientColors = () => {
-    if (isCollected) return ['#e5e7eb', '#d1d5db'];
-    if (isComplete) return ['#fbbf24', '#f59e0b'];
-    return ['#fef3c7', '#fde68a'];
   };
 
   return (
-    <View style={{ position: 'relative' }}>
-      {/* Floating XP Animation */}
-      <FloatingXP
-        amount={20}
-        show={showFloatingXP}
-        onComplete={() => {
-          console.log('DailyChallenge: XP animation completed');
-        }}
-        type="xp"
-      />
-
-      {/* Level Up Animation */}
-      <FloatingXP
-        show={showLevelUp}
-        onComplete={() => {
-          console.log('DailyChallenge: Level up animation completed');
-        }}
-        type="level-up"
-      />
-
-      <Pressable onPress={handlePress} disabled={!isComplete || isCollected}>
+    <View>
+      <Pressable onPress={handleCollect} disabled={!isComplete || isCollected || isAnimating} style={({ pressed }) => [pressed && isComplete && !isCollected && tw`scale-[0.98]`]}>
         <LinearGradient
-          colors={getGradientColors()}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{
-            borderRadius: 16,
-            padding: 16,
-            borderWidth: 1,
-            borderColor: isCollected ? '#e5e7eb' : isComplete ? '#f59e0b' : '#fde68a',
-          }}
+          colors={isCollected ? ['#E5E7EB', '#D1D5DB'] : isComplete ? ['#6B7280', '#4B5563'] : ['#F3F4F6', '#E5E7EB']}
+          style={tw`rounded-2xl p-4 border ${isCollected ? 'border-quartz-300' : isComplete ? 'border-quartz-400' : 'border-quartz-200'}`}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-              <View
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 24,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: isCollected ? '#d1d5db' : isComplete ? 'rgba(255, 255, 255, 0.3)' : '#fed7aa',
-                }}
-              >
+          <View style={tw`flex-row items-center justify-between`}>
+            <View style={tw`flex-row items-center flex-1`}>
+              <View style={tw`w-12 h-12 rounded-2xl items-center justify-center ${isCollected ? 'bg-quartz-300' : isComplete ? 'bg-white bg-opacity-30' : 'bg-quartz-200'}`}>
                 {isCollected ? (
-                  <Image source={require('../../../assets/interface/chest-reward-opened.png')} style={{ width: 40, height: 40 }} />
+                  <CheckCircle2 size={28} color="#6B7280" />
                 ) : isComplete ? (
-                  <Image source={require('../../../assets/interface/chest-reward.png')} style={{ width: 40, height: 40 }} />
+                  <Image source={require('../../../assets/interface/consumable-xp.png')} style={{ width: 40, height: 40 }} />
                 ) : (
                   <Image source={require('../../../assets/interface/challenge.png')} style={{ width: 40, height: 40 }} />
                 )}
               </View>
 
-              <View style={{ marginLeft: 12, flex: 1 }}>
-                <Text
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 'bold',
-                    color: isCollected ? '#6b7280' : isComplete ? '#ffffff' : '#92400e',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  Daily Challenge
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    marginTop: 2,
-                    color: isCollected ? '#9ca3af' : isComplete ? '#ffffff' : '#b45309',
-                  }}
-                >
+              <View style={tw`ml-3 flex-1`}>
+                <Text style={tw`text-xs font-bold ${isCollected ? 'text-quartz-500' : isComplete ? 'text-white' : 'text-quartz-700'} uppercase`}>Daily Challenge</Text>
+                <Text style={tw`text-sm mt-0.5 ${isCollected ? 'text-quartz-400' : isComplete ? 'text-white' : 'text-quartz-600'}`}>
                   {isCollected ? 'Collected! See you tomorrow' : isComplete ? 'Tap to claim 20 XP!' : `${totalTasksToday - completedToday} tasks to go`}
                 </Text>
               </View>
             </View>
 
             {/* XP Badge */}
-            <View
-              style={{
-                backgroundColor: isCollected ? '#9ca3af' : isComplete ? 'rgba(255, 255, 255, 0.25)' : '#92400e',
-                borderRadius: 999,
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: 'bold',
-                  color: '#ffffff',
-                }}
-              >
-                {isCollected ? '✓' : '20 XP'}
-              </Text>
+            <View style={tw`${isCollected ? 'bg-quartz-400' : isComplete ? 'bg-white bg-opacity-25' : 'bg-quartz-600'} rounded-full px-3 py-1.5`}>
+              <Text style={tw`text-sm font-bold text-white`}>{isCollected ? '✓' : '20 XP'}</Text>
             </View>
           </View>
 
           {/* Progress bar */}
           {!isComplete && !isCollected && (
-            <View style={{ marginTop: 12 }}>
-              <View
-                style={{
-                  height: 8,
-                  backgroundColor: '#fed7aa',
-                  borderRadius: 4,
-                  overflow: 'hidden',
-                }}
-              >
-                <View
-                  style={{
-                    height: '100%',
-                    backgroundColor: '#f59e0b',
-                    width: `${completionPercentage}%`,
-                  }}
-                />
+            <View style={tw`mt-3`}>
+              <View style={tw`h-2 bg-quartz-200 rounded-full overflow-hidden`}>
+                <View style={[tw`h-full bg-quartz-400`, { width: `${completionPercentage}%` }]} />
               </View>
-              <Text
-                style={{
-                  fontSize: 12,
-                  color: '#b45309',
-                  marginTop: 4,
-                  textAlign: 'center',
-                }}
-              >
-                {completionPercentage}% Complete
-              </Text>
+              <Text style={tw`text-xs text-quartz-500 mt-1 text-center`}>{completionPercentage}% Complete</Text>
             </View>
           )}
         </LinearGradient>
@@ -269,16 +122,8 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
 
       {/* Debug Reset Button */}
       {debugMode && isCollected && (
-        <Pressable
-          onPress={handleDebugReset}
-          style={{
-            marginTop: 8,
-            backgroundColor: '#ef4444',
-            borderRadius: 8,
-            padding: 8,
-          }}
-        >
-          <Text style={{ color: 'white', fontSize: 12, textAlign: 'center' }}>Reset (Debug)</Text>
+        <Pressable onPress={handleDebugReset} style={tw`mt-2 bg-red-500 rounded-lg p-2`}>
+          <Text style={tw`text-white text-xs text-center`}>Reset (Debug)</Text>
         </Pressable>
       )}
     </View>

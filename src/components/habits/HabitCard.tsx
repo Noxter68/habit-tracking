@@ -21,13 +21,13 @@ interface HabitCardProps {
 }
 
 // Type-safe tier names
-export type TierName = HabitTier; // 'Crystal' | 'Ruby' | 'Amethyst'
+export type TierName = HabitTier;
 
-// Achievement gradients configuration with proper typing
+// Quartz-themed achievement gradients
 const achievementGradients: Record<HabitTier, readonly [ColorValue, ColorValue, ColorValue]> = {
-  Crystal: ['#60a5fa', '#3b82f6', '#1e3a8a'],
-  Ruby: ['#ef4444', '#b91c1c', '#7f1d1d'],
-  Amethyst: ['#8b5cf6', '#6d28d9', '#4c1d95'],
+  Crystal: ['#E5E7EB', '#D1D5DB', '#9CA3AF'], // Light grays
+  Ruby: ['#9CA3AF', '#6B7280', '#4B5563'], // Medium grays
+  Amethyst: ['#6B7280', '#4B5563', '#374151'], // Dark grays
 };
 
 const HabitCard: React.FC<HabitCardProps> = ({ habit, onToggleDay, onToggleTask, onPress, index = 0 }) => {
@@ -56,143 +56,111 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onToggleDay, onToggleTask,
   const isCompleted = todayTasks.allCompleted || (totalTasks === 0 && todayTasks.allCompleted);
 
   const { tier, progress } = HabitProgressionService.calculateTierFromStreak(habit.currentStreak);
-  const currentTier = tier.name; // 'Crystal' | 'Ruby' | 'Amethyst'
-  const tierProgressPercent = progress; // 0–
+  const currentTier = tier.name;
+  const tierProgressPercent = progress;
 
   const multiplier = tier.multiplier;
   const currentXP = useMemo(() => {
     const baseXP = totalTasks > 0 ? completedTasksCount * 10 : isCompleted ? 20 : 0;
-    const streakBonus = habit.currentStreak > 7 ? Math.floor(habit.currentStreak / 7) * 5 : 0;
-    return Math.round((baseXP + streakBonus) * multiplier);
+    const streakBonus = habit.currentStreak > 7 ? 10 : habit.currentStreak > 3 ? 5 : 0;
+    const totalXP = (baseXP + streakBonus) * multiplier;
+    return Math.round(totalXP);
   }, [completedTasksCount, totalTasks, isCompleted, habit.currentStreak, multiplier]);
 
-  const containerStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
+  // Animations
+  useEffect(() => {
+    progressAnimation.value = withSpring(taskProgress, { damping: 15 });
+  }, [taskProgress]);
 
-  const glowStyle = useAnimatedStyle(() => ({
-    opacity: glowOpacity.value,
+  useEffect(() => {
+    if (allTasksCompleted) {
+      completeStateScale.value = withSequence(withTiming(0.95, { duration: 100 }), withSpring(1, { damping: 8, stiffness: 200 }));
+    }
+  }, [allTasksCompleted]);
+
+  const handleToggle = useCallback(async () => {
+    buttonScale.value = withSequence(withTiming(0.9, { duration: 50 }), withSpring(1, { damping: 8, stiffness: 200 }));
+
+    await onToggleDay(habit.id, today);
+
+    if (isCompleted && currentXP > 0) {
+      xpOpacity.value = withSequence(withTiming(0.5, { duration: 200 }), withTiming(1, { duration: 200 }));
+    }
+  }, [habit.id, today, isCompleted, currentXP, onToggleDay]);
+
+  const cardStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
   }));
 
   const buttonAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: buttonScale.value }],
   }));
 
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: glowOpacity.value,
+  }));
+
   const progressBarWidth = useAnimatedStyle(() => ({
     width: `${progressAnimation.value}%`,
   }));
 
-  const xpAnimatedStyle = useAnimatedStyle(() => ({
+  const xpBadgeStyle = useAnimatedStyle(() => ({
     opacity: xpOpacity.value,
+    transform: [{ scale: interpolate(xpOpacity.value, [0.5, 1], [1.1, 1]) }],
   }));
 
   const completeStateStyle = useAnimatedStyle(() => ({
     transform: [{ scale: completeStateScale.value }],
-    opacity: interpolate(completeStateScale.value, [0.8, 1], [0.5, 1]),
   }));
 
-  // Animate on completion state changes
-  useEffect(() => {
-    if (allTasksCompleted || isCompleted) {
-      completeStateScale.value = withSequence(withTiming(1.1, { duration: 200 }), withSpring(1, { damping: 15, stiffness: 250 }));
-    }
-  }, [allTasksCompleted, isCompleted]);
-
-  // Animate XP display
-  React.useEffect(() => {
-    if (currentXP > 0) {
-      xpOpacity.value = withSequence(withTiming(0, { duration: 0 }), withTiming(1, { duration: 500 }));
-    }
-  }, [currentXP]);
-
-  useEffect(() => {
-    const targetProgress = totalTasks === 0 && todayTasks.allCompleted ? 100 : taskProgress;
-
-    progressAnimation.value = withSpring(targetProgress, {
-      damping: 20,
-      stiffness: 90,
-      mass: 1,
-    });
-  }, [taskProgress, todayTasks.allCompleted, totalTasks]);
-
-  const handlePressIn = useCallback(() => {
-    scale.value = withSpring(0.98, { damping: 15, stiffness: 250 });
-  }, []);
-
-  const handlePressOut = useCallback(() => {
-    scale.value = withSpring(1, { damping: 15, stiffness: 250 });
-  }, []);
-
-  const handleToggle = useCallback(
-    (e: any) => {
-      e.stopPropagation();
-      buttonScale.value = withSequence(withTiming(0.9, { duration: 100 }), withSpring(1, { damping: 15, stiffness: 250 }));
-
-      onToggleDay(habit.id, today);
-
-      if (!todayTasks.allCompleted && (allTasksCompleted || totalTasks === 0)) {
-        glowOpacity.value = withSequence(withTiming(1, { duration: 400 }), withTiming(0, { duration: 1200 }));
-      }
-    },
-    [habit.id, today, todayTasks.allCompleted, allTasksCompleted, totalTasks, onToggleDay]
-  );
-
   return (
-    <Animated.View entering={FadeIn.delay(index * 80).springify()} style={[containerStyle, tw`mb-4`]}>
-      {/* Glow effect for completion */}
-      <Animated.View style={[tw`absolute inset-0 rounded-3xl`, glowStyle]} pointerEvents="none">
+    <Animated.View entering={FadeIn.delay(index * 50).springify()} style={[cardStyle]}>
+      <Pressable onPress={onPress}>
+        {/* Card Container with Quartz gradient */}
         <LinearGradient
-          colors={['#fbbf24', '#f59e0b', '#d97706']} // ✅ amber as before
+          colors={isCompleted ? achievementGradients[currentTier] : ['#ffffff', '#F3F4F6', '#E5E7EB']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[tw`rounded-3xl overflow-hidden border`]}
-        />
-      </Animated.View>
-
-      <Pressable onPress={onPress} onPressIn={handlePressIn} onPressOut={handlePressOut}>
-        <LinearGradient
-          colors={['#fbbf24', '#f59e0b', '#d97706']} // 🔥 Amber gradient (same as before)
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[tw`rounded-3xl overflow-hidden border`]}
+          style={tw`rounded-3xl p-4 border ${isCompleted ? 'border-quartz-400' : 'border-quartz-200'}`}
         >
-          <View style={tw`p-5`}>
-            {/* Header Row */}
-            <View style={tw`flex-row items-start justify-between mb-3`}>
+          {/* Header Row */}
+          <View style={tw`flex-row items-center justify-between mb-3`}>
+            <View style={tw`flex-row items-center gap-3 flex-1`}>
+              {/* Category Icon */}
+              <View style={tw`w-12 h-12 bg-white bg-opacity-50 rounded-2xl items-center justify-center`}>
+                <CategoryIcon size={24} color={isCompleted ? '#4B5563' : '#6B7280'} />
+              </View>
+
               {/* Habit Info */}
-              <View style={tw`flex-1 mr-3`}>
-                <View style={tw`flex-row items-center gap-2 mb-1`}>
-                  <Text style={tw`text-base font-bold text-gray-900`}>{habit.name}</Text>
-                  {allTasksCompleted && totalTasks > 0 && (
-                    <Animated.View style={completeStateStyle}>
-                      <View style={tw`bg-gradient-to-r from-amber-100 to-amber-200 px-2 py-1 rounded-lg`}>
-                        <Text style={tw`text-[10px] font-black text-amber-800 uppercase`}>All Done!</Text>
+              <View style={tw`flex-1`}>
+                <Text style={tw`text-base font-bold ${isCompleted ? 'text-white' : 'text-quartz-700'}`}>{habit.name}</Text>
+                <View style={tw`flex-row items-center gap-2 mt-0.5`}>
+                  <StreakCounter streak={habit.currentStreak} compact lightMode={isCompleted} />
+                  {currentXP > 0 && (
+                    <Animated.View style={xpBadgeStyle}>
+                      <View style={tw`bg-white bg-opacity-25 px-2 py-0.5 rounded-full`}>
+                        <Text style={tw`text-xs font-bold text-white`}>+{currentXP} XP</Text>
                       </View>
                     </Animated.View>
                   )}
                 </View>
-                <View style={tw`flex-row items-center gap-2`}>
-                  <View style={tw`flex-row items-center gap-1.5 bg-white/60 px-2.5 py-1 rounded-lg`}>
-                    {CategoryIcon && <CategoryIcon size={13} color="#d97706" />}
-                    <Text style={tw`text-xs text-amber-700 font-semibold`}>{habit.category}</Text>
-                  </View>
-                  {currentXP > 0 && (
-                    <Animated.View style={[tw`flex-row items-center gap-1 bg-white/60 px-2.5 py-1 rounded-lg`, xpAnimatedStyle]}>
-                      <Text style={tw`text-xs font-bold text-amber-700`}>+{currentXP} XP</Text>
-                    </Animated.View>
-                  )}
-                </View>
               </View>
-
-              {/* Streak Counter */}
-              <StreakCounter streak={habit.currentStreak} isActive={habit.currentStreak > 0} size="small" />
             </View>
 
-            {/* Task Progress Section - Show special state when all complete */}
-            <View style={tw`mb-3`}>
-              {allTasksCompleted ? (
+            {/* Complete Button */}
+            <Animated.View style={buttonAnimatedStyle}>
+              <Pressable onPress={handleToggle}>
+                <View style={tw`p-1`}>{isCompleted ? <CheckCircle2 size={28} color="#ffffff" strokeWidth={2.5} /> : <Circle size={28} color="#9CA3AF" strokeWidth={2} />}</View>
+              </Pressable>
+            </Animated.View>
+          </View>
+
+          {/* Progress Section */}
+          <View>
+            {totalTasks > 0 &&
+              (allTasksCompleted ? (
                 <Animated.View style={completeStateStyle}>
-                  <LinearGradient colors={['#fbbf24', '#f59e0b', '#d97706']} style={tw`rounded-2xl p-3`}>
+                  <LinearGradient colors={['#6B7280', '#4B5563', '#374151']} style={tw`rounded-2xl p-3`}>
                     <View style={tw`flex-row items-center justify-between`}>
                       <View style={tw`flex-row items-center gap-2`}>
                         <View>
@@ -212,7 +180,7 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onToggleDay, onToggleTask,
                     <View style={tw`h-3 bg-white/30 rounded-full overflow-hidden`}>
                       <Animated.View style={progressBarWidth}>
                         <LinearGradient
-                          colors={progressAnimation.value >= 75 ? ['#f59e0b', '#d97706'] : progressAnimation.value >= 50 ? ['#fbbf24', '#f59e0b'] : ['#fde68a', '#fcd34d']}
+                          colors={progressAnimation.value >= 75 ? ['#4B5563', '#374151'] : progressAnimation.value >= 50 ? ['#6B7280', '#4B5563'] : ['#9CA3AF', '#6B7280']}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 0 }}
                           style={tw`h-full`}
@@ -220,51 +188,56 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onToggleDay, onToggleTask,
                       </Animated.View>
                     </View>
                     <View style={tw`flex-row justify-between mt-1.5`}>
-                      <Text style={tw`text-[10px] text-gray-600`}>
+                      <Text style={tw`text-[10px] text-quartz-500`}>
                         {completedTasksCount}/{totalTasks} tasks
                       </Text>
-                      <Text style={tw`text-[10px] font-bold text-amber-700`}>{Math.round(taskProgress)}%</Text>
+                      <Text style={tw`text-[10px] font-bold text-quartz-600`}>{Math.round(taskProgress)}%</Text>
                     </View>
+                  </View>
+                </View>
+              ))}
+          </View>
+
+          {/* Gamified Stats Row */}
+          <View style={tw`flex-row items-center justify-between mt-3`}>
+            <View style={tw`flex-row gap-2`}>
+              {/* Tier Badge */}
+              <LinearGradient colors={['rgba(255, 255, 255, 0.3)', 'rgba(255, 255, 255, 0.1)']} style={tw`px-3 py-2 rounded-xl border border-white/20`}>
+                <View style={tw`flex-row items-center gap-1.5`}>
+                  <View>
+                    <Text style={tw`text-[10px] text-quartz-600 font-medium`}>Tier</Text>
+                    <Text style={tw`text-xs font-bold ${habit.currentStreak > 7 ? 'text-quartz-700' : 'text-quartz-500'}`}>{currentTier}</Text>
+                  </View>
+                  <Trophy size={16} color={habit.currentStreak > 7 ? '#4B5563' : '#9CA3AF'} />
+                </View>
+              </LinearGradient>
+
+              {/* XP Multiplier if active */}
+              {multiplier > 1 && (
+                <View style={tw`bg-quartz-100 px-3 py-2 rounded-xl border border-quartz-200`}>
+                  <View style={tw`flex-row items-center gap-1`}>
+                    <Sparkles size={14} color="#6B7280" />
+                    <Text style={tw`text-xs font-bold text-quartz-600`}>{multiplier}x XP</Text>
                   </View>
                 </View>
               )}
             </View>
 
-            {/* Gamified Stats Row */}
-            <View style={tw`flex-row items-center justify-between mb-3`}>
-              <View style={tw`flex-row gap-2`}>
-                {/* Tier Badge */}
-                <LinearGradient colors={['rgba(255, 255, 255, 0.3)', 'rgba(255, 255, 255, 0.1)']} style={tw`px-3 py-2 rounded-xl border border-white/20`}>
-                  <View style={tw`flex-row items-center gap-1.5`}>
-                    <View>
-                      <Text style={tw`text-[10px] text-amber-800 font-medium`}>Tier</Text>
-                      <Text style={tw`text-xs font-bold ${habit.currentStreak > 7 ? 'text-amber-200' : 'text-amber-800'}`}>{currentTier}</Text>
-                    </View>
-                  </View>
-                </LinearGradient>
-
-                {/* Multiplier Badge */}
-                <LinearGradient colors={['rgba(255, 255, 255, 0.3)', 'rgba(255, 255, 255, 0.1)']} style={tw`px-3 py-2 rounded-xl border border-white/20`}>
-                  <View style={tw`flex-row items-center gap-1.5`}>
-                    <View>
-                      <Text style={tw`text-[10px] text-amber-800 font-medium`}>Boost</Text>
-                      <Text style={tw`text-xs font-bold ${habit.currentStreak > 7 ? 'text-amber-200' : 'text-amber-800'}`}>{multiplier}x</Text>
-                    </View>
-                  </View>
-                </LinearGradient>
-
-                {/* Progress to Next Tier */}
-                <LinearGradient colors={['rgba(255, 255, 255, 0.3)', 'rgba(255, 255, 255, 0.1)']} style={tw`px-3 py-2 rounded-xl border border-white/20`}>
-                  <View style={tw`flex-row items-center gap-1.5`}>
-                    <View>
-                      <Text style={tw`text-[10px] text-amber-800 font-medium`}>Next</Text>
-                      <Text style={tw`text-xs font-bold ${habit.currentStreak > 7 ? 'text-amber-200' : 'text-amber-800'}`}>{tierProgressPercent}%</Text>
-                    </View>
-                  </View>
-                </LinearGradient>
+            {/* Tier Progress */}
+            <View style={tw`flex-row items-center gap-2`}>
+              <View style={tw`w-16 h-1.5 bg-quartz-100 rounded-full overflow-hidden`}>
+                <View style={[tw`h-full bg-quartz-400 rounded-full`, { width: `${tierProgressPercent}%` }]} />
               </View>
+              <Text style={tw`text-[10px] text-quartz-500 font-medium`}>{Math.round(tierProgressPercent)}%</Text>
             </View>
           </View>
+
+          {/* Glow Effect for completed state */}
+          {isCompleted && (
+            <Animated.View style={[tw`absolute inset-0 rounded-3xl`, glowStyle]} pointerEvents="none">
+              <LinearGradient colors={['rgba(107, 114, 128, 0.1)', 'transparent']} style={tw`w-full h-full rounded-3xl`} />
+            </Animated.View>
+          )}
         </LinearGradient>
       </Pressable>
     </Animated.View>

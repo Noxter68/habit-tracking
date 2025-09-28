@@ -1,4 +1,4 @@
-import { achievementGradients } from '../lib/tailwind';
+import { quartzGradients } from '@/lib/tailwind';
 
 export interface Achievement {
   level: number;
@@ -230,9 +230,9 @@ export const achievementTitles: Achievement[] = [
 
 export const getTierGradient = (tierName: string, isCompleted: boolean): string[] => {
   if (isCompleted) {
-    return achievementGradients.tiers[tierName] || ['#fbbf24', '#d97706', '#92400e'];
+    return quartzGradients.tiers[tierName] || ['#fbbf24', '#d97706', '#92400e'];
   }
-  return achievementGradients.locked.card;
+  return quartzGradients.locked.card;
 };
 
 // Locked badge image

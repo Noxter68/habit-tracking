@@ -5,19 +5,32 @@ const tw = create({
   theme: {
     extend: {
       colors: {
+        // Quartz/Stone color palette
+        quartz: {
+          50: '#F3F4F6', // off-white shine
+          100: '#E5E7EB', // neutral light gray (base)
+          200: '#D1D5DB', // lighter mid-tone
+          300: '#9CA3AF', // soft silver/stone (mid-tone)
+          400: '#6B7280', // depth/shadow
+          500: '#4B5563', // darker shadow
+          600: '#374151', // deep gray
+          700: '#1F2937', // very deep gray
+          800: '#111827', // near black
+          900: '#030712', // black
+        },
         achievement: {
-          // Base colors for achievements
-          amber: {
-            50: '#fef3c7',
-            100: '#fde68a',
-            200: '#fcd34d',
-            300: '#fbbf24',
-            400: '#fdba74',
-            500: '#fb923c',
-            600: '#f59e0b',
-            700: '#d97706',
-            800: '#b45309',
-            900: '#92400e',
+          // Updated achievement colors to match quartz theme
+          stone: {
+            50: '#F3F4F6',
+            100: '#E5E7EB',
+            200: '#D1D5DB',
+            300: '#9CA3AF',
+            400: '#6B7280',
+            500: '#4B5563',
+            600: '#374151',
+            700: '#1F2937',
+            800: '#111827',
+            900: '#030712',
           },
           // Neutral colors for locked states
           neutral: {
@@ -83,39 +96,45 @@ const tw = create({
   },
 });
 
-// Export gradient configurations
-export const achievementGradients = {
-  // Tier-specific gradients
+// Export gradient configurations with Quartz theme
+export const quartzGradients = {
+  // Tier-specific gradients with stone/silver theme
   tiers: {
-    Novice: ['#fef3c7', '#fde68a'], // amber-50 → amber-100
-    'Rising Hero': ['#fed7aa', '#fdba74'], // warm amber/orange
-    'Mastery Awakens': ['#fde68a', '#fb923c'], // amber-100 → amber-500
-    'Legendary Ascent': ['#fbbf24', '#f59e0b'], // amber-300 → amber-600
-    'Epic Mastery': ['#f59e0b', '#d97706'], // amber-600 → amber-700
-    'Mythic Glory': ['#d97706', '#92400e'], // amber-700 → amber-900
+    Novice: ['#F3F4F6', '#E5E7EB'], // quartz-50 → quartz-100
+    'Rising Hero': ['#E5E7EB', '#D1D5DB'], // quartz-100 → quartz-200
+    'Mastery Awakens': ['#D1D5DB', '#9CA3AF'], // quartz-200 → quartz-300
+    'Legendary Ascent': ['#9CA3AF', '#6B7280'], // quartz-300 → quartz-400
+    'Epic Mastery': ['#6B7280', '#4B5563'], // quartz-400 → quartz-500
+    'Mythic Glory': ['#4B5563', '#374151'], // quartz-500 → quartz-600
   },
 
   // State-based gradients
   unlocked: {
-    border: ['#d97706', '#b45309', '#92400e'],
-    header: ['#fef3c7', '#fde68a', '#fcd34d'],
-    progress: ['#fed7aa', '#fdba74', '#fb923c'],
-    button: ['#d97706', '#b45309', '#92400e'],
-    progressBar: ['#fbbf24', '#d97706'], // brighter amber
+    border: ['#6B7280', '#4B5563', '#374151'],
+    header: ['#F3F4F6', '#E5E7EB', '#D1D5DB'],
+    progress: ['#E5E7EB', '#D1D5DB', '#9CA3AF'],
+    button: ['#6B7280', '#4B5563', '#374151'],
+    progressBar: ['#9CA3AF', '#6B7280'], // silver to depth
   },
 
   locked: {
-    border: ['#fef3c7', '#fde68a', '#fcd34d'],
+    border: ['#F3F4F6', '#E5E7EB', '#D1D5DB'],
     header: ['#fafaf9', '#f5f5f4', '#e7e5e4'],
     card: ['#fafaf9', '#f5f5f4'],
-    progress: ['#fef3c7', '#fde68a', '#fcd34d'],
+    progress: ['#F3F4F6', '#E5E7EB', '#D1D5DB'],
     button: ['#d6d3d1', '#a8a29e', '#78716c'],
   },
 
   // Common gradients
-  hero: ['#fef3c7', '#fde68a'],
-  levelProgress: ['#fbbf24', '#d97706'],
-  overlay: ['rgba(254, 243, 199, 0.2)', 'rgba(255, 255, 255, 0)'],
+  hero: ['#F3F4F6', '#E5E7EB'],
+  levelProgress: ['#9CA3AF', '#6B7280'],
+  overlay: ['rgba(229, 231, 235, 0.2)', 'rgba(255, 255, 255, 0)'],
+
+  // Main gradients for components
+  primary: ['#9CA3AF', '#6B7280', '#4B5563'],
+  secondary: ['#E5E7EB', '#D1D5DB', '#9CA3AF'],
+  light: ['#F3F4F6', '#E5E7EB'],
+  card: ['#ffffff', '#F3F4F6'],
 };
 
 export default tw;
