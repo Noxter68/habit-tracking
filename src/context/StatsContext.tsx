@@ -4,6 +4,7 @@ import { useAuth } from './AuthContext';
 import { XPService } from '@/services/xpService';
 import { HabitService } from '@/services/habitService';
 import { getAchievementByLevel } from '@/utils/achievements';
+import { getXPForNextLevel } from '@/utils/xpCalculations';
 
 interface Stats {
   title: string;
@@ -49,7 +50,7 @@ export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const xpStats = await XPService.getUserXPStats(user.id);
         const level = xpStats?.current_level || 1;
         const currentXP = xpStats?.current_level_xp || 0;
-        const nextLevelXP = xpStats?.xp_for_next_level || 100;
+        const nextLevelXP = getXPForNextLevel(level);
         const adjustedCurrentXP = currentXP % nextLevelXP;
 
         const habitStats = await HabitService.getAggregatedStats(user.id);

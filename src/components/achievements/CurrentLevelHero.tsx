@@ -12,13 +12,17 @@ interface CurrentLevelHeroProps {
   currentTitle: Achievement | undefined;
   nextTitle: Achievement | undefined;
   levelProgress: number;
+  requiredXp: number;
   currentStreak: number;
   perfectDays: number;
   totalHabits: number;
   onPress: () => void;
 }
 
-export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel, currentTitle, nextTitle, levelProgress, currentStreak, perfectDays, totalHabits, onPress }) => {
+export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel, currentTitle, nextTitle, levelProgress, requiredXp, currentStreak, perfectDays, totalHabits, onPress }) => {
+  // Calculate the actual percentage
+  const percent = Math.min(100, Math.round((levelProgress / requiredXp) * 100));
+  console.log(requiredXp, levelProgress);
   return (
     <Pressable onPress={onPress}>
       <View style={tw`rounded-3xl overflow-hidden mb-4 relative`}>
@@ -66,15 +70,14 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
                 <View style={tw`mt-2`}>
                   <View style={tw`flex-row justify-between mb-1`}>
                     <Text style={tw`text-achievement-amber-800 text-xs`}>Progress to {nextTitle.title}</Text>
-                    <Text style={tw`text-amber-800 font-bold text-xs`}>{levelProgress}%</Text>
+                    <Text style={tw`text-amber-800 font-bold text-xs`}>{percent}%</Text>
                   </View>
 
                   <View style={tw`h-5 bg-quartz-100 rounded-full overflow-hidden border-2 border-quartz-400`}>
-                    {levelProgress > 0 ? (
-                      <View style={[tw`h-full rounded-full flex-row`, { width: `${levelProgress}%`, overflow: 'hidden' }]}>
-                        {Array.from({ length: Math.ceil(levelProgress / 5) }).map((_, i) => (
+                    {percent > 0 ? (
+                      <View style={[tw`h-full rounded-full overflow-hidden`, { width: `${percent}%` }]}>
+                        <View style={tw`h-full flex-row`}>
                           <Image
-                            key={i}
                             source={require('../../../assets/interface/quartz-texture-2.png')}
                             style={{
                               height: '100%',
@@ -82,7 +85,7 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
                               resizeMode: 'cover',
                             }}
                           />
-                        ))}
+                        </View>
                       </View>
                     ) : (
                       <View style={tw`h-full w-full bg-achievement-amber-200 rounded-full`} />

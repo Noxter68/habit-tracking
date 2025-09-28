@@ -21,6 +21,10 @@ import { ZoomModal } from '../components/achievements/ZoomModal';
 
 // Utils
 import { achievementTitles } from '../utils/achievements';
+import { getXPForNextLevel } from '@/utils/xpCalculations';
+
+// Helper function to calculate XP required for next level
+// Based on your SQL function get_xp_for_next_level
 
 const AchievementsScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -32,6 +36,8 @@ const AchievementsScreen: React.FC = () => {
   const [showZoomModal, setShowZoomModal] = useState(false);
   const [filter, setFilter] = useState<FilterType>('all');
 
+  const requiredXpForNextLevel = getXPForNextLevel(currentLevel);
+  console.log(requiredXpForNextLevel);
   // Helpers
   const isAchievementUnlocked = (achievement: Achievement): boolean => {
     if (achievement.level <= currentLevel) return true;
@@ -89,6 +95,7 @@ const AchievementsScreen: React.FC = () => {
             currentTitle={currentTitle}
             nextTitle={nextTitle}
             levelProgress={levelProgress}
+            requiredXp={requiredXpForNextLevel}
             currentStreak={streak}
             perfectDays={perfectDays}
             totalHabits={totalHabits}

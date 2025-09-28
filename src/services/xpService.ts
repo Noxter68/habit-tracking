@@ -1,4 +1,5 @@
 // src/services/xpService.ts
+import { getXPForNextLevel } from '@/utils/xpCalculations';
 import { supabase } from '../lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
@@ -284,15 +285,7 @@ export class XPService {
    * KEPT: Get XP needed for a specific level
    */
   static getXPForLevel(level: number): number {
-    if (level <= 10) {
-      return 100 + (level - 1) * 10;
-    } else if (level <= 20) {
-      return 200 + (level - 11) * 15;
-    } else if (level <= 30) {
-      return 350 + (level - 21) * 20;
-    } else {
-      return 550 + (level - 31) * 25;
-    }
+    return getXPForNextLevel(level);
   }
 
   /**
