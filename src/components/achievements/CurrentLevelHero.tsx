@@ -78,10 +78,10 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
                       <View style={[tw`h-full rounded-full overflow-hidden`, { width: `${percent}%` }]}>
                         <View style={tw`h-full flex-row`}>
                           <Image
-                            source={require('../../../assets/interface/quartz-texture-2.png')}
+                            source={require('../../../assets/interface/quartz-texture.png')}
                             style={{
                               height: '100%',
-                              width: 500,
+                              width: 320,
                               resizeMode: 'cover',
                             }}
                           />

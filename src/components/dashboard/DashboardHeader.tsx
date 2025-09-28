@@ -16,9 +16,8 @@ import NextAchievement from './NextAchievement';
 // Utils & Services
 import { getGreeting } from '../../utils/progressStatus';
 import { achievementTitles } from '../../utils/achievements';
-import { HabitService } from '../../services/habitService';
-import { XPService } from '../../services/xpService';
 import { useAuth } from '../../context/AuthContext';
+import { useStats } from '@/context/StatsContext';
 
 interface DashboardHeaderProps {
   userTitle: string;
@@ -34,6 +33,7 @@ interface DashboardHeaderProps {
   xpForNextLevel?: number;
   levelProgress?: number;
   onStatsRefresh?: () => void;
+  totalXP?: number; // Add this prop
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -50,48 +50,31 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   xpForNextLevel = 100,
   levelProgress = 0,
   onStatsRefresh,
+  totalXP = 0, // Add default value
 }) => {
   const navigation = useNavigation();
   const { user } = useAuth();
+  const { refreshStats } = useStats();
   const greeting = getGreeting();
-
-  const [realTimeStats, setRealTimeStats] = useState({
-    totalXP: 0,
-    dailyStreak: totalStreak,
-  });
-
-  const fetchRealTimeStats = useCallback(async () => {
-    if (!user?.id) return;
-
-    try {
-      const xpStats = await XPService.getUserXPStats(user.id);
-      const habitStats = await HabitService.getAggregatedStats(user.id);
-
-      setRealTimeStats({
-        totalXP: xpStats?.total_xp || 0,
-        dailyStreak: habitStats?.totalDaysTracked || totalStreak,
-      });
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    }
-  }, [user?.id, totalStreak]);
-
-  useEffect(() => {
-    fetchRealTimeStats();
-  }, [fetchRealTimeStats]);
 
   const handleAchievementPress = () => {
     navigation.navigate('Achievements' as never);
   };
 
-  const handleXPCollect = (amount: number) => {
+  const handleXPCollect = async (amount: number) => {
     if (onXPCollected) {
       onXPCollected(amount);
     }
-    fetchRealTimeStats();
+    // Refresh stats after collecting XP to get updated values
+    await refreshStats(true);
+    if (onStatsRefresh) {
+      onStatsRefresh();
+    }
   };
 
-  const handleLevelUp = () => {
+  const handleLevelUp = async () => {
+    // Force refresh stats when level up occurs
+    await refreshStats(true);
     if (onStatsRefresh) {
       onStatsRefresh();
     }
@@ -109,14 +92,14 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     <Animated.View entering={FadeIn} style={tw`relative`}>
       {/* Quartz Texture Background - Single instance, not repeated */}
       <ImageBackground
-        source={require('../../../assets/interface/quartz-texture.png')}
+        source={require('../../../assets/interface/quartz-texture-2.png')}
         style={tw`absolute inset-0 rounded-3xl`}
         imageStyle={{
           opacity: 0.5,
           borderRadius: 24,
-          resizeMode: 'cover', // Changed from 'repeat' to 'cover'
+          resizeMode: 'cover',
         }}
-        resizeMode="cover" // Single instance that covers the header
+        resizeMode="cover"
       >
         {/* Gradient overlay for better text readability */}
         <View style={tw`absolute inset-0 bg-gradient-to-b from-quartz-50/80 to-transparent rounded-3xl`} />
@@ -134,7 +117,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 <View style={tw`bg-quartz-600 rounded-full px-2 py-0.5 mr-2`}>
                   <Text style={tw`text-xs font-bold text-white`}>LEVEL {userLevel}</Text>
                 </View>
-                <Text style={tw`text-xs text-quartz-400`}>{realTimeStats.totalXP} Total XP</Text>
+                <Text style={tw`text-xs text-quartz-400`}>{totalXP} Total XP</Text>
               </View>
             </View>
             <AchievementBadge achievement={currentAchievement} onPress={handleAchievementPress} />
@@ -146,7 +129,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
         {/* Stats Grid */}
         <View style={tw`flex-row gap-3 mb-4`}>
-          <StatsCard label="Streak" value={realTimeStats.dailyStreak} image="streak" subtitle="days" isStreak={true} streakValue={totalStreak} />
+          <StatsCard label="Streak" value={totalStreak} image="streak" subtitle="days" isStreak={true} streakValue={totalStreak} />
           <StatsCard label="Active" value={activeHabits} image="active" subtitle="Quests" />
         </View>
 

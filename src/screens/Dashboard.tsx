@@ -84,6 +84,7 @@ const Dashboard: React.FC = () => {
           xpForNextLevel={stats?.xpForNextLevel ?? 100}
           levelProgress={stats?.levelProgress ?? 0}
           onStatsRefresh={() => refreshStats(true)}
+          totalXP={stats?.totalXP ?? 0}
           onXPCollected={() => refreshStats(true)}
         />
 
