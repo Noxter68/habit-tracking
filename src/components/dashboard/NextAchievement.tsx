@@ -40,7 +40,6 @@ const NextAchievement: React.FC<NextAchievementProps> = ({ nextTitle, xpToNextLe
                 </View>
               </View>
             </View>
-            <TrendingUp size={16} color="#6B7280" />
           </View>
         </LinearGradient>
       </Pressable>

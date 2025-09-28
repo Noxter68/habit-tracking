@@ -43,9 +43,9 @@ export const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, focused, si
       case 'home':
         return (
           <Image
-            source={require('../../assets/interface/home.png')}
+            source={require('../../assets/interface/navigation/home.png')}
             style={{
-              width: 60,
+              width: 40,
               height: iconSize,
             }}
             resizeMode="contain"
@@ -54,9 +54,9 @@ export const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, focused, si
       case 'calendar':
         return (
           <Image
-            source={require('../../assets/interface/calendar.png')}
+            source={require('../../assets/interface/navigation/calendar.png')}
             style={{
-              width: 80,
+              width: 40,
               height: iconSize,
             }}
             resizeMode="contain"
@@ -65,9 +65,9 @@ export const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, focused, si
       case 'chart':
         return (
           <Image
-            source={require('../../assets/interface/stats.png')}
+            source={require('../../assets/interface/navigation/stats.png')}
             style={{
-              width: 80,
+              width: 40,
               height: iconSize,
             }}
             resizeMode="contain"
@@ -76,9 +76,9 @@ export const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, focused, si
       case 'settings':
         return (
           <Image
-            source={require('../../assets/interface/settings.png')}
+            source={require('../../assets/interface/navigation/settings.png')}
             style={{
-              width: 70,
+              width: 40,
               height: iconSize,
             }}
             resizeMode="contain"
@@ -87,7 +87,7 @@ export const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, focused, si
       default:
         return (
           <Image
-            source={require('../../assets/interface/home.png')}
+            source={require('../../assets/interface/navigation/home.png')}
             style={{
               width: iconSize,
               height: iconSize,

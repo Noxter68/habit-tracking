@@ -117,7 +117,7 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
 const getImageSource = (imageName: string): ImageSourcePropType | null => {
   const imageMap: Record<string, ImageSourcePropType> = {
     streak: require('../../../assets/interface/streak.png'),
-    active: require('../../../assets/interface/streak.png'),
+    active: require('../../../assets/interface/quest.png'),
     // Add more mappings as needed
   };
 
