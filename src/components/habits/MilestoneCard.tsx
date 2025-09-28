@@ -82,7 +82,7 @@ const MilestonesCard: React.FC<MilestonesCardProps> = ({ milestones, currentStre
               >
                 <View style={tw`flex-row items-center justify-between py-3.5 border-b border-gray-50`}>
                   <View style={tw`flex-row items-center flex-1 gap-3`}>
-                    <View style={[tw`w-12 h-12 rounded-2xl items-center justify-center`, isAchieved ? tw`bg-amber-100` : tw`bg-gray-100`]}>
+                    <View style={[tw`w-12 h-12 rounded-2xl items-center justify-center`, isAchieved ? tw`bg-stone-100` : tw`bg-gray-100`]}>
                       <Image source={tierIcons[idx as keyof typeof tierIcons]} style={[{ width: iconSize.width, height: iconSize.height }, !isAchieved && tw`opacity-40`]} resizeMode="contain" />
                     </View>
 
@@ -94,7 +94,7 @@ const MilestonesCard: React.FC<MilestonesCardProps> = ({ milestones, currentStre
                     </View>
                   </View>
                   {isAchieved && (
-                    <View style={tw`ml-3 bg-amber-50 rounded-full p-2`}>
+                    <View style={tw`ml-3 bg-stone-50 rounded-full p-2`}>
                       <CheckCircle2 size={20} color="#d97706" strokeWidth={2.5} />
                     </View>
                   )}

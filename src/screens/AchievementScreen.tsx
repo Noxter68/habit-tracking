@@ -57,21 +57,21 @@ const AchievementsScreen: React.FC = () => {
   // Loading state
   if (loading) {
     return (
-      <SafeAreaView style={tw`flex-1 bg-achievement-amber-50 items-center justify-center`}>
+      <SafeAreaView style={tw`flex-1 bg-achievement-stone-50 items-center justify-center`}>
         <ActivityIndicator size="large" color="#d97706" />
-        <Text style={tw`text-achievement-amber-700 mt-3`}>Loading achievements...</Text>
+        <Text style={tw`text-achievement-stone-700 mt-3`}>Loading achievements...</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-achievement-amber-50`}>
+    <SafeAreaView style={tw`flex-1 bg-achievement-stone-50`}>
       {/* Header */}
-      <View style={tw`from-achievement-amber-50 to-achievement-amber-100 border-b border-achievement-amber-200`}>
+      <View style={tw`from-achievement-stone-50 to-achievement-stone-100 border-b border-achievement-stone-200`}>
         <View style={tw`px-5 py-4`}>
           {/* Navigation */}
           <View style={tw`flex-row items-center justify-between mb-3`}>
-            <Pressable onPress={() => navigation.goBack()} style={({ pressed }) => [tw`p-2 -ml-2 rounded-xl`, pressed && tw`bg-achievement-amber-100`]}>
+            <Pressable onPress={() => navigation.goBack()} style={({ pressed }) => [tw`p-2 -ml-2 rounded-xl`, pressed && tw`bg-achievement-stone-100`]}>
               <ChevronLeft size={30} color="#92400e" />
             </Pressable>
             <Image source={require('../../assets/achievements/achievements.png')} style={{ width: 200, height: 80 }} resizeMode="cover" />

@@ -128,7 +128,7 @@ const DateDetailsCard: React.FC<DateDetailsCardProps> = ({ selectedDate, habit, 
           <View style={tw`flex-row items-center`}>
             <Text style={tw`text-2xl mr-2`}>{getStatusEmoji()}</Text>
             <View>
-              <Text style={[tw`text-sm font-bold`, status.completed ? tw`text-emerald-600` : status.partial ? tw`text-amber-600` : tw`text-gray-400`]}>{getStatusText()}</Text>
+              <Text style={[tw`text-sm font-bold`, status.completed ? tw`text-emerald-600` : status.partial ? tw`text-stone-600` : tw`text-gray-400`]}>{getStatusText()}</Text>
             </View>
           </View>
         </View>

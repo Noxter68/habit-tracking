@@ -15,7 +15,7 @@ export const AchievementStats: React.FC<AchievementStatsProps> = ({ unlockedCoun
       {/* Unlocked */}
       <View style={tw`items-center w-20`}>
         <Image source={require('../../../assets/achievements/level-star.png')} style={{ width: 150, height: 60 }} resizeMode="contain" />
-        <Text style={tw`text-lg font-bold text-achievement-amber-800 mt-1`}>
+        <Text style={tw`text-lg font-bold text-achievement-stone-800 mt-1`}>
           {unlockedCount}/{totalCount}
         </Text>
       </View>
@@ -23,13 +23,13 @@ export const AchievementStats: React.FC<AchievementStatsProps> = ({ unlockedCoun
       {/* Completions */}
       <View style={tw`items-center w-20`}>
         <Image source={require('../../../assets/achievements/achievement-panel.png')} style={{ width: 150, height: 60 }} resizeMode="contain" />
-        <Text style={tw`text-lg font-bold text-achievement-amber-800 mt-1`}>{totalCompletions}</Text>
+        <Text style={tw`text-lg font-bold text-achievement-stone-800 mt-1`}>{totalCompletions}</Text>
       </View>
 
       {/* XP */}
       <View style={tw`items-center w-20`}>
         <Image source={require('../../../assets/achievements/xp.png')} style={{ width: 150, height: 60 }} resizeMode="contain" />
-        <Text style={tw`text-lg font-bold text-achievement-amber-800 mt-1`}>{totalXP} XP</Text>
+        <Text style={tw`text-lg font-bold text-achievement-stone-800 mt-1`}>{totalXP} XP</Text>
       </View>
     </View>
   );

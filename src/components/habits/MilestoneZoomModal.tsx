@@ -42,7 +42,7 @@ export const MilestoneZoomModal: React.FC<MilestoneZoomModalProps> = ({ visible,
         <View style={tw`w-full px-8`}>
           <View style={tw`items-center`}>
             {/* Large milestone icon */}
-            <View style={[tw`w-48 h-48 rounded-3xl items-center justify-center mb-6`, isUnlocked ? tw`bg-amber-100` : tw`bg-gray-800`]}>
+            <View style={[tw`w-48 h-48 rounded-3xl items-center justify-center mb-6`, isUnlocked ? tw`bg-stone-100` : tw`bg-gray-800`]}>
               <Image source={tierIcons[milestoneIndex as keyof typeof tierIcons]} style={[tw`w-60 h-60`, !isUnlocked && tw`opacity-40`]} resizeMode="contain" />
             </View>
 
@@ -54,11 +54,11 @@ export const MilestoneZoomModal: React.FC<MilestoneZoomModalProps> = ({ visible,
 
             {/* Info badges */}
             <View style={tw`flex-row gap-3 mt-4`}>
-              <View style={tw`bg-amber-900/30 rounded-full px-4 py-2`}>
-                <Text style={tw`text-amber-100 text-sm font-medium`}>Day {milestone.days}</Text>
+              <View style={tw`bg-stone-900/30 rounded-full px-4 py-2`}>
+                <Text style={tw`text-stone-100 text-sm font-medium`}>Day {milestone.days}</Text>
               </View>
-              <View style={tw`bg-amber-900/30 rounded-full px-4 py-2`}>
-                <Text style={tw`text-amber-100 text-sm font-medium`}>+{milestone.xpReward} XP</Text>
+              <View style={tw`bg-stone-900/30 rounded-full px-4 py-2`}>
+                <Text style={tw`text-stone-100 text-sm font-medium`}>+{milestone.xpReward} XP</Text>
               </View>
             </View>
 

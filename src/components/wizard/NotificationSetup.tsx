@@ -169,12 +169,12 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, on
       {/* Tip Card */}
       <LinearGradient colors={['#fef3c7', '#fde68a']} style={tw`rounded-2xl p-4 mt-4`}>
         <View style={tw`flex-row items-start`}>
-          <View style={tw`w-8 h-8 bg-amber-200 rounded-lg items-center justify-center mr-3`}>
+          <View style={tw`w-8 h-8 bg-stone-200 rounded-lg items-center justify-center mr-3`}>
             <Text style={tw`text-base`}>💡</Text>
           </View>
           <View style={tw`flex-1`}>
-            <Text style={tw`text-sm font-semibold text-amber-900 mb-1`}>Best Practice</Text>
-            <Text style={tw`text-xs text-amber-800 leading-5`}>
+            <Text style={tw`text-sm font-semibold text-stone-900 mb-1`}>Best Practice</Text>
+            <Text style={tw`text-xs text-stone-800 leading-5`}>
               {enabled
                 ? 'Stack your habit with an existing routine. If you chose morning, do it right after brushing your teeth.'
                 : 'Reminders increase habit success by 40%. Enable them to stay consistent.'}

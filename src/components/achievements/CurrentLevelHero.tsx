@@ -41,14 +41,14 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
             <View style={tw`p-5`}>
               <View style={tw`flex-row items-center justify-between mb-3 relative`}>
                 <View style={tw`flex-1 pr-20`}>
-                  <Text style={tw`text-achievement-amber-600 text-xs font-semibold uppercase tracking-wider`}>Current Achievement</Text>
-                  <Text style={tw`text-achievement-amber-800 text-2xl font-black mt-1`}>{currentTitle?.title || 'Newcomer'}</Text>
+                  <Text style={tw`text-achievement-stone-600 text-xs font-semibold uppercase tracking-wider`}>Current Achievement</Text>
+                  <Text style={tw`text-achievement-stone-800 text-2xl font-black mt-1`}>{currentTitle?.title || 'Newcomer'}</Text>
                   <View style={tw`flex-row items-center gap-2 mt-2`}>
                     <View style={tw`bg-white/60 rounded-full px-2 py-0.5`}>
-                      <Text style={tw`text-achievement-amber-800 text-xs font-bold`}>Level {currentLevel}</Text>
+                      <Text style={tw`text-achievement-stone-800 text-xs font-bold`}>Level {currentLevel}</Text>
                     </View>
                     <View style={tw`bg-white/60 rounded-full px-2 py-0.5`}>
-                      <Text style={tw`text-achievement-amber-800 text-xs font-bold`}>{currentTitle?.tier || 'Novice'}</Text>
+                      <Text style={tw`text-achievement-stone-800 text-xs font-bold`}>{currentTitle?.tier || 'Novice'}</Text>
                     </View>
                   </View>
                 </View>
@@ -69,8 +69,8 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
               {nextTitle && (
                 <View style={tw`mt-2`}>
                   <View style={tw`flex-row justify-between mb-1`}>
-                    <Text style={tw`text-achievement-amber-800 text-xs`}>Progress to {nextTitle.title}</Text>
-                    <Text style={tw`text-amber-800 font-bold text-xs`}>{percent}%</Text>
+                    <Text style={tw`text-achievement-stone-800 text-xs`}>Progress to {nextTitle.title}</Text>
+                    <Text style={tw`text-stone-800 font-bold text-xs`}>{percent}%</Text>
                   </View>
 
                   <View style={tw`h-5 bg-quartz-100 rounded-full overflow-hidden border-2 border-quartz-400`}>
@@ -88,25 +88,25 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
                         </View>
                       </View>
                     ) : (
-                      <View style={tw`h-full w-full bg-achievement-amber-200 rounded-full`} />
+                      <View style={tw`h-full w-full bg-achievement-stone-200 rounded-full`} />
                     )}
                   </View>
                 </View>
               )}
 
               {/* Backend Stats */}
-              <View style={tw`flex-row justify-around mt-4 pt-4 border-t border-amber-400`}>
+              <View style={tw`flex-row justify-around mt-4 pt-4 border-t border-quartz-400`}>
                 <View style={tw`items-center`}>
-                  <Text style={tw`text-achievement-amber-800/80 text-sm font-medium`}>Streak</Text>
-                  <Text style={tw`text-achievement-amber-800 font-bold text-lg`}>{currentStreak}</Text>
+                  <Text style={tw`text-achievement-stone-800/80 text-sm font-medium`}>Streak</Text>
+                  <Text style={tw`text-achievement-stone-800 font-bold text-lg`}>{currentStreak}</Text>
                 </View>
                 <View style={tw`items-center`}>
-                  <Text style={tw`text-achievement-amber-800/80 text-sm font-medium`}>Perfect Days</Text>
-                  <Text style={tw`text-achievement-amber-800 font-bold text-lg`}>{perfectDays}</Text>
+                  <Text style={tw`text-achievement-stone-800/80 text-sm font-medium`}>Perfect Days</Text>
+                  <Text style={tw`text-achievement-stone-800 font-bold text-lg`}>{perfectDays}</Text>
                 </View>
                 <View style={tw`items-center`}>
-                  <Text style={tw`text-achievement-amber-800/80 text-sm font-medium`}>Active Habits</Text>
-                  <Text style={tw`text-achievement-amber-800 font-bold text-lg`}>{totalHabits}</Text>
+                  <Text style={tw`text-achievement-stone-800/80 text-sm font-medium`}>Active Habits</Text>
+                  <Text style={tw`text-achievement-stone-800 font-bold text-lg`}>{totalHabits}</Text>
                 </View>
               </View>
             </View>

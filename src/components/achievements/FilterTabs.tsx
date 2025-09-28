@@ -16,18 +16,23 @@ export const FilterTabs: React.FC<FilterTabsProps> = ({ filter, setFilter, unloc
   return (
     <View style={tw`px-4 mb-4`}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={tw`-mx-4 px-4`}>
-        {filters.map((filterType) => (
-          <Pressable
-            key={filterType}
-            onPress={() => setFilter(filterType)}
-            style={({ pressed }) => [tw`px-4 py-2 rounded-full mr-2`, filter === filterType ? tw`bg-achievement-amber-700` : tw`bg-achievement-amber-100`, pressed && tw`opacity-80`]}
-          >
-            <Text style={[tw`text-xs font-semibold capitalize`, filter === filterType ? tw`text-white` : tw`text-achievement-amber-800`]}>
-              {filterType}
-              {filterType !== 'all' && ` (${filterType === 'unlocked' ? unlockedCount : totalCount - unlockedCount})`}
-            </Text>
-          </Pressable>
-        ))}
+        {filters.map((filterType) => {
+          const isActive = filter === filterType;
+          const count = filterType === 'unlocked' ? unlockedCount : filterType === 'locked' ? totalCount - unlockedCount : null;
+
+          return (
+            <Pressable
+              key={filterType}
+              onPress={() => setFilter(filterType)}
+              style={({ pressed }) => [tw`px-4 py-2 rounded-full mr-2 border`, isActive ? tw`bg-sage-600 border-sage-600` : tw`bg-sage-50 border-sage-200`, pressed && tw`bg-sage-200 border-sage-300`]}
+            >
+              <Text style={[tw`text-xs font-semibold capitalize`, isActive ? tw`text-gray-700` : tw`text-gray-400`]}>
+                {filterType}
+                {count !== null && ` (${count})`}
+              </Text>
+            </Pressable>
+          );
+        })}
       </ScrollView>
     </View>
   );

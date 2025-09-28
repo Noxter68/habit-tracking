@@ -275,9 +275,9 @@ const HabitDetails: React.FC = () => {
 
             {selectedTab === 'calendar' && (
               <Animated.View entering={FadeInDown.duration(300)}>
-                <LinearGradient colors={['rgba(251, 191, 36, 0.05)', 'rgba(245, 158, 11, 0.02)']} style={tw`rounded-3xl p-8 border border-amber-200/20`}>
+                <LinearGradient colors={['rgba(251, 191, 36, 0.05)', 'rgba(245, 158, 11, 0.02)']} style={tw`rounded-3xl p-8 border border-stone-200/20`}>
                   <View style={tw`items-center`}>
-                    <View style={tw`w-20 h-20 bg-amber-100 rounded-full items-center justify-center mb-4`}>
+                    <View style={tw`w-20 h-20 bg-stone-100 rounded-full items-center justify-center mb-4`}>
                       <Calendar size={40} color="#d97706" strokeWidth={1.5} />
                     </View>
                     <Text style={tw`text-xl font-bold text-gray-800 mb-2`}>Calendar View</Text>

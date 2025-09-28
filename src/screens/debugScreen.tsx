@@ -65,9 +65,9 @@ const DebugScreen: React.FC<DebugScreenProps> = ({ userId }) => {
           <Text style={tw`text-sm text-gray-500`}>Development utilities for testing</Text>
         </View>
 
-        <View style={tw`bg-amber-50 border border-amber-200 rounded-lg p-3 mb-6`}>
-          <Text style={tw`text-sm text-amber-800 font-medium`}>⚠️ Debug Mode Only</Text>
-          <Text style={tw`text-xs text-amber-700 mt-1`}>These tools should be disabled in production</Text>
+        <View style={tw`bg-stone-50 border border-stone-200 rounded-lg p-3 mb-6`}>
+          <Text style={tw`text-sm text-stone-800 font-medium`}>⚠️ Debug Mode Only</Text>
+          <Text style={tw`text-xs text-stone-700 mt-1`}>These tools should be disabled in production</Text>
         </View>
 
         <View style={tw`space-y-3`}>

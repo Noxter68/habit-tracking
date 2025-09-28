@@ -162,8 +162,8 @@ const FrequencySelector: React.FC<FrequencySelectorProps> = ({ selected, customD
           </View>
 
           {selectedDays.length === 0 && (
-            <View style={tw`mt-3 p-3 bg-amber-50 rounded-xl`}>
-              <Text style={tw`text-xs text-amber-800 text-center`}>Tap to select at least one day</Text>
+            <View style={tw`mt-3 p-3 bg-stone-50 rounded-xl`}>
+              <Text style={tw`text-xs text-stone-800 text-center`}>Tap to select at least one day</Text>
             </View>
           )}
 

@@ -73,7 +73,7 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
                     {/* Subtle glow effect for unlocked */}
                     {isUnlocked && (
                       <View style={tw`absolute inset-0 items-center justify-center`}>
-                        <View style={tw`w-48 h-48 bg-achievement-amber-300/20 rounded-full absolute blur-xl`} />
+                        <View style={tw`w-48 h-48 bg-achievement-stone-300/20 rounded-full absolute blur-xl`} />
                       </View>
                     )}
                   </Animated.View>
@@ -82,7 +82,7 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
                 {/* Content Section with subtle gradient overlay */}
                 <LinearGradient colors={quartzGradients.overlay} style={tw`px-6 pb-6 -mt-6`}>
                   {/* Title Card */}
-                  <View style={tw`bg-white rounded-2xl shadow-sm p-4 mb-4 border border-achievement-amber-100`}>
+                  <View style={tw`bg-white rounded-2xl shadow-sm p-4 mb-4 border border-achievement-stone-100`}>
                     <Text style={tw`text-xl font-bold text-gray-800 text-center mb-3`}>{achievement.title}</Text>
 
                     <View style={tw`flex-row gap-2 justify-center`}>
@@ -90,8 +90,8 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
                         <Text style={tw`text-sm font-bold text-white`}>Level {achievement.level}</Text>
                       </LinearGradient>
 
-                      <View style={tw`bg-achievement-amber-50 rounded-full px-3.5 py-1.5 border border-achievement-amber-200`}>
-                        <Text style={tw`text-sm font-semibold text-achievement-amber-700`}>{achievement.tier}</Text>
+                      <View style={tw`bg-achievement-stone-50 rounded-full px-3.5 py-1.5 border border-achievement-stone-200`}>
+                        <Text style={tw`text-sm font-semibold text-achievement-stone-700`}>{achievement.tier}</Text>
                       </View>
                     </View>
                   </View>
@@ -103,11 +103,11 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
                     end={{ x: 1, y: 1 }}
                     style={tw`rounded-2xl p-4 mb-4`}
                   >
-                    <Text style={tw`text-sm font-semibold text-center mb-2 ${isUnlocked ? 'text-achievement-amber-900' : 'text-achievement-amber-800'}`}>
+                    <Text style={tw`text-sm font-semibold text-center mb-2 ${isUnlocked ? 'text-achievement-stone-900' : 'text-achievement-stone-800'}`}>
                       {isUnlocked ? 'Achievement Unlocked!' : 'Progress Status'}
                     </Text>
 
-                    <Text style={tw`text-sm text-center leading-5 font-medium ${isUnlocked ? 'text-achievement-amber-800' : 'text-achievement-amber-700'}`}>
+                    <Text style={tw`text-sm text-center leading-5 font-medium ${isUnlocked ? 'text-achievement-stone-800' : 'text-achievement-stone-700'}`}>
                       {isUnlocked ? `Unlocked at ${requiredCompletions} completions` : `Requires ${requiredCompletions} total completions`}
                     </Text>
 
@@ -116,7 +116,7 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
                         <View style={tw`mt-3 bg-white/50 rounded-full h-2.5 overflow-hidden`}>
                           <LinearGradient colors={quartzGradients.unlocked.progressBar} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[tw`h-full rounded-full`, { width: `${progress}%` }]} />
                         </View>
-                        <Text style={tw`text-xs text-achievement-amber-600 text-center mt-2 font-medium`}>
+                        <Text style={tw`text-xs text-achievement-stone-600 text-center mt-2 font-medium`}>
                           {remaining} more needed • {Math.round(progress)}% complete
                         </Text>
                       </>
