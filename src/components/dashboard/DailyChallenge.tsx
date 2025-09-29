@@ -1,12 +1,11 @@
-// src/components/dashboard/DailyChallenge.tsx - FIXED VERSION
+// src/components/dashboard/DailyChallenge.tsx
 import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CheckCircle2 } from 'lucide-react-native';
 import tw from '../../lib/tailwind';
 import { XPService } from '../../services/xpService';
-import { useStats } from '../../context/StatsContext';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '../../lib/supabase';
 
 interface DailyChallengeProps {
   completedToday: number;
@@ -22,20 +21,30 @@ interface DailyChallengeProps {
 const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTasksToday, onCollect, userId, currentLevelXP, xpForNextLevel, onLevelUp, debugMode = false }) => {
   const [isCollected, setIsCollected] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const { refreshStats } = useStats();
 
   const isComplete = completedToday >= totalTasksToday && totalTasksToday > 0;
   const completionPercentage = totalTasksToday > 0 ? Math.min(100, Math.round((completedToday / totalTasksToday) * 100)) : 0;
 
-  // Check collection status from database
+  // Check collection status from DATABASE, not AsyncStorage
   useEffect(() => {
     checkCollectionStatus();
-  }, [userId, completedToday, totalTasksToday]);
+  }, [userId, completedToday, totalTasksToday]); // Re-check when stats change
 
   const checkCollectionStatus = async () => {
-    const status = await XPService.getDailyChallengeStatus(userId);
-    if (status) {
-      setIsCollected(status.xp_collected);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+
+      // Check database for today's challenge status
+      const { data, error } = await supabase.from('daily_challenges').select('xp_collected').eq('user_id', userId).eq('date', today).single();
+
+      if (!error && data) {
+        setIsCollected(data.xp_collected || false);
+      } else {
+        setIsCollected(false);
+      }
+    } catch (error) {
+      console.error('Error checking collection status:', error);
+      setIsCollected(false);
     }
   };
 
@@ -43,26 +52,16 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
     if (!isComplete || isCollected || isAnimating) return;
 
     setIsAnimating(true);
-    const today = new Date().toISOString().split('T')[0];
-    const key = `daily_challenge_${userId}_${today}`;
 
     try {
-      // FIX: Use correct parameters for awardXP
-      const success = await XPService.awardXP(userId, {
-        amount: 20,
-        source_type: 'daily_challenge',
-        description: 'Daily Challenge Completed!',
-      });
+      // Use the existing collectDailyChallenge method which updates the database
+      const success = await XPService.collectDailyChallenge(userId);
 
       if (success) {
-        // Mark as collected locally
-        await AsyncStorage.setItem(key, 'true');
         setIsCollected(true);
-
-        // Trigger callback - this will refresh stats
         onCollect(20);
 
-        // Optional: Check for level up
+        // Check for level up
         if (currentLevelXP + 20 >= xpForNextLevel && onLevelUp) {
           setTimeout(() => {
             onLevelUp();
@@ -77,10 +76,26 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
   };
 
   const handleDebugReset = async () => {
-    // For debug: manually reset the collection status in database
-    // You might want to add a debug method in XPService for this
-    console.log('Debug reset - would need to reset database status');
-    await checkCollectionStatus(); // Refresh from database
+    try {
+      const today = new Date().toISOString().split('T')[0];
+
+      // Reset in database
+      const { error } = await supabase
+        .from('daily_challenges')
+        .update({
+          xp_collected: false,
+          collected_at: null,
+        })
+        .eq('user_id', userId)
+        .eq('date', today);
+
+      if (!error) {
+        setIsCollected(false);
+        console.log('Debug: Daily challenge reset');
+      }
+    } catch (error) {
+      console.error('Error resetting daily challenge:', error);
+    }
   };
 
   return (
