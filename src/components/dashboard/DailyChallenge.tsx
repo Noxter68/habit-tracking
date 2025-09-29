@@ -6,6 +6,7 @@ import { CheckCircle2 } from 'lucide-react-native';
 import tw from '../../lib/tailwind';
 import { XPService } from '../../services/xpService';
 import { useStats } from '../../context/StatsContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface DailyChallengeProps {
   completedToday: number;
@@ -21,6 +22,7 @@ interface DailyChallengeProps {
 const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTasksToday, onCollect, userId, currentLevelXP, xpForNextLevel, onLevelUp, debugMode = false }) => {
   const [isCollected, setIsCollected] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const { refreshStats } = useStats();
 
   const isComplete = completedToday >= totalTasksToday && totalTasksToday > 0;
   const completionPercentage = totalTasksToday > 0 ? Math.min(100, Math.round((completedToday / totalTasksToday) * 100)) : 0;
@@ -38,28 +40,37 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
   };
 
   const handleCollect = async () => {
-    if (isAnimating) return;
+    if (!isComplete || isCollected || isAnimating) return;
+
+    setIsAnimating(true);
+    const today = new Date().toISOString().split('T')[0];
+    const key = `daily_challenge_${userId}_${today}`;
 
     try {
-      setIsAnimating(true);
-
-      // Use EXISTING collectDailyChallenge
-      const { success, updatedStats } = await XPService.collectDailyChallenge(userId);
+      // FIX: Use correct parameters for awardXP
+      const success = await XPService.awardXP(userId, {
+        amount: 20,
+        source_type: 'daily_challenge',
+        description: 'Daily Challenge Completed!',
+      });
 
       if (success) {
+        // Mark as collected locally
+        await AsyncStorage.setItem(key, 'true');
         setIsCollected(true);
-        setIsAnimating(false);
 
-        // Pass updated stats to parent
-        if (updatedStats) {
-          onCollect(20, updatedStats);
+        // Trigger callback - this will refresh stats
+        onCollect(20);
+
+        // Optional: Check for level up
+        if (currentLevelXP + 20 >= xpForNextLevel && onLevelUp) {
+          setTimeout(() => {
+            onLevelUp();
+          }, 500);
         }
-
-        // Check level up (optional)
-        // Could be handled in parent based on updatedStats
       }
     } catch (error) {
-      console.error('Failed to collect XP:', error);
+      console.error('Error collecting daily challenge:', error);
     } finally {
       setIsAnimating(false);
     }
@@ -74,7 +85,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
 
   return (
     <View>
-      <Pressable onPress={handleCollect} disabled={isAnimating || isCollected || isAnimating} style={({ pressed }) => [pressed && isComplete && !isCollected && tw`scale-[0.98]`]}>
+      <Pressable onPress={handleCollect} disabled={!isComplete || isCollected || isAnimating} style={({ pressed }) => [pressed && isComplete && !isCollected && tw`scale-[0.98]`]}>
         <LinearGradient
           colors={isCollected ? ['#E5E7EB', '#D1D5DB'] : isComplete ? ['#6B7280', '#4B5563'] : ['#F3F4F6', '#E5E7EB']}
           style={tw`rounded-2xl p-4 border ${isCollected ? 'border-quartz-300' : isComplete ? 'border-quartz-400' : 'border-quartz-200'}`}

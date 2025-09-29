@@ -65,11 +65,14 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     if (onXPCollected) {
       onXPCollected(amount);
     }
-    // Refresh stats after collecting XP to get updated values
-    await refreshStats(true);
-    if (onStatsRefresh) {
-      onStatsRefresh();
-    }
+
+    // Small delay to ensure DB transaction completes
+    setTimeout(async () => {
+      await refreshStats(true);
+      if (onStatsRefresh) {
+        onStatsRefresh();
+      }
+    }, 200);
   };
 
   const handleLevelUp = async () => {

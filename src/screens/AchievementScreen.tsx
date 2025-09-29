@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
+// src/screens/AchievementScreen.tsx
+// SAFE VERSION - No useFocusEffect, just manual refresh
+
+import React, { useState, useEffect } from 'react';
 import { ScrollView, Pressable, ActivityIndicator, RefreshControl, View, Text, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import tw from '../lib/tailwind';
 
-// Context
+// Contexts
 import { useAchievements } from '../context/AchievementContext';
+import { useStats } from '../context/StatsContext'; // Use stats for level/XP
 
 // Types
 import { Achievement, FilterType, TIER_NAMES } from '../types/achievement.types';
@@ -23,22 +27,78 @@ import { ZoomModal } from '../components/achievements/ZoomModal';
 import { achievementTitles } from '../utils/achievements';
 import { getXPForNextLevel } from '@/utils/xpCalculations';
 
-// Helper function to calculate XP required for next level
-// Based on your SQL function get_xp_for_next_level
-
 const AchievementsScreen: React.FC = () => {
   const navigation = useNavigation();
-  const { achievements, totalCompletions, totalXP, currentLevel, levelProgress, streak, perfectDays, totalHabits, loading, currentTitle, nextTitle, refreshAchievements } = useAchievements();
+
+  // Get level/XP from StatsContext (single source of truth)
+  const { stats, refreshStats, loading: statsLoading } = useStats();
+
+  // Get achievement-specific data from AchievementContext
+  const { achievements, totalCompletions, streak, perfectDays, totalHabits, loading: achievementsLoading, refreshAchievements } = useAchievements();
+
+  // Use stats from StatsContext
+  const currentLevel = stats?.level || 1;
+  const totalXP = stats?.totalXP || 0;
+  const levelProgress = stats?.levelProgress || 0;
+  const currentTitle = stats?.currentAchievement;
+  const nextTitle = achievementTitles.find((title) => title.level > currentLevel);
 
   // Local UI state
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showZoomModal, setShowZoomModal] = useState(false);
   const [filter, setFilter] = useState<FilterType>('all');
+  const [refreshing, setRefreshing] = useState(false);
 
   const requiredXpForNextLevel = getXPForNextLevel(currentLevel);
-  console.log(requiredXpForNextLevel);
-  // Helpers
+
+  // Manual refresh handler (pull-to-refresh)
+  const handleRefresh = async () => {
+    console.log('AchievementScreen: Manual refresh triggered');
+    setRefreshing(true);
+
+    try {
+      // Refresh both contexts
+      await Promise.all([
+        refreshStats(true), // Force refresh
+        refreshAchievements(),
+      ]);
+    } catch (error) {
+      console.error('Error refreshing achievement data:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  // Initial load effect (only runs once when component mounts)
+  useEffect(() => {
+    console.log('AchievementScreen: Initial mount, checking if refresh needed');
+
+    // Only refresh if we don't have stats data
+    // This prevents unnecessary refreshes but ensures we have data
+    if (!stats) {
+      console.log('AchievementScreen: No stats data, refreshing...');
+      refreshStats(true);
+    }
+
+    // Only refresh achievements if empty
+    if (!achievements || achievements.length === 0) {
+      console.log('AchievementScreen: No achievements data, refreshing...');
+      refreshAchievements();
+    }
+  }, []); // Empty dependency array = only runs once on mount
+
+  // Debug logging (safe, no side effects)
+  useEffect(() => {
+    console.log('AchievementScreen - Current Data:', {
+      level: currentLevel,
+      xp: totalXP,
+      title: currentTitle?.title,
+      achievementsCount: achievements?.length || 0,
+    });
+  }, [currentLevel, totalXP, currentTitle, achievements]);
+
+  // Helper functions
   const isAchievementUnlocked = (achievement: Achievement): boolean => {
     if (achievement.level <= currentLevel) return true;
     return achievements.some((ua) => ua?.title === achievement.title || ua?.achievementId === achievement.id);
@@ -54,8 +114,11 @@ const AchievementsScreen: React.FC = () => {
   const unlockedCount = achievementTitles.filter((a) => isAchievementUnlocked(a)).length;
   const totalCount = achievementTitles.length;
 
-  // Loading state
-  if (loading) {
+  // Combined loading state
+  const isLoading = statsLoading || achievementsLoading;
+
+  // Show loading screen only on initial load
+  if (isLoading && !stats && !achievements) {
     return (
       <SafeAreaView style={tw`flex-1 bg-achievement-stone-50 items-center justify-center`}>
         <ActivityIndicator size="large" color="#d97706" />
@@ -86,7 +149,7 @@ const AchievementsScreen: React.FC = () => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 20 }}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={refreshAchievements} colors={['#d97706']} tintColor="#d97706" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#d97706']} tintColor="#d97706" />}
       >
         {/* Current Level Hero */}
         <View style={tw`px-4 pt-4`}>
