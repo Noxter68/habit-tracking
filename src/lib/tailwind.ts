@@ -44,14 +44,14 @@ const tw = create({
         },
         // Calm, peaceful colors palette
         primary: {
-          50: '#f0fdf4',
-          100: '#dcfce7',
-          200: '#bbf7d0',
-          300: '#86efac',
-          400: '#4ade80',
-          500: '#22c55e',
-          600: '#16a34a',
-          700: '#15803d',
+          50: '#F0F4FF',
+          100: '#E0E9FF',
+          200: '#C7D7FE',
+          300: '#A5B4FC',
+          400: '#818CF8',
+          500: '#6366F1',
+          600: '#4F46E5',
+          700: '#4338CA',
         },
         teal: {
           50: '#f0fdfa',
