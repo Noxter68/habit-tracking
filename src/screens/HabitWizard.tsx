@@ -1,6 +1,6 @@
 // src/screens/HabitWizard.tsx (Improved Navigation Section)
 import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, ScrollView, Alert } from 'react-native';
+import { View, Text, Pressable, ScrollView, Alert, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
@@ -20,6 +20,7 @@ import ProgressIndicator from '../components/ProgressIndicator';
 import { getCategoryName } from '../utils/habitHelpers';
 import { NotificationService } from '../services/notificationService';
 import HabitTypeCards from '@/components/wizard/HabitTypeSelector';
+import { LinearGradient } from 'expo-linear-gradient';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'HabitWizard'>;
 
@@ -175,7 +176,6 @@ const HabitWizard: React.FC = () => {
         <View style={tw`px-5 py-4`}>
           <ProgressIndicator current={step} total={totalSteps} />
         </View>
-
         {/* Content */}
         <ScrollView style={tw`flex-1`} showsVerticalScrollIndicator={false} contentContainerStyle={tw`pb-4`}>
           <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)} key={step}>
@@ -183,53 +183,44 @@ const HabitWizard: React.FC = () => {
           </Animated.View>
         </ScrollView>
 
-        {/* Improved Navigation */}
-        <View style={tw`bg-white border-t border-gray-100 top-8`}>
-          <View style={tw`px-5 py-4`}>
+        <View style={tw`bg-quartz-50 border-t border-quartz-200`}>
+          <ImageBackground source={require('../../assets/interface/quartz-texture.png')} style={tw`px-5 py-4`} imageStyle={{ opacity: 0.05 }} resizeMode="cover">
             <View style={tw`flex-row gap-3`}>
               {/* Back/Cancel Button */}
               <Pressable
                 onPress={handleBack}
                 disabled={isCreating}
-                style={({ pressed }) => [
-                  tw`flex-1 py-4 rounded-xl border`,
-                  isFirstStep ? tw`bg-white border-gray-200` : tw`bg-gray-50 border-gray-200`,
-                  pressed && tw`opacity-80`,
-                  isCreating && tw`opacity-50`,
-                ]}
+                style={({ pressed }) => [tw`flex-1 py-4 rounded-2xl`, tw`bg-white border border-quartz-200`, pressed && tw`opacity-80`, isCreating && tw`opacity-50`]}
               >
                 <View style={tw`flex-row items-center justify-center`}>
                   {isFirstStep ? (
                     <>
-                      <X size={18} color="#6b7280" style={tw`mr-2`} />
-                      <Text style={tw`text-gray-600 font-semibold text-base`}>Cancel</Text>
+                      <X size={18} color="#6B7280" style={tw`mr-2`} />
+                      <Text style={tw`text-quartz-600 font-medium text-base`}>Cancel</Text>
                     </>
                   ) : (
                     <>
-                      <ChevronLeft size={18} color="#6b7280" style={tw`mr-1.5`} />
-                      <Text style={tw`text-gray-600 font-semibold text-base`}>Back</Text>
+                      <ChevronLeft size={18} color="#6B7280" style={tw`mr-1.5`} />
+                      <Text style={tw`text-quartz-600 font-medium text-base`}>Back</Text>
                     </>
                   )}
                 </View>
               </Pressable>
 
               {/* Next/Create Button */}
-              <Pressable
-                onPress={handleNext}
-                disabled={isCreating}
-                style={({ pressed }) => [tw`flex-1 py-4 rounded-xl`, isLastStep ? tw`bg-green-500` : tw`bg-indigo-600`, pressed && tw`opacity-90`, isCreating && tw`opacity-50`]}
-              >
+              <Pressable onPress={handleNext} disabled={isCreating} style={({ pressed }) => [tw`flex-1 py-4 rounded-2xl overflow-hidden`, pressed && tw`opacity-90`, isCreating && tw`opacity-50`]}>
+                <LinearGradient colors={isLastStep ? ['#9CA3AF', '#6B7280'] : ['#6B7280', '#4B5563']} style={tw`absolute inset-0`} />
                 <View style={tw`flex-row items-center justify-center`}>
                   {isCreating ? (
-                    <Text style={tw`text-white font-semibold text-base`}>Creating...</Text>
+                    <Text style={tw`text-white font-medium text-base`}>Creating...</Text>
                   ) : isLastStep ? (
                     <>
                       <Check size={18} color="#ffffff" style={tw`mr-2`} />
-                      <Text style={tw`text-white font-semibold text-base`}>Create Habit</Text>
+                      <Text style={tw`text-white font-medium text-base`}>Create Habit</Text>
                     </>
                   ) : (
                     <>
-                      <Text style={tw`text-white font-semibold text-base`}>Continue</Text>
+                      <Text style={tw`text-white font-medium text-base`}>Continue</Text>
                       <ChevronRight size={18} color="#ffffff" style={tw`ml-1.5`} />
                     </>
                   )}
@@ -239,11 +230,11 @@ const HabitWizard: React.FC = () => {
 
             {/* Step Indicator Text */}
             <View style={tw`mt-3 items-center`}>
-              <Text style={tw`text-xs text-gray-500`}>
+              <Text style={tw`text-xs text-quartz-500 font-light`}>
                 Step {step} of {totalSteps}
               </Text>
             </View>
-          </View>
+          </ImageBackground>
         </View>
       </View>
     </SafeAreaView>

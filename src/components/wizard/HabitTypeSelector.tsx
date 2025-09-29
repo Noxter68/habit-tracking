@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, ImageBackground } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { TrendingUp, ShieldOff } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import tw from '../../lib/tailwind';
 import { HabitType } from '../../types';
 
@@ -17,27 +18,25 @@ const HabitTypeCards: React.FC<HabitTypeCardsProps> = ({ selected, onSelect }) =
       title: 'Build a Good Habit',
       subtitle: 'Start something positive for your life',
       icon: TrendingUp,
-      color: '#10b981',
-      bgColor: '#f0fdf4',
-      borderColor: '#86efac',
+      gradient: ['#E5E7EB', '#D1D5DB'], // quartz-100 to quartz-200
+      selectedGradient: ['#9CA3AF', '#6B7280'], // quartz-300 to quartz-400
     },
     {
       id: 'bad' as HabitType,
       title: 'Quit a Bad Habit',
       subtitle: 'Break free from what holds you back',
       icon: ShieldOff,
-      color: '#ef4444',
-      bgColor: '#fef2f2',
-      borderColor: '#fca5a5',
+      gradient: ['#D1D5DB', '#9CA3AF'], // quartz-200 to quartz-300
+      selectedGradient: ['#6B7280', '#4B5563'], // quartz-400 to quartz-500
     },
   ];
 
   return (
     <View style={tw`px-5`}>
-      {/* Header */}
+      {/* Header with subtle gradient */}
       <View style={tw`mb-6`}>
-        <Text style={tw`text-2xl font-bold text-gray-900 mb-2`}>Let's Get Started</Text>
-        <Text style={tw`text-gray-600 leading-5`}>Choose your path to personal growth</Text>
+        <Text style={tw`text-2xl font-light text-quartz-800 mb-2`}>Let's Get Started</Text>
+        <Text style={tw`text-quartz-600 leading-5`}>Choose your path to personal growth</Text>
       </View>
 
       {/* Cards */}
@@ -47,44 +46,48 @@ const HabitTypeCards: React.FC<HabitTypeCardsProps> = ({ selected, onSelect }) =
           const isSelected = selected === type.id;
 
           return (
-            <Animated.View key={type.id} entering={FadeInDown.delay(index * 100).duration(400)}>
-              <Pressable
-                onPress={() => onSelect(type.id)}
-                style={({ pressed }) => [
-                  tw`p-4 rounded-2xl border`,
-                  isSelected ? { backgroundColor: type.bgColor, borderColor: type.borderColor, borderWidth: 2 } : tw`bg-white border-gray-200`,
-                  pressed && tw`opacity-90`,
-                ]}
-              >
-                <View style={tw`flex-row items-start justify-between`}>
-                  <View style={tw`flex-row items-center flex-1`}>
-                    {/* Icon Container */}
-                    <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-3`, isSelected ? { backgroundColor: type.color + '20' } : tw`bg-gray-50`]}>
-                      <Icon size={24} color={isSelected ? type.color : '#6b7280'} />
-                    </View>
+            <Animated.View key={type.id} entering={FadeInDown.delay(index * 100).duration(600)}>
+              <Pressable onPress={() => onSelect(type.id)} style={({ pressed }) => [tw`rounded-3xl overflow-hidden`, pressed && tw`opacity-90`]}>
+                <LinearGradient colors={isSelected ? type.selectedGradient : type.gradient} style={tw`border border-quartz-200`}>
+                  <ImageBackground
+                    source={require('../../../assets/interface/quartz-texture.png')}
+                    style={tw`p-5`}
+                    imageStyle={{ opacity: isSelected ? 0.3 : 0.1, borderRadius: 24 }}
+                    resizeMode="cover"
+                  >
+                    <View style={tw`flex-row items-center justify-between`}>
+                      <View style={tw`flex-row items-center flex-1`}>
+                        {/* Icon Container */}
+                        <View style={[tw`w-12 h-12 rounded-2xl items-center justify-center mr-4`, isSelected ? tw`bg-white/30` : tw`bg-quartz-50/50`]}>
+                          <Icon size={24} color={isSelected ? '#FFFFFF' : '#4B5563'} strokeWidth={1.5} />
+                        </View>
 
-                    {/* Text Content */}
-                    <View style={tw`flex-1`}>
-                      <Text style={tw`text-base font-semibold text-gray-900 mb-1`}>{type.title}</Text>
-                      <Text style={tw`text-sm text-gray-600 leading-5`}>{type.subtitle}</Text>
-                    </View>
-                  </View>
+                        {/* Text Content */}
+                        <View style={tw`flex-1`}>
+                          <Text style={[tw`text-base font-medium mb-1`, isSelected ? tw`text-white` : tw`text-quartz-800`]}>{type.title}</Text>
+                          <Text style={[tw`text-sm leading-5`, isSelected ? tw`text-white/80` : tw`text-quartz-600`]}>{type.subtitle}</Text>
+                        </View>
+                      </View>
 
-                  {/* Radio Button */}
-                  <View style={[tw`w-5 h-5 rounded-full border-2 ml-2`, isSelected ? { borderColor: type.color, backgroundColor: 'white' } : tw`border-gray-300`]}>
-                    {isSelected && <View style={[tw`w-2 h-2 rounded-full m-auto`, { backgroundColor: type.color }]} />}
-                  </View>
-                </View>
+                      {/* Selection Indicator */}
+                      <View style={[tw`w-6 h-6 rounded-full border-2`, isSelected ? tw`border-white bg-white/20` : tw`border-quartz-300 bg-quartz-50/50`]}>
+                        {isSelected && <View style={tw`w-2.5 h-2.5 bg-white rounded-full m-auto`} />}
+                      </View>
+                    </View>
+                  </ImageBackground>
+                </LinearGradient>
               </Pressable>
             </Animated.View>
           );
         })}
       </View>
 
-      {/* Helper Section */}
-      <View style={tw`mt-6 p-4 bg-gray-50 rounded-2xl`}>
-        <Text style={tw`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2`}>Quick Tip</Text>
-        <Text style={tw`text-sm text-gray-700 leading-5`}>Most people start with building good habits. You can always track multiple habits of both types.</Text>
+      {/* Helper Section with Quartz Texture */}
+      <View style={tw`mt-6 bg-quartz-50 rounded-2xl overflow-hidden`}>
+        <ImageBackground source={require('../../../assets/interface/quartz-texture.png')} style={tw`p-4`} imageStyle={{ opacity: 0.05, borderRadius: 16 }} resizeMode="cover">
+          <Text style={tw`text-xs font-medium text-quartz-500 uppercase tracking-wider mb-2`}>Quick Tip</Text>
+          <Text style={tw`text-sm text-quartz-700 leading-5`}>Most people start with building good habits. You can always track multiple habits of both types.</Text>
+        </ImageBackground>
       </View>
     </View>
   );
