@@ -1,11 +1,11 @@
 // src/screens/StatisticsScreen.tsx
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Dimensions, RefreshControl, ActivityIndicator, ImageBackground } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Dimensions, RefreshControl, ActivityIndicator, ImageBackground, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Image } from 'expo-image';
+
 import { TrendingUp, Target, Zap, Calendar, Activity, Clock, Star, Flame, ArrowUp, ArrowDown, Brain, Sparkles } from 'lucide-react-native';
-import Animated, { FadeInDown, FadeIn, useAnimatedStyle, withTiming, useSharedValue } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeIn, useAnimatedStyle, withTiming, useSharedValue, interpolate, runOnJS } from 'react-native-reanimated';
 import { LineChart, BarChart } from 'react-native-chart-kit';
 import tw from '@/lib/tailwind';
 
@@ -19,6 +19,13 @@ import ProgressBar from '@/components/ui/ProgressBar';
 import { useAuth } from '@/context/AuthContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// Preload all texture images at module level
+const textureCache = {
+  Crystal: Image.resolveAssetSource(require('../../assets/interface/progressBar/crystal.png')),
+  Ruby: Image.resolveAssetSource(require('../../assets/interface/progressBar/ruby-texture.png')),
+  Amethyst: Image.resolveAssetSource(require('../../assets/interface/progressBar/amethyst-texture.png')),
+};
 
 interface HabitAnalytics {
   habit: Habit;
@@ -42,13 +49,31 @@ interface PredictionData {
   confidenceScore: number;
   predictedStreak30Days: number;
   predictedStreak90Days: number;
-  habitFormationProgress: number; // 21 days to form, 66 to automatic
+  habitFormationProgress: number;
   riskFactors: string[];
   strengthFactors: string[];
-  criticalPeriod: string; // e.g., "Days 7-14" when most people quit
+  criticalPeriod: string;
 }
 
-// Helper functions
+// Enhanced TexturedHeader with proper crossfade (no white flash)
+const TexturedHeader: React.FC<{
+  selectedTier: HabitTier;
+  children: React.ReactNode;
+}> = ({ selectedTier, children }) => {
+  const theme = tierThemes[selectedTier];
+
+  // Simply render the texture without complex animations
+  return (
+    <View style={tw`relative overflow-hidden`}>
+      <ImageBackground source={theme.texture} resizeMode="cover" style={tw`px-5 pt-4 pb-8`} fadeDuration={0}>
+        <LinearGradient colors={theme.gradient.map((c) => c + 'dd')} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`absolute inset-0`} />
+        {children}
+      </ImageBackground>
+    </View>
+  );
+};
+
+// Helper functions (keep all existing helper functions)
 const calculateCompletionMetrics = (habit: Habit) => {
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -72,16 +97,14 @@ const calculateCompletionMetrics = (habit: Habit) => {
 };
 
 const calculateSuccessProbability = (habit: Habit, consistency: number): number => {
-  // Base probability on multiple factors
-  const streakFactor = Math.min(habit.currentStreak / 21, 1) * 30; // Up to 30% for 21+ day streak
-  const consistencyFactor = (consistency / 100) * 40; // Up to 40% for consistency
-  const completionFactor = (calculateCompletionMetrics(habit).rate / 100) * 30; // Up to 30% for completion rate
+  const streakFactor = Math.min(habit.currentStreak / 21, 1) * 30;
+  const consistencyFactor = (consistency / 100) * 40;
+  const completionFactor = (calculateCompletionMetrics(habit).rate / 100) * 30;
 
   return Math.min(95, Math.round(streakFactor + consistencyFactor + completionFactor));
 };
 
 const calculateStreakVelocity = (habit: Habit): number => {
-  // Calculate how fast the streak is growing
   const recentDays = habit.completedDays.slice(-14);
   if (recentDays.length < 7) return 0;
 
@@ -101,7 +124,6 @@ const predictMaxStreak = (currentStreak: number, consistency: number, momentum: 
 };
 
 const calculateHabitFormationProgress = (streak: number): number => {
-  // 21 days to form habit, 66 days to become automatic
   if (streak >= 66) return 100;
   if (streak >= 21) return 50 + ((streak - 21) / 45) * 50;
   return (streak / 21) * 50;
@@ -246,6 +268,12 @@ export default function StatisticsScreen() {
 
   const loadingRef = useRef(false);
   const progressAnimation = useSharedValue(0);
+  const tabTransition = useSharedValue(0);
+
+  useEffect(() => {
+    // Preload all textures on mount
+    Promise.all(Object.values(textureCache).map((source) => Image.prefetch(source.uri)));
+  }, []);
 
   const calculateHabitAnalytics = useCallback(async (habitsData: Habit[], userId: string): Promise<HabitAnalytics[]> => {
     const analytics: HabitAnalytics[] = [];
@@ -291,7 +319,6 @@ export default function StatisticsScreen() {
       const confidenceScore = a.successProbability;
       const dailyRate = a.completionRate / 100;
 
-      // Predict future streaks
       const predictedStreak30Days = Math.round(a.habit.currentStreak + 30 * dailyRate * (a.momentum === 'increasing' ? 1.2 : a.momentum === 'decreasing' ? 0.8 : 1));
       const predictedStreak90Days = Math.round(a.habit.currentStreak + 90 * dailyRate * (a.momentum === 'increasing' ? 1.1 : a.momentum === 'decreasing' ? 0.7 : 0.9));
 
@@ -332,8 +359,10 @@ export default function StatisticsScreen() {
         const preds = calculatePredictions(analytics);
         setPredictions(preds);
 
-        // Set first habit as selected by default
-        setSelectedHabitId(habitsData[0].id);
+        // Only set selected habit if not already set
+        if (!selectedHabitId) {
+          setSelectedHabitId(habitsData[0].id);
+        }
       }
     } catch (error) {
       console.error('Error loading statistics:', error);
@@ -341,7 +370,7 @@ export default function StatisticsScreen() {
       setLoading(false);
       loadingRef.current = false;
     }
-  }, [user, calculateHabitAnalytics, calculatePredictions]);
+  }, [user, calculateHabitAnalytics, calculatePredictions, selectedHabitId]);
 
   useEffect(() => {
     if (user && !loadingRef.current) {
@@ -374,7 +403,12 @@ export default function StatisticsScreen() {
     return tierThemes[selectedAnalytics?.tierInfo.name || 'Crystal'];
   }, [selectedAnalytics]);
 
-  // Tier colors for habit tabs
+  const handleHabitSelection = useCallback((habitId: string) => {
+    tabTransition.value = 0;
+    setSelectedHabitId(habitId);
+    tabTransition.value = withTiming(1, { duration: 300 });
+  }, []);
+
   const getTierColors = (tier: HabitTier, isActive: boolean) => {
     const colors = {
       Crystal: {
@@ -426,7 +460,6 @@ export default function StatisticsScreen() {
               </View>
             </View>
 
-            {/* Habit Formation Progress */}
             <View style={tw`mb-6`}>
               <Text style={tw`text-slate-600 text-sm mb-2`}>Habit Formation Progress</Text>
               <View style={tw`bg-slate-100 h-3 rounded-full overflow-hidden mb-2`}>
@@ -443,7 +476,6 @@ export default function StatisticsScreen() {
               <Text style={tw`text-slate-500 text-xs`}>{selectedPrediction.criticalPeriod}</Text>
             </View>
 
-            {/* Predicted Streaks */}
             <View style={tw`flex-row -mx-2 mb-6`}>
               <View style={tw`flex-1 px-2`}>
                 <View style={tw`bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-4`}>
@@ -468,7 +500,6 @@ export default function StatisticsScreen() {
               </View>
             </View>
 
-            {/* Factors Analysis */}
             <View style={tw`flex-row -mx-2`}>
               {selectedPrediction.strengthFactors.length > 0 && (
                 <View style={tw`flex-1 px-2`}>
@@ -630,32 +661,36 @@ export default function StatisticsScreen() {
   return (
     <SafeAreaView style={tw`flex-1 bg-slate-50`}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`pb-6`} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#8b5cf6" />}>
-        {/* Dynamic Header with selected habit's texture */}
-        <ImageBackground source={currentTheme.texture} resizeMode="cover" style={tw`px-5 pt-4 pb-8`}>
-          <LinearGradient colors={currentTheme.gradient.map((c) => c + 'dd')} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`absolute inset-0`} />
-
+        {/* Enhanced Header with smooth texture transitions */}
+        <TexturedHeader selectedTier={selectedAnalytics?.tierInfo.name || 'Crystal'}>
           <Animated.View entering={FadeInDown.duration(400)} style={tw`relative`}>
             <View style={tw`mb-6`}>
               <Text style={tw`text-3xl font-bold text-white`}>Future Vision</Text>
               <Text style={tw`text-white/80 text-sm mt-1`}>Predict your success trajectory</Text>
             </View>
 
-            {/* Habit Tabs - Inline implementation */}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={tw`-mx-5`} contentContainerStyle={tw`px-5`}>
+            {/* Habit Tabs with optimized rendering */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={tw`-mx-5`}
+              contentContainerStyle={tw`px-5`}
+              removeClippedSubviews={true}
+              initialNumToRender={5}
+              maxToRenderPerBatch={3}
+            >
               {habitAnalytics.map((analytics) => {
                 const isActive = selectedHabitId === analytics.habit.id;
                 const colors = getTierColors(analytics.tierInfo.name, isActive);
 
                 return (
-                  <TouchableOpacity key={analytics.habit.id} onPress={() => setSelectedHabitId(analytics.habit.id)} activeOpacity={0.8} style={tw`mr-3`}>
-                    <View style={[tw`px-4 py-3 rounded-2xl border-2`, isActive ? tw`${colors.activeBg} ${colors.activeBorder}` : tw`${colors.bg} ${colors.border}`]}>
+                  <TouchableOpacity key={analytics.habit.id} onPress={() => handleHabitSelection(analytics.habit.id)} activeOpacity={0.8} style={tw`mr-3`}>
+                    <Animated.View style={[tw`px-4 py-3 rounded-2xl border-2`, isActive ? tw`${colors.activeBg} ${colors.activeBorder}` : tw`${colors.bg} ${colors.border}`]}>
                       <View style={tw`flex-row items-center`}>
-                        {/* Habit Icon Placeholder */}
                         <View style={[tw`w-10 h-10 rounded-xl items-center justify-center mr-3`, isActive ? tw`bg-white/20` : tw`bg-white`]}>
-                          <Image source={getGemIcon(analytics.tierInfo.name)} style={tw`w-10 h-10 mr-1`} contentFit="contain" />
+                          <Image source={getGemIcon(analytics.tierInfo.name)} style={tw`w-10 h-10 `} contentFit="contain" />
                         </View>
 
-                        {/* Habit Info */}
                         <View style={tw`mr-3`}>
                           <Text style={[tw`font-semibold text-sm`, isActive ? tw`${colors.activeText}` : tw`text-slate-800`]}>{analytics.habit.name}</Text>
                           <View style={tw`flex-row items-center mt-0.5`}>
@@ -663,14 +698,13 @@ export default function StatisticsScreen() {
                           </View>
                         </View>
 
-                        {/* Streak Badge */}
                         {analytics.habit.currentStreak > 0 && (
                           <View style={[tw`px-2 py-1 rounded-full`, isActive ? tw`bg-white/25` : tw`bg-white`]}>
                             <Text style={[tw`text-xs font-bold`, isActive ? tw`text-white` : tw`${colors.text}`]}>{analytics.habit.currentStreak}</Text>
                           </View>
                         )}
                       </View>
-                    </View>
+                    </Animated.View>
                   </TouchableOpacity>
                 );
               })}
@@ -678,7 +712,7 @@ export default function StatisticsScreen() {
 
             {/* Tier Progress inside header */}
             {selectedAnalytics && (
-              <View style={tw`mt-6`}>
+              <Animated.View style={tw`mt-6`}>
                 <View style={tw`flex-row justify-between mb-2`}>
                   <Text style={tw`text-white/90 text-sm font-semibold`}>{selectedAnalytics.tierInfo.name} Tier Progress</Text>
                   <Text style={tw`text-white text-sm font-bold`}>{Math.round(selectedAnalytics.tierProgress)}%</Text>
@@ -689,12 +723,12 @@ export default function StatisticsScreen() {
                     Next: {selectedAnalytics.nextMilestone.title} in {selectedAnalytics.nextMilestone.days - selectedAnalytics.habit.currentStreak} days
                   </Text>
                 )}
-              </View>
+              </Animated.View>
             )}
           </Animated.View>
-        </ImageBackground>
+        </TexturedHeader>
 
-        {/* Content */}
+        {/* Content with smooth transitions */}
         <View style={tw`px-5 mt-6`}>
           {/* Future Prediction Card */}
           {renderFuturePrediction}
