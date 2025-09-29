@@ -29,6 +29,8 @@ const HabitWizard: React.FC = () => {
   const { addHabit, habits } = useHabits();
   const [step, setStep] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
+  const [previousCategory, setPreviousCategory] = useState<string | undefined>();
+
   const [habitData, setHabitData] = useState<Partial<Habit>>({
     frequency: 'daily',
     notifications: false,
@@ -50,6 +52,15 @@ const HabitWizard: React.FC = () => {
       NotificationService.registerForPushNotifications();
     }
   }, [step]);
+
+  // CRITICAL FIX: Reset tasks when category changes
+  useEffect(() => {
+    if (habitData.category && habitData.category !== previousCategory) {
+      // Category has changed, reset the tasks
+      setHabitData((prev) => ({ ...prev, tasks: [] }));
+      setPreviousCategory(habitData.category);
+    }
+  }, [habitData.category, previousCategory]);
 
   const handleNext = async () => {
     // Validation
