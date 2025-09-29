@@ -1,11 +1,11 @@
 // src/screens/Dashboard.tsx
-import React, { useCallback, useRef, useEffect } from 'react';
+import React, { useCallback, useRef, useEffect, useState } from 'react';
 import { ScrollView, RefreshControl, View, Text, ActivityIndicator, Pressable, ImageBackground, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInUp } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
-import { Plus } from 'lucide-react-native';
+import { Plus, Zap } from 'lucide-react-native';
 import tw from '../lib/tailwind';
 
 // Components
@@ -16,6 +16,8 @@ import SwipeableHabitCard from '../components/SwipeableHabitCard';
 import { useAuth } from '../context/AuthContext';
 import { useHabits } from '../context/HabitContext';
 import { useStats } from '../context/StatsContext';
+import { getAchievementByLevel } from '@/utils/achievements';
+import { LevelUpCelebration } from '@/components/dashboard/LevelUpProgression';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -25,12 +27,73 @@ const Dashboard: React.FC = () => {
   const { habits, loading: habitsLoading, toggleHabitDay, toggleTask, deleteHabit, refreshHabits } = useHabits();
 
   const { stats, loading: statsLoading, refreshStats } = useStats();
+  const previousLevelRef = useRef<number | null>(null);
+  const [showLevelUpModal, setShowLevelUpModal] = useState(false);
+  const [levelUpData, setLevelUpData] = useState<{
+    newLevel: number;
+    previousLevel: number;
+    achievement: any;
+  } | null>(null);
+
+  const [testLevel, setTestLevel] = useState(1);
 
   const renderCount = useRef(0);
   renderCount.current++;
   useEffect(() => {
     console.log(`Dashboard render #${renderCount.current}`);
   });
+
+  // Track level changes
+  useEffect(() => {
+    if (stats?.level && previousLevelRef.current !== null) {
+      // Check if level increased
+      if (stats.level > previousLevelRef.current) {
+        console.log(`LEVEL UP! ${previousLevelRef.current} → ${stats.level}`);
+
+        // Get the achievement for the new level
+        const newAchievement = getAchievementByLevel(stats.level);
+
+        // Set level up data
+        setLevelUpData({
+          newLevel: stats.level,
+          previousLevel: previousLevelRef.current,
+          achievement: newAchievement,
+        });
+
+        // Show the modal
+        setShowLevelUpModal(true);
+      }
+    }
+
+    // Update the ref for next comparison
+    if (stats?.level) {
+      previousLevelRef.current = stats.level;
+    }
+  }, [stats?.level]);
+
+  // Initialize previous level on mount
+  useEffect(() => {
+    if (stats?.level && previousLevelRef.current === null) {
+      previousLevelRef.current = stats.level;
+      console.log('Initial level set:', stats.level);
+    }
+  }, [stats?.level]);
+
+  // DEV MODE: Test level up modal
+  const handleTestLevelUp = () => {
+    const nextTestLevel = testLevel + 1;
+    const testAchievement = getAchievementByLevel(nextTestLevel);
+
+    console.log('DEV: Testing level up to level', nextTestLevel);
+
+    setLevelUpData({
+      newLevel: nextTestLevel,
+      previousLevel: testLevel,
+      achievement: testAchievement,
+    });
+    setShowLevelUpModal(true);
+    setTestLevel(nextTestLevel);
+  };
 
   // Pull-to-refresh handler
   const handleRefresh = useCallback(async () => {
@@ -71,6 +134,18 @@ const Dashboard: React.FC = () => {
         refreshControl={<RefreshControl refreshing={habitsLoading || statsLoading} onRefresh={handleRefresh} tintColor={tw.color('quartz-400')} />}
         showsVerticalScrollIndicator={false}
       >
+        {/* DEV MODE: Test Button */}
+        {__DEV__ && (
+          <Animated.View entering={FadeIn} style={tw`mb-3`}>
+            <Pressable onPress={handleTestLevelUp} style={({ pressed }) => [tw`bg-purple-500 rounded-lg px-4 py-2.5 flex-row items-center justify-center`, pressed && tw`opacity-75`]}>
+              <Zap size={14} color="white" style={tw`mr-1.5`} />
+              <Text style={tw`text-white font-semibold text-xs`}>
+                Test Level {testLevel} → {testLevel + 1}
+              </Text>
+            </Pressable>
+          </Animated.View>
+        )}
+
         {/* Dashboard Header */}
         <DashboardHeader
           userTitle={stats?.title ?? 'Novice'}
@@ -144,6 +219,21 @@ const Dashboard: React.FC = () => {
           )}
         </Animated.View>
       </ScrollView>
+
+      {/* Level Up Celebration Modal */}
+      {levelUpData && (
+        <LevelUpCelebration
+          visible={showLevelUpModal}
+          onClose={() => {
+            setShowLevelUpModal(false);
+            // Optional: Navigate to achievements after closing
+            // setTimeout(() => navigation.navigate('Achievements' as never), 300);
+          }}
+          newLevel={levelUpData.newLevel}
+          previousLevel={levelUpData.previousLevel}
+          achievement={levelUpData.achievement}
+        />
+      )}
     </SafeAreaView>
   );
 };
