@@ -64,22 +64,33 @@ export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           HabitService.getTodayStats(user.id),
         ]);
 
-        console.log('StatsContext: Raw data from backend:', {
-          xpStats,
-          habitStats,
-          activeHabitsCount,
-          todayStats,
+        console.log('StatsContext: Raw XP data from backend:', {
+          total_xp: xpStats?.total_xp,
+          current_level: xpStats?.current_level,
+          current_level_xp: xpStats?.current_level_xp,
+          xp_for_next_level: xpStats?.xp_for_next_level,
         });
 
-        // Calculate level and XP using existing data
+        // Use data from the database/view directly
         const totalXP = xpStats?.total_xp || 0;
         const level = xpStats?.current_level || 1;
+
+        // Use current_level_xp from the view (which maps from level_progress)
         const currentLevelXP = xpStats?.current_level_xp || 0;
-        const nextLevelXP = getXPForNextLevel(level);
+
+        // Use xp_for_next_level from the view (calculated by DB function)
+        const nextLevelXP = xpStats?.xp_for_next_level || getXPForNextLevel(level);
 
         // Calculate progress percentage
         const adjustedCurrentXP = Math.max(0, currentLevelXP);
-        const progress = nextLevelXP > 0 ? (adjustedCurrentXP / nextLevelXP) * 100 : 0;
+        const progress = nextLevelXP > 0 ? Math.min((adjustedCurrentXP / nextLevelXP) * 100, 100) : 0;
+
+        console.log('StatsContext: Calculated values:', {
+          level,
+          currentLevelXP: adjustedCurrentXP,
+          xpForNextLevel: nextLevelXP,
+          progress: `${progress.toFixed(1)}%`,
+        });
 
         // Get achievement for current level
         const currentAchievement = getAchievementByLevel(level);
@@ -98,7 +109,7 @@ export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           totalXP,
         };
 
-        console.log('StatsContext: Calculated stats:', newStats);
+        console.log('StatsContext: Final stats object:', newStats);
         setStats(newStats);
         lastUpdatedRef.current = Date.now();
       } catch (err) {
@@ -120,7 +131,7 @@ export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setStats(null);
       lastUpdatedRef.current = 0;
     }
-  }, [user?.id]);
+  }, [user?.id, refreshStats]);
 
   return (
     <StatsContext.Provider

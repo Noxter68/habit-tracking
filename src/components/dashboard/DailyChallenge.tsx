@@ -1,11 +1,11 @@
-// src/components/dashboard/DailyChallenge.tsx
+// src/components/dashboard/DailyChallenge.tsx - FIXED VERSION
 import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CheckCircle2 } from 'lucide-react-native';
 import tw from '../../lib/tailwind';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { XPService } from '../../services/xpService';
+import { useStats } from '../../context/StatsContext';
 
 interface DailyChallengeProps {
   completedToday: number;
@@ -25,59 +25,56 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
   const isComplete = completedToday >= totalTasksToday && totalTasksToday > 0;
   const completionPercentage = totalTasksToday > 0 ? Math.min(100, Math.round((completedToday / totalTasksToday) * 100)) : 0;
 
-  // Check if already collected today
+  // Check collection status from database
   useEffect(() => {
     checkCollectionStatus();
-  }, [userId]);
+  }, [userId, completedToday, totalTasksToday]);
 
   const checkCollectionStatus = async () => {
-    const today = new Date().toISOString().split('T')[0];
-    const key = `daily_challenge_${userId}_${today}`;
-    const collected = await AsyncStorage.getItem(key);
-    setIsCollected(collected === 'true');
+    const status = await XPService.getDailyChallengeStatus(userId);
+    if (status) {
+      setIsCollected(status.xp_collected);
+    }
   };
 
   const handleCollect = async () => {
-    if (!isComplete || isCollected || isAnimating) return;
-
-    setIsAnimating(true);
-    const today = new Date().toISOString().split('T')[0];
-    const key = `daily_challenge_${userId}_${today}`;
+    if (isAnimating) return;
 
     try {
-      // Award XP
-      await XPService.awardXP(userId, 20, 'daily_challenge', 'Daily Challenge Completed!');
+      setIsAnimating(true);
 
-      // Mark as collected
-      await AsyncStorage.setItem(key, 'true');
-      setIsCollected(true);
+      // Use EXISTING collectDailyChallenge
+      const { success, updatedStats } = await XPService.collectDailyChallenge(userId);
 
-      // Trigger callback
-      onCollect(20);
+      if (success) {
+        setIsCollected(true);
+        setIsAnimating(false);
 
-      // Check for level up
-      if (currentLevelXP + 20 >= xpForNextLevel && onLevelUp) {
-        setTimeout(() => {
-          onLevelUp();
-        }, 500);
+        // Pass updated stats to parent
+        if (updatedStats) {
+          onCollect(20, updatedStats);
+        }
+
+        // Check level up (optional)
+        // Could be handled in parent based on updatedStats
       }
     } catch (error) {
-      console.error('Error collecting daily challenge:', error);
+      console.error('Failed to collect XP:', error);
     } finally {
       setIsAnimating(false);
     }
   };
 
   const handleDebugReset = async () => {
-    const today = new Date().toISOString().split('T')[0];
-    const key = `daily_challenge_${userId}_${today}`;
-    await AsyncStorage.removeItem(key);
-    setIsCollected(false);
+    // For debug: manually reset the collection status in database
+    // You might want to add a debug method in XPService for this
+    console.log('Debug reset - would need to reset database status');
+    await checkCollectionStatus(); // Refresh from database
   };
 
   return (
     <View>
-      <Pressable onPress={handleCollect} disabled={!isComplete || isCollected || isAnimating} style={({ pressed }) => [pressed && isComplete && !isCollected && tw`scale-[0.98]`]}>
+      <Pressable onPress={handleCollect} disabled={isAnimating || isCollected || isAnimating} style={({ pressed }) => [pressed && isComplete && !isCollected && tw`scale-[0.98]`]}>
         <LinearGradient
           colors={isCollected ? ['#E5E7EB', '#D1D5DB'] : isComplete ? ['#6B7280', '#4B5563'] : ['#F3F4F6', '#E5E7EB']}
           style={tw`rounded-2xl p-4 border ${isCollected ? 'border-quartz-300' : isComplete ? 'border-quartz-400' : 'border-quartz-200'}`}

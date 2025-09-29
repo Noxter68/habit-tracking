@@ -6,6 +6,7 @@ import { useAuth } from './AuthContext';
 import { HabitService } from '../services/habitService';
 import { HabitProgressionService } from '@/services/habitProgressionService';
 import { useStats } from './StatsContext';
+import { supabase } from '@/lib/supabase';
 
 interface ToggleTaskResult {
   success: boolean;
@@ -51,6 +52,28 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setHabits([]);
     }
   }, [user]);
+
+  useEffect(() => {
+    const subscription = supabase
+      .channel('xp_updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user?.id}`,
+        },
+        () => {
+          refreshStats(true);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [user?.id]);
 
   const loadHabits = async () => {
     if (!user) return;
