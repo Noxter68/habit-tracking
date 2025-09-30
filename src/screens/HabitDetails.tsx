@@ -28,6 +28,7 @@ import { JourneyCard } from '@/components/habits/JourneyCard';
 import { tierThemes } from '@/utils/tierTheme';
 import { ImageBackground } from 'expo-image';
 import { TierCelebration } from '@/components/habits/TierCelebration';
+import { DebugButton } from '@/components/debug/DebugButton';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'HabitDetails'>;
 type RouteProps = RouteProp<RootStackParamList, 'HabitDetails'>;
@@ -166,9 +167,8 @@ const HabitDetails: React.FC = () => {
 
                 <Text style={tw`text-lg font-black text-white`}>Habit Journey</Text>
 
-                {/* 🔧 DEBUG: Test tier changes */}
-                {__DEV__ && (
-                  <Pressable
+                <View style={tw`w-11`}>
+                  <DebugButton
                     onPress={() => {
                       // Cycle through test values: 10 → 49 → 50 → 100 → 149 → 150 → reset
                       const testValues = [10, 49, 50, 100, 149, 150];
@@ -177,14 +177,12 @@ const HabitDetails: React.FC = () => {
                       const nextIndex = (currentIndex + 1) % testValues.length;
                       setDebugStreak(testValues[nextIndex]);
                     }}
-                    style={({ pressed }) => [tw`w-11 h-11 rounded-2xl items-center justify-center bg-white/20`, pressed && tw`scale-95`]}
-                  >
-                    <Text style={tw`text-white text-xs font-bold`}>{debugStreak !== null ? debugStreak : '🔧'}</Text>
-                  </Pressable>
-                )}
-
-                {/* Show empty view if not in dev mode */}
-                {!__DEV__ && <View style={tw`w-11`} />}
+                    label={debugStreak !== null ? debugStreak.toString() : '🔧'}
+                    variant="secondary"
+                    // Custom style for this specific button to make it fit in the header
+                    customStyle={tw`w-11 h-11 rounded-2xl bg-white/20 px-0 py-0 mb-0`}
+                  />
+                </View>
               </View>
 
               {/* Hero Card inside the big gradient block */}

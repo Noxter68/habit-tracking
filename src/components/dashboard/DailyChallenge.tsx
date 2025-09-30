@@ -6,6 +6,7 @@ import { CheckCircle2 } from 'lucide-react-native';
 import tw from '../../lib/tailwind';
 import { XPService } from '../../services/xpService';
 import { supabase } from '../../lib/supabase';
+import { useDebugMode } from '@/hooks/useDebugMode';
 
 interface DailyChallengeProps {
   completedToday: number;
@@ -24,6 +25,8 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
 
   const isComplete = completedToday >= totalTasksToday && totalTasksToday > 0;
   const completionPercentage = totalTasksToday > 0 ? Math.min(100, Math.round((completedToday / totalTasksToday) * 100)) : 0;
+
+  const { showTestButtons } = useDebugMode();
 
   // Check collection status from DATABASE, not AsyncStorage
   useEffect(() => {
@@ -144,7 +147,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
       </Pressable>
 
       {/* Debug Reset Button */}
-      {debugMode && isCollected && (
+      {showTestButtons && isCollected && (
         <Pressable onPress={handleDebugReset} style={tw`mt-2 bg-red-500 rounded-lg p-2`}>
           <Text style={tw`text-white text-xs text-center`}>Reset (Debug)</Text>
         </Pressable>

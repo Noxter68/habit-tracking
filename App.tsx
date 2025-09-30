@@ -36,6 +36,9 @@ import TabBarIcon from './src/components/TabBarIcon';
 import { AppConfig } from './src/config/appConfig';
 import { PerformanceMonitor } from './src/utils/performanceMonitor';
 import { EpicLevelUpModal } from '@/components/dashboard/EpicLevelUpModal';
+import { useDebugMode } from '@/hooks/useDebugMode';
+import { DebugButton } from '@/components/debug/DebugButton';
+import DebugScreen from '@/screens/debugScreen';
 
 // Type Definitions
 export type RootStackParamList = {
@@ -105,7 +108,7 @@ function MainTabs() {
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: '600',
-          marginTop: 4,
+          marginTop: 2,
           letterSpacing: 0.5,
           textTransform: 'uppercase',
         },
@@ -158,6 +161,8 @@ function AppNavigator() {
   const { user, loading } = useAuth();
   const [isFirstLaunch, setIsFirstLaunch] = useState<boolean | null>(null);
   const [isCheckingFirstLaunch, setIsCheckingFirstLaunch] = useState(true);
+
+  const { showDebugScreen } = useDebugMode();
 
   useEffect(() => {
     checkFirstLaunch();
@@ -229,6 +234,17 @@ function AppNavigator() {
             presentation: 'modal',
           }}
         />
+        {showDebugScreen && (
+          <Stack.Screen
+            name="Debug"
+            component={DebugScreen}
+            options={{
+              title: 'Debug Tools',
+              animation: 'slide_from_right',
+              headerShown: true,
+            }}
+          />
+        )}
       </Stack.Navigator>
 
       {/* Global Components */}

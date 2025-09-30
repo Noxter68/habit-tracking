@@ -1,31 +1,30 @@
+const IS_DEBUG_MODE = false;
+
 export const AppConfig = {
   // Debug settings
   debug: {
-    enabled: process.env.DEBUG_MODE === 'true' || __DEV__,
-    showDebugScreen: process.env.DEBUG_MODE === 'true',
-    logNetworkRequests: process.env.DEBUG_MODE === 'true',
-    showPerformanceMonitor: __DEV__,
+    enabled: IS_DEBUG_MODE,
+    showDebugScreen: IS_DEBUG_MODE,
+    showTestButtons: IS_DEBUG_MODE,
+    logNetworkRequests: IS_DEBUG_MODE,
+    showPerformanceMonitor: IS_DEBUG_MODE,
   },
 
   // API settings
   api: {
-    baseUrl: process.env.API_URL || 'http://localhost:3000',
+    baseUrl: 'http://localhost:3000',
     timeout: 30000,
     retryAttempts: 3,
   },
 
-  // Feature flags
-  features: {
-    dailyChallenge: true,
-    debugTools: process.env.DEBUG_MODE === 'true',
-    analytics: process.env.ENVIRONMENT === 'production',
-  },
-
   // Environment
   env: {
-    name: process.env.ENVIRONMENT || 'development',
-    isDev: process.env.ENVIRONMENT === 'development' || __DEV__,
-    isStaging: process.env.ENVIRONMENT === 'staging',
-    isProd: process.env.ENVIRONMENT === 'production',
+    name: 'development',
+    isDev: true,
+    isStaging: false,
+    isProd: false,
   },
 } as const;
+
+// Log the setting so you can verify it's working
+console.log('🔧 Debug Mode:', IS_DEBUG_MODE ? 'ENABLED' : 'DISABLED');

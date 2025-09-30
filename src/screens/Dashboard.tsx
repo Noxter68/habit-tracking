@@ -19,6 +19,7 @@ import { useStats } from '../context/StatsContext';
 import { getAchievementByLevel } from '@/utils/achievements';
 
 import { useLevelUp } from '@/context/LevelUpContext';
+import { DebugButton } from '@/components/debug/DebugButton';
 
 const Dashboard: React.FC = () => {
   const navigation = useNavigation();
@@ -117,7 +118,6 @@ const Dashboard: React.FC = () => {
     <SafeAreaView style={tw`flex-1 bg-quartz-50`}>
       {/* Subtle Gradient Overlay */}
       <LinearGradient colors={['rgba(243, 244, 246, 0.6)', 'rgba(229, 231, 235, 0.2)', 'transparent']} style={tw`absolute top-0 left-0 right-0 h-80`} pointerEvents="none" />
-
       <ScrollView
         style={tw`flex-1`}
         contentContainerStyle={tw`px-4 pt-5 pb-24`}
@@ -125,17 +125,7 @@ const Dashboard: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* DEV MODE: Test Button */}
-        {__DEV__ && (
-          <Animated.View entering={FadeIn} style={tw`mb-3`}>
-            <Pressable onPress={handleTestLevelUp} style={({ pressed }) => [tw`bg-purple-500 rounded-lg px-4 py-2.5 flex-row items-center justify-center`, pressed && tw`opacity-75`]}>
-              <Zap size={14} color="white" style={tw`mr-1.5`} />
-              <Text style={tw`text-white font-semibold text-xs`}>
-                Test Level {testLevel} → {testLevel + 1}
-              </Text>
-            </Pressable>
-          </Animated.View>
-        )}
-
+        <DebugButton onPress={handleTestLevelUp} label={`Test Level ${testLevel} → ${testLevel + 1}`} icon={Zap} variant="secondary" />
         {/* Dashboard Header */}
         <DashboardHeader
           userTitle={stats?.title ?? 'Novice'}
@@ -209,14 +199,6 @@ const Dashboard: React.FC = () => {
           )}
         </Animated.View>
       </ScrollView>
-
-      {/* Level Up Celebration Modal */}
-      {/* DEV: Test Level Up Button (remove in production) */}
-      {__DEV__ && (
-        <Pressable onPress={handleTestLevelUp} style={tw`bg-amber-500 rounded-xl p-3 mt-4`}>
-          <Text style={tw`text-white text-center font-bold`}>Test Level Up Modal</Text>
-        </Pressable>
-      )}
     </SafeAreaView>
   );
 };
