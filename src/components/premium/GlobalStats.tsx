@@ -19,7 +19,7 @@ interface GlobalStatsProps {
 const GlobalStats: React.FC<GlobalStatsProps> = ({ globalStats, habits, onRefresh }) => {
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
-      <View style={tw`bg-white rounded-3xl px-5 py-6 shadow-lg`}>
+      <View style={tw`bg-white rounded-3xl px-5 py-6`}>
         {/* Header */}
         <View style={tw`flex-row justify-between items-center mb-8`}>
           <Text style={tw`text-xs uppercase tracking-wider text-gray-400`}>Overview</Text>
