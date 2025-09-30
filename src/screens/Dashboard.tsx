@@ -17,9 +17,8 @@ import { useAuth } from '../context/AuthContext';
 import { useHabits } from '../context/HabitContext';
 import { useStats } from '../context/StatsContext';
 import { getAchievementByLevel } from '@/utils/achievements';
-import { LevelUpCelebration } from '@/components/dashboard/LevelUpProgression';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+import { useLevelUp } from '@/context/LevelUpContext';
 
 const Dashboard: React.FC = () => {
   const navigation = useNavigation();
@@ -36,6 +35,7 @@ const Dashboard: React.FC = () => {
   } | null>(null);
 
   const [testLevel, setTestLevel] = useState(1);
+  const { triggerLevelUp } = useLevelUp(); // For testing purposes
 
   const renderCount = useRef(0);
   renderCount.current++;
@@ -81,18 +81,8 @@ const Dashboard: React.FC = () => {
 
   // DEV MODE: Test level up modal
   const handleTestLevelUp = () => {
-    const nextTestLevel = testLevel + 1;
-    const testAchievement = getAchievementByLevel(nextTestLevel);
-
-    console.log('DEV: Testing level up to level', nextTestLevel);
-
-    setLevelUpData({
-      newLevel: nextTestLevel,
-      previousLevel: testLevel,
-      achievement: testAchievement,
-    });
-    setShowLevelUpModal(true);
-    setTestLevel(nextTestLevel);
+    const testLevel = (stats?.level || 1) + 1;
+    triggerLevelUp(testLevel, stats?.level || 1);
   };
 
   // Pull-to-refresh handler
@@ -221,18 +211,11 @@ const Dashboard: React.FC = () => {
       </ScrollView>
 
       {/* Level Up Celebration Modal */}
-      {levelUpData && (
-        <LevelUpCelebration
-          visible={showLevelUpModal}
-          onClose={() => {
-            setShowLevelUpModal(false);
-            // Optional: Navigate to achievements after closing
-            // setTimeout(() => navigation.navigate('Achievements' as never), 300);
-          }}
-          newLevel={levelUpData.newLevel}
-          previousLevel={levelUpData.previousLevel}
-          achievement={levelUpData.achievement}
-        />
+      {/* DEV: Test Level Up Button (remove in production) */}
+      {__DEV__ && (
+        <Pressable onPress={handleTestLevelUp} style={tw`bg-amber-500 rounded-xl p-3 mt-4`}>
+          <Text style={tw`text-white text-center font-bold`}>Test Level Up Modal</Text>
+        </Pressable>
       )}
     </SafeAreaView>
   );

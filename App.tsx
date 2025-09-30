@@ -1,13 +1,14 @@
-// App.tsx - Updated with Achievement System
+// App.tsx - Improved Version
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { View, ActivityIndicator, Text, Platform, LogBox } from 'react-native';
+import { View, ActivityIndicator, Platform, LogBox, StatusBar } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Animated, { useAnimatedStyle, withSpring, useSharedValue, withTiming, configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
+import * as Notifications from 'expo-notifications';
+import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
 import tw from './src/lib/tailwind';
 
 // Screens
@@ -19,21 +20,24 @@ import HabitDetails from './src/screens/HabitDetails';
 import CalendarScreen from './src/screens/CalendarScreen';
 import StatsScreen from './src/screens/StatsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
+import AchievementsScreen from './src/screens/AchievementScreen';
 
-// Context
+// Contexts
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { HabitProvider } from './src/context/HabitContext';
 import { AchievementProvider } from './src/context/AchievementContext';
+import { StatsProvider } from './src/context/StatsContext';
+import { LevelUpProvider } from './src/context/LevelUpContext';
 
-// Icons Component
+// Components
 import TabBarIcon from './src/components/TabBarIcon';
 
-import * as Notifications from 'expo-notifications';
-import AchievementsScreen from '@/screens/AchievementScreen';
-import { AppConfig } from '@/config/appConfig';
-import { PerformanceMonitor } from '@/utils/performanceMonitor';
-import { StatsProvider } from '@/context/StatsContext';
+// Utils & Config
+import { AppConfig } from './src/config/appConfig';
+import { PerformanceMonitor } from './src/utils/performanceMonitor';
+import { EpicLevelUpModal } from '@/components/dashboard/EpicLevelUpModal';
 
+// Type Definitions
 export type RootStackParamList = {
   Auth: undefined;
   Welcome: undefined;
@@ -50,67 +54,48 @@ export type TabParamList = {
   Settings: undefined;
 };
 
-LogBox.ignoreLogs([
-  '[Reanimated]', // Replace with actual warning text
-  "It looks like you might be using shared value's", // Example: React Native require cycle warning
-]);
+// ============================================
+// Configuration
+// ============================================
+
+// Configure Reanimated Logger
 configureReanimatedLogger({
-  level: ReanimatedLogLevel.error, // only show errors
-  strict: false, // disable strict warnings
+  level: ReanimatedLogLevel.error,
+  strict: false,
 });
+
+// Configure LogBox
+LogBox.ignoreLogs(['[Reanimated]', "It looks like you might be using shared value's"]);
+
+// Configure Notifications
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
+// ============================================
+// Navigation Components
+// ============================================
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
 
-// Clean Tab Navigator with modern design
 function MainTabs() {
   const tabBarHeight = Platform.OS === 'ios' ? 88 : 68;
-  useEffect(() => {
-    // Only log in debug mode
-    if (AppConfig.debug.enabled) {
-      console.log('🚀 App started in', AppConfig.env.name, 'mode');
-      console.log('📝 Debug features:', AppConfig.debug);
-    }
-  }, []);
-
-  useEffect(() => {
-    // Enable performance monitoring in development
-    if (__DEV__) {
-      // Log performance report every 30 seconds
-      const interval = setInterval(() => {
-        console.log('📊 Performance Report:');
-        PerformanceMonitor.getReport();
-      }, 30000);
-
-      // Warn if app is sluggish
-      const checkPerformance = () => {
-        const report = PerformanceMonitor.getReport();
-        const slowOps = Object.entries(report.avgTimes).filter(([_, time]) => time > 500);
-
-        if (slowOps.length > 0) {
-          console.warn('🐌 Slow operations detected:', slowOps);
-        }
-      };
-
-      const perfInterval = setInterval(checkPerformance, 10000);
-
-      return () => {
-        clearInterval(interval);
-        clearInterval(perfInterval);
-      };
-    }
-  }, []);
 
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#6366f1', // Indigo for active
-        tabBarInactiveTintColor: '#9ca3af', // Gray for inactive
+        tabBarActiveTintColor: tw.color('indigo-600'),
+        tabBarInactiveTintColor: tw.color('gray-400'),
         tabBarStyle: {
-          backgroundColor: '#ffffff',
+          backgroundColor: tw.color('white'),
           borderTopWidth: 1,
-          borderTopColor: '#f3f4f6',
+          borderTopColor: tw.color('gray-100'),
           elevation: 0,
           shadowOpacity: 0,
           height: tabBarHeight,
@@ -165,7 +150,10 @@ function MainTabs() {
   );
 }
 
-// Main Navigator Component
+// ============================================
+// Main Navigator
+// ============================================
+
 function AppNavigator() {
   const { user, loading } = useAuth();
   const [isFirstLaunch, setIsFirstLaunch] = useState<boolean | null>(null);
@@ -178,11 +166,7 @@ function AppNavigator() {
   const checkFirstLaunch = async () => {
     try {
       const hasLaunched = await AsyncStorage.getItem('hasLaunched');
-      if (hasLaunched === null && user) {
-        setIsFirstLaunch(true);
-      } else {
-        setIsFirstLaunch(false);
-      }
+      setIsFirstLaunch(hasLaunched === null && user !== null);
     } catch (error) {
       console.error('Error checking first launch:', error);
       setIsFirstLaunch(false);
@@ -200,16 +184,16 @@ function AppNavigator() {
     }
   };
 
-  // Show loading screen while checking auth and first launch
+  // Loading state
   if (loading || isCheckingFirstLaunch) {
     return (
       <View style={tw`flex-1 items-center justify-center bg-white`}>
-        <ActivityIndicator size="large" color="#6366f1" />
+        <ActivityIndicator size="large" color={tw.color('indigo-600')} />
       </View>
     );
   }
 
-  // Not authenticated - show auth screen
+  // Auth Navigation
   if (!user) {
     return (
       <Stack.Navigator
@@ -223,60 +207,41 @@ function AppNavigator() {
     );
   }
 
-  // Authenticated - show main app
+  // Main App Navigation
   return (
-    <Stack.Navigator
-      initialRouteName={isFirstLaunch ? 'Welcome' : 'MainTabs'}
-      screenOptions={{
-        headerShown: false,
-        animation: 'fade',
-      }}
-    >
-      <Stack.Screen name="Welcome">{(props) => <WelcomeScreen {...props} onComplete={handleWelcomeComplete} />}</Stack.Screen>
-      <Stack.Screen
-        name="HabitWizard"
-        component={HabitWizard}
-        options={{
-          animation: 'slide_from_right',
-        }}
-      />
-      <Stack.Screen
-        name="MainTabs"
-        component={MainTabs}
-        options={{
+    <>
+      <Stack.Navigator
+        initialRouteName={isFirstLaunch ? 'Welcome' : 'MainTabs'}
+        screenOptions={{
+          headerShown: false,
           animation: 'fade',
         }}
-      />
-      <Stack.Screen
-        name="HabitDetails"
-        component={HabitDetails}
-        options={{
-          animation: 'slide_from_right',
-        }}
-      />
-      <Stack.Screen
-        name="Achievements"
-        component={AchievementsScreen}
-        options={{
-          animation: 'slide_from_bottom',
-          presentation: 'modal',
-        }}
-      />
-    </Stack.Navigator>
+      >
+        <Stack.Screen name="Welcome">{(props) => <WelcomeScreen {...props} onComplete={handleWelcomeComplete} />}</Stack.Screen>
+        <Stack.Screen name="HabitWizard" component={HabitWizard} options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="MainTabs" component={MainTabs} options={{ animation: 'fade' }} />
+        <Stack.Screen name="HabitDetails" component={HabitDetails} options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen
+          name="Achievements"
+          component={AchievementsScreen}
+          options={{
+            animation: 'slide_from_bottom',
+            presentation: 'modal',
+          }}
+        />
+      </Stack.Navigator>
+
+      {/* Global Components */}
+      <EpicLevelUpModal />
+    </>
   );
 }
 
-// Notification setup
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+// ============================================
+// Hooks
+// ============================================
 
-export default function App(): React.JSX.Element {
+function useNotificationSetup() {
   useEffect(() => {
     const setupNotifications = async () => {
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -297,7 +262,7 @@ export default function App(): React.JSX.Element {
           name: 'default',
           importance: Notifications.AndroidImportance.MAX,
           vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#6366f1',
+          lightColor: tw.color('indigo-600'),
         });
       }
     };
@@ -321,6 +286,47 @@ export default function App(): React.JSX.Element {
       receivedSubscription.remove();
     };
   }, []);
+}
+
+function usePerformanceMonitoring() {
+  useEffect(() => {
+    if (!__DEV__) return;
+
+    // Log initial app start
+    if (AppConfig.debug.enabled) {
+      console.log('🚀 App started in', AppConfig.env.name, 'mode');
+      console.log('📝 Debug features:', AppConfig.debug);
+    }
+
+    // Performance monitoring
+    const reportInterval = setInterval(() => {
+      console.log('📊 Performance Report:');
+      PerformanceMonitor.getReport();
+    }, 30000);
+
+    const checkInterval = setInterval(() => {
+      const report = PerformanceMonitor.getReport();
+      const slowOps = Object.entries(report.avgTimes).filter(([_, time]) => time > 500);
+
+      if (slowOps.length > 0) {
+        console.warn('🐌 Slow operations detected:', slowOps);
+      }
+    }, 10000);
+
+    return () => {
+      clearInterval(reportInterval);
+      clearInterval(checkInterval);
+    };
+  }, []);
+}
+
+// ============================================
+// Main App Component
+// ============================================
+
+export default function App() {
+  useNotificationSetup();
+  usePerformanceMonitoring();
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -329,9 +335,19 @@ export default function App(): React.JSX.Element {
           <StatsProvider>
             <HabitProvider>
               <AchievementProvider>
-                <NavigationContainer>
-                  <AppNavigator />
-                </NavigationContainer>
+                <LevelUpProvider>
+                  <NavigationContainer>
+                    {/* Status Bar Configuration */}
+                    <StatusBar
+                      barStyle="dark-content" // or "light-content"
+                      backgroundColor={tw.color('white')}
+                      translucent={false}
+                    />
+
+                    {/* Main App */}
+                    <AppNavigator />
+                  </NavigationContainer>
+                </LevelUpProvider>
               </AchievementProvider>
             </HabitProvider>
           </StatsProvider>
