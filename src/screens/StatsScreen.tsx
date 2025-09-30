@@ -478,7 +478,7 @@ export default function StatisticsScreen() {
 
             <View style={tw`flex-row -mx-2 mb-6`}>
               <View style={tw`flex-1 px-2`}>
-                <View style={tw`bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-4`}>
+                <View style={tw`from-purple-50 to-purple-100 rounded-2xl p-4`}>
                   <View style={tw`flex-row items-center mb-2`}>
                     <Calendar size={16} color="#8b5cf6" />
                     <Text style={tw`text-purple-600 text-xs font-semibold ml-2`}>30 Days</Text>
@@ -489,7 +489,7 @@ export default function StatisticsScreen() {
               </View>
 
               <View style={tw`flex-1 px-2`}>
-                <View style={tw`bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl p-4`}>
+                <View style={tw` from-indigo-50 to-indigo-100 rounded-2xl p-4`}>
                   <View style={tw`flex-row items-center mb-2`}>
                     <Target size={16} color="#6366f1" />
                     <Text style={tw`text-indigo-600 text-xs font-semibold ml-2`}>90 Days</Text>

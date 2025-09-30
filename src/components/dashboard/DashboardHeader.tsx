@@ -105,7 +105,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         resizeMode="cover"
       >
         {/* Gradient overlay for better text readability */}
-        <View style={tw`absolute inset-0 bg-gradient-to-b from-quartz-50/80 to-transparent rounded-3xl`} />
+        <View style={tw`absolute inset-0  from-quartz-50/60 to-transparent rounded-3xl`} />
       </ImageBackground>
 
       {/* Content Container with padding for texture visibility */}

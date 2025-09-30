@@ -39,6 +39,7 @@ import { EpicLevelUpModal } from '@/components/dashboard/EpicLevelUpModal';
 import { useDebugMode } from '@/hooks/useDebugMode';
 import { DebugButton } from '@/components/debug/DebugButton';
 import DebugScreen from '@/screens/debugScreen';
+import { DEBUG_MODE } from '@env';
 
 // Type Definitions
 export type RootStackParamList = {
@@ -306,7 +307,7 @@ function useNotificationSetup() {
 
 function usePerformanceMonitoring() {
   useEffect(() => {
-    if (!__DEV__) return;
+    if (!AppConfig.debug.enabled) return;
 
     // Log initial app start
     if (AppConfig.debug.enabled) {
