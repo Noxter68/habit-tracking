@@ -451,9 +451,9 @@ export default function StatisticsScreen() {
                 <Brain size={24} color="#8b5cf6" />
                 <Text style={tw`text-slate-900 font-bold text-lg ml-3`}>AI Prediction Engine</Text>
               </View>
-              <View style={[tw`px-3 py-1 rounded-full`, selectedPrediction.confidenceScore >= 70 ? tw`bg-green-100` : selectedPrediction.confidenceScore >= 40 ? tw`bg-yellow-100` : tw`bg-red-100`]}>
+              <View style={[tw`px-3 py-1 rounded-full`, selectedPrediction.confidenceScore >= 70 ? tw`bg-green-100` : selectedPrediction.confidenceScore >= 40 ? tw`bg--quartz-100` : tw`bg-red-100`]}>
                 <Text
-                  style={[tw`text-xs font-bold`, selectedPrediction.confidenceScore >= 70 ? tw`text-green-700` : selectedPrediction.confidenceScore >= 40 ? tw`text-yellow-700` : tw`text-red-700`]}
+                  style={[tw`text-xs font-bold`, selectedPrediction.confidenceScore >= 70 ? tw`text-green-700` : selectedPrediction.confidenceScore >= 40 ? tw`text--quartz-700` : tw`text-red-700`]}
                 >
                   {selectedPrediction.confidenceScore}% Success Rate
                 </Text>

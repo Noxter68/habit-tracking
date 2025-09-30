@@ -24,7 +24,11 @@ export const FilterTabs: React.FC<FilterTabsProps> = ({ filter, setFilter, unloc
             <Pressable
               key={filterType}
               onPress={() => setFilter(filterType)}
-              style={({ pressed }) => [tw`px-4 py-2 rounded-full mr-2 border`, isActive ? tw`bg-sage-600 border-sage-600` : tw`bg-sage-50 border-sage-200`, pressed && tw`bg-sage-200 border-sage-300`]}
+              style={({ pressed }) => [
+                tw`px-4 py-2 rounded-full mr-2 border`,
+                isActive ? tw`bg-quartz-600 border-quartz-600` : tw`bg-quartz-50 border-quartz-200`,
+                pressed && tw`bg-quartz-200 border-quartz-300`,
+              ]}
             >
               <Text style={[tw`text-xs font-semibold capitalize`, isActive ? tw`text-gray-700` : tw`text-gray-400`]}>
                 {filterType}

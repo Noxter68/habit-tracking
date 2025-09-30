@@ -152,7 +152,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ habit, selectedDate, onDate
                 style={({ pressed }) => [
                   tw`w-10 h-10 rounded-xl items-center justify-center relative`,
                   status.completed && tw`bg-green-500`,
-                  status.partial && tw`bg-yellow-500`,
+                  status.partial && tw`bg--quartz-500`,
                   isMissed && tw`bg-red-50`,
                   beforeCreation && tw`opacity-30`,
                   selected && !status.completed && !status.partial && !isMissed && !beforeCreation && tw`bg-indigo-100`,
@@ -190,7 +190,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ habit, selectedDate, onDate
           <Text style={tw`text-xs text-gray-600 ml-1`}>Complete</Text>
         </View>
         <View style={tw`flex-row items-center mr-4`}>
-          <View style={tw`w-3 h-3 bg-yellow-500 rounded`} />
+          <View style={tw`w-3 h-3 bg--quartz-500 rounded`} />
           <Text style={tw`text-xs text-gray-600 ml-1`}>Partial</Text>
         </View>
         <View style={tw`flex-row items-center mr-4`}>

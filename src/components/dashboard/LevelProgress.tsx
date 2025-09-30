@@ -69,7 +69,7 @@ const LevelProgress: React.FC<LevelProgressProps> = ({ currentLevel, currentLeve
     return (
       <View style={tw`mb-4 h-12`}>
         {/* Placeholder with same height to prevent layout shift */}
-        <View style={tw`h-5 bg-sage-50/50 rounded-full`} />
+        <View style={tw`h-5 bg-quartz-50/50 rounded-full`} />
       </View>
     );
   }
@@ -78,15 +78,15 @@ const LevelProgress: React.FC<LevelProgressProps> = ({ currentLevel, currentLeve
     <Animated.View style={[tw`mb-4`, animatedContainerStyle]}>
       {/* Header */}
       <View style={tw`flex-row justify-between mb-1.5`}>
-        <Text style={tw`text-xs font-semibold text-sage-600`}>Progress to Level {currentLevel + 1}</Text>
-        <Text style={tw`text-xs font-bold text-sage-700`}>
+        <Text style={tw`text-xs font-semibold text-quartz-600`}>Progress to Level {currentLevel + 1}</Text>
+        <Text style={tw`text-xs font-bold text-quartz-700`}>
           {currentLevelXP}/{xpForNextLevel} XP
         </Text>
       </View>
 
       {/* Progress bar container */}
-      <View style={tw`h-5 bg-sage-50 rounded-full overflow-hidden border border-sage-200`}>
-        <AnimatedView style={[tw`h-full rounded-full overflow-hidden bg-sage-400`, animatedBarStyle]}>
+      <View style={tw`h-5 bg-quartz-50 rounded-full overflow-hidden border border-quartz-200`}>
+        <AnimatedView style={[tw`h-full rounded-full overflow-hidden bg-quartz-400`, animatedBarStyle]}>
           {/* Texture overlay */}
           <View style={tw`h-full flex-row`}>
             <Image
@@ -102,7 +102,7 @@ const LevelProgress: React.FC<LevelProgressProps> = ({ currentLevel, currentLeve
       </View>
 
       {/* Remaining XP */}
-      {xpToNextLevel > 0 && <Text style={tw`text-xs text-sage-500 mt-1.5`}>{xpToNextLevel} XP to next level</Text>}
+      {xpToNextLevel > 0 && <Text style={tw`text-xs text-quartz-500 mt-1.5`}>{xpToNextLevel} XP to next level</Text>}
     </Animated.View>
   );
 };

@@ -100,10 +100,10 @@ export const GameProgressBar: React.FC<GameProgressBarProps> = ({ progress, them
             width: '100%',
             height,
             borderRadius: height / 2,
-            padding: 2, // space for yellow border inside
+            padding: 2, // space for -quartz border inside
           }}
         >
-          {/* Inner yellow border */}
+          {/* Inner -quartz border */}
           <View
             style={{
               flex: 1,
