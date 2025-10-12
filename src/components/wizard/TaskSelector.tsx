@@ -92,7 +92,7 @@ const TaskSelector: React.FC<TaskSelectorProps> = ({ category, habitType, select
                   >
                     <View style={tw`flex-row items-start`}>
                       {/* Icon Container */}
-                      <View style={[tw`w-14 h-14 rounded-2xl items-center justify-center mr-4`, isSelected ? tw`bg-white/25` : tw`bg-quartz-100`]}>
+                      <View style={[tw`w-14 h-14 rounded-2xl items-center justify-center mr-4`, isSelected ? tw`bg-sand/25` : tw`bg-quartz-100`]}>
                         <Text style={tw`text-2xl`}>{task.icon}</Text>
                       </View>
 
@@ -106,12 +106,12 @@ const TaskSelector: React.FC<TaskSelectorProps> = ({ category, habitType, select
                             {/* Task Meta Info */}
                             <View style={tw`flex-row items-center mt-2 gap-3`}>
                               {task.duration && (
-                                <View style={[tw`px-2 py-1 rounded-lg`, isSelected ? tw`bg-white/15` : tw`bg-quartz-100`]}>
+                                <View style={[tw`px-2 py-1 rounded-lg`, isSelected ? tw`bg-sand/15` : tw`bg-quartz-100`]}>
                                   <Text style={[tw`text-xs font-light`, isSelected ? tw`text-white` : tw`text-quartz-600`]}>⏱ {task.duration}</Text>
                                 </View>
                               )}
                               {task.difficulty && (
-                                <View style={[tw`px-2 py-1 rounded-lg`, isSelected ? tw`bg-white/15` : tw`bg-quartz-100`]}>
+                                <View style={[tw`px-2 py-1 rounded-lg`, isSelected ? tw`bg-sand/15` : tw`bg-quartz-100`]}>
                                   <Text style={[tw`text-xs font-light`, isSelected ? tw`text-white` : tw`text-quartz-600`]}>{task.difficulty}</Text>
                                 </View>
                               )}
@@ -150,7 +150,7 @@ const TaskSelector: React.FC<TaskSelectorProps> = ({ category, habitType, select
             <LinearGradient colors={['#6B7280', '#4B5563']} style={tw`rounded-3xl overflow-hidden`}>
               <ImageBackground source={require('../../../assets/interface/quartz-texture.png')} style={tw`p-5`} imageStyle={{ opacity: 0.2, borderRadius: 24 }} resizeMode="cover">
                 <View style={tw`flex-row items-center mb-3`}>
-                  <View style={tw`w-8 h-8 bg-white/20 rounded-lg items-center justify-center mr-3`}>
+                  <View style={tw`w-8 h-8 bg-sand/20 rounded-lg items-center justify-center mr-3`}>
                     <Sparkles size={16} color="#ffffff" strokeWidth={2} />
                   </View>
                   <Text style={tw`text-base font-medium text-white`}>Your Daily Commitment</Text>
@@ -160,7 +160,7 @@ const TaskSelector: React.FC<TaskSelectorProps> = ({ category, habitType, select
                   {selectedTasks.map((taskId, index) => {
                     const task = availableTasks.find((t) => t.id === taskId);
                     return task ? (
-                      <Animated.View key={taskId} entering={FadeInDown.delay(index * 100).duration(400)} style={tw`flex-row items-center bg-white/10 rounded-xl p-3`}>
+                      <Animated.View key={taskId} entering={FadeInDown.delay(index * 100).duration(400)} style={tw`flex-row items-center bg-sand/10 rounded-xl p-3`}>
                         <Text style={tw`text-lg mr-3`}>{task.icon}</Text>
                         <View style={tw`flex-1`}>
                           <Text style={tw`text-sm font-medium text-white`}>{task.name}</Text>

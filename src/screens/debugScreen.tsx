@@ -58,11 +58,11 @@ const DebugScreen: React.FC<DebugScreenProps> = ({ userId }) => {
   ];
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-gray-50`}>
+    <SafeAreaView style={tw`flex-1 bg-stone-50`}>
       <ScrollView contentContainerStyle={tw`p-4`}>
         <View style={tw`mb-6`}>
           <Text style={tw`text-2xl font-bold text-gray-800 mb-2`}>Debug Tools</Text>
-          <Text style={tw`text-sm text-gray-500`}>Development utilities for testing</Text>
+          <Text style={tw`text-sm text-sand-500`}>Development utilities for testing</Text>
         </View>
 
         <View style={tw`bg-stone-50 border border-stone-200 rounded-lg p-3 mb-6`}>
@@ -76,7 +76,7 @@ const DebugScreen: React.FC<DebugScreenProps> = ({ userId }) => {
               key={index}
               onPress={() => handleAction(action.action, `${action.title} completed`)}
               disabled={loading}
-              style={({ pressed }) => [tw`bg-white rounded-xl p-4 border border-gray-200`, pressed && tw`bg-gray-50 scale-[0.98]`]}
+              style={({ pressed }) => [tw`bg-sand rounded-xl p-4 border border-sand-200`, pressed && tw`bg-stone-50 scale-[0.98]`]}
             >
               <View style={tw`flex-row items-center`}>
                 <View style={tw`w-10 h-10 rounded-full bg-${action.color}-100 items-center justify-center mr-3`}>
@@ -84,16 +84,16 @@ const DebugScreen: React.FC<DebugScreenProps> = ({ userId }) => {
                 </View>
                 <View style={tw`flex-1`}>
                   <Text style={tw`font-semibold text-gray-800`}>{action.title}</Text>
-                  <Text style={tw`text-xs text-gray-500 mt-0.5`}>{action.description}</Text>
+                  <Text style={tw`text-xs text-sand-500 mt-0.5`}>{action.description}</Text>
                 </View>
               </View>
             </Pressable>
           ))}
         </View>
 
-        <View style={tw`mt-8 p-4 bg-gray-100 rounded-lg`}>
+        <View style={tw`mt-8 p-4 bg-sand-100 rounded-lg`}>
           <Text style={tw`text-xs font-medium text-gray-600 mb-2`}>Current User ID:</Text>
-          <Text style={tw`text-xs font-mono text-gray-800 bg-white p-2 rounded`}>{userId}</Text>
+          <Text style={tw`text-xs font-mono text-gray-800 bg-sand p-2 rounded`}>{userId}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

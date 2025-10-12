@@ -21,7 +21,7 @@ const ConsistencyChart: React.FC<ConsistencyChartProps> = ({ consistency, period
   const periodLabel = period === 'week' ? '7-Day' : period === 'month' ? '30-Day' : 'Overall';
 
   return (
-    <View style={tw`bg-white rounded-2xl p-5 shadow-sm border border-slate-100`}>
+    <View style={tw`bg-sand rounded-2xl p-5 shadow-sm border border-slate-100`}>
       <View style={tw`flex-row items-center justify-between mb-4`}>
         <View>
           <Text style={tw`text-base font-semibold text-slate-900`}>{periodLabel} Consistency</Text>

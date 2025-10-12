@@ -6,8 +6,8 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import tw from 'twrnc';
 
-// Custom Icon Component
-const Icon = ({ name, size = 22, color = '#6366F1' }) => {
+// Custom Icon Component with Sand/Stone colors
+const Icon = ({ name, size = 22, color = '#726454' }) => {
   const icons = {
     'moon-outline': (
       <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -109,17 +109,17 @@ const SettingsScreen = () => {
   };
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-gray-50`}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FAF9F7' }}>
       <StatusBar barStyle="dark-content" />
 
-      {/* Quartz Gradient Background */}
-      <LinearGradient colors={['#F8F9FD', '#E8EBF7', '#F3F4FA']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`absolute inset-0`} />
+      {/* Calm Sand Gradient Background */}
+      <LinearGradient colors={['#FAF9F7', '#F5F2ED', '#FAF9F7']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Header */}
-        <Animated.View entering={FadeInDown.duration(600).springify()} style={tw`px-6 pt-4 pb-2`}>
-          <Text style={tw`text-3xl font-bold text-gray-900`}>Settings</Text>
-          <Text style={tw`text-sm text-gray-500 mt-1`}>Manage your preferences</Text>
+        <Animated.View entering={FadeInDown.duration(600).springify()} style={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 8 }}>
+          <Text style={{ fontSize: 30, fontWeight: '700', color: '#44403c' }}>Settings</Text>
+          <Text style={{ fontSize: 14, color: '#A89885', marginTop: 4 }}>Manage your preferences</Text>
         </Animated.View>
 
         {/* Profile Section */}
@@ -128,7 +128,7 @@ const SettingsScreen = () => {
         </Animated.View>
 
         {/* Settings Sections */}
-        <View style={tw`px-6 mt-6`}>
+        <View style={{ paddingHorizontal: 24, marginTop: 24 }}>
           <SettingsSection title="Preferences" delay={200}>
             <SettingsItem
               icon="moon-outline"
@@ -138,9 +138,9 @@ const SettingsScreen = () => {
                 <Switch
                   value={darkMode}
                   onValueChange={(value) => handleToggle(setDarkMode, value)}
-                  trackColor={{ false: '#E2E8F0', true: '#A5B4FC' }}
-                  thumbColor={darkMode ? '#6366F1' : '#F3F4F6'}
-                  ios_backgroundColor="#E2E8F0"
+                  trackColor={{ false: '#E8E3DB', true: '#D6CEC1' }}
+                  thumbColor={darkMode ? '#726454' : '#FFFFFF'}
+                  ios_backgroundColor="#E8E3DB"
                 />
               }
             />
@@ -152,9 +152,9 @@ const SettingsScreen = () => {
                 <Switch
                   value={notifications}
                   onValueChange={(value) => handleToggle(setNotifications, value)}
-                  trackColor={{ false: '#E2E8F0', true: '#A5B4FC' }}
-                  thumbColor={notifications ? '#6366F1' : '#F3F4F6'}
-                  ios_backgroundColor="#E2E8F0"
+                  trackColor={{ false: '#E8E3DB', true: '#D6CEC1' }}
+                  thumbColor={notifications ? '#726454' : '#FFFFFF'}
+                  ios_backgroundColor="#E8E3DB"
                 />
               }
             />
@@ -162,7 +162,7 @@ const SettingsScreen = () => {
               icon="language-outline"
               title="Language"
               subtitle="English"
-              trailing={<Icon name="chevron-forward" size={20} color="#9CA3AF" />}
+              trailing={<Icon name="chevron-forward" size={20} color="#BFB3A3" />}
               onPress={() => console.log('Language pressed')}
               isLast={true}
             />
@@ -177,9 +177,9 @@ const SettingsScreen = () => {
                 <Switch
                   value={biometrics}
                   onValueChange={(value) => handleToggle(setBiometrics, value)}
-                  trackColor={{ false: '#E2E8F0', true: '#A5B4FC' }}
-                  thumbColor={biometrics ? '#6366F1' : '#F3F4F6'}
-                  ios_backgroundColor="#E2E8F0"
+                  trackColor={{ false: '#E8E3DB', true: '#D6CEC1' }}
+                  thumbColor={biometrics ? '#726454' : '#FFFFFF'}
+                  ios_backgroundColor="#E8E3DB"
                 />
               }
             />
@@ -187,14 +187,14 @@ const SettingsScreen = () => {
               icon="lock-closed-outline"
               title="Privacy"
               subtitle="Manage your data"
-              trailing={<Icon name="chevron-forward" size={20} color="#9CA3AF" />}
+              trailing={<Icon name="chevron-forward" size={20} color="#BFB3A3" />}
               onPress={() => console.log('Privacy pressed')}
             />
             <SettingsItem
               icon="shield-checkmark-outline"
               title="Two-Factor Auth"
               subtitle="Extra security layer"
-              trailing={<Icon name="chevron-forward" size={20} color="#9CA3AF" />}
+              trailing={<Icon name="chevron-forward" size={20} color="#BFB3A3" />}
               onPress={() => console.log('2FA pressed')}
               isLast={true}
             />
@@ -209,9 +209,9 @@ const SettingsScreen = () => {
                 <Switch
                   value={autoBackup}
                   onValueChange={(value) => handleToggle(setAutoBackup, value)}
-                  trackColor={{ false: '#E2E8F0', true: '#A5B4FC' }}
-                  thumbColor={autoBackup ? '#6366F1' : '#F3F4F6'}
-                  ios_backgroundColor="#E2E8F0"
+                  trackColor={{ false: '#E8E3DB', true: '#D6CEC1' }}
+                  thumbColor={autoBackup ? '#726454' : '#FFFFFF'}
+                  ios_backgroundColor="#E8E3DB"
                 />
               }
             />
@@ -219,14 +219,14 @@ const SettingsScreen = () => {
               icon="download-outline"
               title="Export Data"
               subtitle="Download your information"
-              trailing={<Icon name="chevron-forward" size={20} color="#9CA3AF" />}
+              trailing={<Icon name="chevron-forward" size={20} color="#BFB3A3" />}
               onPress={() => console.log('Export pressed')}
             />
             <SettingsItem
               icon="trash-outline"
               title="Clear Cache"
               subtitle="Free up space"
-              trailing={<Icon name="chevron-forward" size={20} color="#9CA3AF" />}
+              trailing={<Icon name="chevron-forward" size={20} color="#BFB3A3" />}
               onPress={() => console.log('Clear cache pressed')}
               isLast={true}
             />
@@ -234,29 +234,35 @@ const SettingsScreen = () => {
 
           <SettingsSection title="About" delay={500}>
             <SettingsItem icon="information-circle-outline" title="Version" subtitle="1.0.0" />
-            <SettingsItem icon="document-text-outline" title="Terms of Service" trailing={<Icon name="chevron-forward" size={20} color="#9CA3AF" />} onPress={() => console.log('Terms pressed')} />
+            <SettingsItem icon="document-text-outline" title="Terms of Service" trailing={<Icon name="chevron-forward" size={20} color="#BFB3A3" />} onPress={() => console.log('Terms pressed')} />
             <SettingsItem
               icon="help-circle-outline"
               title="Help & Support"
-              trailing={<Icon name="chevron-forward" size={20} color="#9CA3AF" />}
+              trailing={<Icon name="chevron-forward" size={20} color="#BFB3A3" />}
               onPress={() => console.log('Help pressed')}
               isLast={true}
             />
           </SettingsSection>
 
           {/* Sign Out Button */}
-          <Animated.View entering={FadeInDown.delay(600).duration(600).springify()} style={tw`mt-8 mb-6`}>
+          <Animated.View entering={FadeInDown.delay(600).duration(600).springify()} style={{ marginTop: 32, marginBottom: 24 }}>
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 console.log('Sign out pressed');
               }}
-              style={tw`bg-red-50 rounded-2xl p-4`}
+              style={{
+                backgroundColor: '#FEF2F2',
+                borderRadius: 16,
+                padding: 16,
+                borderWidth: 1,
+                borderColor: '#FEE2E2',
+              }}
             >
-              <View style={tw`flex-row items-center justify-center`}>
-                <Icon name="log-out-outline" size={22} color="#EF4444" />
-                <Text style={tw`ml-2 text-red-500 font-semibold text-base`}>Sign Out</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name="log-out-outline" size={22} color="#DC2626" />
+                <Text style={{ marginLeft: 8, color: '#DC2626', fontWeight: '600', fontSize: 16 }}>Sign Out</Text>
               </View>
             </TouchableOpacity>
           </Animated.View>
@@ -269,9 +275,32 @@ const SettingsScreen = () => {
 // Settings Section Component
 const SettingsSection = ({ title, children, delay = 0 }) => {
   return (
-    <Animated.View entering={FadeInDown.delay(delay).duration(600).springify()} style={tw`mb-6`}>
-      <Text style={tw`text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 ml-1`}>{title}</Text>
-      <View style={tw`bg-white bg-opacity-80 rounded-2xl overflow-hidden`}>
+    <Animated.View entering={FadeInDown.delay(delay).duration(600).springify()} style={{ marginBottom: 24 }}>
+      <Text
+        style={{
+          fontSize: 11,
+          fontWeight: '600',
+          color: '#A89885',
+          textTransform: 'uppercase',
+          letterSpacing: 0.8,
+          marginBottom: 12,
+          marginLeft: 4,
+        }}
+      >
+        {title}
+      </Text>
+      <View
+        style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: 20,
+          overflow: 'hidden',
+          shadowColor: '#726454',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.05,
+          shadowRadius: 8,
+          elevation: 2,
+        }}
+      >
         {React.Children.map(children, (child, index) => {
           return React.cloneElement(child, {
             isLast: index === React.Children.count(children) - 1,
@@ -293,20 +322,39 @@ const SettingsItem = ({ icon, title, subtitle, trailing, onPress, isLast = false
 
   const content = (
     <>
-      <View style={tw`flex-row items-center flex-1`}>
-        <View style={tw`w-10 h-10 bg-indigo-50 rounded-xl items-center justify-center mr-4`}>
-          <Icon name={icon} size={22} color="#6366F1" />
+      <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+        <View
+          style={{
+            width: 44,
+            height: 44,
+            backgroundColor: '#F5F2ED',
+            borderRadius: 12,
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginRight: 16,
+          }}
+        >
+          <Icon name={icon} size={22} color="#726454" />
         </View>
-        <View style={tw`flex-1`}>
-          <Text style={tw`text-gray-900 font-medium text-base`}>{title}</Text>
-          {subtitle && <Text style={tw`text-gray-500 text-sm mt-0.5`}>{subtitle}</Text>}
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: '#44403c', fontWeight: '500', fontSize: 16 }}>{title}</Text>
+          {subtitle && <Text style={{ color: '#A89885', fontSize: 14, marginTop: 2 }}>{subtitle}</Text>}
         </View>
       </View>
-      {trailing && <View style={tw`ml-4`}>{trailing}</View>}
+      {trailing && <View style={{ marginLeft: 16 }}>{trailing}</View>}
     </>
   );
 
-  const containerStyle = tw.style('flex-row items-center px-4 py-3.5', !isLast && 'border-b border-gray-100 border-opacity-50');
+  const containerStyle = {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    ...(!isLast && {
+      borderBottomWidth: 1,
+      borderBottomColor: '#F5F2ED',
+    }),
+  };
 
   if (onPress) {
     return (
@@ -328,21 +376,43 @@ const ProfileHeader = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         console.log('Profile pressed');
       }}
-      style={tw`mx-6 mt-4`}
+      style={{ marginHorizontal: 24, marginTop: 16 }}
     >
-      <LinearGradient colors={['#FFFFFF', '#F8F9FD']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-4 shadow-sm`}>
-        <View style={tw`flex-row items-center`}>
-          <LinearGradient colors={['#818CF8', '#A78BFA']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`w-16 h-16 rounded-2xl items-center justify-center`}>
-            <Text style={tw`text-white text-2xl font-bold`}>JD</Text>
+      <View
+        style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: 24,
+          padding: 20,
+          shadowColor: '#726454',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.08,
+          shadowRadius: 12,
+          elevation: 3,
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <LinearGradient
+            colors={['#D6CEC1', '#BFB3A3', '#A89885']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: 16,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text style={{ color: '#FFFFFF', fontSize: 24, fontWeight: '700' }}>JD</Text>
           </LinearGradient>
-          <View style={tw`flex-1 ml-4`}>
-            <Text style={tw`text-gray-900 font-semibold text-lg`}>John Doe</Text>
-            <Text style={tw`text-gray-500 text-sm`}>john.doe@example.com</Text>
-            <Text style={tw`text-indigo-500 text-xs mt-1 font-medium`}>Premium Member</Text>
+          <View style={{ flex: 1, marginLeft: 16 }}>
+            <Text style={{ color: '#44403c', fontWeight: '600', fontSize: 18 }}>John Doe</Text>
+            <Text style={{ color: '#A89885', fontSize: 14, marginTop: 2 }}>john.doe@example.com</Text>
+            <Text style={{ color: '#726454', fontSize: 12, marginTop: 4, fontWeight: '500' }}>Premium Member</Text>
           </View>
-          <Icon name="chevron-forward" size={20} color="#9CA3AF" />
+          <Icon name="chevron-forward" size={20} color="#BFB3A3" />
         </View>
-      </LinearGradient>
+      </View>
     </TouchableOpacity>
   );
 };

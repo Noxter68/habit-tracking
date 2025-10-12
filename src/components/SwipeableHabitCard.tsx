@@ -87,14 +87,14 @@ const SwipeableHabitCard: React.FC<SwipeableHabitCardProps> = ({ habit, onDelete
       {/* Delete Background */}
       <RNAnimated.View style={[tw`absolute inset-0 justify-center items-end pr-6 rounded-2xl overflow-hidden`, { opacity: deleteOpacity }]}>
         <LinearGradient colors={['#ef4444', '#dc2626']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`absolute inset-0`} />
-        <View style={tw`bg-white/20 rounded-xl p-3`}>
+        <View style={tw`bg-sand/20 rounded-xl p-3`}>
           <Trash2 size={24} color="#ffffff" />
         </View>
       </RNAnimated.View>
 
       {/* Swipeable Habit Card */}
       <PanGestureHandler onGestureEvent={handleGestureEvent} onHandlerStateChange={handleStateChange} activeOffsetX={[-10, 10]} failOffsetY={[-5, 5]}>
-        <RNAnimated.View style={[{ transform: [{ translateX }] }, tw`bg-white rounded-2xl`]}>
+        <RNAnimated.View style={[{ transform: [{ translateX }] }, tw`bg-sand rounded-2xl`]}>
           <HabitCard habit={habit} onToggleDay={onToggleDay} onToggleTask={onToggleTask} onPress={onPress} index={index} />
         </RNAnimated.View>
       </PanGestureHandler>

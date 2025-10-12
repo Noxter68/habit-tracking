@@ -181,7 +181,7 @@ const HabitWizard: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-gray-50`}>
+    <SafeAreaView style={tw`flex-1 bg-stone-50`}>
       <View style={tw`flex-1`}>
         {/* Header */}
         <View style={tw`px-5 py-4`}>
@@ -201,7 +201,7 @@ const HabitWizard: React.FC = () => {
               <Pressable
                 onPress={handleBack}
                 disabled={isCreating}
-                style={({ pressed }) => [tw`flex-1 py-4 rounded-2xl`, tw`bg-white border border-quartz-200`, pressed && tw`opacity-80`, isCreating && tw`opacity-50`]}
+                style={({ pressed }) => [tw`flex-1 py-4 rounded-2xl`, tw`bg-sand border border-quartz-200`, pressed && tw`opacity-80`, isCreating && tw`opacity-50`]}
               >
                 <View style={tw`flex-row items-center justify-center`}>
                   {isFirstStep ? (

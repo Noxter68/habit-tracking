@@ -23,7 +23,7 @@ export const TierCard: React.FC<TierCardProps> = ({ tierInfo, currentStreak, nex
           </Text>
           <Text style={tw`text-stone-50/80 text-xs mt-1`}>{tierInfo.description}</Text>
         </View>
-        <View style={tw`bg-white/20 rounded-2xl px-4 py-3`}>
+        <View style={tw`bg-sand/20 rounded-2xl px-4 py-3`}>
           <Text style={tw`text-white font-black text-2xl`}>{currentStreak}</Text>
           <Text style={tw`text-stone-100 text-xs font-semibold`}>days</Text>
         </View>

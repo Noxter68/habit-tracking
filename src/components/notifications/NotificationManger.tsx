@@ -158,7 +158,7 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
 
   if (isLoading) {
     return (
-      <SafeAreaView style={tw`flex-1 bg-gray-50`}>
+      <SafeAreaView style={tw`flex-1 bg-stone-50`}>
         <View style={tw`flex-1 items-center justify-center`}>
           <ActivityIndicator size="large" color={tw.color('teal-500')} />
         </View>
@@ -167,17 +167,17 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
   }
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-gray-50`}>
+    <SafeAreaView style={tw`flex-1 bg-stone-50`}>
       {/* Minimalist Header */}
-      <View style={tw`px-6 py-5 bg-white border-b border-gray-100`}>
+      <View style={tw`px-6 py-5 bg-sand border-b border-stone-100`}>
         <View style={tw`flex-row items-center justify-between`}>
           <View>
-            <Text style={tw`text-2xl font-bold text-gray-900`}>Notifications</Text>
-            <Text style={tw`text-sm text-gray-500 mt-1`}>
+            <Text style={tw`text-2xl font-bold text-stone-800`}>Notifications</Text>
+            <Text style={tw`text-sm text-sand-500 mt-1`}>
               {activeCount} of {localHabits.length} active
             </Text>
           </View>
-          <Pressable onPress={onClose} style={({ pressed }) => [tw`p-2.5 rounded-full`, pressed && tw`bg-gray-100`]}>
+          <Pressable onPress={onClose} style={({ pressed }) => [tw`p-2.5 rounded-full`, pressed && tw`bg-sand-100`]}>
             <Icon name="x" size={22} color={tw.color('gray-600')} />
           </Pressable>
         </View>
@@ -191,7 +191,7 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
               <Icon name="bell" size={16} color={tw.color('teal-600')} />
             </View>
             <View style={tw`flex-1`}>
-              <Text style={tw`text-sm font-medium text-gray-900 mb-1`}>Daily Reminders</Text>
+              <Text style={tw`text-sm font-medium text-stone-800 mb-1`}>Daily Reminders</Text>
               <Text style={tw`text-xs text-gray-600 leading-5`}>Set personalized reminder times for each habit. Your settings are saved even when disabled.</Text>
             </View>
           </View>
@@ -201,31 +201,31 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
         <View style={tw`px-6 mt-6`}>
           {localHabits.length === 0 ? (
             <View style={tw`py-16 items-center`}>
-              <View style={tw`w-20 h-20 rounded-full bg-gray-100 items-center justify-center mb-4`}>
+              <View style={tw`w-20 h-20 rounded-full bg-sand-100 items-center justify-center mb-4`}>
                 <Icon name="bell-off" size={32} color={tw.color('gray-400')} />
               </View>
-              <Text style={tw`text-gray-900 font-medium mb-2`}>No habits yet</Text>
-              <Text style={tw`text-sm text-gray-500 text-center`}>Create habits to set up reminders</Text>
+              <Text style={tw`text-stone-800 font-medium mb-2`}>No habits yet</Text>
+              <Text style={tw`text-sm text-sand-500 text-center`}>Create habits to set up reminders</Text>
             </View>
           ) : (
             <View style={tw`gap-3`}>
               {localHabits.map((habit) => (
-                <View key={habit.id} style={[tw`bg-white rounded-2xl p-4 border`, habit.notificationEnabled ? tw`border-teal-100` : tw`border-gray-100`]}>
+                <View key={habit.id} style={[tw`bg-sand rounded-2xl p-4 border`, habit.notificationEnabled ? tw`border-teal-100` : tw`border-stone-100`]}>
                   {/* Habit Header */}
                   <View style={tw`flex-row items-center justify-between`}>
                     <View style={tw`flex-row items-center flex-1`}>
-                      <View style={tw`w-12 h-12 rounded-xl bg-gray-50 items-center justify-center mr-3`}>
+                      <View style={tw`w-12 h-12 rounded-xl bg-stone-50 items-center justify-center mr-3`}>
                         <Text style={tw`text-xl`}>{habit.icon || '🎯'}</Text>
                       </View>
                       <View style={tw`flex-1`}>
-                        <Text style={tw`text-base font-semibold text-gray-900`} numberOfLines={1}>
+                        <Text style={tw`text-base font-semibold text-stone-800`} numberOfLines={1}>
                           {habit.name}
                         </Text>
                         <View style={tw`flex-row items-center mt-1`}>
-                          <View style={[tw`px-2 py-0.5 rounded-full`, habit.notificationEnabled ? tw`bg-teal-100` : tw`bg-gray-100`]}>
+                          <View style={[tw`px-2 py-0.5 rounded-full`, habit.notificationEnabled ? tw`bg-teal-100` : tw`bg-sand-100`]}>
                             <Text style={[tw`text-xs font-medium`, habit.notificationEnabled ? tw`text-teal-700` : tw`text-gray-600`]}>{habit.notificationEnabled ? 'Active' : 'Inactive'}</Text>
                           </View>
-                          {habit.category && <Text style={tw`text-xs text-gray-500 ml-2 capitalize`}>{habit.category.replace('-', ' ')}</Text>}
+                          {habit.category && <Text style={tw`text-xs text-sand-500 ml-2 capitalize`}>{habit.category.replace('-', ' ')}</Text>}
                         </View>
                       </View>
                     </View>
@@ -245,24 +245,24 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
                     disabled={isUpdating === habit.id}
                     style={({ pressed }) => [
                       tw`flex-row items-center justify-between mt-3 py-3 px-4 rounded-xl`,
-                      habit.notificationEnabled ? tw`bg-teal-50/30 border border-teal-100` : tw`bg-gray-50 border border-gray-100`,
+                      habit.notificationEnabled ? tw`bg-teal-50/30 border border-teal-100` : tw`bg-stone-50 border border-stone-100`,
                       pressed && tw`opacity-70`,
                       isUpdating === habit.id && tw`opacity-50`,
                     ]}
                   >
                     <View style={tw`flex-row items-center`}>
                       <Icon name="clock" size={16} color={habit.notificationEnabled ? tw.color('teal-600') : tw.color('gray-400')} />
-                      <Text style={[tw`ml-2 text-sm`, habit.notificationEnabled ? tw`text-gray-700` : tw`text-gray-500`]}>Daily at</Text>
+                      <Text style={[tw`ml-2 text-sm`, habit.notificationEnabled ? tw`text-sand-700` : tw`text-sand-500`]}>Daily at</Text>
                     </View>
                     <View style={tw`flex-row items-center`}>
-                      <Text style={[tw`text-sm font-medium`, habit.notificationEnabled ? tw`text-gray-900` : tw`text-gray-500`]}>{formatTime(habit.notificationTime)}</Text>
+                      <Text style={[tw`text-sm font-medium`, habit.notificationEnabled ? tw`text-stone-800` : tw`text-sand-500`]}>{formatTime(habit.notificationTime)}</Text>
                       <Icon name="chevron-right" size={14} color={habit.notificationEnabled ? tw.color('teal-600') : tw.color('gray-400')} style={tw`ml-1`} />
                     </View>
                   </Pressable>
 
                   {/* Loading overlay */}
                   {isUpdating === habit.id && (
-                    <View style={tw`absolute inset-0 rounded-2xl bg-white/80 items-center justify-center`}>
+                    <View style={tw`absolute inset-0 rounded-2xl bg-sand/80 items-center justify-center`}>
                       <ActivityIndicator size="small" color={tw.color('teal-500')} />
                     </View>
                   )}

@@ -30,7 +30,7 @@ export const FilterTabs: React.FC<FilterTabsProps> = ({ filter, setFilter, unloc
                 pressed && tw`bg-quartz-200 border-quartz-300`,
               ]}
             >
-              <Text style={[tw`text-xs font-semibold capitalize`, isActive ? tw`text-gray-700` : tw`text-gray-400`]}>
+              <Text style={[tw`text-xs font-semibold capitalize`, isActive ? tw`text-sand-700` : tw`text-stone-300`]}>
                 {filterType}
                 {count !== null && ` (${count})`}
               </Text>

@@ -162,7 +162,7 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, on
           <ImageBackground source={require('../../../assets/interface/quartz-texture.png')} style={tw`p-5`} imageStyle={{ opacity: enabled ? 0.15 : 0.05, borderRadius: 24 }} resizeMode="cover">
             <View style={tw`flex-row items-center justify-between`}>
               <View style={tw`flex-row items-center flex-1`}>
-                <View style={[tw`w-12 h-12 rounded-2xl items-center justify-center mr-4`, enabled ? tw`bg-white/25` : tw`bg-quartz-100`]}>
+                <View style={[tw`w-12 h-12 rounded-2xl items-center justify-center mr-4`, enabled ? tw`bg-sand/25` : tw`bg-quartz-100`]}>
                   {enabled ? <Bell size={24} color={enabled ? '#FFFFFF' : '#6B7280'} strokeWidth={1.5} /> : <BellOff size={24} color="#6B7280" strokeWidth={1.5} />}
                 </View>
                 <View style={tw`flex-1`}>
@@ -187,7 +187,7 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, on
             {/* Permission Status Badge */}
             {enabled && (
               <Animated.View entering={FadeInDown.delay(200).duration(400)} style={tw`mt-3`}>
-                <View style={[tw`flex-row items-center self-start px-3 py-1.5 rounded-full`, hasPermission ? tw`bg-white/20` : tw`bg-red-500/20`]}>
+                <View style={[tw`flex-row items-center self-start px-3 py-1.5 rounded-full`, hasPermission ? tw`bg-sand/20` : tw`bg-red-500/20`]}>
                   <Shield size={12} color={hasPermission ? '#FFFFFF' : '#EF4444'} strokeWidth={2} />
                   <Text style={[tw`text-xs font-light ml-1.5`, hasPermission ? tw`text-white` : tw`text-red-200`]}>{hasPermission ? 'Notifications Active' : 'Permission Required'}</Text>
                 </View>
@@ -212,7 +212,7 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, on
                   <Pressable onPress={() => handleTimeSelect(timeOption)} style={({ pressed }) => [tw`rounded-2xl overflow-hidden`, pressed && tw`scale-[0.98]`]}>
                     <LinearGradient colors={isSelected ? timeOption.gradient : ['#FFFFFF', '#F9FAFB']} style={tw`border border-quartz-200`}>
                       <View style={tw`p-4 flex-row items-center`}>
-                        <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-4`, isSelected ? tw`bg-white/40` : tw`bg-quartz-50`]}>
+                        <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-4`, isSelected ? tw`bg-sand/40` : tw`bg-quartz-50`]}>
                           <Icon size={22} color={isSelected ? '#374151' : '#9CA3AF'} strokeWidth={1.5} />
                         </View>
 
@@ -231,7 +231,7 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, on
                         </View>
 
                         <View style={[tw`w-6 h-6 rounded-full border-2 items-center justify-center`, isSelected ? tw`border-quartz-700 bg-quartz-700` : tw`border-quartz-300`]}>
-                          {isSelected && <View style={tw`w-2.5 h-2.5 bg-white rounded-full`} />}
+                          {isSelected && <View style={tw`w-2.5 h-2.5 bg-sand rounded-full`} />}
                         </View>
                       </View>
                     </LinearGradient>
@@ -279,12 +279,12 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, on
                 <Text style={tw`text-white/60 text-xs font-light`}>Success Rate</Text>
                 <Text style={tw`text-white text-lg font-semibold mt-0.5`}>+40%</Text>
               </View>
-              <View style={tw`w-px bg-white/20`} />
+              <View style={tw`w-px bg-sand/20`} />
               <View style={tw`items-center`}>
                 <Text style={tw`text-white/60 text-xs font-light`}>Best Time</Text>
                 <Text style={tw`text-white text-lg font-semibold mt-0.5`}>Morning</Text>
               </View>
-              <View style={tw`w-px bg-white/20`} />
+              <View style={tw`w-px bg-sand/20`} />
               <View style={tw`items-center`}>
                 <Text style={tw`text-white/60 text-xs font-light`}>Avg Streak</Text>
                 <Text style={tw`text-white text-lg font-semibold mt-0.5`}>21 days</Text>

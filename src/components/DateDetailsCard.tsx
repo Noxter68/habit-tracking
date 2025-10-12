@@ -91,7 +91,7 @@ const DateDetailsCard: React.FC<DateDetailsCardProps> = ({ selectedDate, habit, 
   };
 
   return (
-    <View style={tw`bg-white rounded-2xl shadow-sm overflow-hidden`}>
+    <View style={tw`bg-sand rounded-2xl shadow-sm overflow-hidden`}>
       {/* Header with gradient */}
       <LinearGradient colors={gradientColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`p-4`}>
         <View style={tw`flex-row items-center justify-between`}>
@@ -109,7 +109,7 @@ const DateDetailsCard: React.FC<DateDetailsCardProps> = ({ selectedDate, habit, 
             </Text>
           </View>
 
-          <View style={tw`bg-white/20 rounded-xl p-3`}>
+          <View style={tw`bg-sand/20 rounded-xl p-3`}>
             <StatusIcon size={24} color="#ffffff" strokeWidth={2} />
           </View>
         </View>
@@ -119,8 +119,8 @@ const DateDetailsCard: React.FC<DateDetailsCardProps> = ({ selectedDate, habit, 
       <View style={tw`p-4`}>
         <View style={tw`flex-row items-center justify-between mb-3`}>
           <View>
-            <Text style={tw`text-2xl font-bold text-gray-900`}>{status.percentage}%</Text>
-            <Text style={tw`text-xs text-gray-500 mt-0.5`}>
+            <Text style={tw`text-2xl font-bold text-stone-800`}>{status.percentage}%</Text>
+            <Text style={tw`text-xs text-sand-500 mt-0.5`}>
               {status.completedCount} of {status.totalCount} tasks
             </Text>
           </View>
@@ -128,13 +128,13 @@ const DateDetailsCard: React.FC<DateDetailsCardProps> = ({ selectedDate, habit, 
           <View style={tw`flex-row items-center`}>
             <Text style={tw`text-2xl mr-2`}>{getStatusEmoji()}</Text>
             <View>
-              <Text style={[tw`text-sm font-bold`, status.completed ? tw`text-emerald-600` : status.partial ? tw`text-stone-600` : tw`text-gray-400`]}>{getStatusText()}</Text>
+              <Text style={[tw`text-sm font-bold`, status.completed ? tw`text-emerald-600` : status.partial ? tw`text-stone-600` : tw`text-stone-300`]}>{getStatusText()}</Text>
             </View>
           </View>
         </View>
 
         {/* Progress Bar */}
-        <View style={tw`h-2 bg-gray-100 rounded-full overflow-hidden`}>
+        <View style={tw`h-2 bg-sand-100 rounded-full overflow-hidden`}>
           <LinearGradient colors={gradientColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[tw`h-full rounded-full`, { width: `${status.percentage}%` }]} />
         </View>
 
@@ -142,9 +142,9 @@ const DateDetailsCard: React.FC<DateDetailsCardProps> = ({ selectedDate, habit, 
         {isToday() && !isFuture() && onToggleDay && (
           <Pressable
             onPress={() => onToggleDay(habit.id, dateString)}
-            style={({ pressed }) => [tw`mt-4 py-3 rounded-xl`, status.completed ? tw`bg-emerald-50` : tw`bg-indigo-50`, pressed && tw`opacity-80`]}
+            style={({ pressed }) => [tw`mt-4 py-3 rounded-xl`, status.completed ? tw`bg-sage-100` : tw`bg-sage-50`, pressed && tw`opacity-80`]}
           >
-            <Text style={[tw`text-center font-semibold`, status.completed ? tw`text-emerald-700` : tw`text-indigo-700`]}>{status.completed ? 'Mark as Incomplete' : 'Complete All Tasks'}</Text>
+            <Text style={[tw`text-center font-semibold`, status.completed ? tw`text-sage-700` : tw`text-indigo-700`]}>{status.completed ? 'Mark as Incomplete' : 'Complete All Tasks'}</Text>
           </Pressable>
         )}
       </View>

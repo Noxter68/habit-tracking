@@ -22,7 +22,7 @@ const PeriodSelector: React.FC<PeriodSelectorProps> = ({ selectedPeriod, onSelec
           <View
             style={tw`
               px-4 py-2.5 rounded-xl
-              ${selectedPeriod === period.key ? 'bg-white shadow-sm' : ''}
+              ${selectedPeriod === period.key ? 'bg-sand shadow-sm' : ''}
             `}
           >
             <Text

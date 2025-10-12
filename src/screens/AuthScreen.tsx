@@ -71,7 +71,7 @@ const AuthScreen: React.FC = () => {
 
             {/* Form Fields - Center */}
             <View style={tw`flex-1 justify-center`}>
-              <View style={tw`bg-white/90 rounded-3xl p-5 shadow-sm`}>
+              <View style={tw`bg-sand/90 rounded-3xl p-5 shadow-sm`}>
                 {mode === 'signup' && (
                   <View style={tw`mb-3`}>
                     <Text style={tw`text-xs font-semibold text-slate-700 mb-1.5`}>Username (optional)</Text>
@@ -173,13 +173,13 @@ const AuthScreen: React.FC = () => {
                   {mode === 'signin' && (
                     <>
                       <Pressable onPress={() => switchMode('reset')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                        <Text style={tw`text-indigo-600 text-xs font-medium`}>Forgot password?</Text>
+                        <Text style={tw`text-stone-600 text-xs font-medium`}>Forgot password?</Text>
                       </Pressable>
                       <Text style={tw`text-slate-400 mx-2`}>•</Text>
                     </>
                   )}
                   <Pressable onPress={() => switchMode(mode === 'signin' ? 'signup' : 'signin')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                    <Text style={tw`text-indigo-600 text-xs font-medium`}>{mode === 'signin' ? 'Sign Up' : mode === 'reset' ? 'Back to Sign In' : 'Sign In'}</Text>
+                    <Text style={tw`text-stone-600 text-xs font-medium`}>{mode === 'signin' ? 'Sign Up' : mode === 'reset' ? 'Back to Sign In' : 'Sign In'}</Text>
                   </Pressable>
                 </View>
               </View>

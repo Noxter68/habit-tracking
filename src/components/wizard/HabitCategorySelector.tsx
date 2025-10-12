@@ -49,7 +49,7 @@ const HabitCategorySelector: React.FC<HabitCategorySelectorProps> = ({ habitType
             <Pressable onPress={() => onSelect(category.id)} style={({ pressed }) => [tw`rounded-2xl overflow-hidden`, pressed && tw`opacity-90`]}>
               <LinearGradient colors={selected === category.id ? ['#9CA3AF', '#6B7280'] : ['#F3F4F6', '#E5E7EB']} style={tw`border border-quartz-200`}>
                 <View style={tw`p-4 flex-row items-center`}>
-                  <View style={[tw`w-14 h-14 rounded-2xl items-center justify-center mr-4`, selected === category.id ? tw`bg-white/20` : tw`bg-quartz-100`]}>
+                  <View style={[tw`w-14 h-14 rounded-2xl items-center justify-center mr-4`, selected === category.id ? tw`bg-sand/20` : tw`bg-quartz-100`]}>
                     <Text style={tw`text-2xl`}>{category.icon}</Text>
                   </View>
                   <View style={tw`flex-1`}>
@@ -57,7 +57,7 @@ const HabitCategorySelector: React.FC<HabitCategorySelectorProps> = ({ habitType
                     <Text style={[tw`text-sm mt-1`, selected === category.id ? tw`text-white/80` : tw`text-quartz-600`]}>{category.description}</Text>
                   </View>
                   {selected === category.id && (
-                    <View style={tw`w-6 h-6 rounded-full bg-white/20 items-center justify-center`}>
+                    <View style={tw`w-6 h-6 rounded-full bg-sand/20 items-center justify-center`}>
                       <Text style={tw`text-white text-xs`}>✓</Text>
                     </View>
                   )}

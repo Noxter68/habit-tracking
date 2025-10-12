@@ -19,7 +19,7 @@ const ChampionHabitCard: React.FC<ChampionHabitCardProps> = ({ habit }) => {
       <View style={tw`flex-row items-start justify-between`}>
         <View style={tw`flex-1`}>
           <View style={tw`flex-row items-center mb-2`}>
-            <View style={tw`w-8 h-8 bg-white/20 rounded-lg items-center justify-center mr-2`}>
+            <View style={tw`w-8 h-8 bg-sand/20 rounded-lg items-center justify-center mr-2`}>
               <StatsIcons.Star size={16} color="#ffffff" />
             </View>
             <Text style={tw`text-xs font-bold text-white/90 uppercase tracking-wide`}>Champion Habit</Text>
@@ -36,7 +36,7 @@ const ChampionHabitCard: React.FC<ChampionHabitCardProps> = ({ habit }) => {
             </View>
           </View>
         </View>
-        <View style={tw`w-16 h-16 bg-white/20 rounded-2xl items-center justify-center`}>
+        <View style={tw`w-16 h-16 bg-sand/20 rounded-2xl items-center justify-center`}>
           <StatsIcons.Trophy size={32} color="#ffffff" />
         </View>
       </View>

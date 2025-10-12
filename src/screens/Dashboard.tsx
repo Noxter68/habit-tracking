@@ -191,7 +191,7 @@ const Dashboard: React.FC = () => {
                 <Text style={tw`text-lg font-bold text-quartz-700 mb-2`}>Create Your First Habit</Text>
                 <Text style={tw`text-sm text-quartz-500 text-center px-4`}>Start your journey to build better habits and earn achievements!</Text>
 
-                <View style={tw`mt-4 px-6 py-2 bg-white rounded-full border border-quartz-300 shadow-sm`}>
+                <View style={tw`mt-4 px-6 py-2 bg-sand rounded-full border border-quartz-300 shadow-sm`}>
                   <Text style={tw`text-sm font-semibold text-quartz-600`}>Tap to Begin →</Text>
                 </View>
               </LinearGradient>

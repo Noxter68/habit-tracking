@@ -25,6 +25,14 @@
       "package": "com.yourname.mindfulhabits",
       "versionCode": 1
     },
-    "plugins": ["expo-web-browser", "expo-apple-authentication"]
+    "plugins": [
+      "expo-web-browser",
+      "expo-apple-authentication"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "dce18d12-f105-4367-a9fd-51359484a713"
+      }
+    }
   }
 }

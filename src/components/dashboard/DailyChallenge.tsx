@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CheckCircle2 } from 'lucide-react-native';
-import tw from '../../lib/tailwind';
+import tw, { quartzGradients } from '../../lib/tailwind';
 import { XPService } from '../../services/xpService';
 import { supabase } from '../../lib/supabase';
 import { useDebugMode } from '@/hooks/useDebugMode';
@@ -28,16 +28,15 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
 
   const { showTestButtons } = useDebugMode();
 
-  // Check collection status from DATABASE, not AsyncStorage
+  // Check collection status from DATABASE
   useEffect(() => {
     checkCollectionStatus();
-  }, [userId, completedToday, totalTasksToday]); // Re-check when stats change
+  }, [userId, completedToday, totalTasksToday]);
 
   const checkCollectionStatus = async () => {
     try {
       const today = new Date().toISOString().split('T')[0];
 
-      // Check database for today's challenge status
       const { data, error } = await supabase.from('daily_challenges').select('xp_collected').eq('user_id', userId).eq('date', today).single();
 
       if (!error && data) {
@@ -57,7 +56,6 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
     setIsAnimating(true);
 
     try {
-      // Use the existing collectDailyChallenge method which updates the database
       const success = await XPService.collectDailyChallenge(userId);
 
       if (success) {
@@ -82,7 +80,6 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
     try {
       const today = new Date().toISOString().split('T')[0];
 
-      // Reset in database
       const { error } = await supabase
         .from('daily_challenges')
         .update({
@@ -101,16 +98,71 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
     }
   };
 
+  // Determine gradient and styles based on state
+  const getCardStyle = () => {
+    if (isCollected) {
+      return {
+        gradient: quartzGradients.locked.card, // Soft sand for collected
+        iconBg: 'bg-sand-200',
+        textPrimary: 'text-stone-700',
+        textSecondary: 'text-sand-600',
+        badgeBg: 'bg-sand-300',
+      };
+    }
+    if (isComplete) {
+      return {
+        gradient: quartzGradients.success, // Soft sky blue for ready to claim
+        iconBg: 'bg-white/30',
+        textPrimary: 'text-white',
+        textSecondary: 'text-white/90',
+        badgeBg: 'bg-white/25',
+      };
+    }
+    return {
+      gradient: quartzGradients.light, // Light stone for in progress
+      iconBg: 'bg-sand-100',
+      textPrimary: 'text-stone-800',
+      textSecondary: 'text-sand-700',
+      badgeBg: 'bg-stone-500',
+    };
+  };
+
+  const cardStyle = getCardStyle();
+
   return (
     <View>
       <Pressable onPress={handleCollect} disabled={!isComplete || isCollected || isAnimating} style={({ pressed }) => [pressed && isComplete && !isCollected && tw`scale-[0.98]`]}>
+        {/* Card with gradient and subtle shadow */}
         <LinearGradient
-          colors={isCollected ? ['#E5E7EB', '#D1D5DB'] : isComplete ? ['#6B7280', '#4B5563'] : ['#F3F4F6', '#E5E7EB']}
-          style={tw`rounded-2xl p-4 border ${isCollected ? 'border-quartz-300' : isComplete ? 'border-quartz-400' : 'border-quartz-200'}`}
+          colors={cardStyle.gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[
+            tw`rounded-2xl p-4`,
+            {
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.1,
+              shadowRadius: 8,
+              elevation: 4,
+            },
+          ]}
         >
           <View style={tw`flex-row items-center justify-between`}>
+            {/* Left side: Icon + Text */}
             <View style={tw`flex-row items-center flex-1`}>
-              <View style={tw`w-12 h-12 rounded-2xl items-center justify-center ${isCollected ? 'bg-quartz-300' : isComplete ? 'bg-white bg-opacity-30' : 'bg-quartz-200'}`}>
+              {/* Icon */}
+              <View
+                style={[
+                  tw`w-12 h-12 rounded-2xl items-center justify-center ${cardStyle.iconBg}`,
+                  {
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 4,
+                  },
+                ]}
+              >
                 {isCollected ? (
                   <CheckCircle2 size={28} color="#6B7280" />
                 ) : isComplete ? (
@@ -120,27 +172,49 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
                 )}
               </View>
 
+              {/* Text */}
               <View style={tw`ml-3 flex-1`}>
-                <Text style={tw`text-xs font-bold ${isCollected ? 'text-quartz-500' : isComplete ? 'text-white' : 'text-quartz-700'} uppercase`}>Daily Challenge</Text>
-                <Text style={tw`text-sm mt-0.5 ${isCollected ? 'text-quartz-400' : isComplete ? 'text-white' : 'text-quartz-600'}`}>
+                <Text style={[tw`text-xs font-bold uppercase tracking-wide`, tw`${cardStyle.textPrimary}`]}>Daily Challenge</Text>
+                <Text style={[tw`text-sm mt-0.5`, tw`${cardStyle.textSecondary}`]}>
                   {isCollected ? 'Collected! See you tomorrow' : isComplete ? 'Tap to claim 20 XP!' : `${totalTasksToday - completedToday} tasks to go`}
                 </Text>
               </View>
             </View>
 
-            {/* XP Badge */}
-            <View style={tw`${isCollected ? 'bg-quartz-400' : isComplete ? 'bg-white bg-opacity-25' : 'bg-quartz-600'} rounded-full px-3 py-1.5`}>
+            {/* Right side: XP Badge */}
+            <View
+              style={[
+                tw`rounded-full px-3 py-1.5 ${cardStyle.badgeBg}`,
+                {
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 3,
+                },
+              ]}
+            >
               <Text style={tw`text-sm font-bold text-white`}>{isCollected ? '✓' : '20 XP'}</Text>
             </View>
           </View>
 
-          {/* Progress bar */}
+          {/* Progress bar - only show if not complete and not collected */}
           {!isComplete && !isCollected && (
             <View style={tw`mt-3`}>
-              <View style={tw`h-2 bg-quartz-200 rounded-full overflow-hidden`}>
-                <View style={[tw`h-full bg-quartz-400`, { width: `${completionPercentage}%` }]} />
+              <View
+                style={[
+                  tw`h-2 rounded-full overflow-hidden`,
+                  {
+                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 2,
+                  },
+                ]}
+              >
+                <LinearGradient colors={['#9CA3AF', '#6B7280']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[tw`h-full`, { width: `${completionPercentage}%` }]} />
               </View>
-              <Text style={tw`text-xs text-quartz-500 mt-1 text-center`}>{completionPercentage}% Complete</Text>
+              <Text style={tw`text-xs text-sand-700 mt-1 text-center`}>{completionPercentage}% Complete</Text>
             </View>
           )}
         </LinearGradient>
@@ -149,7 +223,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
       {/* Debug Reset Button */}
       {showTestButtons && isCollected && (
         <Pressable onPress={handleDebugReset} style={tw`mt-2 bg-red-500 rounded-lg p-2`}>
-          <Text style={tw`text-white text-xs text-center`}>Reset (Debug)</Text>
+          <Text style={tw`text-white text-xs text-center font-semibold`}>Reset (Debug)</Text>
         </Pressable>
       )}
     </View>

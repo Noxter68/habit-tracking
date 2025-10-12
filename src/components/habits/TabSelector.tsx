@@ -19,7 +19,7 @@ export const TabSelector: React.FC<TabSelectorProps> = ({ selected, onChange, ti
   const theme = tierThemes[tier];
 
   return (
-    <View style={tw`bg-white rounded-2xl p-1.5 shadow-sm border border-gray-100`}>
+    <View style={tw`bg-sand rounded-2xl p-1.5 shadow-sm border border-stone-100`}>
       <View style={tw`flex-row`}>
         {TABS.map((tab) => {
           const isActive = selected === tab;
@@ -34,7 +34,7 @@ export const TabSelector: React.FC<TabSelectorProps> = ({ selected, onChange, ti
                 </ImageBackground>
               ) : (
                 <View style={tw`py-3`}>
-                  <Text style={tw`text-center font-semibold text-gray-500 text-sm`}>{tab.charAt(0).toUpperCase() + tab.slice(1)}</Text>
+                  <Text style={tw`text-center font-semibold text-sand-500 text-sm`}>{tab.charAt(0).toUpperCase() + tab.slice(1)}</Text>
                 </View>
               )}
             </Pressable>

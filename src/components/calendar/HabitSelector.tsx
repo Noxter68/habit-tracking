@@ -30,11 +30,11 @@ const HabitSelector: React.FC<HabitSelectorProps> = ({ habits, selectedHabit, on
           >
             <Pressable onPress={() => onSelectHabit(habit)} style={({ pressed }) => [pressed && tw`opacity-80`]}>
               {/* Matching the stats card style - rounded-lg instead of rounded-full */}
-              <View style={[tw`px-3 py-2 rounded-lg flex-row items-center`, isSelected ? tw`bg-indigo-500` : tw`bg-white/80 border border-gray-200`]}>
+              <View style={[tw`px-3 py-2 rounded-lg flex-row items-center`, isSelected ? tw`bg-sage-500` : tw`bg-sand/80 border border-sand-200`]}>
                 {/* Mini category icon with matching style */}
                 <View style={tw`flex-row items-center`}>
                   <CategoryIcon size={14} color={isSelected ? '#ffffff' : categoryData.color} strokeWidth={2.5} />
-                  <Text style={[tw`font-semibold text-sm ml-2`, isSelected ? tw`text-white` : tw`text-gray-700`]} numberOfLines={1}>
+                  <Text style={[tw`font-semibold text-sm ml-2`, isSelected ? tw`text-white` : tw`text-sand-700`]} numberOfLines={1}>
                     {habit.name}
                   </Text>
                 </View>
