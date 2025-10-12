@@ -1,9 +1,10 @@
+// src/components/premium/RingChart.tsx
 import React from 'react';
 import { View, Text, Dimensions, ScrollView } from 'react-native';
 import { ProgressChart } from 'react-native-chart-kit';
 import { LinearGradient } from 'expo-linear-gradient';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react-native';
-import tw from 'twrnc';
+import tw from '@/lib/tailwind';
 import { Habit } from '@/types';
 
 interface RingChartProps {
@@ -24,11 +25,21 @@ interface RingChartProps {
 const screenWidth = Dimensions.get('window').width;
 
 const RingChart: React.FC<RingChartProps> = ({ data, habits = [], period = 'week' }) => {
-  // Validate data and provide defaults
   if (!data || !data.summary) {
     return (
-      <View style={tw`bg-sand rounded-3xl p-8 shadow-sm items-center justify-center`}>
-        <Text style={tw`text-quartz-400 text-center`}>No data available</Text>
+      <View
+        style={[
+          tw`rounded-2xl p-8 items-center justify-center bg-white`,
+          {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.06,
+            shadowRadius: 6,
+            elevation: 2,
+          },
+        ]}
+      >
+        <Text style={tw`text-sand-600 text-center text-sm`}>No data available</Text>
       </View>
     );
   }
@@ -61,7 +72,6 @@ const RingChart: React.FC<RingChartProps> = ({ data, habits = [], period = 'week
     const completedDays = habit.completedDays?.length || 0;
     const percentage = Math.round((completedDays / totalDays) * 100);
 
-    // Calculate trend
     const recentDays = 7;
     const recentCompletions =
       habit.completedDays?.filter((date) => {
@@ -88,10 +98,21 @@ const RingChart: React.FC<RingChartProps> = ({ data, habits = [], period = 'week
   });
 
   return (
-    <View style={tw`bg-sand rounded-3xl shadow-sm overflow-hidden`}>
-      <LinearGradient colors={['#F3F4F6', '#FFFFFF']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={tw`p-4`}>
+    <View
+      style={[
+        tw`rounded-2xl overflow-hidden bg-white`,
+        {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
+          elevation: 3,
+        },
+      ]}
+    >
+      <View style={tw`p-5`}>
         {/* Main Ring Chart */}
-        <View style={tw`items-center mb-4`}>
+        <View style={tw`items-center mb-5`}>
           <View style={tw`relative`}>
             <ProgressChart
               data={{ data: safeData.data }}
@@ -106,11 +127,11 @@ const RingChart: React.FC<RingChartProps> = ({ data, habits = [], period = 'week
               }}
             />
             <View style={tw`absolute inset-0 items-center justify-center`}>
-              <Text style={tw`text-5xl font-bold text-quartz-700`}>{safeData.summary.percentage}%</Text>
-              <Text style={tw`text-base text-quartz-500 mt-1`}>Overall Progress</Text>
+              <Text style={tw`text-5xl font-bold text-stone-800`}>{safeData.summary.percentage}%</Text>
+              <Text style={tw`text-sm text-sand-600 mt-1`}>Overall Progress</Text>
               <View style={tw`mt-2`}>
-                <Text style={tw`text-sm text-quartz-400`}>{safeData.summary.completed} completed</Text>
-                <Text style={tw`text-sm text-quartz-400`}>{safeData.summary.perfectDays} perfect days</Text>
+                <Text style={tw`text-xs text-sand-600 text-center`}>{safeData.summary.completed} completed</Text>
+                <Text style={tw`text-xs text-sand-600 text-center`}>{safeData.summary.perfectDays} perfect days</Text>
               </View>
             </View>
           </View>
@@ -118,30 +139,32 @@ const RingChart: React.FC<RingChartProps> = ({ data, habits = [], period = 'week
 
         {/* Habits Breakdown */}
         {habits.length > 0 && (
-          <View style={tw`mt-4`}>
-            <Text style={tw`text-sm font-semibold text-quartz-600 mb-3`}>Habits Breakdown</Text>
+          <View>
+            <Text style={tw`text-xs font-bold text-stone-700 uppercase tracking-wider mb-3`}>Habits Breakdown</Text>
             <ScrollView style={tw`max-h-48`} showsVerticalScrollIndicator={true}>
               {habitProgress.map((habit, index) => (
-                <View key={index} style={tw`mb-3 pb-3 ${index < habitProgress.length - 1 ? 'border-b border-quartz-100' : ''}`}>
+                <View key={index} style={[tw`mb-3 pb-3`, index < habitProgress.length - 1 && tw`border-b border-sand-100`]}>
                   <View style={tw`flex-row items-center justify-between mb-1`}>
                     <View style={tw`flex-row items-center flex-1`}>
-                      <Text style={tw`text-sm text-quartz-700 font-medium mr-2`} numberOfLines={1}>
+                      <Text style={tw`text-sm text-stone-800 font-semibold mr-2`} numberOfLines={1}>
                         {habit.name}
                       </Text>
-                      {habit.trend === 'up' && <TrendingUp size={14} color="#10B981" />}
-                      {habit.trend === 'down' && <TrendingDown size={14} color="#EF4444" />}
-                      {habit.trend === 'stable' && <Minus size={14} color="#9CA3AF" />}
+                      {habit.trend === 'up' && <TrendingUp size={14} color="#6B7280" />}
+                      {habit.trend === 'down' && <TrendingDown size={14} color="#d6cec1" />}
+                      {habit.trend === 'stable' && <Minus size={14} color="#a89885" />}
                     </View>
-                    <Text style={tw`text-sm font-bold text-quartz-600 ml-2`}>{habit.percentage}%</Text>
+                    <Text style={tw`text-sm font-bold text-stone-700 ml-2`}>{habit.percentage}%</Text>
                   </View>
-                  <View style={tw`flex-row items-center justify-between`}>
-                    <Text style={tw`text-xs text-quartz-400`}>
+
+                  <View style={tw`flex-row items-center justify-between mb-2`}>
+                    <Text style={tw`text-xs text-sand-600`}>
                       {habit.completedDays}/{habit.totalDays} days
                     </Text>
-                    {habit.currentStreak > 0 && <Text style={tw`text-xs text-quartz-500`}>🔥 {habit.currentStreak} streak</Text>}
+                    {habit.currentStreak > 0 && <Text style={tw`text-xs text-sand-600`}>🔥 {habit.currentStreak} streak</Text>}
                   </View>
+
                   {/* Progress bar */}
-                  <View style={tw`mt-2 h-1.5 bg-quartz-100 rounded-full overflow-hidden`}>
+                  <View style={[tw`h-1.5 rounded-full overflow-hidden`, { backgroundColor: 'rgba(168, 152, 133, 0.2)' }]}>
                     <LinearGradient
                       colors={habit.percentage >= 70 ? ['#9CA3AF', '#6B7280'] : ['#D1D5DB', '#9CA3AF']}
                       start={{ x: 0, y: 0 }}
@@ -149,13 +172,14 @@ const RingChart: React.FC<RingChartProps> = ({ data, habits = [], period = 'week
                       style={[tw`h-full`, { width: `${Math.min(habit.percentage, 100)}%` }]}
                     />
                   </View>
-                  {habit.endGoal && <Text style={tw`text-xs text-quartz-400 mt-1`}>Goal: {habit.endGoal} days</Text>}
+
+                  {habit.endGoal && <Text style={tw`text-xs text-sand-600 mt-1`}>Goal: {habit.endGoal} days</Text>}
                 </View>
               ))}
             </ScrollView>
           </View>
         )}
-      </LinearGradient>
+      </View>
     </View>
   );
 };
