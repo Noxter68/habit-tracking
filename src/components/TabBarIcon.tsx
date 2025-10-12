@@ -2,7 +2,7 @@
 import React from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
-import Svg, { Path, Circle, Rect, G } from 'react-native-svg';
+import Svg, { Path, Circle, Rect, G, Polyline } from 'react-native-svg';
 import tw from '../lib/tailwind';
 
 interface TabBarIconProps {
@@ -13,24 +13,24 @@ interface TabBarIconProps {
 }
 
 export const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, focused, size = 24 }) => {
-  // Professional color scheme
-  const activeColor = focused ? '#6366F1' : '#94A3B8';
-  const strokeWidth = focused ? 2.2 : 1.8;
+  // Sand/Stone color scheme - warm and calming
+  const activeColor = focused ? '#726454' : '#BFB3A3'; // sand-700 : sand-400
+  const strokeWidth = focused ? 2.3 : 2;
 
   // Smooth animated styles for the icon container
   const animatedIconStyle = useAnimatedStyle(() => {
     return {
       transform: [
         {
-          scale: withSpring(focused ? 1.05 : 1, {
-            damping: 20,
-            stiffness: 350,
-            mass: 1,
+          scale: withSpring(focused ? 1.08 : 1, {
+            damping: 18,
+            stiffness: 320,
+            mass: 0.8,
           }),
         },
       ],
-      opacity: withTiming(focused ? 1 : 0.65, {
-        duration: 200,
+      opacity: withTiming(focused ? 1 : 0.7, {
+        duration: 220,
       }),
     };
   });
@@ -42,25 +42,27 @@ export const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, focused, si
         return (
           <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
             <Path
-              d="M9 21V13C9 12.4477 9.44772 12 10 12H14C14.5523 12 15 12.4477 15 13V21M12 3L3 10V21H21V10L12 3Z"
+              d="M3 12L5 10M5 10L12 3L19 10M5 10V20C5 20.5523 5.44772 21 6 21H9M19 10L21 12M19 10V20C19 20.5523 18.5523 21 18 21H15M9 21C9.55228 21 10 20.5523 10 20V16C10 15.4477 10.4477 15 11 15H13C13.5523 15 14 15.4477 14 16V20C14 20.5523 14.4477 21 15 21M9 21H15"
               stroke={activeColor}
               strokeWidth={strokeWidth}
               strokeLinecap="round"
               strokeLinejoin="round"
             />
+            {focused && <Circle cx="12" cy="3" r="1.2" fill={activeColor} opacity="0.4" />}
           </Svg>
         );
 
       case 'calendar':
         return (
           <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-            <Rect x="3" y="4" width="18" height="18" rx="2" stroke={activeColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
-            <Path d="M16 2V6M8 2V6M3 10H21" stroke={activeColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+            <Rect x="3" y="6" width="18" height="15" rx="2" stroke={activeColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+            <Path d="M3 10H21M8 3V6M16 3V6" stroke={activeColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
             {focused && (
               <G>
-                <Circle cx="8" cy="15" r="1" fill={activeColor} />
-                <Circle cx="12" cy="15" r="1" fill={activeColor} />
-                <Circle cx="16" cy="15" r="1" fill={activeColor} />
+                <Rect x="7" y="13" width="2" height="2" rx="0.5" fill={activeColor} />
+                <Rect x="11" y="13" width="2" height="2" rx="0.5" fill={activeColor} />
+                <Rect x="15" y="13" width="2" height="2" rx="0.5" fill={activeColor} />
+                <Rect x="7" y="17" width="2" height="2" rx="0.5" fill={activeColor} opacity="0.6" />
               </G>
             )}
           </Svg>
@@ -70,13 +72,12 @@ export const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, focused, si
         return (
           <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
             <Path d="M3 3V21H21" stroke={activeColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
-            <Path d="M7 16L12 11L15 14L20 9" stroke={activeColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+            <Path d="M7 17V14M12 17V11M17 17V7" stroke={activeColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
             {focused && (
               <G>
-                <Circle cx="7" cy="16" r="1.5" fill={activeColor} />
-                <Circle cx="12" cy="11" r="1.5" fill={activeColor} />
-                <Circle cx="15" cy="14" r="1.5" fill={activeColor} />
-                <Circle cx="20" cy="9" r="1.5" fill={activeColor} />
+                <Circle cx="7" cy="14" r="1.2" fill={activeColor} opacity="0.5" />
+                <Circle cx="12" cy="11" r="1.2" fill={activeColor} opacity="0.5" />
+                <Circle cx="17" cy="7" r="1.2" fill={activeColor} opacity="0.5" />
               </G>
             )}
           </Svg>
@@ -85,14 +86,32 @@ export const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, focused, si
       case 'settings':
         return (
           <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+            <Circle
+              cx="12"
+              cy="12"
+              r="3"
+              stroke={activeColor}
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill={focused ? activeColor : 'none'}
+              fillOpacity={focused ? 0.2 : 0}
+            />
             <Path
-              d="M10.325 4.317C10.751 2.561 13.249 2.561 13.675 4.317C13.834 5.018 14.591 5.428 15.293 5.188C16.945 4.659 18.285 6.005 17.757 7.656C17.517 8.358 17.927 9.115 18.628 9.274C20.383 9.7 20.383 12.2 18.628 12.626C17.927 12.785 17.517 13.542 17.757 14.244C18.286 15.895 16.94 17.235 15.289 16.707C14.587 16.467 13.83 16.877 13.671 17.578C13.245 19.333 10.747 19.333 10.321 17.578C10.162 16.877 9.405 16.467 8.703 16.707C7.052 17.236 5.712 15.89 6.24 14.239C6.48 13.537 6.07 12.78 5.369 12.621C3.614 12.195 3.614 9.695 5.369 9.269C6.07 9.11 6.48 8.353 6.24 7.651C5.711 6 7.057 4.66 8.708 5.188C9.41 5.428 10.167 5.018 10.326 4.317Z"
+              d="M12 1V3M12 21V23M4.22 4.22L5.64 5.64M18.36 18.36L19.78 19.78M1 12H3M21 12H23M4.22 19.78L5.64 18.36M18.36 5.64L19.78 4.22"
               stroke={activeColor}
               strokeWidth={strokeWidth}
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            <Circle cx="12" cy="12" r="3" stroke={activeColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" fill={focused ? activeColor : 'none'} />
+            {focused && (
+              <G>
+                <Circle cx="12" cy="1" r="0.8" fill={activeColor} opacity="0.4" />
+                <Circle cx="12" cy="23" r="0.8" fill={activeColor} opacity="0.4" />
+                <Circle cx="1" cy="12" r="0.8" fill={activeColor} opacity="0.4" />
+                <Circle cx="23" cy="12" r="0.8" fill={activeColor} opacity="0.4" />
+              </G>
+            )}
           </Svg>
         );
 

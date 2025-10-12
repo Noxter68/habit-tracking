@@ -1,4 +1,4 @@
-// App.tsx - Improved Version
+// App.tsx - Sand/Stone Theme Version
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -94,12 +94,13 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: tw.color('indigo-600'),
-        tabBarInactiveTintColor: tw.color('gray-400'),
+        // Sand/Stone theme colors
+        tabBarActiveTintColor: '#726454', // sand-700
+        tabBarInactiveTintColor: '#BFB3A3', // sand-400
         tabBarStyle: {
-          backgroundColor: tw.color('white'),
+          backgroundColor: '#FFFFFF', // white
           borderTopWidth: 1,
-          borderTopColor: tw.color('gray-100'),
+          borderTopColor: '#F5F2ED', // sand-100
           elevation: 0,
           shadowOpacity: 0,
           height: tabBarHeight,
@@ -190,11 +191,11 @@ function AppNavigator() {
     }
   };
 
-  // Loading state
+  // Loading state - Updated with sand colors
   if (loading || isCheckingFirstLaunch) {
     return (
-      <View style={tw`flex-1 items-center justify-center bg-sand`}>
-        <ActivityIndicator size="large" color={tw.color('indigo-600')} />
+      <View style={tw`flex-1 items-center justify-center bg-sand-50`}>
+        <ActivityIndicator size="large" color="#726454" />
       </View>
     );
   }
@@ -279,7 +280,7 @@ function useNotificationSetup() {
           name: 'default',
           importance: Notifications.AndroidImportance.MAX,
           vibrationPattern: [0, 250, 250, 250],
-          lightColor: tw.color('indigo-600'),
+          lightColor: '#726454', // sand-700
         });
       }
     };
@@ -355,11 +356,7 @@ export default function App() {
                 <LevelUpProvider>
                   <NavigationContainer>
                     {/* Status Bar Configuration */}
-                    <StatusBar
-                      barStyle="dark-content" // or "light-content"
-                      backgroundColor={tw.color('white')}
-                      translucent={false}
-                    />
+                    <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
 
                     {/* Main App */}
                     <AppNavigator />
