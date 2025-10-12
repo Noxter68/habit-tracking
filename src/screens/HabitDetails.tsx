@@ -56,8 +56,8 @@ const HabitDetails: React.FC = () => {
 
   if (!habit || !user) {
     return (
-      <SafeAreaView style={tw`flex-1 bg-gray-50 items-center justify-center`}>
-        <Text style={tw`text-gray-500`}>Habit not found</Text>
+      <SafeAreaView style={tw`flex-1 bg-stone-50 items-center justify-center`}>
+        <Text style={tw`text-sand-500`}>Habit not found</Text>
       </SafeAreaView>
     );
   }
@@ -151,7 +151,7 @@ const HabitDetails: React.FC = () => {
   }, [habit?.id, user?.id, completedTasksToday]);
 
   return (
-    <View style={tw`flex-1 bg-gray-50`}>
+    <View style={tw`flex-1 bg-stone-50`}>
       <StatusBar barStyle="dark-content" />
 
       <ScrollView contentContainerStyle={tw`pb-8`} showsVerticalScrollIndicator={false}>
@@ -161,7 +161,7 @@ const HabitDetails: React.FC = () => {
             <SafeAreaView edges={['top']}>
               {/* Navigation Header */}
               <View style={tw`px-8 py-5 flex-row items-center justify-between`}>
-                <Pressable onPress={() => navigation.goBack()} style={({ pressed }) => [tw`w-11 h-11 rounded-2xl items-center justify-center bg-white/20`, pressed && tw`scale-95`]}>
+                <Pressable onPress={() => navigation.goBack()} style={({ pressed }) => [tw`w-11 h-11 rounded-2xl items-center justify-center bg-sand/20`, pressed && tw`scale-95`]}>
                   <ArrowLeft size={22} color="#fff" strokeWidth={2.5} />
                 </Pressable>
 
@@ -180,7 +180,7 @@ const HabitDetails: React.FC = () => {
                     label={debugStreak !== null ? debugStreak.toString() : '🔧'}
                     variant="secondary"
                     // Custom style for this specific button to make it fit in the header
-                    customStyle={tw`w-11 h-11 rounded-2xl bg-white/20 px-0 py-0 mb-0`}
+                    customStyle={tw`w-11 h-11 rounded-2xl bg-sand/20 px-0 py-0 mb-0`}
                   />
                 </View>
               </View>
@@ -250,7 +250,7 @@ const HabitDetails: React.FC = () => {
                 </ImageBackground>
 
                 {/* Overall Progress Card - IMPROVED COLORS */}
-                <View style={tw`bg-white rounded-3xl p-5 shadow-sm border border-gray-100`}>
+                <View style={tw`bg-sand rounded-3xl p-5 shadow-sm border border-stone-100`}>
                   <JourneyCard
                     overallProgress={overallProgress}
                     completedDays={habit.completedDays.length}
@@ -275,12 +275,12 @@ const HabitDetails: React.FC = () => {
               <Animated.View entering={FadeInDown.duration(300)}>
                 <LinearGradient colors={['rgba(251, 191, 36, 0.05)', 'rgba(245, 158, 11, 0.02)']} style={tw`rounded-3xl p-8 border border-stone-200/20`}>
                   <View style={tw`items-center`}>
-                    <View style={tw`w-20 h-20 bg-stone-100 rounded-full items-center justify-center mb-4`}>
+                    <View style={tw`w-20 h-20 bg-sand-100 rounded-full items-center justify-center mb-4`}>
                       <Calendar size={40} color="#d97706" strokeWidth={1.5} />
                     </View>
                     <Text style={tw`text-xl font-bold text-gray-800 mb-2`}>Calendar View</Text>
-                    <Text style={tw`text-sm text-gray-500 text-center`}>Visual calendar tracking coming soon!</Text>
-                    <Text style={tw`text-xs text-gray-400 mt-2 text-center`}>Track your daily progress with a beautiful calendar</Text>
+                    <Text style={tw`text-sm text-sand-500 text-center`}>Visual calendar tracking coming soon!</Text>
+                    <Text style={tw`text-xs text-stone-300 mt-2 text-center`}>Track your daily progress with a beautiful calendar</Text>
                   </View>
                 </LinearGradient>
               </Animated.View>

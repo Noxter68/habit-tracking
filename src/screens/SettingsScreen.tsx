@@ -109,7 +109,7 @@ const SettingsScreen = () => {
   };
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-gray-50`}>
+    <SafeAreaView style={tw`flex-1 bg-stone-50`}>
       <StatusBar barStyle="dark-content" />
 
       {/* Quartz Gradient Background */}
@@ -118,8 +118,8 @@ const SettingsScreen = () => {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Header */}
         <Animated.View entering={FadeInDown.duration(600).springify()} style={tw`px-6 pt-4 pb-2`}>
-          <Text style={tw`text-3xl font-bold text-gray-900`}>Settings</Text>
-          <Text style={tw`text-sm text-gray-500 mt-1`}>Manage your preferences</Text>
+          <Text style={tw`text-3xl font-bold text-stone-800`}>Settings</Text>
+          <Text style={tw`text-sm text-sand-500 mt-1`}>Manage your preferences</Text>
         </Animated.View>
 
         {/* Profile Section */}
@@ -270,8 +270,8 @@ const SettingsScreen = () => {
 const SettingsSection = ({ title, children, delay = 0 }) => {
   return (
     <Animated.View entering={FadeInDown.delay(delay).duration(600).springify()} style={tw`mb-6`}>
-      <Text style={tw`text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 ml-1`}>{title}</Text>
-      <View style={tw`bg-white bg-opacity-80 rounded-2xl overflow-hidden`}>
+      <Text style={tw`text-xs font-semibold text-stone-300 uppercase tracking-wider mb-3 ml-1`}>{title}</Text>
+      <View style={tw`bg-sand bg-opacity-80 rounded-2xl overflow-hidden`}>
         {React.Children.map(children, (child, index) => {
           return React.cloneElement(child, {
             isLast: index === React.Children.count(children) - 1,
@@ -294,19 +294,19 @@ const SettingsItem = ({ icon, title, subtitle, trailing, onPress, isLast = false
   const content = (
     <>
       <View style={tw`flex-row items-center flex-1`}>
-        <View style={tw`w-10 h-10 bg-indigo-50 rounded-xl items-center justify-center mr-4`}>
+        <View style={tw`w-10 h-10 bg-sage-50 rounded-xl items-center justify-center mr-4`}>
           <Icon name={icon} size={22} color="#6366F1" />
         </View>
         <View style={tw`flex-1`}>
-          <Text style={tw`text-gray-900 font-medium text-base`}>{title}</Text>
-          {subtitle && <Text style={tw`text-gray-500 text-sm mt-0.5`}>{subtitle}</Text>}
+          <Text style={tw`text-stone-800 font-medium text-base`}>{title}</Text>
+          {subtitle && <Text style={tw`text-sand-500 text-sm mt-0.5`}>{subtitle}</Text>}
         </View>
       </View>
       {trailing && <View style={tw`ml-4`}>{trailing}</View>}
     </>
   );
 
-  const containerStyle = tw.style('flex-row items-center px-4 py-3.5', !isLast && 'border-b border-gray-100 border-opacity-50');
+  const containerStyle = tw.style('flex-row items-center px-4 py-3.5', !isLast && 'border-b border-stone-100 border-opacity-50');
 
   if (onPress) {
     return (
@@ -336,8 +336,8 @@ const ProfileHeader = () => {
             <Text style={tw`text-white text-2xl font-bold`}>JD</Text>
           </LinearGradient>
           <View style={tw`flex-1 ml-4`}>
-            <Text style={tw`text-gray-900 font-semibold text-lg`}>John Doe</Text>
-            <Text style={tw`text-gray-500 text-sm`}>john.doe@example.com</Text>
+            <Text style={tw`text-stone-800 font-semibold text-lg`}>John Doe</Text>
+            <Text style={tw`text-sand-500 text-sm`}>john.doe@example.com</Text>
             <Text style={tw`text-indigo-500 text-xs mt-1 font-medium`}>Premium Member</Text>
           </View>
           <Icon name="chevron-forward" size={20} color="#9CA3AF" />

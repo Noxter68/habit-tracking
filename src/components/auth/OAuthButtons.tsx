@@ -79,7 +79,7 @@ export const OAuthButton: React.FC<OAuthButtonProps> = ({ onPress, loading, prov
       disabled={loading}
       style={[
         animatedStyle,
-        tw`${isApple ? 'bg-black' : 'bg-white'} 
+        tw`${isApple ? 'bg-black' : 'bg-sand'} 
            border ${isApple ? 'border-black' : 'border-slate-200'} 
            py-4 px-6 rounded-2xl flex-row items-center justify-center
            shadow-sm`,

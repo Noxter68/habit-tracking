@@ -24,17 +24,17 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, i
       <Pressable onPress={() => onPress(achievement)} style={({ pressed }) => pressed && tw`scale-[0.98]`}>
         <LinearGradient
           colors={isUnlocked ? unlockedGradient : lockedGradient}
-          style={tw`rounded-2xl p-3 items-center border ${isUnlocked ? 'border-quartz-200' : 'border-gray-200'} ${isFromBackend ? 'shadow-md' : 'shadow-sm'}`}
+          style={tw`rounded-2xl p-3 items-center border ${isUnlocked ? 'border-quartz-200' : 'border-sand-200'} ${isFromBackend ? 'shadow-md' : 'shadow-sm'}`}
         >
           <AchievementBadge level={achievement.level} achievement={achievement} isUnlocked={isUnlocked} size={50} />
 
-          <Text style={[tw`text-xs font-semibold text-center mt-2`, isUnlocked ? tw`text-quartz-700` : tw`text-gray-500`]} numberOfLines={2}>
+          <Text style={[tw`text-xs font-semibold text-center mt-2`, isUnlocked ? tw`text-quartz-700` : tw`text-sand-500`]} numberOfLines={2}>
             {achievement.title}
           </Text>
 
           <View style={tw`items-center mt-1`}>
-            <View style={tw`rounded-full px-2 py-0.5 ${isUnlocked ? 'bg-quartz-300' : 'bg-gray-200'}`}>
-              <Text style={tw`text-xs font-bold ${isUnlocked ? 'text-quartz-700' : 'text-gray-500'}`}>LVL {achievement.level}</Text>
+            <View style={tw`rounded-full px-2 py-0.5 ${isUnlocked ? 'bg-quartz-300' : 'bg-stone-200'}`}>
+              <Text style={tw`text-xs font-bold ${isUnlocked ? 'text-quartz-700' : 'text-sand-500'}`}>LVL {achievement.level}</Text>
             </View>
           </View>
 

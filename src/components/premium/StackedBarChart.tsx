@@ -20,7 +20,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({ data, period = 'week'
   // Validate data
   if (!data || !data.data || !data.labels || data.data.length === 0 || data.labels.length === 0) {
     return (
-      <View style={tw`bg-white rounded-3xl p-8 shadow-sm items-center justify-center`}>
+      <View style={tw`bg-sand rounded-3xl p-8 shadow-sm items-center justify-center`}>
         <Text style={tw`text-quartz-400 text-center`}>No data available</Text>
       </View>
     );
@@ -71,7 +71,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({ data, period = 'week'
   );
 
   return (
-    <View style={tw`bg-white rounded-3xl p-4 shadow-sm`}>
+    <View style={tw`bg-sand rounded-3xl p-4 shadow-sm`}>
       <View style={tw`flex-row justify-center mb-3 gap-4`}>
         <View style={tw`flex-row items-center`}>
           <View style={tw`w-3 h-3 bg-quartz-300 rounded-full mr-2`} />

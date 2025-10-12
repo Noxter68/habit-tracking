@@ -62,14 +62,14 @@ export const HabitHero: React.FC<HabitHeroProps> = ({ habitName, habitType, cate
           </Text>
           <View style={tw`flex-row items-center gap-2 mt-2.5`}>
             {/* Tier badge without icon */}
-            <View style={tw`bg-white/25 rounded-xl px-2.5 py-1`}>
+            <View style={tw`bg-sand/25 rounded-xl px-2.5 py-1`}>
               <Text style={tw`text-white text-xs font-bold`}>{tierInfo.name}</Text>
             </View>
-            <View style={tw`bg-white/25 rounded-xl px-2.5 py-1`}>
+            <View style={tw`bg-sand/25 rounded-xl px-2.5 py-1`}>
               <Text style={tw`text-white text-xs font-bold`}>{category}</Text>
             </View>
             {tierMultiplier > 1 && (
-              <View style={tw`bg-white/25 rounded-xl px-2.5 py-1`}>
+              <View style={tw`bg-sand/25 rounded-xl px-2.5 py-1`}>
                 <Text style={tw`text-white text-xs font-bold`}>×{tierMultiplier.toFixed(1)} XP</Text>
               </View>
             )}

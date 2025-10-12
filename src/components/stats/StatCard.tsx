@@ -50,7 +50,7 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
   };
 
   const isOnFire = isStreak && streakValue >= 7;
-  const containerBg = isOnFire ? 'bg-white bg-opacity-20' : 'bg-quartz-200 bg-opacity-50';
+  const containerBg = isOnFire ? 'bg-sand bg-opacity-20' : 'bg-quartz-200 bg-opacity-50';
 
   const renderVisual = () => {
     // Check if we have an icon prop

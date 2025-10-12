@@ -79,7 +79,7 @@ export const TierCelebration: React.FC<TierCelebrationProps> = ({ visible, newTi
     <Modal transparent visible={visible} animationType="none" onRequestClose={onClose}>
       <Pressable onPress={onClose} style={tw`flex-1 bg-black/70 items-center justify-center px-6`}>
         <Animated.View style={[animatedCardStyle, tw`w-full max-w-sm`]}>
-          <View style={tw`bg-white rounded-3xl overflow-hidden shadow-2xl`}>
+          <View style={tw`bg-sand rounded-3xl overflow-hidden shadow-2xl`}>
             {/* Gradient Header with Texture */}
             <ImageBackground source={getTexture()} resizeMode="cover" style={tw`overflow-hidden`}>
               <LinearGradient
@@ -106,25 +106,25 @@ export const TierCelebration: React.FC<TierCelebrationProps> = ({ visible, newTi
             </ImageBackground>
 
             {/* Content Section */}
-            <View style={tw`px-10 py-8 bg-gray-50`}>
+            <View style={tw`px-10 py-8 bg-stone-50`}>
               {/* Achievement Text */}
-              <Text style={tw`text-gray-900 text-center text-lg font-semibold mb-6`}>{newTier.description}</Text>
+              <Text style={tw`text-stone-800 text-center text-lg font-semibold mb-6`}>{newTier.description}</Text>
 
               {/* Benefits Row - No icons, just clean text */}
               <View style={tw`flex-row items-center justify-center gap-4`}>
-                <View style={tw`bg-white rounded-2xl px-5 py-3 flex-1`}>
-                  <Text style={tw`text-gray-500 text-xs font-medium text-center mb-1`}>STREAK</Text>
-                  <Text style={tw`text-gray-900 font-black text-center text-base`}>{newTier.minDays}+ Days</Text>
+                <View style={tw`bg-sand rounded-2xl px-5 py-3 flex-1`}>
+                  <Text style={tw`text-sand-500 text-xs font-medium text-center mb-1`}>STREAK</Text>
+                  <Text style={tw`text-stone-800 font-black text-center text-base`}>{newTier.minDays}+ Days</Text>
                 </View>
 
-                <View style={tw`bg-white rounded-2xl px-5 py-3 flex-1`}>
-                  <Text style={tw`text-gray-500 text-xs font-medium text-center mb-1`}>MULTIPLIER</Text>
-                  <Text style={tw`text-gray-900 font-black text-center text-base`}>{newTier.multiplier}x XP</Text>
+                <View style={tw`bg-sand rounded-2xl px-5 py-3 flex-1`}>
+                  <Text style={tw`text-sand-500 text-xs font-medium text-center mb-1`}>MULTIPLIER</Text>
+                  <Text style={tw`text-stone-800 font-black text-center text-base`}>{newTier.multiplier}x XP</Text>
                 </View>
               </View>
 
               {/* Continue Hint */}
-              <Text style={tw`text-gray-400 text-center text-xs mt-8`}>Tap anywhere to continue</Text>
+              <Text style={tw`text-stone-300 text-center text-xs mt-8`}>Tap anywhere to continue</Text>
             </View>
           </View>
         </Animated.View>

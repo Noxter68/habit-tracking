@@ -23,7 +23,7 @@ interface DateStats {
 
 // Separate component for stat item to prevent re-renders
 const StatItem = React.memo(({ icon, iconColor, label, value }: { icon: React.ReactElement; iconColor: string; label: string; value: number }) => (
-  <View style={tw`flex-1 bg-white/10 rounded-lg px-3 py-2`}>
+  <View style={tw`flex-1 bg-sand/10 rounded-lg px-3 py-2`}>
     <View style={tw`flex-row items-center justify-between`}>
       <View style={tw`flex-row items-center`}>
         {icon}
@@ -51,7 +51,7 @@ const ProgressIndicator = React.memo(({ percentage }: { percentage: number }) =>
   }));
 
   return (
-    <View style={tw`h-1.5 bg-white/20 rounded-full overflow-hidden relative`}>
+    <View style={tw`h-1.5 bg-sand/20 rounded-full overflow-hidden relative`}>
       <Animated.View
         style={[
           tw`h-full rounded-full`,
@@ -66,7 +66,7 @@ const ProgressIndicator = React.memo(({ percentage }: { percentage: number }) =>
 
       <View
         style={[
-          tw`absolute top-1/2 w-2 h-2 bg-white rounded-full -mt-1`,
+          tw`absolute top-1/2 w-2 h-2 bg-sand rounded-full -mt-1`,
           {
             left: `${Math.max(0, Math.min(98, percentage - 2))}%`,
             shadowColor: '#000',
@@ -181,7 +181,7 @@ const DynamicCalendarHeader: React.FC<DynamicCalendarHeaderProps> = ({ selectedH
 
         {/* Progress Circle */}
         <Animated.View entering={FadeInUp.duration(200).springify()} style={tw`relative`}>
-          <View style={tw`w-16 h-16 rounded-full bg-white/10 items-center justify-center`}>
+          <View style={tw`w-16 h-16 rounded-full bg-sand/10 items-center justify-center`}>
             <Text style={tw`text-white font-bold text-lg`}>{dateStats.percentage}%</Text>
             {dateStats.tasksCompleted > 0 && (
               <Text style={tw`text-white/60 text-xs`}>

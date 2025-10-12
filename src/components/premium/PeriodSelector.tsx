@@ -21,10 +21,10 @@ const PeriodSelector: React.FC<PeriodSelectorProps> = ({ selected, onSelect }) =
   ];
 
   return (
-    <View style={tw`flex-row bg-white rounded-3xl p-1.5 shadow-lg`}>
+    <View style={tw`flex-row bg-sand rounded-3xl p-1.5 shadow-lg`}>
       {periods.map((period) => (
-        <TouchableOpacity key={period.id} onPress={() => onSelect(period.id)} style={tw`flex-1 py-3 px-4 rounded-2xl ${selected === period.id ? 'bg-gray-100' : ''}`}>
-          <Text style={tw`text-center font-semibold ${selected === period.id ? 'text-black' : 'text-gray-400'} text-sm`}>{period.label}</Text>
+        <TouchableOpacity key={period.id} onPress={() => onSelect(period.id)} style={tw`flex-1 py-3 px-4 rounded-2xl ${selected === period.id ? 'bg-sand-100' : ''}`}>
+          <Text style={tw`text-center font-semibold ${selected === period.id ? 'text-black' : 'text-stone-300'} text-sm`}>{period.label}</Text>
         </TouchableOpacity>
       ))}
     </View>

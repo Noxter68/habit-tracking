@@ -60,8 +60,8 @@ const MilestonesCard: React.FC<MilestonesCardProps> = ({ milestones, currentStre
 
   return (
     <>
-      <View style={tw`bg-white rounded-3xl p-5 shadow-sm border border-gray-100`}>
-        <Text style={tw`text-base font-bold text-gray-900 mb-4`}>Milestones</Text>
+      <View style={tw`bg-sand rounded-3xl p-5 shadow-sm border border-stone-100`}>
+        <Text style={tw`text-base font-bold text-stone-800 mb-4`}>Milestones</Text>
 
         {milestones.map((milestone, idx) => {
           const isUnlocked = unlockedMilestones.some((m) => m.title === milestone.title);
@@ -78,17 +78,17 @@ const MilestonesCard: React.FC<MilestonesCardProps> = ({ milestones, currentStre
                     isUnlocked: isAchieved,
                   })
                 }
-                style={({ pressed }) => [tw`flex-row items-center justify-between py-3.5 border-b border-gray-50 rounded-xl`, pressed && tw`bg-gray-50`]}
+                style={({ pressed }) => [tw`flex-row items-center justify-between py-3.5 border-b border-gray-50 rounded-xl`, pressed && tw`bg-stone-50`]}
               >
                 <View style={tw`flex-row items-center justify-between py-3.5 border-b border-gray-50`}>
                   <View style={tw`flex-row items-center flex-1 gap-3`}>
-                    <View style={[tw`w-12 h-12 rounded-2xl items-center justify-center`, isAchieved ? tw`bg-stone-100` : tw`bg-gray-100`]}>
+                    <View style={[tw`w-12 h-12 rounded-2xl items-center justify-center`, isAchieved ? tw`bg-sand-100` : tw`bg-sand-100`]}>
                       <Image source={tierIcons[idx as keyof typeof tierIcons]} style={[{ width: iconSize.width, height: iconSize.height }, !isAchieved && tw`opacity-40`]} resizeMode="contain" />
                     </View>
 
                     <View style={tw`flex-1`}>
-                      <Text style={[tw`text-sm font-bold`, isAchieved ? tw`text-gray-900` : tw`text-gray-400`]}>{milestone.title}</Text>
-                      <Text style={tw`text-xs text-gray-500 mt-0.5`}>
+                      <Text style={[tw`text-sm font-bold`, isAchieved ? tw`text-stone-800` : tw`text-stone-300`]}>{milestone.title}</Text>
+                      <Text style={tw`text-xs text-sand-500 mt-0.5`}>
                         {isAchieved ? `Achieved! +${milestone.xpReward} XP` : currentStreak > milestone.days ? 'Missed' : `${milestone.days - currentStreak} days away`}
                       </Text>
                     </View>

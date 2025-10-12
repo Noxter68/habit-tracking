@@ -93,14 +93,14 @@ const FrequencySelector: React.FC<FrequencySelectorProps> = ({ selected, customD
                   >
                     <View style={tw`flex-row items-start justify-between`}>
                       <View style={tw`flex-row items-center flex-1`}>
-                        <View style={[tw`w-10 h-10 rounded-xl items-center justify-center mr-3`, isSelected ? tw`bg-white/20` : tw`bg-quartz-100`]}>
+                        <View style={[tw`w-10 h-10 rounded-xl items-center justify-center mr-3`, isSelected ? tw`bg-sand/20` : tw`bg-quartz-100`]}>
                           <Icon size={20} color={isSelected ? '#ffffff' : '#6B7280'} strokeWidth={1.5} />
                         </View>
                         <View style={tw`flex-1`}>
                           <View style={tw`flex-row items-center`}>
                             <Text style={[tw`text-lg font-medium`, isSelected ? tw`text-white` : tw`text-quartz-800`]}>{freq.label}</Text>
                             {freq.badge && (
-                              <View style={[tw`ml-2 px-2 py-0.5 rounded-full`, isSelected ? tw`bg-white/20` : tw`bg-quartz-200`]}>
+                              <View style={[tw`ml-2 px-2 py-0.5 rounded-full`, isSelected ? tw`bg-sand/20` : tw`bg-quartz-200`]}>
                                 <Text style={[tw`text-xs font-medium`, isSelected ? tw`text-white` : tw`text-quartz-600`]}>{freq.badge}</Text>
                               </View>
                             )}
@@ -109,12 +109,12 @@ const FrequencySelector: React.FC<FrequencySelectorProps> = ({ selected, customD
                         </View>
                       </View>
 
-                      <View style={[tw`w-5 h-5 rounded-full border-2 ml-2`, isSelected ? tw`border-white bg-white/20` : tw`border-quartz-300`]}>
-                        {isSelected && <View style={tw`w-2 h-2 bg-white rounded-full m-auto`} />}
+                      <View style={[tw`w-5 h-5 rounded-full border-2 ml-2`, isSelected ? tw`border-white bg-sand/20` : tw`border-quartz-300`]}>
+                        {isSelected && <View style={tw`w-2 h-2 bg-sand rounded-full m-auto`} />}
                       </View>
                     </View>
 
-                    <View style={[tw`mt-2 px-3 py-1.5 rounded-lg self-start`, isSelected ? tw`bg-white/10` : tw`bg-quartz-50`]}>
+                    <View style={[tw`mt-2 px-3 py-1.5 rounded-lg self-start`, isSelected ? tw`bg-sand/10` : tw`bg-quartz-50`]}>
                       <Text style={[tw`text-xs font-light`, isSelected ? tw`text-white` : tw`text-quartz-600`]}>{freq.stats}</Text>
                     </View>
                   </ImageBackground>

@@ -49,20 +49,20 @@ const GoalSetting: React.FC<GoalSettingProps> = ({ hasEndGoal, endGoalDays, onCh
               <View style={tw`flex-row items-start justify-between`}>
                 <View style={tw`flex-1 mr-3`}>
                   <View style={tw`flex-row items-center mb-2`}>
-                    <View style={[tw`w-9 h-9 rounded-lg items-center justify-center mr-3`, !hasEndGoal ? tw`bg-white/20` : tw`bg-quartz-100`]}>
+                    <View style={[tw`w-9 h-9 rounded-lg items-center justify-center mr-3`, !hasEndGoal ? tw`bg-sand/20` : tw`bg-quartz-100`]}>
                       <Target size={20} color={!hasEndGoal ? '#ffffff' : '#6B7280'} strokeWidth={1.5} />
                     </View>
                     <Text style={[tw`text-lg font-medium`, !hasEndGoal ? tw`text-white` : tw`text-quartz-800`]}>61-Day Challenge</Text>
                   </View>
                   <Text style={[tw`text-sm leading-5`, !hasEndGoal ? tw`text-white/80` : tw`text-quartz-600`]}>Science-backed duration for lasting habit formation</Text>
                   {!hasEndGoal && (
-                    <View style={tw`mt-2 bg-white/10 rounded-lg px-3 py-1.5 self-start`}>
+                    <View style={tw`mt-2 bg-sand/10 rounded-lg px-3 py-1.5 self-start`}>
                       <Text style={tw`text-xs text-white font-light`}>Optimal for habit building</Text>
                     </View>
                   )}
                 </View>
-                <View style={[tw`w-5 h-5 rounded-full border-2`, !hasEndGoal ? tw`border-white bg-white/20` : tw`border-quartz-300`]}>
-                  {!hasEndGoal && <View style={tw`w-2 h-2 bg-white rounded-full m-auto`} />}
+                <View style={[tw`w-5 h-5 rounded-full border-2`, !hasEndGoal ? tw`border-white bg-sand/20` : tw`border-quartz-300`]}>
+                  {!hasEndGoal && <View style={tw`w-2 h-2 bg-sand rounded-full m-auto`} />}
                 </View>
               </View>
             </ImageBackground>
@@ -75,13 +75,13 @@ const GoalSetting: React.FC<GoalSettingProps> = ({ hasEndGoal, endGoalDays, onCh
             <View style={tw`p-4`}>
               <View style={tw`flex-row items-start justify-between mb-3`}>
                 <View style={tw`flex-row items-center flex-1`}>
-                  <View style={[tw`w-9 h-9 rounded-lg items-center justify-center mr-3`, hasEndGoal ? tw`bg-white/20` : tw`bg-quartz-100`]}>
+                  <View style={[tw`w-9 h-9 rounded-lg items-center justify-center mr-3`, hasEndGoal ? tw`bg-sand/20` : tw`bg-quartz-100`]}>
                     <Zap size={20} color={hasEndGoal ? '#ffffff' : '#6B7280'} strokeWidth={1.5} />
                   </View>
                   <Text style={[tw`text-lg font-medium`, hasEndGoal ? tw`text-white` : tw`text-quartz-800`]}>Custom Duration</Text>
                 </View>
-                <View style={[tw`w-5 h-5 rounded-full border-2`, hasEndGoal ? tw`border-white bg-white/20` : tw`border-quartz-300`]}>
-                  {hasEndGoal && <View style={tw`w-2 h-2 bg-white rounded-full m-auto`} />}
+                <View style={[tw`w-5 h-5 rounded-full border-2`, hasEndGoal ? tw`border-white bg-sand/20` : tw`border-quartz-300`]}>
+                  {hasEndGoal && <View style={tw`w-2 h-2 bg-sand rounded-full m-auto`} />}
                 </View>
               </View>
 
@@ -96,7 +96,7 @@ const GoalSetting: React.FC<GoalSettingProps> = ({ hasEndGoal, endGoalDays, onCh
                         onPress={() => handlePresetSelect(goal.days)}
                         style={({ pressed }) => [
                           tw`px-3 py-2 rounded-xl border`,
-                          endGoalDays === goal.days ? tw`bg-white/20 border-white` : tw`bg-white/10 border-quartz-400`,
+                          endGoalDays === goal.days ? tw`bg-sand/20 border-white` : tw`bg-sand/10 border-quartz-400`,
                           pressed && tw`opacity-80`,
                         ]}
                       >
@@ -105,7 +105,7 @@ const GoalSetting: React.FC<GoalSettingProps> = ({ hasEndGoal, endGoalDays, onCh
                     ))}
                   </View>
 
-                  <View style={tw`bg-white/10 rounded-xl p-3`}>
+                  <View style={tw`bg-sand/10 rounded-xl p-3`}>
                     <Text style={tw`text-xs text-white/80 mb-2`}>Or enter custom days:</Text>
                     <TextInput
                       value={inputValue}
@@ -113,7 +113,7 @@ const GoalSetting: React.FC<GoalSettingProps> = ({ hasEndGoal, endGoalDays, onCh
                       placeholder="Enter number of days"
                       placeholderTextColor="rgba(255,255,255,0.4)"
                       keyboardType="numeric"
-                      style={tw`bg-white/20 rounded-lg px-3 py-2 text-white`}
+                      style={tw`bg-sand/20 rounded-lg px-3 py-2 text-white`}
                     />
                   </View>
                 </Animated.View>

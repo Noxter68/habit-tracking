@@ -23,11 +23,11 @@ const ChartTypeSelector: React.FC<ChartTypeSelectorProps> = ({ selected, onSelec
   ];
 
   return (
-    <View style={tw`flex-row bg-white rounded-3xl p-2 shadow-lg`}>
+    <View style={tw`flex-row bg-sand rounded-3xl p-2 shadow-lg`}>
       {chartTypes.map(({ id, Icon, label }) => (
-        <TouchableOpacity key={id} onPress={() => onSelect(id)} style={tw`flex-1 items-center py-3 rounded-2xl ${selected === id ? 'bg-gray-100' : ''}`}>
+        <TouchableOpacity key={id} onPress={() => onSelect(id)} style={tw`flex-1 items-center py-3 rounded-2xl ${selected === id ? 'bg-sand-100' : ''}`}>
           <Icon size={20} color={selected === id ? '#000000' : '#9CA3AF'} />
-          <Text style={tw`mt-2 text-xs ${selected === id ? 'text-black font-bold' : 'text-gray-400'}`}>{label}</Text>
+          <Text style={tw`mt-2 text-xs ${selected === id ? 'text-black font-bold' : 'text-stone-300'}`}>{label}</Text>
         </TouchableOpacity>
       ))}
     </View>

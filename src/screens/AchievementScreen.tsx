@@ -120,22 +120,22 @@ const AchievementsScreen: React.FC = () => {
   // Show loading screen only on initial load
   if (isLoading && !stats && !achievements) {
     return (
-      <SafeAreaView style={tw`flex-1 bg-achievement-stone-50 items-center justify-center`}>
-        <ActivityIndicator size="large" color="#d97706" />
-        <Text style={tw`text-achievement-stone-700 mt-3`}>Loading achievements...</Text>
+      <SafeAreaView style={tw`flex-1 bg-sand-50 items-center justify-center`}>
+        <ActivityIndicator size="large" color="#9CA3AF" /> {/* Stone-300 */}
+        <Text style={tw`text-sand-700 mt-3`}>Loading achievements...</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-achievement-stone-50`}>
+    <SafeAreaView style={tw`flex-1 bg-sand-50`}>
       {/* Header */}
-      <View style={tw`from-achievement-stone-50 to-achievement-stone-100 border-b border-achievement-stone-200`}>
+      <View style={tw`from-sand-50 to-stone-100 border-b border-sand-200`}>
         <View style={tw`px-5 py-4`}>
           {/* Navigation */}
           <View style={tw`flex-row items-center justify-between mb-3`}>
-            <Pressable onPress={() => navigation.goBack()} style={({ pressed }) => [tw`p-2 -ml-2 rounded-xl`, pressed && tw`bg-achievement-stone-100`]}>
-              <ChevronLeft size={30} color="#92400e" />
+            <Pressable onPress={() => navigation.goBack()} style={({ pressed }) => [tw`p-2 -ml-2 rounded-xl`, pressed && tw`bg-sand-100`]}>
+              <ChevronLeft size={30} color="#6B7280" />
             </Pressable>
             <Image source={require('../../assets/achievements/achievements.png')} style={{ width: 200, height: 80 }} resizeMode="cover" />
             <View style={tw`w-10`} />
@@ -149,7 +149,7 @@ const AchievementsScreen: React.FC = () => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 20 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#d97706']} tintColor="#d97706" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#9CA3AF']} tintColor="#9CA3AF" />}
       >
         {/* Current Level Hero */}
         <View style={tw`px-4 pt-4`}>

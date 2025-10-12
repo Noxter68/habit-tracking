@@ -1,9 +1,9 @@
 // src/components/dashboard/LevelProgress.tsx
 import React, { useEffect } from 'react';
 import { View, Text } from 'react-native';
-import Animated, { useAnimatedStyle, withSpring, useSharedValue, withTiming, interpolate } from 'react-native-reanimated';
-import { Image } from 'expo-image';
-import tw from '../../lib/tailwind';
+import Animated, { useAnimatedStyle, withSpring, useSharedValue, withTiming } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
+import tw, { quartzGradients } from '../../lib/tailwind';
 
 interface LevelProgressProps {
   currentLevel: number;
@@ -69,40 +69,45 @@ const LevelProgress: React.FC<LevelProgressProps> = ({ currentLevel, currentLeve
     return (
       <View style={tw`mb-4 h-12`}>
         {/* Placeholder with same height to prevent layout shift */}
-        <View style={tw`h-5 bg-quartz-50/50 rounded-full`} />
+        <View style={tw`h-5 bg-sand-100 rounded-full`} />
       </View>
     );
   }
 
   return (
-    <Animated.View style={[tw`mb-4`, animatedContainerStyle]}>
+    <Animated.View style={[animatedContainerStyle]}>
       {/* Header */}
-      <View style={tw`flex-row justify-between mb-1.5`}>
-        <Text style={tw`text-xs font-semibold text-quartz-600`}>Progress to Level {currentLevel + 1}</Text>
-        <Text style={tw`text-xs font-bold text-quartz-700`}>
-          {currentLevelXP}/{xpForNextLevel} XP
-        </Text>
+      <View style={tw`flex-row justify-between items-center mb-2`}>
+        <Text style={tw`text-xs font-semibold text-sand-700`}>Progress to Level {currentLevel + 1}</Text>
+        <View style={tw`bg-white/70 rounded-full px-2.5 py-0.5`}>
+          <Text style={tw`text-xs font-bold text-stone-700`}>
+            {currentLevelXP}/{xpForNextLevel} XP
+          </Text>
+        </View>
       </View>
 
-      {/* Progress bar container */}
-      <View style={tw`h-5 bg-quartz-50 rounded-full overflow-hidden border border-quartz-200`}>
-        <AnimatedView style={[tw`h-full rounded-full overflow-hidden bg-quartz-400`, animatedBarStyle]}>
-          {/* Texture overlay */}
-          <View style={tw`h-full flex-row`}>
-            <Image
-              source={require('../../../assets/interface/quartz-texture.png')}
-              style={{
-                height: '100%',
-                width: 320, // Wider to ensure coverage
-              }}
-              contentFit="cover"
-            />
-          </View>
+      {/* Progress bar container with subtle shadow */}
+      <View
+        style={[
+          tw`h-5 rounded-full overflow-hidden`,
+          {
+            backgroundColor: 'rgba(255, 255, 255, 0.4)',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.08,
+            shadowRadius: 4,
+            elevation: 2,
+          },
+        ]}
+      >
+        <AnimatedView style={[tw`h-full rounded-full overflow-hidden`, animatedBarStyle]}>
+          {/* Clean white gradient fill */}
+          <LinearGradient colors={['#ffffff', 'rgba(255, 255, 255, 0.95)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`h-full w-full`} />
         </AnimatedView>
       </View>
 
       {/* Remaining XP */}
-      {xpToNextLevel > 0 && <Text style={tw`text-xs text-quartz-500 mt-1.5`}>{xpToNextLevel} XP to next level</Text>}
+      {xpToNextLevel > 0 && <Text style={tw`text-xs text-sand-600 mt-1.5 text-center`}>{xpToNextLevel} XP to next level</Text>}
     </Animated.View>
   );
 };

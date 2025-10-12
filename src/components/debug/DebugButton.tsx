@@ -21,8 +21,8 @@ export const DebugButton: React.FC<DebugButtonProps> = ({ onPress, label, icon: 
   if (!showTestButtons) return null;
 
   const colors = {
-    primary: 'bg-indigo-500',
-    secondary: 'bg-purple-500',
+    primary: 'bg-sage-500',
+    secondary: 'bg-clay-1000',
     danger: 'bg-red-500',
   };
 

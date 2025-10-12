@@ -27,7 +27,7 @@ const StreakCounter: React.FC<StreakCounterProps> = ({ streak, compact = false, 
   };
 
   const getBgColor = () => {
-    if (lightMode) return 'bg-white/20';
+    if (lightMode) return 'bg-sand/20';
     if (streak >= 30) return 'bg-quartz-100';
     if (streak >= 7) return 'bg-quartz-50';
     return 'bg-transparent';

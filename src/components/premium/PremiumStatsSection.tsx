@@ -105,7 +105,7 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({ habits: propH
   const renderChart = () => {
     if (!chartData && selectedChart !== 'heatmap') {
       return (
-        <View style={tw`bg-white rounded-3xl p-12 shadow-lg items-center justify-center`}>
+        <View style={tw`bg-sand rounded-3xl p-12 shadow-lg items-center justify-center`}>
           <Text style={tw`text-quartz-400 text-center text-base`}>No data available for this period</Text>
         </View>
       );
@@ -142,7 +142,7 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({ habits: propH
     } catch (error) {
       console.error('Error rendering chart:', error);
       return (
-        <View style={tw`bg-white rounded-3xl p-12 shadow-lg items-center justify-center`}>
+        <View style={tw`bg-sand rounded-3xl p-12 shadow-lg items-center justify-center`}>
           <Text style={tw`text-quartz-400 text-center`}>Unable to display chart</Text>
         </View>
       );
@@ -152,7 +152,7 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({ habits: propH
   if (loading || habitsLoading) {
     return (
       <View style={tw`mx-5 mt-8`}>
-        <View style={tw`bg-white rounded-3xl p-12 shadow-lg items-center justify-center`}>
+        <View style={tw`bg-sand rounded-3xl p-12 shadow-lg items-center justify-center`}>
           <ActivityIndicator size="large" color="#6B7280" />
           <Text style={tw`text-quartz-400 text-center mt-4`}>Loading premium analytics...</Text>
         </View>
@@ -178,7 +178,7 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({ habits: propH
         <LinearGradient colors={['#4B5563', '#374151']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-5 mb-6 shadow-xl`}>
           <View style={tw`flex-row items-center justify-between mb-3`}>
             <View style={tw`flex-row items-center`}>
-              <View style={tw`bg-white/20 p-2 rounded-full mr-3`}>
+              <View style={tw`bg-sand/20 p-2 rounded-full mr-3`}>
                 <Crown size={24} color="#FFFFFF" />
               </View>
               <View>
@@ -188,7 +188,7 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({ habits: propH
                 </Text>
               </View>
             </View>
-            <TouchableOpacity onPress={() => setShowGlobalStats(!showGlobalStats)} style={tw`bg-white/25 px-4 py-2 rounded-full flex-row items-center`}>
+            <TouchableOpacity onPress={() => setShowGlobalStats(!showGlobalStats)} style={tw`bg-sand/25 px-4 py-2 rounded-full flex-row items-center`}>
               {showGlobalStats ? <Eye size={16} color="#FFFFFF" /> : <BarChart3 size={16} color="#FFFFFF" />}
               <Text style={tw`ml-2 text-white font-semibold text-sm`}>{showGlobalStats ? 'Charts' : 'Stats'}</Text>
             </TouchableOpacity>

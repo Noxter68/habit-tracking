@@ -49,7 +49,7 @@ const QuickStats: React.FC<QuickStatsProps> = ({ summary }) => {
   ];
 
   return (
-    <View style={tw`bg-white rounded-3xl p-5 shadow-lg`}>
+    <View style={tw`bg-sand rounded-3xl p-5 shadow-lg`}>
       <View style={tw`flex-row flex-wrap gap-3`}>
         {stats.map(({ label, value, Icon, colors }) => (
           <View key={label} style={tw`flex-1 min-w-[47%]`}>
@@ -59,7 +59,7 @@ const QuickStats: React.FC<QuickStatsProps> = ({ summary }) => {
                   <Text style={tw`text-2xl font-bold text-white`}>{value}</Text>
                   <Text style={tw`text-xs text-white/80 mt-1`}>{label}</Text>
                 </View>
-                <View style={tw`bg-white/20 p-2 rounded-xl`}>
+                <View style={tw`bg-sand/20 p-2 rounded-xl`}>
                   <Icon size={20} color="white" />
                 </View>
               </View>

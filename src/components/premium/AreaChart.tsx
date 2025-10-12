@@ -22,8 +22,8 @@ const screenWidth = Dimensions.get('window').width;
 const AreaChart: React.FC<AreaChartProps> = ({ data, period = 'week' }) => {
   if (!data || !data.datasets || data.datasets.length === 0 || !data.datasets[0].data) {
     return (
-      <View style={tw`bg-white rounded-3xl p-12 shadow-lg items-center justify-center`}>
-        <Text style={tw`text-gray-400 text-center`}>No data available</Text>
+      <View style={tw`bg-sand rounded-3xl p-12 shadow-lg items-center justify-center`}>
+        <Text style={tw`text-stone-300 text-center`}>No data available</Text>
       </View>
     );
   }
@@ -79,9 +79,9 @@ const AreaChart: React.FC<AreaChartProps> = ({ data, period = 'week' }) => {
   );
 
   return (
-    <View style={tw`bg-white rounded-3xl shadow-lg overflow-hidden`}>
+    <View style={tw`bg-sand rounded-3xl shadow-lg overflow-hidden`}>
       <View style={tw`px-5 py-6`}>
-        <Text style={tw`text-xs uppercase tracking-wider text-gray-400 mb-6`}>Trend</Text>
+        <Text style={tw`text-xs uppercase tracking-wider text-stone-300 mb-6`}>Trend</Text>
         {period === 'month' || period === '4weeks' ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={tw`pb-2`}>
             {chart}

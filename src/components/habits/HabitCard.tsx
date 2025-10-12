@@ -161,9 +161,9 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onToggleDay, onToggleTask,
                   <Text style={tw`text-xs text-white font-bold`}>{Math.round(taskProgress)}%</Text>
                 </View>
 
-                <View style={tw`h-1.5 bg-white/20 rounded-full overflow-hidden`}>
+                <View style={tw`h-1.5 bg-sand/20 rounded-full overflow-hidden`}>
                   <Animated.View style={progressBarStyle}>
-                    <View style={tw`h-full bg-white/50 rounded-full`} />
+                    <View style={tw`h-full bg-sand/50 rounded-full`} />
                   </Animated.View>
                 </View>
 
@@ -181,8 +181,8 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onToggleDay, onToggleTask,
                   <Text style={tw`text-[10px] text-white/70 font-medium uppercase tracking-wider`}>{currentTier} Tier</Text>
                   <Text style={tw`text-[10px] text-white/90 font-bold`}>{Math.round(tierProgressPercent)}%</Text>
                 </View>
-                <View style={tw`h-1 bg-white/20 rounded-full overflow-hidden`}>
-                  <View style={[tw`h-full bg-white/40 rounded-full`, { width: `${tierProgressPercent}%` }]} />
+                <View style={tw`h-1 bg-sand/20 rounded-full overflow-hidden`}>
+                  <View style={[tw`h-full bg-sand/40 rounded-full`, { width: `${tierProgressPercent}%` }]} />
                 </View>
                 {multiplier > 1 && <Text style={tw`text-[10px] text-white/90 font-bold mt-1`}>{multiplier}x XP Multiplier</Text>}
               </View>

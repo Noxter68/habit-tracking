@@ -58,7 +58,7 @@ const ProgressCard: React.FC<ProgressCardProps> = ({ status, completionRate, hab
 
   return (
     <Animated.View entering={FadeIn.duration(500).springify()} style={tw`px-5 pb-4 mt-4`}>
-      <View style={tw`bg-white rounded-3xl overflow-hidden shadow-sm`}>
+      <View style={tw`bg-sand rounded-3xl overflow-hidden shadow-sm`}>
         {/* Main Content Area */}
         <View style={tw`p-5`}>
           {/* Top Section - Current Progress */}
@@ -66,13 +66,13 @@ const ProgressCard: React.FC<ProgressCardProps> = ({ status, completionRate, hab
             <View style={tw`flex-1`}>
               <View style={tw`flex-row items-center mb-1`}>
                 <StatusIcon size={18} color={completionRate >= 50 ? '#6366f1' : '#9ca3af'} strokeWidth={2.5} />
-                <Text style={tw`text-xs font-medium text-gray-500 ml-2`}>TODAY'S PROGRESS</Text>
+                <Text style={tw`text-xs font-medium text-sand-500 ml-2`}>TODAY'S PROGRESS</Text>
               </View>
               <View style={tw`flex-row items-baseline`}>
-                <Text style={tw`text-3xl font-bold text-gray-900`}>{habitsCompleted}</Text>
-                <Text style={tw`text-lg text-gray-400 ml-1`}>/ {totalHabits}</Text>
-                <View style={tw`ml-3 px-2.5 py-0.5 rounded-full bg-indigo-50`}>
-                  <Text style={tw`text-sm font-bold text-indigo-600`}>{completionRate}%</Text>
+                <Text style={tw`text-3xl font-bold text-stone-800`}>{habitsCompleted}</Text>
+                <Text style={tw`text-lg text-stone-300 ml-1`}>/ {totalHabits}</Text>
+                <View style={tw`ml-3 px-2.5 py-0.5 rounded-full bg-sage-50`}>
+                  <Text style={tw`text-sm font-bold text-stone-600`}>{completionRate}%</Text>
                 </View>
               </View>
             </View>
@@ -80,7 +80,7 @@ const ProgressCard: React.FC<ProgressCardProps> = ({ status, completionRate, hab
             {/* Visual Progress Circle */}
             <View style={tw`relative w-16 h-16`}>
               <View style={tw`absolute inset-0 items-center justify-center`}>
-                <View style={tw`w-full h-full rounded-full border-4 border-gray-100`} />
+                <View style={tw`w-full h-full rounded-full border-4 border-stone-100`} />
               </View>
               <View
                 style={[
@@ -102,34 +102,34 @@ const ProgressCard: React.FC<ProgressCardProps> = ({ status, completionRate, hab
           </View>
 
           {/* Progress Bar */}
-          <View style={tw`h-2.5 bg-gray-50 rounded-full overflow-hidden mb-3`}>
+          <View style={tw`h-2.5 bg-stone-50 rounded-full overflow-hidden mb-3`}>
             <Animated.View style={[progressStyle]}>
               <LinearGradient colors={getProgressGradient()} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`h-full rounded-full`} />
             </Animated.View>
           </View>
 
           {/* Status Message */}
-          <Text style={tw`text-xs text-gray-500 text-center mb-4`}>{status.message}</Text>
+          <Text style={tw`text-xs text-sand-500 text-center mb-4`}>{status.message}</Text>
         </View>
 
         {/* Bottom Section - Lifetime Stats */}
-        <LinearGradient colors={['#fafafa', '#ffffff']} style={tw`border-t border-gray-100`}>
+        <LinearGradient colors={['#fafafa', '#ffffff']} style={tw`border-t border-stone-100`}>
           <Pressable onPress={() => navigation.navigate('Stats' as never)} style={({ pressed }) => [tw`px-5 py-4`, pressed && tw`opacity-70`]}>
             <View style={tw`flex-row items-center justify-between`}>
               <View style={tw`flex-1`}>
                 <View style={tw`flex-row items-center mb-1`}>
                   <Award size={14} color="#9ca3af" strokeWidth={2} />
-                  <Text style={tw`text-xs font-medium text-gray-500 ml-1.5`}>LIFETIME ACHIEVEMENT</Text>
+                  <Text style={tw`text-xs font-medium text-sand-500 ml-1.5`}>LIFETIME ACHIEVEMENT</Text>
                 </View>
                 <View style={tw`flex-row items-center`}>
-                  <Text style={tw`text-xl font-bold text-gray-900 mr-3`}>{totalCompletions}</Text>
+                  <Text style={tw`text-xl font-bold text-stone-800 mr-3`}>{totalCompletions}</Text>
                   <View style={tw`flex-1`}>
                     <Text style={tw`text-xs text-gray-600`}>habits completed</Text>
                     <View style={tw`flex-row items-center mt-0.5`}>
-                      <View style={tw`h-1 bg-gray-100 rounded-full flex-1 mr-2`}>
-                        <View style={[tw`h-full bg-indigo-400 rounded-full`, { width: `${milestoneProgress}%` }]} />
+                      <View style={tw`h-1 bg-sand-100 rounded-full flex-1 mr-2`}>
+                        <View style={[tw`h-full bg-stone-400 rounded-full`, { width: `${milestoneProgress}%` }]} />
                       </View>
-                      <Text style={tw`text-xs text-gray-400`}>
+                      <Text style={tw`text-xs text-stone-300`}>
                         {nextMilestone - totalCompletions} to {nextMilestone}
                       </Text>
                     </View>
@@ -138,7 +138,7 @@ const ProgressCard: React.FC<ProgressCardProps> = ({ status, completionRate, hab
               </View>
 
               <View style={tw`ml-4 flex-row items-center`}>
-                <Text style={tw`text-xs font-medium text-indigo-600 mr-1`}>View Details</Text>
+                <Text style={tw`text-xs font-medium text-stone-600 mr-1`}>View Details</Text>
                 <ChevronRight size={16} color="#6366f1" strokeWidth={2.5} />
               </View>
             </View>

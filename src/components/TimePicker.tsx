@@ -173,21 +173,21 @@ const TimePicker: React.FC<TimePickerProps> = ({ initialHour = 9, initialMinute 
           },
         ]}
       >
-        <View style={tw`bg-white rounded-t-3xl shadow-2xl`}>
+        <View style={tw`bg-sand rounded-t-3xl shadow-2xl`}>
           {/* Swipeable header area */}
           <View {...panResponder.panHandlers}>
             {/* Handle */}
             <View style={tw`items-center pt-3 pb-2`}>
-              <View style={tw`h-1 w-12 bg-gray-300 rounded-full`} />
+              <View style={tw`h-1 w-12 bg-stone-300 rounded-full`} />
             </View>
 
             {/* Header */}
             <View style={tw`flex-row items-center justify-between px-6 py-4`}>
               <Pressable onPress={handleCancel} style={({ pressed }) => [tw`px-4 py-2 -ml-4`, pressed && tw`opacity-50`]}>
-                <Text style={tw`text-base text-gray-500`}>Cancel</Text>
+                <Text style={tw`text-base text-sand-500`}>Cancel</Text>
               </Pressable>
 
-              <Text style={tw`text-lg font-semibold text-gray-900`}>Select Time</Text>
+              <Text style={tw`text-lg font-semibold text-stone-800`}>Select Time</Text>
 
               <Pressable onPress={handleConfirm} style={({ pressed }) => [tw`px-4 py-2 bg-teal-500 rounded-full`, pressed && tw`bg-teal-600`]}>
                 <Text style={tw`text-white font-medium`}>Done</Text>
@@ -197,12 +197,12 @@ const TimePicker: React.FC<TimePickerProps> = ({ initialHour = 9, initialMinute 
 
           {/* Display Time */}
           <View style={tw`py-3 mb-2`}>
-            <Text style={tw`text-center text-2xl font-bold text-gray-900`}>{formatDisplayTime()}</Text>
+            <Text style={tw`text-center text-2xl font-bold text-stone-800`}>{formatDisplayTime()}</Text>
           </View>
 
           {/* iOS Picker */}
           <View style={tw`px-6 pb-6`}>
-            <View style={tw`bg-gray-50 rounded-2xl p-2`}>
+            <View style={tw`bg-stone-50 rounded-2xl p-2`}>
               <DateTimePicker value={selectedTime} mode="time" display="spinner" onChange={onChange} style={{ height: 200 }} textColor="#111827" locale="en" />
             </View>
           </View>

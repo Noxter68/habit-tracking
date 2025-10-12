@@ -102,16 +102,16 @@ const CalendarView: React.FC<CalendarViewProps> = ({ habit, selectedDate, onDate
   const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
   return (
-    <View style={tw`bg-white rounded-2xl shadow-sm p-4`}>
+    <View style={tw`bg-sand rounded-2xl shadow-sm p-4`}>
       {/* Month Navigation */}
       <View style={tw`flex-row items-center justify-between mb-4`}>
-        <Pressable onPress={() => navigateMonth('prev')} style={({ pressed }) => [tw`p-2 rounded-lg`, pressed && tw`bg-gray-100`]}>
+        <Pressable onPress={() => navigateMonth('prev')} style={({ pressed }) => [tw`p-2 rounded-lg`, pressed && tw`bg-sand-100`]}>
           <ChevronLeft size={20} color="#6b7280" />
         </Pressable>
 
         <Text style={tw`text-base font-bold text-gray-800`}>{currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</Text>
 
-        <Pressable onPress={() => navigateMonth('next')} style={({ pressed }) => [tw`p-2 rounded-lg`, pressed && tw`bg-gray-100`]}>
+        <Pressable onPress={() => navigateMonth('next')} style={({ pressed }) => [tw`p-2 rounded-lg`, pressed && tw`bg-sand-100`]}>
           <ChevronRight size={20} color="#6b7280" />
         </Pressable>
       </View>
@@ -120,7 +120,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ habit, selectedDate, onDate
       <View style={tw`flex-row mb-2`}>
         {weekDays.map((day, index) => (
           <View key={index} style={tw`flex-1 items-center`}>
-            <Text style={tw`text-xs font-medium text-gray-500`}>{day}</Text>
+            <Text style={tw`text-xs font-medium text-sand-500`}>{day}</Text>
           </View>
         ))}
       </View>
@@ -155,8 +155,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ habit, selectedDate, onDate
                   status.partial && tw`bg--quartz-500`,
                   isMissed && tw`bg-red-50`,
                   beforeCreation && tw`opacity-30`,
-                  selected && !status.completed && !status.partial && !isMissed && !beforeCreation && tw`bg-indigo-100`,
-                  today && !selected && tw`bg-gray-100`,
+                  selected && !status.completed && !status.partial && !isMissed && !beforeCreation && tw`bg-stone-100`,
+                  today && !selected && tw`bg-sand-100`,
                   pressed && !beforeCreation && tw`opacity-80`,
                 ]}
               >
@@ -166,17 +166,17 @@ const CalendarView: React.FC<CalendarViewProps> = ({ habit, selectedDate, onDate
                 <Text
                   style={[
                     tw`text-base font-medium`,
-                    status.completed || status.partial ? tw`text-white` : tw`text-gray-700`,
+                    status.completed || status.partial ? tw`text-white` : tw`text-sand-700`,
                     isMissed && tw`text-red-500`,
-                    beforeCreation && tw`text-gray-400`,
-                    selected && !status.completed && !status.partial && !isMissed && !beforeCreation && tw`text-indigo-600`,
+                    beforeCreation && tw`text-stone-300`,
+                    selected && !status.completed && !status.partial && !isMissed && !beforeCreation && tw`text-stone-600`,
                   ]}
                 >
                   {date.getDate()}
                 </Text>
 
                 {/* Today indicator */}
-                {today && !status.completed && !status.partial && <View style={tw`absolute bottom-0.5 w-1 h-1 bg-indigo-500 rounded-full`} />}
+                {today && !status.completed && !status.partial && <View style={tw`absolute bottom-0.5 w-1 h-1 bg-sage-500 rounded-full`} />}
               </Pressable>
             </Animated.View>
           );
@@ -184,7 +184,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ habit, selectedDate, onDate
       </View>
 
       {/* Legend */}
-      <View style={tw`flex-row justify-center items-center mt-3 pt-3 border-t border-gray-100`}>
+      <View style={tw`flex-row justify-center items-center mt-3 pt-3 border-t border-stone-100`}>
         <View style={tw`flex-row items-center mr-4`}>
           <View style={tw`w-3 h-3 bg-green-500 rounded`} />
           <Text style={tw`text-xs text-gray-600 ml-1`}>Complete</Text>

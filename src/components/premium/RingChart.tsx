@@ -27,7 +27,7 @@ const RingChart: React.FC<RingChartProps> = ({ data, habits = [], period = 'week
   // Validate data and provide defaults
   if (!data || !data.summary) {
     return (
-      <View style={tw`bg-white rounded-3xl p-8 shadow-sm items-center justify-center`}>
+      <View style={tw`bg-sand rounded-3xl p-8 shadow-sm items-center justify-center`}>
         <Text style={tw`text-quartz-400 text-center`}>No data available</Text>
       </View>
     );
@@ -88,7 +88,7 @@ const RingChart: React.FC<RingChartProps> = ({ data, habits = [], period = 'week
   });
 
   return (
-    <View style={tw`bg-white rounded-3xl shadow-sm overflow-hidden`}>
+    <View style={tw`bg-sand rounded-3xl shadow-sm overflow-hidden`}>
       <LinearGradient colors={['#F3F4F6', '#FFFFFF']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={tw`p-4`}>
         {/* Main Ring Chart */}
         <View style={tw`items-center mb-4`}>

@@ -58,7 +58,7 @@ const HabitTypeCards: React.FC<HabitTypeCardsProps> = ({ selected, onSelect }) =
                     <View style={tw`flex-row items-center justify-between`}>
                       <View style={tw`flex-row items-center flex-1`}>
                         {/* Icon Container */}
-                        <View style={[tw`w-12 h-12 rounded-2xl items-center justify-center mr-4`, isSelected ? tw`bg-white/30` : tw`bg-quartz-50/50`]}>
+                        <View style={[tw`w-12 h-12 rounded-2xl items-center justify-center mr-4`, isSelected ? tw`bg-sand/30` : tw`bg-quartz-50/50`]}>
                           <Icon size={24} color={isSelected ? '#FFFFFF' : '#4B5563'} strokeWidth={1.5} />
                         </View>
 
@@ -70,8 +70,8 @@ const HabitTypeCards: React.FC<HabitTypeCardsProps> = ({ selected, onSelect }) =
                       </View>
 
                       {/* Selection Indicator */}
-                      <View style={[tw`w-6 h-6 rounded-full border-2`, isSelected ? tw`border-white bg-white/20` : tw`border-quartz-300 bg-quartz-50/50`]}>
-                        {isSelected && <View style={tw`w-2.5 h-2.5 bg-white rounded-full m-auto`} />}
+                      <View style={[tw`w-6 h-6 rounded-full border-2`, isSelected ? tw`border-white bg-sand/20` : tw`border-quartz-300 bg-quartz-50/50`]}>
+                        {isSelected && <View style={tw`w-2.5 h-2.5 bg-sand rounded-full m-auto`} />}
                       </View>
                     </View>
                   </ImageBackground>

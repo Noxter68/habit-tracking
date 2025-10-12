@@ -99,7 +99,7 @@ const NotificationSettingsScreen: React.FC<Props> = ({ navigation }) => {
           {notificationOptions.map((option, index) => (
             <Animated.View key={option.id} entering={FadeIn.delay(100 * index)}>
               <Pressable onPress={() => handleOptionSelect(option.id)} style={tw`mb-3`}>
-                <View style={[tw`p-4 rounded-2xl border-2`, selectedCadence === option.id ? tw`bg-teal-50 border-teal-300` : tw`bg-white border-slate-200`]}>
+                <View style={[tw`p-4 rounded-2xl border-2`, selectedCadence === option.id ? tw`bg-teal-50 border-teal-300` : tw`bg-sand border-slate-200`]}>
                   <View style={tw`flex-row items-center justify-between`}>
                     <View style={tw`flex-row items-center flex-1`}>
                       <View style={[tw`w-5 h-5 rounded-full border-2 mr-3 items-center justify-center`, selectedCadence === option.id ? tw`bg-teal-500 border-teal-500` : tw`border-slate-300`]}>

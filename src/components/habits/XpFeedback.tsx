@@ -71,7 +71,7 @@ export const XPFeedback: React.FC<XPFeedbackProps> = ({ visible, xpEarned, break
             <Text style={tw`text-4xl font-bold text-white mt-3`}>+{xpEarned} XP</Text>
 
             {breakdown && (
-              <View style={tw`mt-4 bg-white/20 rounded-xl p-3 w-full`}>
+              <View style={tw`mt-4 bg-sand/20 rounded-xl p-3 w-full`}>
                 <View style={tw`space-y-1`}>
                   {breakdown.base > 0 && (
                     <View style={tw`flex-row justify-between`}>
@@ -159,7 +159,7 @@ export const MilestoneCelebration: React.FC<MilestoneCelebrationProps> = ({ visi
         />
       ))}
 
-      <Animated.View entering={SlideInUp.springify()} style={tw`bg-white rounded-3xl p-8 shadow-2xl mx-8`}>
+      <Animated.View entering={SlideInUp.springify()} style={tw`bg-sand rounded-3xl p-8 shadow-2xl mx-8`}>
         <View style={tw`items-center`}>
           <Text style={tw`text-6xl mb-4`}>{milestone.badge}</Text>
           <Text style={tw`text-2xl font-bold text-gray-800 text-center`}>{milestone.title}</Text>
@@ -169,8 +169,8 @@ export const MilestoneCelebration: React.FC<MilestoneCelebrationProps> = ({ visi
             <Text style={tw`text-white font-bold text-xl`}>+{milestone.xpReward} XP</Text>
           </LinearGradient>
 
-          <Pressable onPress={onDismiss} style={({ pressed }) => [tw`mt-6 bg-gray-100 px-8 py-3 rounded-xl`, pressed && tw`opacity-80`]}>
-            <Text style={tw`text-gray-700 font-semibold`}>Continue</Text>
+          <Pressable onPress={onDismiss} style={({ pressed }) => [tw`mt-6 bg-sand-100 px-8 py-3 rounded-xl`, pressed && tw`opacity-80`]}>
+            <Text style={tw`text-sand-700 font-semibold`}>Continue</Text>
           </Pressable>
         </View>
       </Animated.View>
@@ -215,7 +215,7 @@ export const TierUpgrade: React.FC<TierUpgradeProps> = ({ visible, tier, onDismi
   return (
     <Animated.View entering={ZoomIn.springify()} exiting={FadeOut} style={[tw`absolute inset-0 items-center justify-center z-50`, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
       <Animated.View style={containerStyle}>
-        <View style={[tw`bg-white rounded-3xl p-8 shadow-2xl mx-8 border-4`, { borderColor: tier.color }]}>
+        <View style={[tw`bg-sand rounded-3xl p-8 shadow-2xl mx-8 border-4`, { borderColor: tier.color }]}>
           {/* Glow Effect */}
           <Animated.View
             style={[
@@ -230,7 +230,7 @@ export const TierUpgrade: React.FC<TierUpgradeProps> = ({ visible, tier, onDismi
 
           <View style={tw`items-center`}>
             <Text style={tw`text-6xl mb-4`}>{tier.icon}</Text>
-            <Text style={tw`text-xs font-bold text-gray-500 uppercase tracking-wider`}>Tier Upgraded</Text>
+            <Text style={tw`text-xs font-bold text-sand-500 uppercase tracking-wider`}>Tier Upgraded</Text>
             <Text style={[tw`text-3xl font-bold mt-2`, { color: tier.color }]}>{tier.name}</Text>
             <Text style={tw`text-sm text-gray-600 text-center mt-3`}>{tier.description}</Text>
 

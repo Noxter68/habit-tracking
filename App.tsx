@@ -193,7 +193,7 @@ function AppNavigator() {
   // Loading state
   if (loading || isCheckingFirstLaunch) {
     return (
-      <View style={tw`flex-1 items-center justify-center bg-white`}>
+      <View style={tw`flex-1 items-center justify-center bg-sand`}>
         <ActivityIndicator size="large" color={tw.color('indigo-600')} />
       </View>
     );

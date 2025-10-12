@@ -26,10 +26,10 @@ export const TasksCard: React.FC<TasksCardProps> = ({ tasks, todayTasks, habitId
   const taskProgress = totalTasks > 0 ? (completedTasksToday / totalTasks) * 100 : 0;
 
   return (
-    <View style={tw`bg-white rounded-3xl p-5 mb-4 shadow-sm border border-gray-100`}>
+    <View style={tw`bg-sand rounded-3xl p-5 mb-4 shadow-sm border border-stone-100`}>
       {/* Header */}
       <View style={tw`flex-row items-center justify-between mb-4`}>
-        <Text style={tw`text-base font-bold text-gray-900`}>Today's Tasks</Text>
+        <Text style={tw`text-base font-bold text-stone-800`}>Today's Tasks</Text>
         <View style={[tw`px-3 py-1.5 rounded-xl border`, { borderColor: theme.accent + '50', backgroundColor: theme.accent + '15' }]}>
           <Text style={[tw`text-xs font-black`, { color: theme.accent }]}>
             {completedTasksToday}/{totalTasks}
@@ -38,7 +38,7 @@ export const TasksCard: React.FC<TasksCardProps> = ({ tasks, todayTasks, habitId
       </View>
 
       {/* Progress Bar with texture */}
-      <View style={tw`h-3 bg-gray-100 rounded-full overflow-hidden mb-4`}>
+      <View style={tw`h-3 bg-sand-100 rounded-full overflow-hidden mb-4`}>
         <ImageBackground source={theme.texture} style={[tw`h-full`, { width: `${Math.max(taskProgress, 5)}%` }]} resizeMode="cover">
           <LinearGradient colors={theme.gradient.map((c) => c + 'cc')} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`h-full`} />
         </ImageBackground>
@@ -53,7 +53,7 @@ export const TasksCard: React.FC<TasksCardProps> = ({ tasks, todayTasks, habitId
 
         return (
           <Animated.View key={`task-${taskId}`} entering={FadeInDown.delay(idx * 50).springify()}>
-            <Pressable onPress={() => onToggleTask(taskId)} disabled={isProcessing || isCompleted} style={tw`flex-row items-center p-4 rounded-2xl mb-2.5 border bg-white`}>
+            <Pressable onPress={() => onToggleTask(taskId)} disabled={isProcessing || isCompleted} style={tw`flex-row items-center p-4 rounded-2xl mb-2.5 border bg-sand`}>
               {/* Status Icon */}
               <View style={tw`w-6 h-6 mr-3.5`}>
                 {isProcessing ? (
@@ -66,7 +66,7 @@ export const TasksCard: React.FC<TasksCardProps> = ({ tasks, todayTasks, habitId
               </View>
 
               {/* Task Name */}
-              <Text style={[tw`text-sm flex-1 font-medium`, isCompleted ? tw`text-gray-400 line-through` : tw`text-gray-800`]}>{typeof task === 'string' ? task : task.name}</Text>
+              <Text style={[tw`text-sm flex-1 font-medium`, isCompleted ? tw`text-stone-300 line-through` : tw`text-gray-800`]}>{typeof task === 'string' ? task : task.name}</Text>
 
               {/* XP Badge */}
               {isCompleted && hasEarnedXP && (

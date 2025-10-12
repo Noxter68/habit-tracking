@@ -76,8 +76,8 @@ const InteractiveRingChart: React.FC<InteractiveRingChartProps> = ({ data, habit
 
   if (!data || !data.summary) {
     return (
-      <View style={tw`bg-white rounded-3xl p-12 shadow-lg items-center justify-center`}>
-        <Text style={tw`text-gray-400 text-center`}>No data available</Text>
+      <View style={tw`bg-sand rounded-3xl p-12 shadow-lg items-center justify-center`}>
+        <Text style={tw`text-stone-300 text-center`}>No data available</Text>
       </View>
     );
   }
@@ -105,10 +105,10 @@ const InteractiveRingChart: React.FC<InteractiveRingChartProps> = ({ data, habit
   };
 
   return (
-    <View style={tw`bg-white rounded-3xl shadow-lg overflow-hidden`}>
+    <View style={tw`bg-sand rounded-3xl shadow-lg overflow-hidden`}>
       <View style={tw`px-5 py-6`}>
         {/* Minimalist Title */}
-        <Text style={tw`text-xs uppercase tracking-wider text-gray-400 mb-6`}>Summary</Text>
+        <Text style={tw`text-xs uppercase tracking-wider text-stone-300 mb-6`}>Summary</Text>
 
         {/* Habits - Minimal Pills */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={tw`mb-8`} contentContainerStyle={tw`gap-3`}>
@@ -117,12 +117,12 @@ const InteractiveRingChart: React.FC<InteractiveRingChartProps> = ({ data, habit
               key={index}
               onPress={() => setSelectedHabitIndex(selectedHabitIndex === index ? null : index)}
               activeOpacity={0.8}
-              style={tw`${selectedHabitIndex === index ? 'bg-black' : 'bg-gray-50'} px-4 py-2 rounded-full`}
+              style={tw`${selectedHabitIndex === index ? 'bg-black' : 'bg-stone-50'} px-4 py-2 rounded-full`}
             >
               <View style={tw`flex-row items-center gap-2`}>
-                <Text style={tw`text-xs font-medium ${selectedHabitIndex === index ? 'text-white' : 'text-gray-900'}`}>{habit.name}</Text>
-                <Text style={tw`text-xs ${selectedHabitIndex === index ? 'text-white/80' : 'text-gray-500'}`}>{habit.percentage}%</Text>
-                {habit.currentStreak > 0 && <Text style={tw`text-xs ${selectedHabitIndex === index ? 'text-white/60' : 'text-gray-400'}`}>• {habit.currentStreak}d</Text>}
+                <Text style={tw`text-xs font-medium ${selectedHabitIndex === index ? 'text-white' : 'text-stone-800'}`}>{habit.name}</Text>
+                <Text style={tw`text-xs ${selectedHabitIndex === index ? 'text-white/80' : 'text-sand-500'}`}>{habit.percentage}%</Text>
+                {habit.currentStreak > 0 && <Text style={tw`text-xs ${selectedHabitIndex === index ? 'text-white/60' : 'text-stone-300'}`}>• {habit.currentStreak}d</Text>}
               </View>
             </TouchableOpacity>
           ))}
@@ -143,7 +143,7 @@ const InteractiveRingChart: React.FC<InteractiveRingChartProps> = ({ data, habit
             />
             <View style={tw`absolute inset-0 items-center justify-center`}>
               <Text style={tw`text-6xl font-light text-black`}>{safeData.summary.percentage}</Text>
-              <Text style={tw`text-xs text-gray-400 mt-2 uppercase tracking-wider`}>
+              <Text style={tw`text-xs text-stone-300 mt-2 uppercase tracking-wider`}>
                 {selectedHabitIndex !== null && habitProgress[selectedHabitIndex] ? habitProgress[selectedHabitIndex].name : 'Total'}
               </Text>
             </View>
@@ -151,22 +151,22 @@ const InteractiveRingChart: React.FC<InteractiveRingChartProps> = ({ data, habit
         </View>
 
         {/* Minimal Stats with rounded background */}
-        <View style={tw`flex-row justify-center gap-4 bg-gray-50 rounded-2xl p-4`}>
+        <View style={tw`flex-row justify-center gap-4 bg-stone-50 rounded-2xl p-4`}>
           <View style={tw`items-center`}>
             <Text style={tw`text-2xl font-light text-black`}>{safeData.summary.completed}</Text>
-            <Text style={tw`text-xs text-gray-400 uppercase tracking-wider mt-1`}>Done</Text>
+            <Text style={tw`text-xs text-stone-300 uppercase tracking-wider mt-1`}>Done</Text>
           </View>
-          <View style={tw`w-px h-12 bg-gray-200 self-center`} />
+          <View style={tw`w-px h-12 bg-stone-200 self-center`} />
           <View style={tw`items-center`}>
             <Text style={tw`text-2xl font-light text-black`}>{safeData.summary.total}</Text>
-            <Text style={tw`text-xs text-gray-400 uppercase tracking-wider mt-1`}>Total</Text>
+            <Text style={tw`text-xs text-stone-300 uppercase tracking-wider mt-1`}>Total</Text>
           </View>
           {safeData.summary.perfectDays > 0 && (
             <>
-              <View style={tw`w-px h-12 bg-gray-200 self-center`} />
+              <View style={tw`w-px h-12 bg-stone-200 self-center`} />
               <View style={tw`items-center`}>
                 <Text style={tw`text-2xl font-light text-black`}>{safeData.summary.perfectDays}</Text>
-                <Text style={tw`text-xs text-gray-400 uppercase tracking-wider mt-1`}>Perfect</Text>
+                <Text style={tw`text-xs text-stone-300 uppercase tracking-wider mt-1`}>Perfect</Text>
               </View>
             </>
           )}

@@ -42,7 +42,7 @@ export const MilestoneZoomModal: React.FC<MilestoneZoomModalProps> = ({ visible,
         <View style={tw`w-full px-8`}>
           <View style={tw`items-center`}>
             {/* Large milestone icon */}
-            <View style={[tw`w-48 h-48 rounded-3xl items-center justify-center mb-6`, isUnlocked ? tw`bg-stone-100` : tw`bg-gray-800`]}>
+            <View style={[tw`w-48 h-48 rounded-3xl items-center justify-center mb-6`, isUnlocked ? tw`bg-sand-100` : tw`bg-stone-800`]}>
               <Image source={tierIcons[milestoneIndex as keyof typeof tierIcons]} style={[tw`w-60 h-60`, !isUnlocked && tw`opacity-40`]} resizeMode="contain" />
             </View>
 
@@ -64,10 +64,10 @@ export const MilestoneZoomModal: React.FC<MilestoneZoomModalProps> = ({ visible,
 
             {/* Status */}
             <View style={tw`mt-4`}>
-              {isUnlocked ? <Text style={tw`text-green-400 text-sm font-semibold`}>✓ Achieved</Text> : <Text style={tw`text-gray-400 text-sm`}>Locked - Requires {milestone.days} day streak</Text>}
+              {isUnlocked ? <Text style={tw`text-green-400 text-sm font-semibold`}>✓ Achieved</Text> : <Text style={tw`text-stone-300 text-sm`}>Locked - Requires {milestone.days} day streak</Text>}
             </View>
 
-            <Text style={tw`text-gray-500 text-xs mt-6`}>Tap anywhere to close</Text>
+            <Text style={tw`text-sand-500 text-xs mt-6`}>Tap anywhere to close</Text>
           </View>
         </View>
       </Pressable>
