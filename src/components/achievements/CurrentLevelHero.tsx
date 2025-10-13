@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import tw, { getTierGradient } from '../../lib/tailwind';
+import tw from '../../lib/tailwind';
+import { getAchievementTierTheme } from '../../utils/tierTheme';
 import { Achievement } from '../../types/achievement.types';
 import { AchievementBadge } from './AchievementBadge';
 
@@ -21,15 +22,14 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
   // Calculate the actual percentage
   const percent = Math.min(100, Math.round((levelProgress / requiredXp) * 100));
 
-  // Get current tier gradient
-  const tierGradient = getTierGradient(currentTitle?.tier || 'Novice');
+  // Get current tier theme using new achievement tier system
+  const tierTheme = getAchievementTierTheme((currentTitle?.tier as any) || 'Novice');
+  const tierGradient = tierTheme.gradient;
 
-  // Determine text colors based on tier for optimal contrast
-  const getTextColors = (tier: string | undefined) => {
-    const t = tier || 'Novice';
-
-    // Lighter tiers (Novice, Rising Hero, Legendary) need darker text
-    if (['Novice', 'Rising Hero', 'Legendary Ascent'].includes(t)) {
+  // Determine text colors based on gem type for optimal contrast
+  const getTextColors = (gemName: string) => {
+    // Lighter/brighter gems need darker text
+    if (['Crystal', 'Topaz'].includes(gemName)) {
       return {
         primary: 'text-stone-800',
         secondary: 'text-stone-700',
@@ -38,7 +38,7 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
       };
     }
 
-    // Darker tiers (Mastery, Epic, Mythic) need lighter text
+    // Darker/richer gems need lighter text
     return {
       primary: 'text-white',
       secondary: 'text-white/90',
@@ -47,22 +47,29 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
     };
   };
 
-  const textColors = getTextColors(currentTitle?.tier);
+  const textColors = getTextColors(tierTheme.gemName);
 
-  // Progress bar border color - contrasts with tier gradient
-  const getProgressBorderColor = (tier: string | undefined) => {
-    const t = tier || 'Novice';
-
-    if (['Novice'].includes(t)) return '#bfad93'; // Darker sand
-    if (['Rising Hero'].includes(t)) return '#9cb9d3'; // Darker sky
-    if (['Mastery Awakens'].includes(t)) return '#6B7280'; // Stone-400
-    if (['Legendary Ascent'].includes(t)) return '#aa98c4'; // Darker lavender
-    if (['Epic Mastery', 'Mythic Glory'].includes(t)) return '#374151'; // Stone-600
-
-    return '#6B7280'; // Default stone
+  // Progress bar border color - complements tier gradient
+  const getProgressBorderColor = (gemName: string) => {
+    switch (gemName) {
+      case 'Crystal': // Blue
+        return '#2563eb';
+      case 'Ruby': // Red
+        return '#b91c1c';
+      case 'Amethyst': // Purple
+        return '#6b21a8';
+      case 'Jade': // Green
+        return '#047857';
+      case 'Topaz': // Gold
+        return '#ca8a04';
+      case 'Obsidian': // Indigo
+        return '#4338ca';
+      default:
+        return '#6B7280';
+    }
   };
 
-  const borderColor = getProgressBorderColor(currentTitle?.tier);
+  const borderColor = getProgressBorderColor(tierTheme.gemName);
 
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [pressed && tw`opacity-95`]}>
@@ -79,14 +86,14 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
                 {/* Achievement title */}
                 <Text style={[tw`text-2xl font-black leading-tight`, tw`${textColors.primary}`]}>{currentTitle?.title || 'Newcomer'}</Text>
 
-                {/* Level & Tier badges */}
+                {/* Level & Gem badges */}
                 <View style={tw`flex-row items-center gap-2 mt-3`}>
                   <View style={[tw`rounded-full px-3 py-1 border`, tw`${textColors.badgeBg}`, { borderColor: 'rgba(255, 255, 255, 0.3)' }]}>
                     <Text style={[tw`text-xs font-bold`, tw`${textColors.badge}`]}>Level {currentLevel}</Text>
                   </View>
 
                   <View style={[tw`rounded-full px-3 py-1 border`, tw`${textColors.badgeBg}`, { borderColor: 'rgba(255, 255, 255, 0.3)' }]}>
-                    <Text style={[tw`text-xs font-bold`, tw`${textColors.badge}`]}>{currentTitle?.tier || 'Novice'}</Text>
+                    <Text style={[tw`text-xs font-bold`, tw`${textColors.badge}`]}>{tierTheme.gemName}</Text>
                   </View>
                 </View>
               </View>
@@ -114,7 +121,7 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
                   </View>
                 </View>
 
-                {/* Clean white progress bar with solid fill */}
+                {/* Clean white progress bar with tier-colored border */}
                 <View
                   style={[
                     tw`h-5 rounded-full overflow-hidden`,

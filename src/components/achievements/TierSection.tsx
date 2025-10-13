@@ -1,11 +1,10 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, ImageBackground } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Award, Trophy } from 'lucide-react-native';
 import { Achievement, TierName, UserAchievement } from '../../types/achievement.types';
 import { AchievementCard } from './AchievementCard';
-import { getTierGradient } from '../../utils/achievements';
+import { getAchievementTierTheme } from '../../utils/tierTheme';
 
 interface TierSectionProps {
   tierName: TierName;
@@ -22,77 +21,137 @@ export const TierSection: React.FC<TierSectionProps> = ({ tierName, tierIndex, a
   const progress = tierTotalCount > 0 ? (tierUnlockedCount / tierTotalCount) * 100 : 0;
   const isCompleted = tierUnlockedCount === tierTotalCount;
 
+  // Get tier theme
+  const tierTheme = getAchievementTierTheme(tierName as any);
+  const tierGradient = tierTheme.gradient;
+
+  // Determine text colors based on gem
+  const getTextColors = (gemName: string) => {
+    if (['Crystal', 'Topaz'].includes(gemName)) {
+      return {
+        primary: '#292524',
+        secondary: '#57534e',
+      };
+    }
+    return {
+      primary: '#ffffff',
+      secondary: 'rgba(255, 255, 255, 0.9)',
+    };
+  };
+
+  const textColors = getTextColors(tierTheme.gemName);
+
+  // Get texture based on tier
+  const getTierTexture = () => {
+    // Map achievement tier names to habit tier textures
+    switch (tierName) {
+      case 'Novice': // Crystal
+        return require('../../../assets/interface/progressBar/crystal.png');
+      case 'Rising Hero': // Ruby
+        return require('../../../assets/interface/progressBar/ruby-texture.png');
+      case 'Mastery Awakens': // Amethyst
+        return require('../../../assets/interface/progressBar/amethyst-texture.png');
+      case 'Legendary Ascent': // Jade
+        return require('../../../assets/interface/progressBar/crystal.png'); // Fallback to crystal
+      case 'Epic Mastery': // Topaz
+        return require('../../../assets/interface/progressBar/crystal.png'); // Fallback to crystal
+      case 'Mythic Glory': // Obsidian
+        return require('../../../assets/interface/progressBar/amethyst-texture.png'); // Fallback to amethyst
+      default:
+        return require('../../../assets/interface/progressBar/crystal.png');
+    }
+  };
+
+  const texture = getTierTexture();
+
   return (
     <Animated.View entering={FadeInDown.delay(tierIndex * 100).springify()} style={{ marginBottom: 24 }}>
-      {/* Tier Header */}
-      <LinearGradient
-        colors={getTierGradient(tierName, isCompleted)}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={{
-          marginHorizontal: 8,
-          borderRadius: 16,
-          padding: 16,
-          marginBottom: 12,
-          borderWidth: 1,
-          borderColor: isCompleted ? '#b5bfb5' : '#e1e5e9',
-        }}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            {isCompleted && <Award size={18} color="#5a6b5a" />}
-            <Text
-              style={{
-                fontSize: 16,
-                fontWeight: '700',
-                color: isCompleted ? '#3e463e' : '#566070',
-              }}
-            >
-              {tierName}
-            </Text>
-          </View>
-
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: '600',
-                color: isCompleted ? '#4a564a' : '#6b7889',
-              }}
-            >
-              {tierUnlockedCount}/{tierTotalCount}
-            </Text>
-            {isCompleted && <Trophy size={16} color="#738573" />}
-          </View>
-        </View>
-
-        {/* Progress Bar */}
-        <View
-          style={{
-            height: 6,
-            backgroundColor: 'rgba(0, 0, 0, 0.1)',
-            borderRadius: 3,
-            overflow: 'hidden',
-          }}
-        >
-          <View
+      {/* Tier Header with Gradient & Texture */}
+      <View style={{ marginHorizontal: 8, marginBottom: 12, borderRadius: 20, overflow: 'hidden' }}>
+        <ImageBackground source={texture} style={{ overflow: 'hidden' }} imageStyle={{ opacity: 0.7, borderRadius: 20 }} resizeMode="cover">
+          <LinearGradient
+            colors={[tierGradient[0] + 'cc', tierGradient[1] + 'cc', tierGradient[2] + 'cc']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0.5 }}
             style={{
-              height: '100%',
-              backgroundColor: isCompleted ? '#91a091' : '#a8b4c1',
-              borderRadius: 3,
-              width: `${progress}%`,
+              padding: 16,
+              borderRadius: 20,
             }}
-          />
-        </View>
-      </LinearGradient>
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: '800',
+                    color: textColors.primary,
+                    letterSpacing: 0.5,
+                  }}
+                >
+                  {tierName}
+                </Text>
+                {isCompleted && (
+                  <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.25)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}>
+                    <Text style={{ fontSize: 10, fontWeight: '700', color: textColors.primary }}>COMPLETE</Text>
+                  </View>
+                )}
+              </View>
 
-      {/* Achievement Grid - Fixed Layout */}
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: '700',
+                  color: textColors.primary,
+                }}
+              >
+                {tierUnlockedCount}/{tierTotalCount}
+              </Text>
+            </View>
+
+            {/* Progress Bar with white fill */}
+            <View
+              style={{
+                height: 8,
+                backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                borderRadius: 4,
+                overflow: 'hidden',
+              }}
+            >
+              <View
+                style={{
+                  height: '100%',
+                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                  borderRadius: 4,
+                  width: `${progress}%`,
+                }}
+              />
+            </View>
+
+            {/* Progress percentage */}
+            {!isCompleted && progress > 0 && (
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontWeight: '600',
+                  color: textColors.secondary,
+                  marginTop: 6,
+                  textAlign: 'right',
+                }}
+              >
+                {Math.round(progress)}% Complete
+              </Text>
+            )}
+          </LinearGradient>
+        </ImageBackground>
+      </View>
+
+      {/* Achievement Grid */}
       <View
         style={{
           paddingHorizontal: 8,
           flexDirection: 'row',
           flexWrap: 'wrap',
-          marginHorizontal: -4, // Negative margin to compensate for card padding
+          marginHorizontal: -4,
         }}
       >
         {achievements.map((achievement, index) => {
@@ -103,9 +162,9 @@ export const TierSection: React.FC<TierSectionProps> = ({ tierName, tierIndex, a
             <View
               key={`${achievement.id}=${achievement.title}`}
               style={{
-                width: '49%', // Exactly 2 columns
-                paddingHorizontal: 4, // Horizontal spacing between cards
-                paddingVertical: 4, // Vertical spacing between rows
+                width: '49%',
+                paddingHorizontal: 4,
+                paddingVertical: 4,
               }}
             >
               <AchievementCard achievement={achievement} isUnlocked={isUnlocked} isFromBackend={isFromBackend} index={index} onPress={onAchievementPress} />

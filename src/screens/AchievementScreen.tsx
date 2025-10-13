@@ -1,22 +1,20 @@
 // src/screens/AchievementScreen.tsx
-// SAFE VERSION - No useFocusEffect, just manual refresh
-
 import React, { useState, useEffect } from 'react';
-import { ScrollView, Pressable, ActivityIndicator, RefreshControl, View, Text, Image } from 'react-native';
+import { ScrollView, Pressable, ActivityIndicator, RefreshControl, View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 import tw from '../lib/tailwind';
 
 // Contexts
 import { useAchievements } from '../context/AchievementContext';
-import { useStats } from '../context/StatsContext'; // Use stats for level/XP
+import { useStats } from '../context/StatsContext';
 
 // Types
 import { Achievement, FilterType, TIER_NAMES } from '../types/achievement.types';
 
 // Components
-import { AchievementStats } from '../components/achievements/AchievementStats';
 import { CurrentLevelHero } from '../components/achievements/CurrentLevelHero';
 import { FilterTabs } from '../components/achievements/FilterTabs';
 import { TierSection } from '../components/achievements/TierSection';
@@ -26,24 +24,22 @@ import { ZoomModal } from '../components/achievements/ZoomModal';
 // Utils
 import { achievementTitles } from '../utils/achievements';
 import { getXPForNextLevel } from '@/utils/xpCalculations';
+import { getAchievementTierTheme } from '../utils/tierTheme';
 
 const AchievementsScreen: React.FC = () => {
   const navigation = useNavigation();
 
-  // Get level/XP from StatsContext (single source of truth)
   const { stats, refreshStats, loading: statsLoading } = useStats();
-
-  // Get achievement-specific data from AchievementContext
   const { achievements, totalCompletions, streak, perfectDays, totalHabits, loading: achievementsLoading, refreshAchievements } = useAchievements();
 
-  // Use stats from StatsContext
   const currentLevel = stats?.level || 1;
   const totalXP = stats?.totalXP || 0;
   const levelProgress = stats?.levelProgress || 0;
   const currentTitle = stats?.currentAchievement;
   const nextTitle = achievementTitles.find((title) => title.level > currentLevel);
 
-  // Local UI state
+  const currentTierTheme = currentTitle ? getAchievementTierTheme(currentTitle.tier as any) : getAchievementTierTheme('Novice');
+
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showZoomModal, setShowZoomModal] = useState(false);
@@ -52,17 +48,28 @@ const AchievementsScreen: React.FC = () => {
 
   const requiredXpForNextLevel = getXPForNextLevel(currentLevel);
 
-  // Manual refresh handler (pull-to-refresh)
-  const handleRefresh = async () => {
-    console.log('AchievementScreen: Manual refresh triggered');
-    setRefreshing(true);
+  // Determine text colors based on gem type
+  const getTextColors = (gemName: string) => {
+    if (['Crystal', 'Topaz'].includes(gemName)) {
+      return {
+        primary: 'text-stone-800',
+        secondary: 'text-stone-700',
+        iconColor: '#292524',
+      };
+    }
+    return {
+      primary: 'text-white',
+      secondary: 'text-white/90',
+      iconColor: '#ffffff',
+    };
+  };
 
+  const textColors = getTextColors(currentTierTheme.gemName);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
     try {
-      // Refresh both contexts
-      await Promise.all([
-        refreshStats(true), // Force refresh
-        refreshAchievements(),
-      ]);
+      await Promise.all([refreshStats(true), refreshAchievements()]);
     } catch (error) {
       console.error('Error refreshing achievement data:', error);
     } finally {
@@ -70,35 +77,11 @@ const AchievementsScreen: React.FC = () => {
     }
   };
 
-  // Initial load effect (only runs once when component mounts)
   useEffect(() => {
-    console.log('AchievementScreen: Initial mount, checking if refresh needed');
+    if (!stats) refreshStats(true);
+    if (!achievements || achievements.length === 0) refreshAchievements();
+  }, []);
 
-    // Only refresh if we don't have stats data
-    // This prevents unnecessary refreshes but ensures we have data
-    if (!stats) {
-      console.log('AchievementScreen: No stats data, refreshing...');
-      refreshStats(true);
-    }
-
-    // Only refresh achievements if empty
-    if (!achievements || achievements.length === 0) {
-      console.log('AchievementScreen: No achievements data, refreshing...');
-      refreshAchievements();
-    }
-  }, []); // Empty dependency array = only runs once on mount
-
-  // Debug logging (safe, no side effects)
-  useEffect(() => {
-    console.log('AchievementScreen - Current Data:', {
-      level: currentLevel,
-      xp: totalXP,
-      title: currentTitle?.title,
-      achievementsCount: achievements?.length || 0,
-    });
-  }, [currentLevel, totalXP, currentTitle, achievements]);
-
-  // Helper functions
   const isAchievementUnlocked = (achievement: Achievement): boolean => {
     if (achievement.level <= currentLevel) return true;
     return achievements.some((ua) => ua?.title === achievement.title || ua?.achievementId === achievement.id);
@@ -114,14 +97,12 @@ const AchievementsScreen: React.FC = () => {
   const unlockedCount = achievementTitles.filter((a) => isAchievementUnlocked(a)).length;
   const totalCount = achievementTitles.length;
 
-  // Combined loading state
   const isLoading = statsLoading || achievementsLoading;
 
-  // Show loading screen only on initial load
   if (isLoading && !stats && !achievements) {
     return (
       <SafeAreaView style={tw`flex-1 bg-sand-50 items-center justify-center`}>
-        <ActivityIndicator size="large" color="#9CA3AF" /> {/* Stone-300 */}
+        <ActivityIndicator size="large" color={currentTierTheme.accent} />
         <Text style={tw`text-sand-700 mt-3`}>Loading achievements...</Text>
       </SafeAreaView>
     );
@@ -129,29 +110,71 @@ const AchievementsScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={tw`flex-1 bg-sand-50`}>
-      {/* Header */}
-      <View style={tw`from-sand-50 to-stone-100 border-b border-sand-200`}>
-        <View style={tw`px-5 py-4`}>
+      {/* Header with Deep Tier Gradient */}
+      <LinearGradient colors={[currentTierTheme.gradient[0], currentTierTheme.gradient[1], currentTierTheme.gradient[2]]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`pb-6 shadow-xl`}>
+        <View style={tw`px-5 pt-4`}>
           {/* Navigation */}
-          <View style={tw`flex-row items-center justify-between mb-3`}>
-            <Pressable onPress={() => navigation.goBack()} style={({ pressed }) => [tw`p-2 -ml-2 rounded-xl`, pressed && tw`bg-sand-100`]}>
-              <ChevronLeft size={30} color="#6B7280" />
+          <View style={tw`flex-row items-center justify-between mb-6`}>
+            <Pressable
+              onPress={() => navigation.goBack()}
+              style={({ pressed }) => [tw`p-2 -ml-2 rounded-xl`, { backgroundColor: pressed ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.15)' }]}
+            >
+              <ChevronLeft size={24} color={textColors.iconColor} />
             </Pressable>
-            <Image source={require('../../assets/achievements/achievements.png')} style={{ width: 200, height: 80 }} resizeMode="cover" />
+
+            <View style={tw`items-center flex-1`}>
+              <Text style={[tw`text-2xl font-black tracking-tight`, tw`${textColors.primary}`]}>Achievements</Text>
+              <Text style={[tw`text-xs font-bold uppercase tracking-wider mt-1`, tw`${textColors.secondary}`]}>{currentTierTheme.gemName} Tier</Text>
+            </View>
+
             <View style={tw`w-10`} />
           </View>
 
-          {/* Stats */}
-          <AchievementStats unlockedCount={unlockedCount} totalCount={totalCount} totalCompletions={totalCompletions} totalXP={totalXP} />
+          {/* Stats Cards - NO ICONS */}
+          <View style={tw`flex-row gap-2.5`}>
+            {/* Unlocked Card */}
+            <View style={[tw`flex-1 rounded-2xl p-3.5`, { backgroundColor: 'rgba(255, 255, 255, 0.15)', minHeight: 80 }]}>
+              <Text style={[tw`text-[10px] font-bold uppercase mb-2 tracking-wide`, tw`${textColors.secondary}`]} numberOfLines={1}>
+                Unlocked
+              </Text>
+              <View style={tw`flex-row items-baseline gap-0.5 flex-wrap`}>
+                <Text style={[tw`text-xl font-black`, tw`${textColors.primary}`]} numberOfLines={1}>
+                  {unlockedCount}
+                </Text>
+                <Text style={[tw`text-xs font-bold`, tw`${textColors.secondary}`]} numberOfLines={1}>
+                  /{totalCount}
+                </Text>
+              </View>
+            </View>
+
+            {/* Completions Card */}
+            <View style={[tw`flex-1 rounded-2xl p-3.5`, { backgroundColor: 'rgba(255, 255, 255, 0.15)', minHeight: 80 }]}>
+              <Text style={[tw`text-[10px] font-bold uppercase mb-2 tracking-wide`, tw`${textColors.secondary}`]} numberOfLines={1}>
+                Completions
+              </Text>
+              <Text style={[tw`text-xl font-black`, tw`${textColors.primary}`]} numberOfLines={1} adjustsFontSizeToFit>
+                {totalCompletions}
+              </Text>
+            </View>
+
+            {/* Total XP Card */}
+            <View style={[tw`flex-1 rounded-2xl p-3.5`, { backgroundColor: 'rgba(255, 255, 255, 0.15)', minHeight: 80 }]}>
+              <Text style={[tw`text-[10px] font-bold uppercase mb-2 tracking-wide`, tw`${textColors.secondary}`]} numberOfLines={1}>
+                Total XP
+              </Text>
+              <Text style={[tw`text-xl font-black`, tw`${textColors.primary}`]} numberOfLines={1} adjustsFontSizeToFit>
+                {totalXP.toLocaleString()}
+              </Text>
+            </View>
+          </View>
         </View>
-      </View>
+      </LinearGradient>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 20 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#9CA3AF']} tintColor="#9CA3AF" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[currentTierTheme.accent]} tintColor={currentTierTheme.accent} />}
       >
-        {/* Current Level Hero */}
         <View style={tw`px-4 pt-4`}>
           <CurrentLevelHero
             currentLevel={currentLevel}
@@ -166,10 +189,8 @@ const AchievementsScreen: React.FC = () => {
           />
         </View>
 
-        {/* Filter Tabs */}
         <FilterTabs filter={filter} setFilter={setFilter} unlockedCount={unlockedCount} totalCount={totalCount} />
 
-        {/* Achievement Tiers */}
         <View style={tw`px-2.5`}>
           {TIER_NAMES.map((tierName, tierIndex) => {
             const tierAchievements = filteredAchievements.filter((a) => a.tier === tierName);
@@ -193,7 +214,6 @@ const AchievementsScreen: React.FC = () => {
         </View>
       </ScrollView>
 
-      {/* Modals */}
       <AchievementDetailModal visible={showModal} onClose={() => setShowModal(false)} achievement={selectedAchievement} currentLevel={currentLevel} totalCompletions={totalCompletions} />
 
       <ZoomModal visible={showZoomModal} onClose={() => setShowZoomModal(false)} currentLevel={currentLevel} currentTitle={currentTitle} />

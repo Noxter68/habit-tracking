@@ -2,7 +2,8 @@ import React from 'react';
 import { Modal, View, Text, Pressable, Image } from 'react-native';
 import Animated, { SlideInDown, FadeInDown } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import tw, { quartzGradients, getTierGradient } from '../../lib/tailwind';
+import tw, { quartzGradients } from '../../lib/tailwind';
+import { getAchievementTierTheme } from '../../utils/tierTheme';
 import { Achievement } from '../../utils/achievements';
 
 interface AchievementDetailModalProps {
@@ -21,8 +22,9 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
   const remaining = requiredCompletions - totalCompletions;
   const progress = Math.min((totalCompletions / requiredCompletions) * 100, 100);
 
-  // Get tier-specific gradient
-  const tierGradient = getTierGradient(achievement.tier);
+  // Get tier-specific gradient based on tier name
+  const tierTheme = getAchievementTierTheme(achievement.tier as any);
+  const tierGradient = tierTheme.gradient;
 
   // Determine border gradient based on unlock status and tier
   const borderGradient = isUnlocked
@@ -42,14 +44,10 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
             {/* Outer gradient border - Tier-based for unlocked */}
             <LinearGradient colors={borderGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-0.5`}>
               <View style={tw`bg-sand-50 rounded-3xl overflow-hidden`}>
-                {/* Header with tier-specific gradient */}
+                {/* Header with tier-specific gradient - NO SHAPES */}
                 <LinearGradient colors={headerGradient} start={{ x: 0, y: 0 }} end={{ x: 0.5, y: 1 }} style={tw`px-6 pt-8 pb-12 items-center relative`}>
-                  {/* Subtle decorative circles with tier-based opacity */}
-                  <View style={[tw`absolute top-4 left-4 w-24 h-24 rounded-full`, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]} />
-                  <View style={[tw`absolute bottom-0 right-0 w-36 h-36 rounded-full`, { backgroundColor: 'rgba(255, 255, 255, 0.15)' }]} />
-
-                  {/* Achievement Badge */}
-                  <Animated.View entering={FadeInDown.delay(200).springify()} style={tw`relative`}>
+                  {/* Achievement Badge - Full opacity */}
+                  <Animated.View entering={FadeInDown.delay(200).springify()} style={tw`relative z-10`}>
                     <Image
                       source={achievement.image}
                       style={{
@@ -74,13 +72,6 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
                         />
                       </View>
                     )}
-
-                    {/* Subtle glow effect for unlocked */}
-                    {isUnlocked && (
-                      <View style={tw`absolute inset-0 items-center justify-center`}>
-                        <View style={[tw`w-48 h-48 rounded-full absolute blur-xl`, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]} />
-                      </View>
-                    )}
                   </Animated.View>
                 </LinearGradient>
 
@@ -96,9 +87,9 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
                         <Text style={tw`text-sm font-bold text-white`}>Level {achievement.level}</Text>
                       </LinearGradient>
 
-                      {/* Tier badge */}
+                      {/* Tier badge - shows gem name */}
                       <View style={tw`bg-sand-100 rounded-full px-3.5 py-1.5 border border-sand-300`}>
-                        <Text style={tw`text-sm font-semibold text-sand-700`}>{achievement.tier}</Text>
+                        <Text style={tw`text-sm font-semibold text-sand-700`}>{tierTheme.gemName}</Text>
                       </View>
                     </View>
                   </View>
@@ -122,9 +113,9 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
 
                     {!isUnlocked && (
                       <>
-                        {/* Progress bar with stone gradient */}
+                        {/* Progress bar with tier gradient */}
                         <View style={tw`mt-3 bg-white/50 rounded-full h-2.5 overflow-hidden`}>
-                          <LinearGradient colors={quartzGradients.unlocked.progressBar} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[tw`h-full rounded-full`, { width: `${progress}%` }]} />
+                          <LinearGradient colors={tierGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[tw`h-full rounded-full`, { width: `${progress}%` }]} />
                         </View>
                         <Text style={tw`text-xs text-sand-700 text-center mt-2 font-medium`}>
                           {remaining} more needed • {Math.round(progress)}% complete
