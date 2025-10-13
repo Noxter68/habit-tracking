@@ -136,7 +136,7 @@ const LeaderboardScreen = () => {
             }}
           >
             {/* Physical Podium with Gem Icons */}
-            <View style={{ alignItems: 'center' }}>
+            <View style={{ alignItems: 'center', paddingTop: 20 }}>
               {/* Winners Row with Gem Icons - NO CROWN */}
               <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 10, marginBottom: 0, zIndex: 10 }}>
                 {/* 2nd Place - Ruby */}
