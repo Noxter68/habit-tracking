@@ -4,7 +4,7 @@ import { View, Text } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
-import tw, { quartzGradients } from '../../lib/tailwind';
+import tw from '../../lib/tailwind';
 
 // Components
 import AchievementBadge from './AchievementBadge';
@@ -92,35 +92,64 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const displayProgress = xpForNextLevel > 0 ? (displayXP / xpForNextLevel) * 100 : 0;
 
   return (
-    <Animated.View entering={FadeIn} style={tw`relative mb-4`}>
-      {/* Beautiful gradient background */}
+    <Animated.View entering={FadeIn} style={{ position: 'relative', marginBottom: 16 }}>
+      {/* Beautiful Amethyst gradient background */}
       <LinearGradient
-        colors={quartzGradients.calmMorning} // Stone to sand blend
+        colors={['#F5F3FF', '#EDE9FE', '#FAF9F7']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={tw`rounded-3xl overflow-hidden shadow-lg`}
+        style={{
+          borderRadius: 24,
+          overflow: 'hidden',
+          shadowColor: '#9333EA',
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: 0.15,
+          shadowRadius: 16,
+        }}
       >
         {/* Content Container */}
-        <View style={tw`p-6`}>
+        <View style={{ padding: 24 }}>
           {/* Greeting and Level Section */}
-          <View style={tw`mb-5`}>
-            <Text style={tw`text-sm font-semibold text-sand-600 uppercase tracking-wider`}>{greeting}</Text>
+          <View style={{ marginBottom: 20 }}>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: '#9333EA', letterSpacing: 2 }}>{greeting.toUpperCase()}</Text>
 
-            <View style={tw`flex-row items-center justify-between mt-2`}>
-              <View style={tw`flex-1 pr-20`}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+              <View style={{ flex: 1, paddingRight: 80 }}>
                 {/* User Title */}
-                <Text style={tw`text-2xl font-black text-stone-800 leading-tight`}>{userTitle}</Text>
+                <Text style={{ fontSize: 28, fontWeight: '900', color: '#1F2937', lineHeight: 32 }}>{userTitle}</Text>
 
                 {/* Level & XP badges */}
-                <View style={tw`flex-row items-center gap-2 mt-2`}>
-                  {/* Level Badge */}
-                  <LinearGradient colors={quartzGradients.primary} style={tw`rounded-full px-3 py-1`}>
-                    <Text style={tw`text-xs font-bold text-white`}>LEVEL {userLevel}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 }}>
+                  {/* Level Badge - Amethyst */}
+                  <LinearGradient
+                    colors={['#9333EA', '#7C3AED']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{
+                      borderRadius: 20,
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      shadowColor: '#9333EA',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 6,
+                    }}
+                  >
+                    <Text style={{ fontSize: 11, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.5 }}>LEVEL {userLevel}</Text>
                   </LinearGradient>
 
-                  {/* Total XP Display */}
-                  <View style={tw`bg-white/70 rounded-full px-3 py-1 border border-sand-200`}>
-                    <Text style={tw`text-xs font-semibold text-stone-700`}>{totalXP.toLocaleString()} XP</Text>
+                  {/* Total XP Display - Crystal Accent */}
+                  <View
+                    style={{
+                      backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                      borderRadius: 20,
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      borderWidth: 1,
+                      borderColor: 'rgba(6, 182, 212, 0.2)',
+                    }}
+                  >
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: '#0891B2' }}>{totalXP.toLocaleString()} XP</Text>
                   </View>
                 </View>
               </View>
@@ -133,19 +162,19 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           </View>
 
           {/* Level Progress Bar */}
-          <View style={tw`mb-5`}>
+          <View style={{ marginBottom: 20 }}>
             <LevelProgress currentLevel={userLevel} currentLevelXP={displayXP} xpForNextLevel={xpForNextLevel} levelProgress={displayProgress} />
           </View>
 
           {/* Stats Grid - Beautiful cards */}
-          <View style={tw`flex-row gap-3 mb-5`}>
+          <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
             <StatsCard label="Streak" value={totalStreak} image="streak" subtitle="days" isStreak={true} streakValue={totalStreak} />
             <StatsCard label="Active" value={activeHabits} image="active" subtitle="Quests" />
           </View>
 
           {/* Daily Challenge */}
           {user?.id && (
-            <View style={tw`mb-4`}>
+            <View style={{ marginBottom: 16 }}>
               <DailyChallenge
                 completedToday={completedTasksToday}
                 totalTasksToday={totalTasksToday}

@@ -4,7 +4,6 @@ import { View, Text, Image, ImageSourcePropType } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { HomeIcon, LucideIcon } from 'lucide-react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
-import tw, { quartzGradients } from '../../lib/tailwind';
 import { getImage } from '@/utils/images';
 
 // Define props with proper typing
@@ -34,40 +33,46 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
 
   const getGradientColors = () => {
     if (isStreak && streakValue >= 30) {
-      // Legendary streak - deep stone gradient
-      return quartzGradients.primary; // ['#9CA3AF', '#6B7280', '#4B5563']
+      // Legendary streak - Ruby gradient
+      return ['#DC2626', '#B91C1C'];
     }
     if (isStreak && streakValue >= 7) {
-      // Epic streak - sky blue gradient
-      return quartzGradients.success; // ['#d4e3f0', '#b8d1e5', '#9cb9d3']
+      // Epic streak - Quartz gradient
+      return ['#EC4899', '#DB2777'];
     }
     if (highlight) {
-      // Highlighted - light stone
-      return quartzGradients.light; // ['#F3F4F6', '#E5E7EB']
+      // Highlighted - Amethyst
+      return ['#A855F7', '#9333EA'];
     }
     // Default - clean white
-    return ['#ffffff', '#faf9f7']; // White to sand
+    return ['#FFFFFF', '#FAF9F7'];
   };
 
   const getTextColors = () => {
-    if (isStreak && streakValue >= 7) return 'text-white';
-    return 'text-stone-800';
+    if (isStreak && streakValue >= 7) return '#FFFFFF';
+    return '#1F2937';
   };
 
   const getSubtextColors = () => {
-    if (isStreak && streakValue >= 7) return 'text-white/90';
-    return 'text-sand-600';
+    if (isStreak && streakValue >= 7) return 'rgba(255, 255, 255, 0.9)';
+    return '#9CA3AF';
   };
 
   const getIconBg = () => {
-    if (isStreak && streakValue >= 30) return 'bg-white/30';
-    if (isStreak && streakValue >= 7) return 'bg-white/30';
-    return 'bg-sand-100';
+    if (isStreak && streakValue >= 30) return 'rgba(255, 255, 255, 0.25)';
+    if (isStreak && streakValue >= 7) return 'rgba(255, 255, 255, 0.25)';
+    return '#F5F3FF';
   };
 
   const getIconColor = () => {
-    if (isStreak && streakValue >= 7) return '#ffffff';
-    return '#6B7280'; // stone-400
+    if (isStreak && streakValue >= 7) return '#FFFFFF';
+    return '#9333EA';
+  };
+
+  const getShadowColor = () => {
+    if (isStreak && streakValue >= 30) return '#DC2626';
+    if (isStreak && streakValue >= 7) return '#EC4899';
+    return '#9333EA';
   };
 
   const isOnFire = isStreak && streakValue >= 7;
@@ -79,17 +84,20 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
       return (
         <Animated.View style={isOnFire ? fireAnimatedStyle : undefined}>
           <View
-            style={[
-              tw`w-10 h-10 ${getIconBg()} rounded-xl items-center justify-center`,
-              {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.05,
-                shadowRadius: 3,
-              },
-            ]}
+            style={{
+              width: 40,
+              height: 40,
+              backgroundColor: getIconBg(),
+              borderRadius: 12,
+              alignItems: 'center',
+              justifyContent: 'center',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.08,
+              shadowRadius: 4,
+            }}
           >
-            <Icon size={24} color={getIconColor()} />
+            <Icon size={22} color={getIconColor()} />
           </View>
         </Animated.View>
       );
@@ -104,17 +112,20 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
         return (
           <Animated.View style={isOnFire ? fireAnimatedStyle : undefined}>
             <View
-              style={[
-                tw`w-10 h-10 ${getIconBg()} rounded-xl items-center justify-center`,
-                {
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.05,
-                  shadowRadius: 3,
-                },
-              ]}
+              style={{
+                width: 40,
+                height: 40,
+                backgroundColor: getIconBg(),
+                borderRadius: 12,
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.08,
+                shadowRadius: 4,
+              }}
             >
-              <HomeIcon size={24} color={getIconColor()} />
+              <HomeIcon size={22} color={getIconColor()} />
             </View>
           </Animated.View>
         );
@@ -123,17 +134,21 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
       return (
         <Animated.View style={isOnFire ? fireAnimatedStyle : undefined}>
           <View
-            style={[
-              tw`w-10 h-10 ${getIconBg()} rounded-xl items-center justify-center p-1.5`,
-              {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.05,
-                shadowRadius: 3,
-              },
-            ]}
+            style={{
+              width: 40,
+              height: 40,
+              backgroundColor: getIconBg(),
+              borderRadius: 12,
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 6,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.08,
+              shadowRadius: 4,
+            }}
           >
-            <Image source={imageSource} style={tw`w-7 h-7`} resizeMode="contain" />
+            <Image source={imageSource} style={{ width: 28, height: 28 }} resizeMode="contain" />
           </View>
         </Animated.View>
       );
@@ -142,17 +157,20 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
     // Default case - no icon or image provided
     return (
       <View
-        style={[
-          tw`w-10 h-10 ${getIconBg()} rounded-xl items-center justify-center`,
-          {
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.05,
-            shadowRadius: 3,
-          },
-        ]}
+        style={{
+          width: 40,
+          height: 40,
+          backgroundColor: getIconBg(),
+          borderRadius: 12,
+          alignItems: 'center',
+          justifyContent: 'center',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 4,
+        }}
       >
-        <HomeIcon size={24} color={getIconColor()} />
+        <HomeIcon size={22} color={getIconColor()} />
       </View>
     );
   };
@@ -162,24 +180,43 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
       colors={getGradientColors()}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
-      style={[
-        tw`flex-1 rounded-2xl p-4`,
-        {
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.08,
-          shadowRadius: 8,
-          elevation: 3,
-        },
-      ]}
+      style={{
+        flex: 1,
+        borderRadius: 16,
+        padding: 16,
+        shadowColor: getShadowColor(),
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+      }}
     >
-      <View style={tw`flex-row items-center justify-between`}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         {renderVisual()}
-        <View style={tw`flex-1 ml-3`}>
-          <Text style={tw`text-xs ${getSubtextColors()} font-medium uppercase tracking-wide`}>{label}</Text>
-          <View style={tw`flex-row items-baseline gap-1`}>
-            <Text style={tw`text-2xl font-black ${getTextColors()}`}>{value}</Text>
-            {subtitle && <Text style={tw`text-xs ${getSubtextColors()} font-medium`}>{subtitle}</Text>}
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <Text
+            style={{
+              fontSize: 11,
+              color: getSubtextColors(),
+              fontWeight: '600',
+              textTransform: 'uppercase',
+              letterSpacing: 1,
+            }}
+          >
+            {label}
+          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
+            <Text style={{ fontSize: 26, fontWeight: '900', color: getTextColors() }}>{value}</Text>
+            {subtitle && (
+              <Text
+                style={{
+                  fontSize: 12,
+                  color: getSubtextColors(),
+                  fontWeight: '600',
+                }}
+              >
+                {subtitle}
+              </Text>
+            )}
           </View>
         </View>
       </View>

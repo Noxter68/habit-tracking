@@ -6,7 +6,7 @@ import Svg, { Path, Circle, Rect, G, Polyline } from 'react-native-svg';
 import tw from '../lib/tailwind';
 
 interface TabBarIconProps {
-  name: 'home' | 'calendar' | 'chart' | 'settings';
+  name: 'home' | 'calendar' | 'chart' | 'settings' | 'leaderboard';
   color: string;
   focused: boolean;
   size?: number;
@@ -110,6 +110,36 @@ export const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, focused, si
                 <Circle cx="12" cy="23" r="0.8" fill={activeColor} opacity="0.4" />
                 <Circle cx="1" cy="12" r="0.8" fill={activeColor} opacity="0.4" />
                 <Circle cx="23" cy="12" r="0.8" fill={activeColor} opacity="0.4" />
+              </G>
+            )}
+          </Svg>
+        );
+
+      case 'leaderboard':
+        return (
+          <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+            {/* Trophy Cup */}
+            <Path d="M6 9C6 10.5 6.5 13 9 13M18 9C18 10.5 17.5 13 15 13" stroke={activeColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+            <Path
+              d="M9 4H15C15.5523 4 16 4.44772 16 5V10C16 12.2091 14.2091 14 12 14C9.79086 14 8 12.2091 8 10V5C8 4.44772 8.44772 4 9 4Z"
+              stroke={activeColor}
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill={focused ? activeColor : 'none'}
+              fillOpacity={focused ? 0.15 : 0}
+            />
+            {/* Base */}
+            <Path
+              d="M10 14V17H14V14M8 20H16C16.5523 20 17 19.5523 17 19V18C17 17.4477 16.5523 17 16 17H8C7.44772 17 7 17.4477 7 18V19C7 19.5523 7.44772 20 8 20Z"
+              stroke={activeColor}
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {focused && (
+              <G>
+                <Path d="M10.5 7.5L11.5 9L13 8.5" stroke={activeColor} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" opacity="0.6" />
               </G>
             )}
           </Svg>

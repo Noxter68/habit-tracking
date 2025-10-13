@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CheckCircle2 } from 'lucide-react-native';
-import tw, { quartzGradients } from '../../lib/tailwind';
 import { XPService } from '../../services/xpService';
 import { supabase } from '../../lib/supabase';
 import { useDebugMode } from '@/hooks/useDebugMode';
@@ -102,28 +101,31 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
   const getCardStyle = () => {
     if (isCollected) {
       return {
-        gradient: quartzGradients.locked.card, // Soft sand for collected
-        iconBg: 'bg-sand-200',
-        textPrimary: 'text-stone-700',
-        textSecondary: 'text-sand-600',
-        badgeBg: 'bg-sand-300',
+        gradient: ['#F3F4F6', '#E5E7EB'], // Neutral for collected
+        iconBg: 'rgba(156, 163, 175, 0.2)',
+        textPrimary: '#4B5563',
+        textSecondary: '#9CA3AF',
+        badgeBg: '#D1D5DB',
+        shadowColor: '#6B7280',
       };
     }
     if (isComplete) {
       return {
-        gradient: quartzGradients.success, // Soft sky blue for ready to claim
-        iconBg: 'bg-white/30',
-        textPrimary: 'text-white',
-        textSecondary: 'text-white/90',
-        badgeBg: 'bg-white/25',
+        gradient: ['#06B6D4', '#0891B2'], // Crystal for ready to claim
+        iconBg: 'rgba(255, 255, 255, 0.25)',
+        textPrimary: '#FFFFFF',
+        textSecondary: 'rgba(255, 255, 255, 0.9)',
+        badgeBg: 'rgba(255, 255, 255, 0.25)',
+        shadowColor: '#06B6D4',
       };
     }
     return {
-      gradient: quartzGradients.light, // Light stone for in progress
-      iconBg: 'bg-sand-100',
-      textPrimary: 'text-stone-800',
-      textSecondary: 'text-sand-700',
-      badgeBg: 'bg-stone-500',
+      gradient: ['#F5F3FF', '#EDE9FE'], // Amethyst light for in progress
+      iconBg: 'rgba(147, 51, 234, 0.15)',
+      textPrimary: '#1F2937',
+      textSecondary: '#6B7280',
+      badgeBg: '#9333EA',
+      shadowColor: '#9333EA',
     };
   };
 
@@ -131,37 +133,46 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
 
   return (
     <View>
-      <Pressable onPress={handleCollect} disabled={!isComplete || isCollected || isAnimating} style={({ pressed }) => [pressed && isComplete && !isCollected && tw`scale-[0.98]`]}>
-        {/* Card with gradient and subtle shadow */}
+      <Pressable
+        onPress={handleCollect}
+        disabled={!isComplete || isCollected || isAnimating}
+        style={({ pressed }) => [
+          {
+            transform: [{ scale: pressed && isComplete && !isCollected ? 0.98 : 1 }],
+          },
+        ]}
+      >
+        {/* Card with gradient and shadow */}
         <LinearGradient
           colors={cardStyle.gradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[
-            tw`rounded-2xl p-4`,
-            {
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.1,
-              shadowRadius: 8,
-              elevation: 4,
-            },
-          ]}
+          style={{
+            borderRadius: 16,
+            padding: 16,
+            shadowColor: cardStyle.shadowColor,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.15,
+            shadowRadius: 12,
+          }}
         >
-          <View style={tw`flex-row items-center justify-between`}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             {/* Left side: Icon + Text */}
-            <View style={tw`flex-row items-center flex-1`}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
               {/* Icon */}
               <View
-                style={[
-                  tw`w-12 h-12 rounded-2xl items-center justify-center ${cardStyle.iconBg}`,
-                  {
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 4,
-                  },
-                ]}
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 16,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: cardStyle.iconBg,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.08,
+                  shadowRadius: 4,
+                }}
               >
                 {isCollected ? (
                   <CheckCircle2 size={28} color="#6B7280" />
@@ -173,9 +184,26 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
               </View>
 
               {/* Text */}
-              <View style={tw`ml-3 flex-1`}>
-                <Text style={[tw`text-xs font-bold uppercase tracking-wide`, tw`${cardStyle.textPrimary}`]}>Daily Challenge</Text>
-                <Text style={[tw`text-sm mt-0.5`, tw`${cardStyle.textSecondary}`]}>
+              <View style={{ marginLeft: 12, flex: 1 }}>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontWeight: '800',
+                    textTransform: 'uppercase',
+                    letterSpacing: 1,
+                    color: cardStyle.textPrimary,
+                  }}
+                >
+                  Daily Challenge
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    marginTop: 2,
+                    color: cardStyle.textSecondary,
+                    fontWeight: '600',
+                  }}
+                >
                   {isCollected ? 'Collected! See you tomorrow' : isComplete ? 'Tap to claim 20 XP!' : `${totalTasksToday - completedToday} tasks to go`}
                 </Text>
               </View>
@@ -183,38 +211,57 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
 
             {/* Right side: XP Badge */}
             <View
-              style={[
-                tw`rounded-full px-3 py-1.5 ${cardStyle.badgeBg}`,
-                {
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.05,
-                  shadowRadius: 3,
-                },
-              ]}
+              style={{
+                borderRadius: 20,
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                backgroundColor: cardStyle.badgeBg,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.08,
+                shadowRadius: 4,
+              }}
             >
-              <Text style={tw`text-sm font-bold text-white`}>{isCollected ? '✓' : '20 XP'}</Text>
+              <Text style={{ fontSize: 13, fontWeight: '800', color: '#FFFFFF' }}>{isCollected ? '✓' : '20 XP'}</Text>
             </View>
           </View>
 
           {/* Progress bar - only show if not complete and not collected */}
           {!isComplete && !isCollected && (
-            <View style={tw`mt-3`}>
+            <View style={{ marginTop: 12 }}>
               <View
-                style={[
-                  tw`h-2 rounded-full overflow-hidden`,
-                  {
-                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 2,
-                  },
-                ]}
+                style={{
+                  height: 8,
+                  borderRadius: 20,
+                  overflow: 'hidden',
+                  backgroundColor: 'rgba(147, 51, 234, 0.15)',
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 2,
+                }}
               >
-                <LinearGradient colors={['#9CA3AF', '#6B7280']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[tw`h-full`, { width: `${completionPercentage}%` }]} />
+                <LinearGradient
+                  colors={['#9333EA', '#7C3AED']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{
+                    height: '100%',
+                    width: `${completionPercentage}%`,
+                  }}
+                />
               </View>
-              <Text style={tw`text-xs text-sand-700 mt-1 text-center`}>{completionPercentage}% Complete</Text>
+              <Text
+                style={{
+                  fontSize: 11,
+                  color: '#6B7280',
+                  marginTop: 6,
+                  textAlign: 'center',
+                  fontWeight: '600',
+                }}
+              >
+                {completionPercentage}% Complete
+              </Text>
             </View>
           )}
         </LinearGradient>
@@ -222,8 +269,25 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
 
       {/* Debug Reset Button */}
       {showTestButtons && isCollected && (
-        <Pressable onPress={handleDebugReset} style={tw`mt-2 bg-red-500 rounded-lg p-2`}>
-          <Text style={tw`text-white text-xs text-center font-semibold`}>Reset (Debug)</Text>
+        <Pressable
+          onPress={handleDebugReset}
+          style={{
+            marginTop: 8,
+            backgroundColor: '#DC2626',
+            borderRadius: 12,
+            padding: 8,
+          }}
+        >
+          <Text
+            style={{
+              color: '#FFFFFF',
+              fontSize: 11,
+              textAlign: 'center',
+              fontWeight: '700',
+            }}
+          >
+            Reset (Debug)
+          </Text>
         </Pressable>
       )}
     </View>

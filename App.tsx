@@ -18,6 +18,7 @@ import HabitWizard from './src/screens/HabitWizard';
 import Dashboard from './src/screens/Dashboard';
 import HabitDetails from './src/screens/HabitDetails';
 import CalendarScreen from './src/screens/CalendarScreen';
+import LeaderboardScreen from './src/screens/LeaderboardScreen';
 import StatsScreen from './src/screens/StatsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import AchievementsScreen from './src/screens/AchievementScreen';
@@ -54,6 +55,7 @@ export type RootStackParamList = {
 export type TabParamList = {
   Dashboard: undefined;
   Calendar: undefined;
+  Leaderboard: undefined;
   Stats: undefined;
   Settings: undefined;
 };
@@ -133,6 +135,14 @@ function MainTabs() {
         options={{
           tabBarLabel: 'Calendar',
           tabBarIcon: ({ color, focused }) => <TabBarIcon name="calendar" color={color} focused={focused} />,
+        }}
+      />
+      <Tab.Screen
+        name="Leaderboard"
+        component={LeaderboardScreen}
+        options={{
+          tabBarLabel: 'League',
+          tabBarIcon: ({ color, focused }) => <TabBarIcon name="leaderboard" color={color} focused={focused} />,
         }}
       />
       <Tab.Screen

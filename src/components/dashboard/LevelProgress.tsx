@@ -3,7 +3,6 @@ import React, { useEffect } from 'react';
 import { View, Text } from 'react-native';
 import Animated, { useAnimatedStyle, withSpring, useSharedValue, withTiming } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import tw, { quartzGradients } from '../../lib/tailwind';
 
 interface LevelProgressProps {
   currentLevel: number;
@@ -67,9 +66,9 @@ const LevelProgress: React.FC<LevelProgressProps> = ({ currentLevel, currentLeve
   // Don't render if we don't have valid data
   if (!xpForNextLevel || xpForNextLevel <= 0) {
     return (
-      <View style={tw`mb-4 h-12`}>
+      <View style={{ marginBottom: 16, height: 48 }}>
         {/* Placeholder with same height to prevent layout shift */}
-        <View style={tw`h-5 bg-sand-100 rounded-full`} />
+        <View style={{ height: 20, backgroundColor: '#F5F3FF', borderRadius: 20 }} />
       </View>
     );
   }
@@ -77,37 +76,57 @@ const LevelProgress: React.FC<LevelProgressProps> = ({ currentLevel, currentLeve
   return (
     <Animated.View style={[animatedContainerStyle]}>
       {/* Header */}
-      <View style={tw`flex-row justify-between items-center mb-2`}>
-        <Text style={tw`text-xs font-semibold text-sand-700`}>Progress to Level {currentLevel + 1}</Text>
-        <View style={tw`bg-white/70 rounded-full px-2.5 py-0.5`}>
-          <Text style={tw`text-xs font-bold text-stone-700`}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <Text style={{ fontSize: 11, fontWeight: '700', color: '#9333EA', letterSpacing: 0.5 }}>Progress to Level {currentLevel + 1}</Text>
+        <View
+          style={{
+            backgroundColor: 'rgba(147, 51, 234, 0.1)',
+            borderRadius: 20,
+            paddingHorizontal: 10,
+            paddingVertical: 4,
+            borderWidth: 1,
+            borderColor: 'rgba(147, 51, 234, 0.2)',
+          }}
+        >
+          <Text style={{ fontSize: 11, fontWeight: '800', color: '#9333EA' }}>
             {currentLevelXP}/{xpForNextLevel} XP
           </Text>
         </View>
       </View>
 
-      {/* Progress bar container with subtle shadow */}
+      {/* Progress bar container */}
       <View
-        style={[
-          tw`h-5 rounded-full overflow-hidden`,
-          {
-            backgroundColor: 'rgba(255, 255, 255, 0.4)',
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.08,
-            shadowRadius: 4,
-            elevation: 2,
-          },
-        ]}
+        style={{
+          height: 20,
+          borderRadius: 20,
+          overflow: 'hidden',
+          backgroundColor: 'rgba(147, 51, 234, 0.1)',
+          shadowColor: '#9333EA',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 6,
+        }}
       >
-        <AnimatedView style={[tw`h-full rounded-full overflow-hidden`, animatedBarStyle]}>
-          {/* Clean white gradient fill */}
-          <LinearGradient colors={['#ffffff', 'rgba(255, 255, 255, 0.95)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`h-full w-full`} />
+        <AnimatedView style={[{ height: '100%', borderRadius: 20, overflow: 'hidden' }, animatedBarStyle]}>
+          {/* Amethyst gradient fill */}
+          <LinearGradient colors={['#9333EA', '#7C3AED']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ height: '100%', width: '100%' }} />
         </AnimatedView>
       </View>
 
       {/* Remaining XP */}
-      {xpToNextLevel > 0 && <Text style={tw`text-xs text-sand-600 mt-1.5 text-center`}>{xpToNextLevel} XP to next level</Text>}
+      {xpToNextLevel > 0 && (
+        <Text
+          style={{
+            fontSize: 11,
+            color: '#9CA3AF',
+            marginTop: 6,
+            textAlign: 'center',
+            fontWeight: '600',
+          }}
+        >
+          {xpToNextLevel} XP to next level
+        </Text>
+      )}
     </Animated.View>
   );
 };

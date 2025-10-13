@@ -5,7 +5,6 @@ import { Lock, ChevronRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
-import tw, { quartzGradients } from '../../lib/tailwind';
 
 interface NextAchievementProps {
   nextTitle?: {
@@ -26,66 +25,114 @@ const NextAchievement: React.FC<NextAchievementProps> = ({ nextTitle, xpToNextLe
 
   return (
     <Animated.View entering={FadeIn.delay(300)}>
-      <Pressable onPress={handlePress} style={({ pressed }) => [pressed && tw`scale-[0.98]`]}>
-        {/* Clean gradient card with subtle shadow */}
+      <Pressable
+        onPress={handlePress}
+        style={({ pressed }) => ({
+          transform: [{ scale: pressed ? 0.98 : 1 }],
+        })}
+      >
+        {/* Gradient card with Quartz accent */}
         <LinearGradient
-          colors={['rgba(255, 255, 255, 0.7)', 'rgba(250, 249, 247, 0.9)']}
+          colors={['#FDF4FF', '#FCE7F3', '#FAF9F7']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[
-            tw`rounded-2xl p-4`,
-            {
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.06,
-              shadowRadius: 6,
-              elevation: 2,
-            },
-          ]}
+          style={{
+            borderRadius: 16,
+            padding: 16,
+            borderWidth: 1,
+            borderColor: 'rgba(236, 72, 153, 0.2)',
+            shadowColor: '#EC4899',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
+          }}
         >
-          <View style={tw`flex-row items-center justify-between`}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             {/* Left side: Icon + Text */}
-            <View style={tw`flex-row items-center flex-1`}>
-              {/* Lock Icon */}
-              <View
-                style={[
-                  tw`w-10 h-10 bg-sand-100 rounded-xl items-center justify-center mr-3`,
-                  {
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 2,
-                  },
-                ]}
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+              {/* Lock Icon with Quartz gradient */}
+              <LinearGradient
+                colors={['#EC4899', '#DB2777']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 12,
+                  shadowColor: '#EC4899',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 4,
+                }}
               >
-                <Lock size={18} color="#a89885" />
-              </View>
+                <Lock size={20} color="#FFFFFF" strokeWidth={2.5} />
+              </LinearGradient>
 
               {/* Text Content */}
-              <View style={tw`flex-1`}>
-                <Text style={tw`text-xs font-bold text-sand-600 uppercase tracking-wide`}>NEXT ACHIEVEMENT</Text>
-                <Text style={tw`text-sm font-bold text-stone-800 mt-0.5`}>{nextTitle.title}</Text>
-                <View style={tw`flex-row items-center mt-1`}>
-                  <View style={tw`bg-sand-200 rounded-full px-2 py-0.5`}>
-                    <Text style={tw`text-xs font-semibold text-sand-700`}>{xpToNextLevel} XP needed</Text>
-                  </View>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontWeight: '800',
+                    color: '#EC4899',
+                    textTransform: 'uppercase',
+                    letterSpacing: 1,
+                  }}
+                >
+                  NEXT ACHIEVEMENT
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 15,
+                    fontWeight: '800',
+                    color: '#1F2937',
+                    marginTop: 2,
+                  }}
+                >
+                  {nextTitle.title}
+                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+                  <LinearGradient
+                    colors={['#EC4899', '#DB2777']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{
+                      borderRadius: 20,
+                      paddingHorizontal: 10,
+                      paddingVertical: 4,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        fontWeight: '700',
+                        color: '#FFFFFF',
+                      }}
+                    >
+                      {xpToNextLevel} XP needed
+                    </Text>
+                  </LinearGradient>
                 </View>
               </View>
             </View>
 
             {/* Right side: Chevron indicator */}
             <View
-              style={[
-                tw`w-8 h-8 bg-sand-100 rounded-full items-center justify-center`,
-                {
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: 0.05,
-                  shadowRadius: 2,
-                },
-              ]}
+              style={{
+                width: 32,
+                height: 32,
+                backgroundColor: 'rgba(236, 72, 153, 0.1)',
+                borderRadius: 16,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: 1,
+                borderColor: 'rgba(236, 72, 153, 0.2)',
+              }}
             >
-              <ChevronRight size={16} color="#a89885" />
+              <ChevronRight size={18} color="#EC4899" strokeWidth={2.5} />
             </View>
           </View>
         </LinearGradient>

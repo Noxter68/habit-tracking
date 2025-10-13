@@ -31,7 +31,7 @@ const StatsScreen: React.FC = () => {
   if (habitsLoading) {
     return (
       <View style={tw`flex-1 bg-sand-50 items-center justify-center`}>
-        <ActivityIndicator size="large" color="#a89885" />
+        <ActivityIndicator size="large" color="#9333EA" />
       </View>
     );
   }
@@ -41,268 +41,334 @@ const StatsScreen: React.FC = () => {
   const currentStreak = Math.max(...(habits?.map((h) => h.currentStreak || 0) || [0]));
 
   return (
-    <LinearGradient colors={['#faf9f7', '#f5f2ed', '#e8e3db']} style={tw`flex-1`}>
-      <ScrollView style={tw`flex-1 mt-8`} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#a89885" />}>
-        {/* Header Section */}
-        <View style={tw`px-6 pt-6 pb-4`}>
-          <View style={tw`flex-row justify-between items-center`}>
-            <View>
-              <Text style={tw`text-3xl font-bold text-stone-800`}>Statistics</Text>
-              <Text style={tw`text-sm text-sand-600 mt-1`}>{format(new Date(), 'EEEE, MMMM d')}</Text>
-            </View>
+    <View style={{ flex: 1, backgroundColor: '#FAF9F7' }}>
+      <ScrollView style={{ flex: 1, marginTop: 32 }} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#9333EA" />}>
+        {/* Elegant Header Section */}
+        <LinearGradient colors={['#F5F3FF', '#EDE9FE', '#FAF9F7']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingHorizontal: 24, paddingTop: 60, paddingBottom: 32 }}>
+          <View style={{ alignItems: 'center', marginBottom: 20 }}>
             <View
-              style={[
-                tw`rounded-full px-4 py-2`,
-                {
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.08,
-                  shadowRadius: 4,
-                  elevation: 2,
-                },
-              ]}
+              style={{
+                backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                paddingHorizontal: 20,
+                paddingVertical: 8,
+                borderRadius: 20,
+                marginBottom: 12,
+              }}
             >
-              <LinearGradient colors={['#9CA3AF', '#6B7280']} style={tw`absolute inset-0 rounded-full`} />
-              <Text style={tw`text-xs text-white font-bold`}>Level {stats?.level || 1}</Text>
+              <Text style={{ fontSize: 13, fontWeight: '700', color: '#9333EA', letterSpacing: 2 }}>YOUR PROGRESS</Text>
             </View>
+            <Text style={{ fontSize: 40, fontWeight: '900', color: '#1F2937', letterSpacing: -1.5, textAlign: 'center' }}>Statistics</Text>
+            <Text style={{ fontSize: 15, color: '#6B7280', marginTop: 6, textAlign: 'center' }}>{format(new Date(), 'EEEE, MMMM d')}</Text>
           </View>
-        </View>
+
+          {/* Level Badge - Amethyst Gradient */}
+          <View style={{ alignItems: 'center' }}>
+            <LinearGradient
+              colors={['#9333EA', '#7C3AED']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                paddingHorizontal: 24,
+                paddingVertical: 12,
+                borderRadius: 20,
+                shadowColor: '#9333EA',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 12,
+              }}
+            >
+              <Text style={{ fontSize: 14, color: '#FFFFFF', fontWeight: '700', letterSpacing: 1, textAlign: 'center' }}>LEVEL {stats?.level || 1}</Text>
+            </LinearGradient>
+          </View>
+        </LinearGradient>
 
         {/* Premium Analytics Section */}
-        <View style={tw`px-6 mb-6`}>
+        <View style={{ paddingHorizontal: 24, marginBottom: 28 }}>
           <PremiumStatsSection habits={habits} selectedRange={selectedRange} onRangeChange={setSelectedRange} />
         </View>
 
-        {/* Quick Stats Grid */}
-        <View style={tw`px-6 mb-6`}>
-          <Text style={tw`text-xs font-semibold text-sand-700 uppercase tracking-wider mb-3`}>Overview</Text>
-          <View style={tw`flex-row flex-wrap gap-3`}>
-            {/* Completion Rate */}
-            <View
-              style={[
-                tw`flex-1 min-w-[47%] rounded-2xl p-4 bg-white`,
-                {
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.06,
-                  shadowRadius: 6,
-                  elevation: 2,
-                },
-              ]}
-            >
-              <View style={tw`flex-row items-center gap-3`}>
-                <View
-                  style={[
-                    tw`w-10 h-10 bg-sand-100 rounded-xl items-center justify-center`,
-                    {
-                      shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.05,
-                      shadowRadius: 2,
-                    },
-                  ]}
-                >
-                  <TrendingUp size={20} color="#a89885" />
-                </View>
-                <View style={tw`flex-1`}>
-                  <Text style={tw`text-2xl font-bold text-stone-800`}>{avgCompletion}%</Text>
-                  <Text style={tw`text-xs text-sand-600`}>Completion</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Best Streak */}
-            <View
-              style={[
-                tw`flex-1 min-w-[47%] rounded-2xl p-4 bg-white`,
-                {
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.06,
-                  shadowRadius: 6,
-                  elevation: 2,
-                },
-              ]}
-            >
-              <View style={tw`flex-row items-center gap-3`}>
-                <View
-                  style={[
-                    tw`w-10 h-10 bg-sand-100 rounded-xl items-center justify-center`,
-                    {
-                      shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.05,
-                      shadowRadius: 2,
-                    },
-                  ]}
-                >
-                  <Text style={tw`text-lg`}>🔥</Text>
-                </View>
-                <View style={tw`flex-1`}>
-                  <Text style={tw`text-2xl font-bold text-stone-800`}>{currentStreak}</Text>
-                  <Text style={tw`text-xs text-sand-600`}>Best Streak</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Total XP */}
-            <View
-              style={[
-                tw`flex-1 min-w-[47%] rounded-2xl p-4 bg-white`,
-                {
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.06,
-                  shadowRadius: 6,
-                  elevation: 2,
-                },
-              ]}
-            >
-              <View style={tw`flex-row items-center gap-3`}>
-                <View
-                  style={[
-                    tw`w-10 h-10 bg-sand-100 rounded-xl items-center justify-center`,
-                    {
-                      shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.05,
-                      shadowRadius: 2,
-                    },
-                  ]}
-                >
-                  <Award size={20} color="#a89885" />
-                </View>
-                <View style={tw`flex-1`}>
-                  <Text style={tw`text-2xl font-bold text-stone-800`}>{stats?.totalXP || 0}</Text>
-                  <Text style={tw`text-xs text-sand-600`}>Total XP</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Active Habits */}
-            <View
-              style={[
-                tw`flex-1 min-w-[47%] rounded-2xl p-4 bg-white`,
-                {
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.06,
-                  shadowRadius: 6,
-                  elevation: 2,
-                },
-              ]}
-            >
-              <View style={tw`flex-row items-center gap-3`}>
-                <View
-                  style={[
-                    tw`w-10 h-10 bg-sand-100 rounded-xl items-center justify-center`,
-                    {
-                      shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.05,
-                      shadowRadius: 2,
-                    },
-                  ]}
-                >
-                  <Target size={20} color="#a89885" />
-                </View>
-                <View style={tw`flex-1`}>
-                  <Text style={tw`text-2xl font-bold text-stone-800`}>{habits?.length || 0}</Text>
-                  <Text style={tw`text-xs text-sand-600`}>Active Quests</Text>
-                </View>
-              </View>
-            </View>
+        {/* Quick Stats Grid - Vibrant Cards */}
+        <View style={{ paddingHorizontal: 24, marginBottom: 28 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            <BarChart3 size={18} color="#9333EA" />
+            <Text style={{ fontSize: 13, fontWeight: '800', color: '#9333EA', letterSpacing: 1.5 }}>OVERVIEW</Text>
           </View>
-        </View>
 
-        {/* Achievements Section */}
-        <View style={tw`px-6 mb-6`}>
-          <Text style={tw`text-xs font-semibold text-sand-700 uppercase tracking-wider mb-3`}>Milestones</Text>
-          <View
-            style={[
-              tw`rounded-2xl p-5 bg-white`,
-              {
-                shadowColor: '#000',
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+            {/* Completion Rate - Amethyst */}
+            <View
+              style={{
+                flex: 1,
+                minWidth: '47%',
+                backgroundColor: '#FFFFFF',
+                borderRadius: 20,
+                padding: 18,
+                shadowColor: '#9333EA',
                 shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.08,
-                shadowRadius: 8,
-                elevation: 3,
-              },
-            ]}
-          >
-            <View style={tw`flex-row justify-around`}>
-              <View style={tw`items-center`}>
-                <View style={tw`w-12 h-12 bg-sand-100 rounded-full items-center justify-center mb-2`}>
-                  <Award size={20} color="#a89885" />
+                shadowOpacity: 0.12,
+                shadowRadius: 12,
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                <LinearGradient
+                  colors={['#9333EA', '#7C3AED']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <TrendingUp size={20} color="#FFFFFF" />
+                </LinearGradient>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 26, fontWeight: '900', color: '#1F2937' }}>{avgCompletion}%</Text>
+                  <Text style={{ fontSize: 12, color: '#6B7280', fontWeight: '600' }}>Completion</Text>
                 </View>
-                <Text style={tw`text-xl font-bold text-stone-800`}>{totalCompletions}</Text>
-                <Text style={tw`text-xs text-sand-600 mt-1`}>Completions</Text>
               </View>
+            </View>
 
-              <View style={tw`items-center`}>
-                <View style={tw`w-12 h-12 bg-sand-100 rounded-full items-center justify-center mb-2`}>
-                  <Calendar size={20} color="#a89885" />
+            {/* Best Streak - Ruby */}
+            <View
+              style={{
+                flex: 1,
+                minWidth: '47%',
+                backgroundColor: '#FFFFFF',
+                borderRadius: 20,
+                padding: 18,
+                shadowColor: '#DC2626',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.12,
+                shadowRadius: 12,
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                <LinearGradient
+                  colors={['#DC2626', '#B91C1C']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text style={{ fontSize: 20 }}>🔥</Text>
+                </LinearGradient>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 26, fontWeight: '900', color: '#1F2937' }}>{currentStreak}</Text>
+                  <Text style={{ fontSize: 12, color: '#6B7280', fontWeight: '600' }}>Best Streak</Text>
                 </View>
-                <Text style={tw`text-xl font-bold text-stone-800`}>{stats?.perfectDays || 0}</Text>
-                <Text style={tw`text-xs text-sand-600 mt-1`}>Perfect Days</Text>
               </View>
+            </View>
 
-              <View style={tw`items-center`}>
-                <View style={tw`w-12 h-12 bg-sand-100 rounded-full items-center justify-center mb-2`}>
-                  <BarChart3 size={20} color="#a89885" />
+            {/* Total XP - Crystal */}
+            <View
+              style={{
+                flex: 1,
+                minWidth: '47%',
+                backgroundColor: '#FFFFFF',
+                borderRadius: 20,
+                padding: 18,
+                shadowColor: '#06B6D4',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.12,
+                shadowRadius: 12,
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                <LinearGradient
+                  colors={['#06B6D4', '#0891B2']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Award size={20} color="#FFFFFF" />
+                </LinearGradient>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 26, fontWeight: '900', color: '#1F2937' }}>{stats?.totalXP || 0}</Text>
+                  <Text style={{ fontSize: 12, color: '#6B7280', fontWeight: '600' }}>Total XP</Text>
                 </View>
-                <Text style={tw`text-xl font-bold text-stone-800`}>Level {stats?.level || 1}</Text>
-                <Text style={tw`text-xs text-sand-600 mt-1`}>Current</Text>
+              </View>
+            </View>
+
+            {/* Active Habits - Quartz */}
+            <View
+              style={{
+                flex: 1,
+                minWidth: '47%',
+                backgroundColor: '#FFFFFF',
+                borderRadius: 20,
+                padding: 18,
+                shadowColor: '#EC4899',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.12,
+                shadowRadius: 12,
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                <LinearGradient
+                  colors={['#EC4899', '#DB2777']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Target size={20} color="#FFFFFF" />
+                </LinearGradient>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 26, fontWeight: '900', color: '#1F2937' }}>{habits?.length || 0}</Text>
+                  <Text style={{ fontSize: 12, color: '#6B7280', fontWeight: '600' }}>Active Quests</Text>
+                </View>
               </View>
             </View>
           </View>
         </View>
 
-        {/* Level Progress */}
-        <View style={tw`px-6 mb-8`}>
+        {/* Achievements Section - Rainbow Gradient Card */}
+        <View style={{ paddingHorizontal: 24, marginBottom: 28 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            <Award size={18} color="#9333EA" />
+            <Text style={{ fontSize: 13, fontWeight: '800', color: '#9333EA', letterSpacing: 1.5 }}>MILESTONES</Text>
+          </View>
+
           <View
-            style={[
-              tw`rounded-2xl p-5 bg-white`,
-              {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.06,
-                shadowRadius: 6,
-                elevation: 2,
-              },
-            ]}
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: 24,
+              padding: 24,
+              shadowColor: '#9333EA',
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.15,
+              shadowRadius: 16,
+            }}
           >
-            <View style={tw`flex-row justify-between items-center mb-3`}>
-              <Text style={tw`text-xs font-semibold text-sand-700 uppercase tracking-wider`}>Level Progress</Text>
-              <Text style={tw`text-xs text-sand-600`}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+              <View style={{ alignItems: 'center' }}>
+                <LinearGradient
+                  colors={['#9333EA', '#7C3AED']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: 26,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: 10,
+                  }}
+                >
+                  <Award size={22} color="#FFFFFF" />
+                </LinearGradient>
+                <Text style={{ fontSize: 22, fontWeight: '900', color: '#1F2937' }}>{totalCompletions}</Text>
+                <Text style={{ fontSize: 11, color: '#9CA3AF', marginTop: 4, fontWeight: '600' }}>Completions</Text>
+              </View>
+
+              <View style={{ alignItems: 'center' }}>
+                <LinearGradient
+                  colors={['#DC2626', '#B91C1C']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: 26,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: 10,
+                  }}
+                >
+                  <Calendar size={22} color="#FFFFFF" />
+                </LinearGradient>
+                <Text style={{ fontSize: 22, fontWeight: '900', color: '#1F2937' }}>{stats?.perfectDays || 0}</Text>
+                <Text style={{ fontSize: 11, color: '#9CA3AF', marginTop: 4, fontWeight: '600' }}>Perfect Days</Text>
+              </View>
+
+              <View style={{ alignItems: 'center' }}>
+                <LinearGradient
+                  colors={['#06B6D4', '#0891B2']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: 26,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: 10,
+                  }}
+                >
+                  <BarChart3 size={22} color="#FFFFFF" />
+                </LinearGradient>
+                <Text style={{ fontSize: 22, fontWeight: '900', color: '#1F2937' }}>L{stats?.level || 1}</Text>
+                <Text style={{ fontSize: 11, color: '#9CA3AF', marginTop: 4, fontWeight: '600' }}>Current</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Level Progress - Amethyst Gradient Card */}
+        <View style={{ paddingHorizontal: 24, marginBottom: 32 }}>
+          <LinearGradient
+            colors={['#9333EA', '#7C3AED']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              borderRadius: 24,
+              padding: 20,
+              shadowColor: '#9333EA',
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.3,
+              shadowRadius: 16,
+            }}
+          >
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <Text style={{ fontSize: 13, fontWeight: '800', color: '#FFFFFF', letterSpacing: 1.5 }}>LEVEL PROGRESS</Text>
+              <Text style={{ fontSize: 12, color: '#E9D5FF', fontWeight: '600' }}>
                 {stats?.xp || 0} / {stats?.xpForNextLevel || 100} XP
               </Text>
             </View>
             <View
-              style={[
-                tw`h-3 rounded-full overflow-hidden`,
-                {
-                  backgroundColor: 'rgba(168, 152, 133, 0.2)',
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: 0.05,
-                  shadowRadius: 2,
-                },
-              ]}
+              style={{
+                height: 12,
+                borderRadius: 6,
+                overflow: 'hidden',
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              }}
             >
               <LinearGradient
-                colors={['#9CA3AF', '#6B7280']}
+                colors={['#F0ABFC', '#FFFFFF']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                style={[tw`h-full rounded-full`, { width: `${((stats?.xp || 0) / (stats?.xpForNextLevel || 100)) * 100}%` }]}
+                style={{
+                  height: '100%',
+                  borderRadius: 6,
+                  width: `${((stats?.xp || 0) / (stats?.xpForNextLevel || 100)) * 100}%`,
+                }}
               />
             </View>
-          </View>
+          </LinearGradient>
         </View>
 
-        <View style={tw`h-8`} />
+        <View style={{ height: 32 }} />
       </ScrollView>
-    </LinearGradient>
+    </View>
   );
 };
 
