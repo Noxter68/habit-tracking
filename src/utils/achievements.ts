@@ -102,7 +102,7 @@ export const achievementTitles: Achievement[] = [
     title: 'The Unyielding',
     tier: 'Mastery Awakens',
     color: '#f59e0b',
-    image: require('../../assets/achievements/level-27.png'),
+    image: require('../../assets/achievements/level-13.png'),
   },
   {
     level: 14,
@@ -203,28 +203,28 @@ export const achievementTitles: Achievement[] = [
     title: 'Titan of Consistency',
     tier: 'Mythic Glory',
     color: '#8b5cf6',
-    image: require('../../assets/achievements/level-19.png'),
+    image: require('../../assets/achievements/level-27.png'),
   },
   {
     level: 28,
     title: 'The Invincible',
     tier: 'Mythic Glory',
     color: '#8b5cf6',
-    image: require('../../assets/achievements/level-19.png'),
+    image: require('../../assets/achievements/level-28.png'),
   },
   {
     level: 29,
     title: 'Legend of the Grind',
     tier: 'Mythic Glory',
     color: '#8b5cf6',
-    image: require('../../assets/achievements/level-19.png'),
+    image: require('../../assets/achievements/level-29.png'),
   },
   {
     level: 30,
     title: 'Ascended One',
     tier: 'Mythic Glory',
     color: '#8b5cf6',
-    image: require('../../assets/achievements/level-19.png'),
+    image: require('../../assets/achievements/level-30.png'),
   },
 ];
 
