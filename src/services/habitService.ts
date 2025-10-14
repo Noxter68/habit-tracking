@@ -418,10 +418,16 @@ export class HabitService {
   }
 
   // Calculate streaks with better logic
+  // In src/services/habitService.ts
   static async calculateStreaks(habitId: string, userId: string, date: string, allCompleted: boolean): Promise<{ currentStreak: number; bestStreak: number }> {
     try {
-      // Get all completions for this habit
-      const { data: completions, error } = await supabase.from('task_completions').select('date, all_completed').eq('habit_id', habitId).eq('all_completed', true).order('date', { ascending: false });
+      // ✅ Get ALL completions (any progress counts for streak)
+      const { data: completions, error } = await supabase
+        .from('task_completions')
+        .select('date, all_completed')
+        .eq('habit_id', habitId)
+        // ✅ REMOVE: .eq('all_completed', true)
+        .order('date', { ascending: false });
 
       if (error) throw error;
 
@@ -430,23 +436,33 @@ export class HabitService {
 
       if (completions && completions.length > 0) {
         const today = new Date().toISOString().split('T')[0];
-        const dates = completions.map((c) => c.date);
 
-        // Calculate current streak
-        if (dates.includes(today) || (date === today && allCompleted)) {
+        // ✅ Get unique dates (any progress on that day)
+        const dates = [...new Set(completions.map((c) => c.date))];
+
+        // Calculate current streak - check if we have activity today or yesterday
+        const todayHasProgress = dates.includes(today) || date === today;
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+        const yesterdayHasProgress = dates.includes(yesterdayStr);
+
+        // Start counting if today OR yesterday has progress
+        if (todayHasProgress || yesterdayHasProgress) {
           currentStreak = 1;
-          const yesterday = new Date();
-          yesterday.setDate(yesterday.getDate() - 1);
+
+          // Start from yesterday if today has no progress
+          let startDay = todayHasProgress ? 0 : 1;
 
           for (let i = 1; i < 365; i++) {
-            const checkDate = new Date(yesterday);
-            checkDate.setDate(checkDate.getDate() - (i - 1));
+            const checkDate = new Date();
+            checkDate.setDate(checkDate.getDate() - (i + startDay));
             const dateStr = checkDate.toISOString().split('T')[0];
 
             if (dates.includes(dateStr)) {
               currentStreak++;
             } else {
-              break;
+              break; // Stop at first gap
             }
           }
         }
@@ -461,8 +477,7 @@ export class HabitService {
           } else {
             const prevDate = new Date(sortedDates[i - 1]);
             const currDate = new Date(sortedDates[i]);
-            const diffTime = Math.abs(currDate.getTime() - prevDate.getTime());
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const diffDays = Math.round((currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
 
             if (diffDays === 1) {
               tempStreak++;
