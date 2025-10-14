@@ -117,29 +117,29 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
   const getCardStyle = () => {
     if (isCollected) {
       return {
-        gradient: ['#F3F4F6', '#E5E7EB'], // Neutral for collected
-        iconBg: 'rgba(156, 163, 175, 0.2)',
-        textPrimary: '#4B5563',
+        gradient: ['#F9FAFB', '#F3F4F6', '#F9FAFB'],
+        iconBg: 'rgba(156, 163, 175, 0.15)',
+        textPrimary: '#6B7280',
         textSecondary: '#9CA3AF',
         badgeBg: '#D1D5DB',
-        shadowColor: '#6B7280',
-        borderColor: 'rgba(156, 163, 175, 0.3)',
+        shadowColor: '#9CA3AF',
+        borderColor: 'rgba(156, 163, 175, 0.25)',
       };
     }
     if (isComplete) {
       return {
-        gradient: ['#06B6D4', '#0891B2'], // Crystal for ready to claim
-        iconBg: 'rgba(255, 255, 255, 0.25)',
-        textPrimary: '#FFFFFF',
-        textSecondary: 'rgba(255, 255, 255, 0.9)',
-        badgeBg: 'rgba(255, 255, 255, 0.25)',
+        gradient: ['#CFFAFE', '#A5F3FC', '#E0F2FE'],
+        iconBg: 'rgba(6, 182, 212, 0.15)',
+        textPrimary: '#0E7490',
+        textSecondary: '#0891B2',
+        badgeBg: '#06B6D4',
         shadowColor: '#06B6D4',
         borderColor: 'rgba(6, 182, 212, 0.4)',
       };
     }
     // In progress - use tier theme
     return {
-      gradient: [`${theme.accent}08`, `${theme.accent}05`],
+      gradient: [`${theme.accent}08`, `${theme.accent}05`, '#FAF9F7'],
       iconBg: `${theme.accent}15`,
       textPrimary: '#1F2937',
       textSecondary: '#6B7280',
@@ -147,7 +147,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
       shadowColor: theme.accent,
       progressBg: `${theme.accent}15`,
       progressGradient: theme.gradient,
-      borderColor: `${theme.accent}25`,
+      borderColor: `${theme.accent}30`,
     };
   };
 
@@ -164,7 +164,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
           },
         ]}
       >
-        {/* Card with gradient and shadow */}
+        {/* Card with gradient, border and shadow */}
         <LinearGradient
           colors={cardStyle.gradient}
           start={{ x: 0, y: 0 }}
@@ -172,10 +172,13 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
           style={{
             borderRadius: 16,
             padding: 16,
+            borderWidth: 1.5,
+            borderColor: cardStyle.borderColor,
             shadowColor: cardStyle.shadowColor,
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.15,
-            shadowRadius: 12,
+            shadowOpacity: 0.12,
+            shadowRadius: 10,
+            elevation: 4,
           }}
         >
           <View
@@ -203,7 +206,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
                 }}
               >
                 {isCollected ? (
-                  <CheckCircle2 size={28} color="#6B7280" />
+                  <CheckCircle2 size={28} color="#9CA3AF" />
                 ) : isComplete ? (
                   <Image source={require('../../../assets/interface/consumable-xp.png')} style={{ width: 40, height: 40 }} />
                 ) : (
@@ -246,11 +249,19 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
                 backgroundColor: cardStyle.badgeBg,
                 shadowColor: '#000',
                 shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.08,
+                shadowOpacity: 0.1,
                 shadowRadius: 4,
               }}
             >
-              <Text style={{ fontSize: 13, fontWeight: '800', color: '#FFFFFF' }}>{isCollected ? '✓' : '20 XP'}</Text>
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: '800',
+                  color: '#FFFFFF',
+                }}
+              >
+                {isCollected ? '✓' : '20 XP'}
+              </Text>
             </View>
           </View>
 

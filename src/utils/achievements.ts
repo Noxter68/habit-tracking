@@ -102,7 +102,7 @@ export const achievementTitles: Achievement[] = [
     title: 'The Unyielding',
     tier: 'Mastery Awakens',
     color: '#f59e0b',
-    image: require('../../assets/achievements/level-13.png'),
+    image: require('../../assets/achievements/level-27.png'),
   },
   {
     level: 14,

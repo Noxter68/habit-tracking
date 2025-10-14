@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, ImageBackground } from 'react-native';
+import { View, Text, ImageBackground, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeIn, FadeOut } from 'react-native-reanimated';
+import { ChevronDown, ChevronUp } from 'lucide-react-native';
 import { Achievement, TierName, UserAchievement } from '../../types/achievement.types';
 import { AchievementCard } from './AchievementCard';
 import { getAchievementTierTheme } from '../../utils/tierTheme';
@@ -13,43 +14,47 @@ interface TierSectionProps {
   userAchievements: UserAchievement[];
   isAchievementUnlocked: (achievement: Achievement) => boolean;
   onAchievementPress: (achievement: Achievement) => void;
+  isExpanded: boolean;
+  onToggle: (tierName: TierName) => void;
 }
 
-export const TierSection: React.FC<TierSectionProps> = ({ tierName, tierIndex, achievements, userAchievements, isAchievementUnlocked, onAchievementPress }) => {
+export const TierSection: React.FC<TierSectionProps> = ({ tierName, tierIndex, achievements, userAchievements, isAchievementUnlocked, onAchievementPress, isExpanded, onToggle }) => {
   const tierUnlockedCount = achievements.filter((a) => isAchievementUnlocked(a)).length;
   const tierTotalCount = achievements.length;
   const progress = tierTotalCount > 0 ? (tierUnlockedCount / tierTotalCount) * 100 : 0;
   const isCompleted = tierUnlockedCount === tierTotalCount;
 
-  // Get tier theme directly from utils
   const tierTheme = getAchievementTierTheme(tierName as any);
   const tierGradient = tierTheme.gradient;
   const tierTexture = tierTheme.texture;
 
-  // Determine text colors based on gem
-  const getTextColors = (gemName: string) => {
-    return {
-      primary: '#ffffff',
-      secondary: 'rgba(255, 255, 255, 0.9)',
-    };
+  const textColors = {
+    primary: '#ffffff',
+    secondary: 'rgba(255, 255, 255, 0.9)',
   };
-
-  const textColors = getTextColors(tierTheme.gemName);
 
   return (
     <Animated.View entering={FadeInDown.delay(tierIndex * 100).springify()} style={{ marginBottom: 24 }}>
-      {/* Tier Header with Gradient & Texture */}
-      <View style={{ marginHorizontal: 8, marginBottom: 12, borderRadius: 20, overflow: 'hidden' }}>
-        <LinearGradient
-          colors={[tierGradient[0], tierGradient[1], tierGradient[2]]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0.5 }}
-          style={{
-            borderRadius: 20,
-          }}
-        >
+      <Pressable
+        onPress={() => onToggle(tierName)}
+        style={({ pressed }) => ({
+          marginHorizontal: 8,
+          marginBottom: isExpanded ? 12 : 0,
+          borderRadius: 20,
+          overflow: 'hidden',
+          opacity: pressed ? 0.85 : 1,
+        })}
+      >
+        <LinearGradient colors={[tierGradient[0], tierGradient[1], tierGradient[2]]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0.5 }} style={{ borderRadius: 20 }}>
           <ImageBackground source={tierTexture} style={{ padding: 16 }} imageStyle={{ opacity: 0.8 }} resizeMode="cover">
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 10,
+              }}
+            >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Text
                   style={{
@@ -62,24 +67,42 @@ export const TierSection: React.FC<TierSectionProps> = ({ tierName, tierIndex, a
                   {tierName}
                 </Text>
                 {isCompleted && (
-                  <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.25)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}>
-                    <Text style={{ fontSize: 10, fontWeight: '700', color: textColors.primary }}>COMPLETE</Text>
+                  <View
+                    style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                      paddingHorizontal: 8,
+                      paddingVertical: 2,
+                      borderRadius: 8,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 10,
+                        fontWeight: '700',
+                        color: textColors.primary,
+                      }}
+                    >
+                      COMPLETE
+                    </Text>
                   </View>
                 )}
               </View>
 
-              <Text
-                style={{
-                  fontSize: 16,
-                  fontWeight: '700',
-                  color: textColors.primary,
-                }}
-              >
-                {tierUnlockedCount}/{tierTotalCount}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: '700',
+                    color: textColors.primary,
+                  }}
+                >
+                  {tierUnlockedCount}/{tierTotalCount}
+                </Text>
+
+                {isExpanded ? <ChevronUp size={20} color={textColors.primary} /> : <ChevronDown size={20} color={textColors.primary} />}
+              </View>
             </View>
 
-            {/* Progress Bar with white fill */}
             <View
               style={{
                 height: 8,
@@ -98,7 +121,6 @@ export const TierSection: React.FC<TierSectionProps> = ({ tierName, tierIndex, a
               />
             </View>
 
-            {/* Progress percentage */}
             {!isCompleted && progress > 0 && (
               <Text
                 style={{
@@ -114,35 +136,38 @@ export const TierSection: React.FC<TierSectionProps> = ({ tierName, tierIndex, a
             )}
           </ImageBackground>
         </LinearGradient>
-      </View>
+      </Pressable>
 
-      {/* Achievement Grid */}
-      <View
-        style={{
-          paddingHorizontal: 8,
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          marginHorizontal: -4,
-        }}
-      >
-        {achievements.map((achievement, index) => {
-          const isUnlocked = isAchievementUnlocked(achievement);
-          const isFromBackend = userAchievements.some((ua) => ua?.title === achievement.title);
+      {isExpanded && (
+        <Animated.View
+          entering={FadeIn.duration(300)}
+          exiting={FadeOut.duration(400)}
+          style={{
+            paddingHorizontal: 8,
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            marginHorizontal: -4,
+          }}
+        >
+          {achievements.map((achievement, index) => {
+            const isUnlocked = isAchievementUnlocked(achievement);
+            const isFromBackend = userAchievements.some((ua) => ua?.title === achievement.title);
 
-          return (
-            <View
-              key={`${achievement.id}=${achievement.title}`}
-              style={{
-                width: '50%',
-                paddingHorizontal: 4,
-                paddingVertical: 4,
-              }}
-            >
-              <AchievementCard achievement={achievement} isUnlocked={isUnlocked} isFromBackend={isFromBackend} index={index} onPress={onAchievementPress} tierName={tierName} />
-            </View>
-          );
-        })}
-      </View>
+            return (
+              <View
+                key={`${achievement.id}=${achievement.title}`}
+                style={{
+                  width: '50%',
+                  paddingHorizontal: 4,
+                  paddingVertical: 4,
+                }}
+              >
+                <AchievementCard achievement={achievement} isUnlocked={isUnlocked} isFromBackend={isFromBackend} index={index} onPress={onAchievementPress} tierName={tierName} />
+              </View>
+            );
+          })}
+        </Animated.View>
+      )}
     </Animated.View>
   );
 };

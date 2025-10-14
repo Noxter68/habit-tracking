@@ -83,10 +83,10 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, i
               paddingHorizontal: 12,
             }}
           >
-            {/* Badge - FIXED 60x60 size */}
+            {/* Badge - FIXED 60x60 size with opacity for locked */}
             <View
               style={{
-                opacity: isUnlocked ? 1 : 0.35,
+                opacity: isUnlocked ? 1 : 0.3,
                 height: 60,
                 width: 60,
                 alignItems: 'center',
@@ -94,10 +94,8 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, i
                 overflow: 'hidden',
               }}
             >
-              <AchievementBadge level={achievement.level} achievement={achievement} isUnlocked={isUnlocked} size={60} />
+              <AchievementBadge level={achievement.level} achievement={achievement} isUnlocked={true} size={60} />
             </View>
-
-            {/* Lock icon overlay for locked achievements */}
 
             {/* Title - FIXED 32px height */}
             <View

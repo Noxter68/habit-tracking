@@ -126,7 +126,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           shadowRadius: 16,
         }}
       >
-        <View style={{ padding: 24 }}>
+        <View style={{ padding: 24, paddingBottom: 0 }}>
           {/* Greeting and Level Section */}
           <View style={{ marginBottom: 20 }}>
             <Text
@@ -255,7 +255,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           )}
 
           {/* Next Achievement Preview */}
-          {nextTitle && <NextAchievement nextTitle={nextTitle} xpToNextLevel={xpToNextLevel} tierTheme={tierTheme} />}
+          {/* {nextTitle && <NextAchievement nextTitle={nextTitle} xpToNextLevel={xpToNextLevel} tierTheme={tierTheme} />} */}
         </View>
       </LinearGradient>
     </Animated.View>
