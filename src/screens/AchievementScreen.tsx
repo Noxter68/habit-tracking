@@ -96,6 +96,7 @@ const AchievementsScreen: React.FC = () => {
 
   const unlockedCount = achievementTitles.filter((a) => isAchievementUnlocked(a)).length;
   const totalCount = achievementTitles.length;
+  const completionPercent = Math.round((unlockedCount / totalCount) * 100);
 
   const isLoading = statsLoading || achievementsLoading;
 
@@ -112,9 +113,9 @@ const AchievementsScreen: React.FC = () => {
     <SafeAreaView style={tw`flex-1 bg-sand-50`}>
       {/* Header with Deep Tier Gradient */}
       <LinearGradient colors={[currentTierTheme.gradient[0], currentTierTheme.gradient[1], currentTierTheme.gradient[2]]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`pb-6 shadow-xl`}>
-        <View style={tw`px-5 pt-4`}>
+        <View style={tw`px-5 pt-4 pb-3`}>
           {/* Navigation */}
-          <View style={tw`flex-row items-center justify-between mb-6`}>
+          <View style={tw`flex-row items-center justify-between mb-4`}>
             <Pressable
               onPress={() => navigation.goBack()}
               style={({ pressed }) => [tw`p-2 -ml-2 rounded-xl`, { backgroundColor: pressed ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.15)' }]}
@@ -123,48 +124,73 @@ const AchievementsScreen: React.FC = () => {
             </Pressable>
 
             <View style={tw`items-center flex-1`}>
-              <Text style={[tw`text-2xl font-black tracking-tight`, tw`${textColors.primary}`]}>Achievements</Text>
-              <Text style={[tw`text-xs font-bold uppercase tracking-wider mt-1`, tw`${textColors.secondary}`]}>{currentTierTheme.gemName} Tier</Text>
+              <Text style={[tw`text-xl font-black tracking-tight`, tw`${textColors.primary}`]}>Achievements</Text>
+              <View style={tw`flex-row items-center gap-1.5 mt-0.5`}>
+                <View style={[tw`h-1.5 w-1.5 rounded-full`, { backgroundColor: currentTierTheme.accent }]} />
+                <Text style={[tw`text-[10px] font-bold uppercase tracking-wider`, tw`${textColors.secondary}`]}>{currentTierTheme.gemName} Tier</Text>
+              </View>
             </View>
 
             <View style={tw`w-10`} />
           </View>
 
-          {/* Stats Cards - NO ICONS */}
-          <View style={tw`flex-row gap-2.5`}>
-            {/* Unlocked Card */}
-            <View style={[tw`flex-1 rounded-2xl p-3.5`, { backgroundColor: 'rgba(255, 255, 255, 0.15)', minHeight: 80 }]}>
-              <Text style={[tw`text-[10px] font-bold uppercase mb-2 tracking-wide`, tw`${textColors.secondary}`]} numberOfLines={1}>
-                Unlocked
-              </Text>
-              <View style={tw`flex-row items-baseline gap-0.5 flex-wrap`}>
-                <Text style={[tw`text-xl font-black`, tw`${textColors.primary}`]} numberOfLines={1}>
-                  {unlockedCount}
-                </Text>
-                <Text style={[tw`text-xs font-bold`, tw`${textColors.secondary}`]} numberOfLines={1}>
-                  /{totalCount}
-                </Text>
+          {/* Compact Stats */}
+          <View style={tw`gap-2`}>
+            {/* Compact Progress Bar First */}
+            <View style={[tw`rounded-xl p-2.5`, { backgroundColor: 'rgba(255, 255, 255, 0.15)' }]}>
+              <View style={tw`flex-row items-center justify-between mb-1.5`}>
+                <Text style={[tw`text-[9px] font-bold uppercase tracking-wide`, tw`${textColors.secondary}`]}>Progress</Text>
+                <Text style={[tw`text-xs font-black`, tw`${textColors.primary}`]}>{completionPercent}%</Text>
+              </View>
+              <View style={[tw`h-2 rounded-full overflow-hidden`, { backgroundColor: 'rgba(255, 255, 255, 0.25)' }]}>
+                <View
+                  style={[
+                    tw`h-full rounded-full`,
+                    {
+                      width: `${completionPercent}%`,
+                      backgroundColor: currentTierTheme.accent,
+                    },
+                  ]}
+                />
               </View>
             </View>
 
-            {/* Completions Card */}
-            <View style={[tw`flex-1 rounded-2xl p-3.5`, { backgroundColor: 'rgba(255, 255, 255, 0.15)', minHeight: 80 }]}>
-              <Text style={[tw`text-[10px] font-bold uppercase mb-2 tracking-wide`, tw`${textColors.secondary}`]} numberOfLines={1}>
-                Completions
-              </Text>
-              <Text style={[tw`text-xl font-black`, tw`${textColors.primary}`]} numberOfLines={1} adjustsFontSizeToFit>
-                {totalCompletions}
-              </Text>
-            </View>
+            {/* Three Equal Cards Row */}
+            <View style={tw`flex-row gap-2`}>
+              {/* Unlocked Card */}
+              <View style={[tw`flex-1 rounded-xl p-2.5`, { backgroundColor: 'rgba(255, 255, 255, 0.15)' }]}>
+                <Text style={[tw`text-[9px] font-bold uppercase tracking-wide mb-0.5`, tw`${textColors.secondary}`]} numberOfLines={1}>
+                  Unlocked
+                </Text>
+                <View style={tw`flex-row items-baseline gap-0.5`}>
+                  <Text style={[tw`text-lg font-black`, tw`${textColors.primary}`]} numberOfLines={1}>
+                    {unlockedCount}
+                  </Text>
+                  <Text style={[tw`text-xs font-bold`, tw`${textColors.secondary}`]} numberOfLines={1}>
+                    /{totalCount}
+                  </Text>
+                </View>
+              </View>
 
-            {/* Total XP Card */}
-            <View style={[tw`flex-1 rounded-2xl p-3.5`, { backgroundColor: 'rgba(255, 255, 255, 0.15)', minHeight: 80 }]}>
-              <Text style={[tw`text-[10px] font-bold uppercase mb-2 tracking-wide`, tw`${textColors.secondary}`]} numberOfLines={1}>
-                Total XP
-              </Text>
-              <Text style={[tw`text-xl font-black`, tw`${textColors.primary}`]} numberOfLines={1} adjustsFontSizeToFit>
-                {totalXP.toLocaleString()}
-              </Text>
+              {/* Completions Card */}
+              <View style={[tw`flex-1 rounded-xl p-2.5`, { backgroundColor: 'rgba(255, 255, 255, 0.15)' }]}>
+                <Text style={[tw`text-[9px] font-bold uppercase tracking-wide mb-0.5`, tw`${textColors.secondary}`]} numberOfLines={1}>
+                  Completions
+                </Text>
+                <Text style={[tw`text-lg font-black`, tw`${textColors.primary}`]} numberOfLines={1}>
+                  {totalCompletions}
+                </Text>
+              </View>
+
+              {/* Total XP Card */}
+              <View style={[tw`flex-1 rounded-xl p-2.5`, { backgroundColor: 'rgba(255, 255, 255, 0.15)' }]}>
+                <Text style={[tw`text-[9px] font-bold uppercase tracking-wide mb-0.5`, tw`${textColors.secondary}`]} numberOfLines={1}>
+                  Total XP
+                </Text>
+                <Text style={[tw`text-lg font-black`, tw`${textColors.primary}`]} adjustsFontSizeToFit numberOfLines={1}>
+                  {totalXP.toLocaleString()}
+                </Text>
+              </View>
             </View>
           </View>
         </View>

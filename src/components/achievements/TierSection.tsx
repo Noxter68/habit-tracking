@@ -21,18 +21,13 @@ export const TierSection: React.FC<TierSectionProps> = ({ tierName, tierIndex, a
   const progress = tierTotalCount > 0 ? (tierUnlockedCount / tierTotalCount) * 100 : 0;
   const isCompleted = tierUnlockedCount === tierTotalCount;
 
-  // Get tier theme
+  // Get tier theme directly from utils
   const tierTheme = getAchievementTierTheme(tierName as any);
   const tierGradient = tierTheme.gradient;
+  const tierTexture = tierTheme.texture;
 
   // Determine text colors based on gem
   const getTextColors = (gemName: string) => {
-    if (['Crystal', 'Topaz'].includes(gemName)) {
-      return {
-        primary: '#292524',
-        secondary: '#57534e',
-      };
-    }
     return {
       primary: '#ffffff',
       secondary: 'rgba(255, 255, 255, 0.9)',
@@ -41,43 +36,19 @@ export const TierSection: React.FC<TierSectionProps> = ({ tierName, tierIndex, a
 
   const textColors = getTextColors(tierTheme.gemName);
 
-  // Get texture based on tier
-  const getTierTexture = () => {
-    // Map achievement tier names to habit tier textures
-    switch (tierName) {
-      case 'Novice': // Crystal
-        return require('../../../assets/interface/progressBar/crystal.png');
-      case 'Rising Hero': // Ruby
-        return require('../../../assets/interface/progressBar/ruby-texture.png');
-      case 'Mastery Awakens': // Amethyst
-        return require('../../../assets/interface/progressBar/amethyst-texture.png');
-      case 'Legendary Ascent': // Jade
-        return require('../../../assets/interface/progressBar/crystal.png'); // Fallback to crystal
-      case 'Epic Mastery': // Topaz
-        return require('../../../assets/interface/progressBar/crystal.png'); // Fallback to crystal
-      case 'Mythic Glory': // Obsidian
-        return require('../../../assets/interface/progressBar/amethyst-texture.png'); // Fallback to amethyst
-      default:
-        return require('../../../assets/interface/progressBar/crystal.png');
-    }
-  };
-
-  const texture = getTierTexture();
-
   return (
     <Animated.View entering={FadeInDown.delay(tierIndex * 100).springify()} style={{ marginBottom: 24 }}>
       {/* Tier Header with Gradient & Texture */}
       <View style={{ marginHorizontal: 8, marginBottom: 12, borderRadius: 20, overflow: 'hidden' }}>
-        <ImageBackground source={texture} style={{ overflow: 'hidden' }} imageStyle={{ opacity: 0.7, borderRadius: 20 }} resizeMode="cover">
-          <LinearGradient
-            colors={[tierGradient[0] + 'cc', tierGradient[1] + 'cc', tierGradient[2] + 'cc']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0.5 }}
-            style={{
-              padding: 16,
-              borderRadius: 20,
-            }}
-          >
+        <LinearGradient
+          colors={[tierGradient[0], tierGradient[1], tierGradient[2]]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0.5 }}
+          style={{
+            borderRadius: 20,
+          }}
+        >
+          <ImageBackground source={tierTexture} style={{ padding: 16 }} imageStyle={{ opacity: 0.8 }} resizeMode="cover">
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Text
@@ -141,8 +112,8 @@ export const TierSection: React.FC<TierSectionProps> = ({ tierName, tierIndex, a
                 {Math.round(progress)}% Complete
               </Text>
             )}
-          </LinearGradient>
-        </ImageBackground>
+          </ImageBackground>
+        </LinearGradient>
       </View>
 
       {/* Achievement Grid */}
@@ -162,12 +133,12 @@ export const TierSection: React.FC<TierSectionProps> = ({ tierName, tierIndex, a
             <View
               key={`${achievement.id}=${achievement.title}`}
               style={{
-                width: '49%',
+                width: '50%',
                 paddingHorizontal: 4,
                 paddingVertical: 4,
               }}
             >
-              <AchievementCard achievement={achievement} isUnlocked={isUnlocked} isFromBackend={isFromBackend} index={index} onPress={onAchievementPress} />
+              <AchievementCard achievement={achievement} isUnlocked={isUnlocked} isFromBackend={isFromBackend} index={index} onPress={onAchievementPress} tierName={tierName} />
             </View>
           );
         })}

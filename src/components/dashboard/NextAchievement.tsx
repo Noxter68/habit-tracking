@@ -5,23 +5,45 @@ import { Lock, ChevronRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
+import { getAchievementTierTheme } from '@/utils/tierTheme';
+import type { AchievementTierName } from '@/utils/tierTheme';
+
+interface TierTheme {
+  gradient: string[];
+  accent: string;
+  gemName: string;
+}
 
 interface NextAchievementProps {
   nextTitle?: {
     title: string;
     level: number;
+    name?: string;
   };
   xpToNextLevel: number;
+  tierTheme?: TierTheme;
 }
 
-const NextAchievement: React.FC<NextAchievementProps> = ({ nextTitle, xpToNextLevel }) => {
+const NextAchievement: React.FC<NextAchievementProps> = ({ nextTitle, xpToNextLevel, tierTheme }) => {
   const navigation = useNavigation();
 
   if (!nextTitle) return null;
 
+  // Get the theme for the NEXT achievement tier
+  const nextTierTheme = nextTitle.name
+    ? getAchievementTierTheme(nextTitle.name as AchievementTierName)
+    : tierTheme || {
+        gradient: ['#EC4899', '#DB2777'],
+        accent: '#EC4899',
+        gemName: 'Rose Quartz',
+      };
+
   const handlePress = () => {
     navigation.navigate('Achievements' as never);
   };
+
+  // Create light gradient for background
+  const lightGradient = [`${nextTierTheme.accent}08`, `${nextTierTheme.accent}05`, '#FAF9F7'];
 
   return (
     <Animated.View entering={FadeIn.delay(300)}>
@@ -31,28 +53,40 @@ const NextAchievement: React.FC<NextAchievementProps> = ({ nextTitle, xpToNextLe
           transform: [{ scale: pressed ? 0.98 : 1 }],
         })}
       >
-        {/* Gradient card with Quartz accent */}
+        {/* Gradient card with next tier accent */}
         <LinearGradient
-          colors={['#FDF4FF', '#FCE7F3', '#FAF9F7']}
+          colors={lightGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{
             borderRadius: 16,
             padding: 16,
             borderWidth: 1,
-            borderColor: 'rgba(236, 72, 153, 0.2)',
-            shadowColor: '#EC4899',
+            borderColor: `${nextTierTheme.accent}30`,
+            shadowColor: nextTierTheme.accent,
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.1,
             shadowRadius: 8,
           }}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
             {/* Left side: Icon + Text */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-              {/* Lock Icon with Quartz gradient */}
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                flex: 1,
+              }}
+            >
+              {/* Lock Icon with next tier gradient */}
               <LinearGradient
-                colors={['#EC4899', '#DB2777']}
+                colors={nextTierTheme.gradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={{
@@ -62,7 +96,7 @@ const NextAchievement: React.FC<NextAchievementProps> = ({ nextTitle, xpToNextLe
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginRight: 12,
-                  shadowColor: '#EC4899',
+                  shadowColor: nextTierTheme.accent,
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.3,
                   shadowRadius: 4,
@@ -77,7 +111,7 @@ const NextAchievement: React.FC<NextAchievementProps> = ({ nextTitle, xpToNextLe
                   style={{
                     fontSize: 11,
                     fontWeight: '800',
-                    color: '#EC4899',
+                    color: nextTierTheme.accent,
                     textTransform: 'uppercase',
                     letterSpacing: 1,
                   }}
@@ -94,9 +128,15 @@ const NextAchievement: React.FC<NextAchievementProps> = ({ nextTitle, xpToNextLe
                 >
                   {nextTitle.title}
                 </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    marginTop: 6,
+                  }}
+                >
                   <LinearGradient
-                    colors={['#EC4899', '#DB2777']}
+                    colors={nextTierTheme.gradient}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={{
@@ -124,15 +164,15 @@ const NextAchievement: React.FC<NextAchievementProps> = ({ nextTitle, xpToNextLe
               style={{
                 width: 32,
                 height: 32,
-                backgroundColor: 'rgba(236, 72, 153, 0.1)',
+                backgroundColor: `${nextTierTheme.accent}10`,
                 borderRadius: 16,
                 alignItems: 'center',
                 justifyContent: 'center',
                 borderWidth: 1,
-                borderColor: 'rgba(236, 72, 153, 0.2)',
+                borderColor: `${nextTierTheme.accent}30`,
               }}
             >
-              <ChevronRight size={18} color="#EC4899" strokeWidth={2.5} />
+              <ChevronRight size={18} color={nextTierTheme.accent} strokeWidth={2.5} />
             </View>
           </View>
         </LinearGradient>

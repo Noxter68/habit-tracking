@@ -4,9 +4,13 @@ import { View, Text, Image, ImageSourcePropType } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { HomeIcon, LucideIcon } from 'lucide-react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
-import { getImage } from '@/utils/images';
 
-// Define props with proper typing
+interface TierTheme {
+  gradient: string[];
+  accent: string;
+  gemName: string;
+}
+
 type StatsCardProps = {
   label: string;
   value: number | string;
@@ -14,11 +18,20 @@ type StatsCardProps = {
   highlight?: boolean;
   isStreak?: boolean;
   streakValue?: number;
+  tierTheme?: TierTheme;
 } & ({ icon: LucideIcon; image?: never } | { icon?: never; image: ImageSourcePropType | string } | { icon?: never; image?: never });
 
 const StatsCard: React.FC<StatsCardProps> = (props) => {
-  const { label, value, subtitle, highlight = false, isStreak = false, streakValue = 0 } = props;
+  const { label, value, subtitle, highlight = false, isStreak = false, streakValue = 0, tierTheme } = props;
 
+  // Default to Amethyst if no tier theme provided
+  const defaultTheme = {
+    gradient: ['#9333EA', '#7C3AED'],
+    accent: '#9333EA',
+    gemName: 'Amethyst',
+  };
+
+  const theme = tierTheme || defaultTheme;
   const fireScale = useSharedValue(1);
 
   React.useEffect(() => {
@@ -33,19 +46,27 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
 
   const getGradientColors = () => {
     if (isStreak && streakValue >= 30) {
-      // Legendary streak - Ruby gradient
-      return ['#DC2626', '#B91C1C'];
+      // Legendary streak (30+ days) - Use tier theme gradient for ultimate achievement
+      return theme.gradient;
     }
     if (isStreak && streakValue >= 7) {
-      // Epic streak - Quartz gradient
-      return ['#EC4899', '#DB2777'];
+      // Epic streak (7+ days) - Lighter version of tier theme
+      return [`${theme.gradient[0]}`, `${theme.gradient[1]}`];
     }
     if (highlight) {
-      // Highlighted - Amethyst
-      return ['#A855F7', '#9333EA'];
+      // Highlighted - Use tier theme
+      return theme.gradient;
     }
     // Default - clean white
     return ['#FFFFFF', '#FAF9F7'];
+  };
+
+  const getBorderColor = () => {
+    if (isStreak && streakValue >= 30) return `${theme.accent}40`; // Legendary - stronger border
+    if (isStreak && streakValue >= 7) return `${theme.accent}40`; // Epic - strong border
+    if (highlight) return `${theme.accent}30`;
+    // Default - subtle border
+    return 'rgba(0, 0, 0, 0.06)';
   };
 
   const getTextColors = () => {
@@ -61,18 +82,21 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
   const getIconBg = () => {
     if (isStreak && streakValue >= 30) return 'rgba(255, 255, 255, 0.25)';
     if (isStreak && streakValue >= 7) return 'rgba(255, 255, 255, 0.25)';
-    return '#F5F3FF';
+    // Use tier theme for default state
+    return `${theme.accent}15`;
   };
 
   const getIconColor = () => {
     if (isStreak && streakValue >= 7) return '#FFFFFF';
-    return '#9333EA';
+    // Use tier theme accent
+    return theme.accent;
   };
 
   const getShadowColor = () => {
     if (isStreak && streakValue >= 30) return '#DC2626';
     if (isStreak && streakValue >= 7) return '#EC4899';
-    return '#9333EA';
+    // Use tier theme accent
+    return theme.accent;
   };
 
   const isOnFire = isStreak && streakValue >= 7;
@@ -148,7 +172,7 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
               shadowRadius: 4,
             }}
           >
-            <Image source={imageSource} style={{ width: 28, height: 28 }} resizeMode="contain" />
+            <Image source={imageSource} style={{ width: 35, height: 35 }} resizeMode="contain" />
           </View>
         </Animated.View>
       );
@@ -184,13 +208,21 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
         flex: 1,
         borderRadius: 16,
         padding: 16,
+        borderWidth: 1.5,
+        borderColor: getBorderColor(),
         shadowColor: getShadowColor(),
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.15,
         shadowRadius: 12,
       }}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
         {renderVisual()}
         <View style={{ flex: 1, marginLeft: 12 }}>
           <Text

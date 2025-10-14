@@ -7,6 +7,12 @@ import { XPService } from '../../services/xpService';
 import { supabase } from '../../lib/supabase';
 import { useDebugMode } from '@/hooks/useDebugMode';
 
+interface TierTheme {
+  gradient: string[];
+  accent: string;
+  gemName: string;
+}
+
 interface DailyChallengeProps {
   completedToday: number;
   totalTasksToday: number;
@@ -16,9 +22,10 @@ interface DailyChallengeProps {
   xpForNextLevel: number;
   onLevelUp?: () => void;
   debugMode?: boolean;
+  tierTheme?: TierTheme;
 }
 
-const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTasksToday, onCollect, userId, currentLevelXP, xpForNextLevel, onLevelUp, debugMode = false }) => {
+const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTasksToday, onCollect, userId, currentLevelXP, xpForNextLevel, onLevelUp, debugMode = false, tierTheme }) => {
   const [isCollected, setIsCollected] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -26,6 +33,15 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
   const completionPercentage = totalTasksToday > 0 ? Math.min(100, Math.round((completedToday / totalTasksToday) * 100)) : 0;
 
   const { showTestButtons } = useDebugMode();
+
+  // Default to Amethyst if no tier theme provided
+  const defaultTheme = {
+    gradient: ['#9333EA', '#7C3AED'],
+    accent: '#9333EA',
+    gemName: 'Amethyst',
+  };
+
+  const theme = tierTheme || defaultTheme;
 
   // Check collection status from DATABASE
   useEffect(() => {
@@ -107,6 +123,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
         textSecondary: '#9CA3AF',
         badgeBg: '#D1D5DB',
         shadowColor: '#6B7280',
+        borderColor: 'rgba(156, 163, 175, 0.3)',
       };
     }
     if (isComplete) {
@@ -117,15 +134,20 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
         textSecondary: 'rgba(255, 255, 255, 0.9)',
         badgeBg: 'rgba(255, 255, 255, 0.25)',
         shadowColor: '#06B6D4',
+        borderColor: 'rgba(6, 182, 212, 0.4)',
       };
     }
+    // In progress - use tier theme
     return {
-      gradient: ['#F5F3FF', '#EDE9FE'], // Amethyst light for in progress
-      iconBg: 'rgba(147, 51, 234, 0.15)',
+      gradient: [`${theme.accent}08`, `${theme.accent}05`],
+      iconBg: `${theme.accent}15`,
       textPrimary: '#1F2937',
       textSecondary: '#6B7280',
-      badgeBg: '#9333EA',
-      shadowColor: '#9333EA',
+      badgeBg: theme.accent,
+      shadowColor: theme.accent,
+      progressBg: `${theme.accent}15`,
+      progressGradient: theme.gradient,
+      borderColor: `${theme.accent}25`,
     };
   };
 
@@ -156,7 +178,13 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
             shadowRadius: 12,
           }}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
             {/* Left side: Icon + Text */}
             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
               {/* Icon */}
@@ -234,7 +262,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
                   height: 8,
                   borderRadius: 20,
                   overflow: 'hidden',
-                  backgroundColor: 'rgba(147, 51, 234, 0.15)',
+                  backgroundColor: cardStyle.progressBg || `${theme.accent}15`,
                   shadowColor: '#000',
                   shadowOffset: { width: 0, height: 1 },
                   shadowOpacity: 0.05,
@@ -242,7 +270,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
                 }}
               >
                 <LinearGradient
-                  colors={['#9333EA', '#7C3AED']}
+                  colors={cardStyle.progressGradient || theme.gradient}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={{
