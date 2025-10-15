@@ -238,15 +238,17 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             </View>
           </View>
 
-          {/* Level Progress Bar */}
-          <View style={{ marginBottom: 20 }}>
-            <LevelProgress currentLevel={userLevel} currentLevelXP={displayXP} xpForNextLevel={xpForNextLevel} levelProgress={displayProgress} tierTheme={tierTheme} />
-          </View>
+          {/* Level Progress Bar - Only show if level < 30 */}
+          {userLevel < 30 && (
+            <View style={{ marginBottom: 20 }}>
+              <LevelProgress currentLevel={userLevel} currentLevelXP={displayXP} xpForNextLevel={xpForNextLevel} levelProgress={displayProgress} tierTheme={tierTheme} />
+            </View>
+          )}
 
-          {/* Stats Grid */}
+          {/* Stats Grid - NOW WITH TIER THEME */}
           <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
-            <StatsCard label="Streak" value={totalStreak} image="streak" subtitle="days" isStreak={true} streakValue={totalStreak} />
-            <StatsCard label="Active" value={activeHabits} image="active" subtitle="Quests" />
+            <StatsCard label="Streak" value={totalStreak} image="streak" subtitle="days" isStreak={true} streakValue={totalStreak} tierTheme={tierTheme} />
+            <StatsCard label="Active" value={activeHabits} image="active" subtitle="Quests" tierTheme={tierTheme} />
           </View>
 
           {/* Daily Challenge */}

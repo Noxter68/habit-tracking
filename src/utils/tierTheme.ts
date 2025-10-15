@@ -37,6 +37,9 @@ export const achievementTierThemes: Record<
     accent: string;
     gemName: string;
     texture: any;
+    streakImage: any;
+    questImage: any;
+    backgroundGradient: string[];
   }
 > = {
   Novice: {
@@ -44,36 +47,54 @@ export const achievementTierThemes: Record<
     accent: '#3b82f6',
     gemName: 'Crystal',
     texture: require('../../assets/interface/progressBar/crystal.png'),
+    streakImage: require('../../assets/interface/streak-crystal.png'),
+    questImage: require('../../assets/interface/quest-crystal.png'),
+    backgroundGradient: ['#eff6ff', '#dbeafe', '#bfdbfe'], // Light blue tones
   },
   'Rising Hero': {
     gradient: ['#ef4444', '#dc2626', '#991b1b'],
     accent: '#dc2626',
     gemName: 'Ruby',
     texture: require('../../assets/interface/progressBar/ruby-texture.png'),
+    streakImage: require('../../assets/interface/streak-ruby.png'),
+    questImage: require('../../assets/interface/quest-ruby.png'),
+    backgroundGradient: ['#fef2f2', '#fee2e2', '#fecaca'], // Light red tones
   },
   'Mastery Awakens': {
     gradient: ['#8b5cf6', '#7c3aed', '#4c1d95'],
     accent: '#7c3aed',
     gemName: 'Amethyst',
     texture: require('../../assets/interface/progressBar/amethyst-texture.png'),
+    streakImage: require('../../assets/interface/streak-amethyst.png'),
+    questImage: require('../../assets/interface/quest-amethyst.png'),
+    backgroundGradient: ['#faf5ff', '#f3e8ff', '#e9d5ff'], // Light purple tones
   },
   'Legendary Ascent': {
     gradient: ['#10b981', '#059669', '#047857'],
     accent: '#059669',
     gemName: 'Jade',
     texture: require('../../assets/interface/progressBar/jade-texture.png'),
+    streakImage: require('../../assets/interface/streak-jade.png'),
+    questImage: require('../../assets/interface/quest-jade.png'),
+    backgroundGradient: ['#f0fdf4', '#dcfce7', '#bbf7d0'], // Light green tones
   },
   'Epic Mastery': {
     gradient: ['#fbbf24', '#f59e0b', '#d97706'],
     accent: '#f59e0b',
     gemName: 'Topaz',
     texture: require('../../assets/interface/progressBar/topaz-texture.png'),
+    streakImage: require('../../assets/interface/streak-topaz.png'),
+    questImage: require('../../assets/interface/quest-topaz.png'),
+    backgroundGradient: ['#fffbeb', '#fef3c7', '#fde68a'], // Light amber/gold tones
   },
   'Mythic Glory': {
     gradient: ['#6366f1', '#4f46e5', '#4338ca'],
     accent: '#4f46e5',
     gemName: 'Obsidian',
     texture: require('../../assets/interface/progressBar/obsidian-texture.png'),
+    streakImage: require('../../assets/interface/streak-obsidian.png'),
+    questImage: require('../../assets/interface/quest-obsidian.png'),
+    backgroundGradient: ['#eef2ff', '#e0e7ff', '#c7d2fe'], // Light indigo tones
   },
 };
 

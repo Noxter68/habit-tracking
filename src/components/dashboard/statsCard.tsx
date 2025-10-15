@@ -9,6 +9,9 @@ interface TierTheme {
   gradient: string[];
   accent: string;
   gemName: string;
+  streakImage?: any;
+  questImage?: any;
+  backgroundGradient?: string[];
 }
 
 type StatsCardProps = {
@@ -29,6 +32,9 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
     gradient: ['#9333EA', '#7C3AED'],
     accent: '#9333EA',
     gemName: 'Amethyst',
+    streakImage: require('../../../assets/interface/streak-amethyst.png'),
+    questImage: require('../../../assets/interface/quest-amethyst.png'),
+    backgroundGradient: ['#faf5ff', '#f3e8ff', '#e9d5ff'],
   };
 
   const theme = tierTheme || defaultTheme;
@@ -45,63 +51,91 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
   }));
 
   const getGradientColors = () => {
-    if (isStreak && streakValue >= 30) {
-      // Legendary streak (30+ days) - Use tier theme gradient for ultimate achievement
-      return theme.gradient;
-    }
-    if (isStreak && streakValue >= 7) {
-      // Epic streak (7+ days) - Lighter version of tier theme
-      return [`${theme.gradient[0]}`, `${theme.gradient[1]}`];
-    }
-    if (highlight) {
-      // Highlighted - Use tier theme
-      return theme.gradient;
-    }
-    // Default - clean white
-    return ['#FFFFFF', '#FAF9F7'];
+    // Always use the same light background gradient for consistency
+    return theme.backgroundGradient || ['#FFFFFF', '#FAF9F7'];
   };
 
   const getBorderColor = () => {
-    if (isStreak && streakValue >= 30) return `${theme.accent}40`; // Legendary - stronger border
-    if (isStreak && streakValue >= 7) return `${theme.accent}40`; // Epic - strong border
-    if (highlight) return `${theme.accent}30`;
-    // Default - subtle border
-    return 'rgba(0, 0, 0, 0.06)';
+    // Always use subtle tier-themed border
+    return `${theme.accent}20`;
   };
 
   const getTextColors = () => {
-    if (isStreak && streakValue >= 7) return '#FFFFFF';
+    // Always use dark text for consistency
     return '#1F2937';
   };
 
   const getSubtextColors = () => {
-    if (isStreak && streakValue >= 7) return 'rgba(255, 255, 255, 0.9)';
+    // Always use gray subtext
     return '#9CA3AF';
   };
 
   const getIconBg = () => {
-    if (isStreak && streakValue >= 30) return 'rgba(255, 255, 255, 0.25)';
-    if (isStreak && streakValue >= 7) return 'rgba(255, 255, 255, 0.25)';
-    // Use tier theme for default state
+    // Always use tier-themed icon background
     return `${theme.accent}15`;
   };
 
   const getIconColor = () => {
-    if (isStreak && streakValue >= 7) return '#FFFFFF';
-    // Use tier theme accent
+    // Always use tier accent color
     return theme.accent;
   };
 
   const getShadowColor = () => {
-    if (isStreak && streakValue >= 30) return '#DC2626';
-    if (isStreak && streakValue >= 7) return '#EC4899';
-    // Use tier theme accent
+    // Always use tier accent for shadow
     return theme.accent;
   };
 
   const isOnFire = isStreak && streakValue >= 7;
 
   const renderVisual = () => {
+    // For streak cards, use the tier-based streak image
+    if (isStreak && theme.streakImage) {
+      return (
+        <Animated.View style={isOnFire ? fireAnimatedStyle : undefined}>
+          <View
+            style={{
+              width: 40,
+              height: 40,
+              backgroundColor: getIconBg(),
+              borderRadius: 12,
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 6,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.08,
+              shadowRadius: 4,
+            }}
+          >
+            <Image source={theme.streakImage} style={{ width: 35, height: 35 }} resizeMode="contain" />
+          </View>
+        </Animated.View>
+      );
+    }
+
+    // For quest/active cards with image prop set to "active", use tier-based quest image
+    if ('image' in props && props.image === 'active' && theme.questImage) {
+      return (
+        <View
+          style={{
+            width: 40,
+            height: 40,
+            backgroundColor: getIconBg(),
+            borderRadius: 12,
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 6,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.08,
+            shadowRadius: 4,
+          }}
+        >
+          <Image source={theme.questImage} style={{ width: 35, height: 35 }} resizeMode="contain" />
+        </View>
+      );
+    }
+
     // Check if we have an icon prop
     if ('icon' in props && props.icon) {
       const Icon = props.icon;
@@ -256,12 +290,11 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
   );
 };
 
-// Helper function to map string to image source
+// Helper function to map string to image source (deprecated - now uses tier-based images)
 const getImageSource = (imageName: string): ImageSourcePropType | null => {
+  // Legacy support for non-tier images
   const imageMap: Record<string, ImageSourcePropType> = {
-    streak: require('../../../assets/interface/streak.png'),
-    active: require('../../../assets/interface/quest.png'),
-    // Add more mappings as needed
+    // 'active' and 'streak' now handled by tier theme
   };
 
   return imageMap[imageName] || null;
