@@ -8,6 +8,7 @@ import ProgressBar from '@/components/ui/ProgressBar';
 import { TierInfo } from '@/services/habitProgressionService';
 import { HabitHeroBackground } from '@/components/habits/HabitHeroBackground';
 import { Image } from 'expo-image';
+import { AnimatedNumber } from '@/components/ui/AnimatedNumber';
 
 interface HabitHeroProps {
   habitName: string;
@@ -55,7 +56,6 @@ export const HabitHero: React.FC<HabitHeroProps> = ({ habitName, habitType, cate
       {/* Content */}
       <View style={tw`flex-row items-center justify-between`}>
         <View style={tw`flex-1 pr-16`}>
-          {/* Added padding to avoid overlap with gem */}
           <Text style={tw`text-white/80 text-xs font-bold uppercase tracking-wider`}>{habitType === 'good' ? 'Building' : 'Breaking'}</Text>
           <Text style={tw`text-white text-2xl font-black mt-1`} numberOfLines={1}>
             {habitName}
@@ -88,23 +88,23 @@ export const HabitHero: React.FC<HabitHeroProps> = ({ habitName, habitType, cate
         </View>
       )}
 
-      {/* Stats */}
+      {/* Stats - All Animated */}
       <View style={tw`flex-row justify-around mt-4 pt-4 border-t border-white/20`}>
         <View style={tw`items-center`}>
           <Text style={tw`text-white/80 text-xs font-semibold`}>Streak</Text>
-          <Text style={tw`text-white font-black text-xl`}>{currentStreak}</Text>
+          <AnimatedNumber value={currentStreak} style={tw`text-white font-black text-xl`} />
         </View>
         <View style={tw`items-center`}>
           <Text style={tw`text-white/80 text-xs font-semibold`}>Best</Text>
-          <Text style={tw`text-white font-black text-xl`}>{bestStreak}</Text>
+          <AnimatedNumber value={bestStreak} style={tw`text-white font-black text-xl`} />
         </View>
         <View style={tw`items-center`}>
           <Text style={tw`text-white/80 text-xs font-semibold`}>Total XP</Text>
-          <Text style={tw`text-white font-black text-xl`}>{totalXPEarned}</Text>
+          <AnimatedNumber value={totalXPEarned} style={tw`text-white font-black text-xl`} />
         </View>
         <View style={tw`items-center`}>
           <Text style={tw`text-white/80 text-xs font-semibold`}>Consistency</Text>
-          <Text style={tw`text-white font-black text-xl`}>{completionRate}%</Text>
+          <AnimatedNumber value={completionRate} style={tw`text-white font-black text-xl`} suffix="%" />
         </View>
       </View>
     </HabitHeroBackground>

@@ -66,6 +66,7 @@ export class HabitService {
         xpEarned: result.xp_earned,
         completedTasks,
         allCompleted: result.all_completed,
+        streakUpdated: result.streak_updated, // ✅ This comes from DB now
       });
 
       // Handle day completion if all tasks are done
@@ -86,7 +87,7 @@ export class HabitService {
         alreadyEarnedXP: result.already_earned || false,
         completedTasks: completedTasks,
         milestoneReached,
-        streakUpdated,
+        streakUpdated: result.streak_updated, // ✅ Use the value from DB
       };
     } catch (error) {
       console.error('Error toggling task:', error);

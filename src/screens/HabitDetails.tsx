@@ -120,15 +120,16 @@ const HabitDetails: React.FC = () => {
 
   const handleToggleTask = useCallback(
     async (taskId: string): Promise<void> => {
-      const result = await toggleTask(habit.id, today, taskId);
+      await toggleTask(habit.id, today, taskId);
 
-      if (result?.success) {
-        await refreshProgression();
-      }
+      // ❌ DON'T call refreshProgression() here!
+      // The context already updates the streak immediately
+      // Calling refreshProgression fetches from DB which might have stale data
 
-      // Don't return anything - TasksCard expects Promise<void>
+      // The useHabitDetails hook will automatically re-fetch when
+      // completedTasksToday or habit.currentStreak changes
     },
-    [habit.id, today, toggleTask, refreshProgression]
+    [habit.id, today, toggleTask]
   );
 
   useEffect(() => {

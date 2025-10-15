@@ -18,19 +18,14 @@ interface UseHabitDetailsResult {
     tierProgress: number;
     consistency: number;
     totalXPEarned: number;
-    currentStreak?: number;
-    bestStreak?: number;
+    currentStreak: number;
+    bestStreak: number;
   } | null;
   refreshProgression: () => Promise<void>;
   loading: boolean;
 }
 
-export function useHabitDetails(
-  habitId: string,
-  userId: string,
-  currentStreak: number,
-  completedTasksToday?: number // ✅ Add this parameter to trigger refresh
-): UseHabitDetailsResult {
+export function useHabitDetails(habitId: string, userId: string, currentStreak: number, completedTasksToday?: number): UseHabitDetailsResult {
   const [tierInfo, setTierInfo] = useState<TierInfo | null>(null);
   const [tierProgress, setTierProgress] = useState(0);
   const [nextTier, setNextTier] = useState<TierInfo | null>(null);
@@ -64,16 +59,42 @@ export function useHabitDetails(
 
       // 3. Performance metrics
       const metrics = await HabitProgressionService.getPerformanceMetrics(habitId, userId);
+
       if (metrics) {
-        // Add streak data to metrics
+        // ✅ Always use real-time currentStreak from props
         setPerformanceMetrics({
           ...metrics,
-          currentStreak,
-          bestStreak: metrics.bestStreak || currentStreak,
+          currentStreak: currentStreak, // Override with real-time value
+          bestStreak: Math.max(metrics.bestStreak || 0, currentStreak), // Take the maximum
+        });
+      } else {
+        // ✅ If metrics are null, create a basic object with streak info
+        setPerformanceMetrics({
+          avgTasksPerDay: 0,
+          perfectDayRate: 0,
+          currentTier: tier,
+          tierProgress: progress,
+          consistency: 0,
+          totalXPEarned: 0,
+          currentStreak: currentStreak,
+          bestStreak: currentStreak,
         });
       }
     } catch (err) {
       console.error('useHabitDetails error', err);
+
+      // ✅ Set fallback metrics on error
+      const { tier, progress } = HabitProgressionService.calculateTierFromStreak(currentStreak);
+      setPerformanceMetrics({
+        avgTasksPerDay: 0,
+        perfectDayRate: 0,
+        currentTier: tier,
+        tierProgress: progress,
+        consistency: 0,
+        totalXPEarned: 0,
+        currentStreak: currentStreak,
+        bestStreak: currentStreak,
+      });
     } finally {
       setLoading(false);
     }

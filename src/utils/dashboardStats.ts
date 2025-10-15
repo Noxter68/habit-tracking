@@ -11,16 +11,57 @@ export interface DashboardStats {
   completionRate: number;
 }
 
+/**
+ * Calculate GLOBAL streak - consecutive days where ALL habits were completed
+ * This is different from individual habit streaks
+ */
 export const calculateTotalStreak = (habits: Habit[]): number => {
   // Ensure habits is an array
   if (!Array.isArray(habits) || habits.length === 0) {
     return 0;
   }
 
-  return habits.reduce((max, habit) => {
-    const streak = habit?.currentStreak || 0;
-    return Math.max(max, streak);
-  }, 0);
+  let streak = 0;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Check backwards from today
+  for (let i = 0; i < 365; i++) {
+    // Max 365 days to prevent infinite loop
+    const checkDate = new Date(today);
+    checkDate.setDate(checkDate.getDate() - i);
+    const dateStr = checkDate.toISOString().split('T')[0];
+
+    // Check if ALL active habits were completed on this date
+    const allCompletedOnDate = habits.every((habit) => {
+      if (!habit) return false;
+
+      // Check dailyTasks first (more accurate)
+      if (habit.dailyTasks && typeof habit.dailyTasks === 'object') {
+        const dayData = habit.dailyTasks[dateStr];
+        if (dayData) {
+          return dayData.allCompleted === true;
+        }
+      }
+
+      // Fallback to completedDays array
+      if (habit.completedDays && Array.isArray(habit.completedDays)) {
+        return habit.completedDays.includes(dateStr);
+      }
+
+      // If no data, treat as not completed
+      return false;
+    });
+
+    if (allCompletedOnDate) {
+      streak++;
+    } else {
+      // Stop at first day where not all habits were completed
+      break;
+    }
+  }
+
+  return streak;
 };
 
 export const calculateWeekProgress = (habits: Habit[]): number => {
