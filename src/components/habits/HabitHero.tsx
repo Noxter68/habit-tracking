@@ -1,6 +1,6 @@
 // src/components/habits/HabitHero.tsx
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import tw from '@/lib/tailwind';
@@ -26,6 +26,10 @@ interface HabitHeroProps {
 
 export const HabitHero: React.FC<HabitHeroProps> = ({ habitName, habitType, category, currentStreak, bestStreak, tierInfo, nextTier, tierProgress, tierMultiplier, totalXPEarned, completionRate }) => {
   if (!tierInfo) return null;
+
+  // Create a sync key that changes when either streak updates
+  // This forces both animations to trigger together
+  const streakSyncKey = useMemo(() => `${currentStreak}-${bestStreak}`, [currentStreak, bestStreak]);
 
   // Get the correct gem icon based on tier
   const getGemIcon = () => {
@@ -61,7 +65,6 @@ export const HabitHero: React.FC<HabitHeroProps> = ({ habitName, habitType, cate
             {habitName}
           </Text>
           <View style={tw`flex-row items-center gap-2 mt-2.5`}>
-            {/* Tier badge without icon */}
             <View style={tw`bg-sand/25 rounded-xl px-2.5 py-1`}>
               <Text style={tw`text-white text-xs font-bold`}>{tierInfo.name}</Text>
             </View>
@@ -90,11 +93,11 @@ export const HabitHero: React.FC<HabitHeroProps> = ({ habitName, habitType, cate
 
       {/* Stats - All Animated */}
       <View style={tw`flex-row justify-around mt-4 pt-4 border-t border-white/20`}>
-        <View style={tw`items-center`}>
+        <View style={tw`items-center`} key={`streak-${streakSyncKey}`}>
           <Text style={tw`text-white/80 text-xs font-semibold`}>Streak</Text>
           <AnimatedNumber value={currentStreak} style={tw`text-white font-black text-xl`} />
         </View>
-        <View style={tw`items-center`}>
+        <View style={tw`items-center`} key={`best-${streakSyncKey}`}>
           <Text style={tw`text-white/80 text-xs font-semibold`}>Best</Text>
           <AnimatedNumber value={bestStreak} style={tw`text-white font-black text-xl`} />
         </View>

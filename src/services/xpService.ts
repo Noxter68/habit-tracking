@@ -1,73 +1,65 @@
-// src/services/xpService.ts - FIXED UUID HANDLING
+// src/services/xpService.ts - WITH VALIDATION
 
 import { supabase } from '../lib/supabase';
 
 export interface XPTransaction {
   amount: number;
   source_type: 'habit_completion' | 'task_completion' | 'streak_bonus' | 'daily_challenge' | 'achievement_unlock' | 'milestone';
-  source_id?: string; // Can be string, will convert to UUID if needed
+  source_id?: string;
   description?: string;
-  habit_id?: string; // Can be string, will convert to UUID if needed
+  habit_id?: string;
 }
 
 export class XPService {
-  /**
-   * Award XP to a user - handles UUID conversion
-   */
   static async awardXP(userId: string, transaction: XPTransaction): Promise<boolean> {
     try {
-      // Helper function to validate and format UUID
+      // ✅ CRITICAL VALIDATION: Ensure amount exists and is a number
+      if (transaction.amount === undefined || transaction.amount === null || typeof transaction.amount !== 'number') {
+        console.error('❌ XP amount is invalid:', transaction.amount);
+        console.error('Full transaction:', JSON.stringify(transaction, null, 2));
+        throw new Error(`Invalid XP amount: ${transaction.amount}`);
+      }
+
       const toUuidOrNull = (value?: string): string | null => {
         if (!value) return null;
-
-        // Check if it's a valid UUID format
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        if (uuidRegex.test(value)) {
-          return value;
-        }
-
+        if (uuidRegex.test(value)) return value;
         console.warn(`Invalid UUID format for value: ${value}`);
         return null;
       };
 
-      // Prepare parameters with proper types
       const params = {
         p_user_id: userId,
         p_amount: transaction.amount,
         p_source_type: transaction.source_type,
-        p_source_id: toUuidOrNull(transaction.source_id), // Convert to UUID or null
+        p_source_id: toUuidOrNull(transaction.source_id),
         p_description: transaction.description || null,
-        p_habit_id: toUuidOrNull(transaction.habit_id), // Convert to UUID or null
+        p_habit_id: toUuidOrNull(transaction.habit_id),
       };
 
-      console.log('Calling award_xp with params:', params);
+      console.log('✅ Calling award_xp with params:', JSON.stringify(params, null, 2));
 
       const { error } = await supabase.rpc('award_xp', params);
 
       if (error) {
-        console.error('Error awarding XP:', error);
+        console.error('❌ Error awarding XP:', JSON.stringify(error, null, 2));
         return false;
       }
 
-      console.log('XP awarded successfully');
+      console.log('✅ XP awarded successfully');
       return true;
     } catch (error) {
-      console.error('Error in awardXP:', error);
+      console.error('❌ Error in awardXP:', error);
       return false;
     }
   }
 
-  /**
-   * Collect daily challenge XP
-   */
   static async collectDailyChallenge(userId: string): Promise<{
     success: boolean;
     xpEarned: number;
   }> {
     try {
       const today = new Date().toISOString().split('T')[0];
-
-      // Get challenge status
       const { data: challenge, error } = await supabase.from('daily_challenges').select('*').eq('user_id', userId).eq('date', today).single();
 
       if (error || !challenge) {
@@ -75,32 +67,25 @@ export class XPService {
         return { success: false, xpEarned: 0 };
       }
 
-      // Validate challenge is ready to collect
       if (challenge.xp_collected) {
         console.log('Daily challenge already collected');
         return { success: false, xpEarned: 0 };
       }
 
       if (!challenge.total_tasks || challenge.completed_tasks < challenge.total_tasks) {
-        console.log('Daily challenge not complete:', {
-          completed: challenge.completed_tasks,
-          total: challenge.total_tasks,
-        });
+        console.log('Daily challenge not complete');
         return { success: false, xpEarned: 0 };
       }
 
-      // Award XP - challenge.id is already a UUID
       const xpAmount = 20;
       const success = await this.awardXP(userId, {
         amount: xpAmount,
         source_type: 'daily_challenge',
-        source_id: challenge.id, // This is already a UUID from the database
+        source_id: challenge.id,
         description: 'Perfect Day - All tasks completed!',
-        // habit_id is not passed, will be null
       });
 
       if (success) {
-        // Mark as collected
         await supabase
           .from('daily_challenges')
           .update({
@@ -119,44 +104,32 @@ export class XPService {
     }
   }
 
-  /**
-   * Award XP for habit completion
-   */
   static async awardHabitXP(userId: string, habitId: string, amount: number, description?: string): Promise<boolean> {
     return await this.awardXP(userId, {
       amount,
       source_type: 'habit_completion',
-      source_id: habitId, // habitId is a UUID
+      source_id: habitId,
       description: description || 'Habit completion',
       habit_id: habitId,
     });
   }
 
-  /**
-   * Award milestone XP
-   */
   static async awardMilestoneXP(userId: string, habitId: string, milestone: { title: string; xpReward: number }): Promise<boolean> {
     return await this.awardXP(userId, {
       amount: milestone.xpReward,
       source_type: 'achievement_unlock',
-      source_id: habitId, // habitId is a UUID
+      source_id: habitId,
       description: `Milestone achieved: ${milestone.title}`,
       habit_id: habitId,
     });
   }
 
-  /**
-   * Get user's current XP stats
-   */
   static async getUserXPStats(userId: string) {
     try {
-      // First try the view
       const { data, error } = await supabase.from('user_xp_stats').select('*').eq('user_id', userId).single();
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching XP stats:', error);
-
-        // Fallback to profiles table
         const { data: profile } = await supabase.from('profiles').select('id, total_xp, current_level, level_progress').eq('id', userId).single();
 
         if (profile) {
@@ -165,7 +138,7 @@ export class XPService {
             total_xp: profile.total_xp || 0,
             current_level: profile.current_level || 1,
             level_progress: profile.level_progress || 0,
-            xp_for_next_level: 100, // Calculate based on level
+            xp_for_next_level: 100,
             current_level_xp: profile.level_progress || 0,
             daily_challenge_collected: false,
             daily_tasks_completed: 0,
@@ -181,13 +154,9 @@ export class XPService {
     }
   }
 
-  /**
-   * Get today's daily challenge status
-   */
   static async getDailyChallengeStatus(userId: string) {
     try {
       const today = new Date().toISOString().split('T')[0];
-
       const { data, error } = await supabase.from('daily_challenges').select('*').eq('user_id', userId).eq('date', today).single();
 
       if (error && error.code !== 'PGRST116') {

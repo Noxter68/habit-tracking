@@ -1,7 +1,7 @@
 // src/components/ui/AnimatedNumber.tsx
 import React, { useEffect, useRef } from 'react';
 import { Text } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withSequence, withSpring } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSequence, Easing } from 'react-native-reanimated';
 
 interface AnimatedNumberProps {
   value: number;
@@ -12,20 +12,35 @@ interface AnimatedNumberProps {
 
 export const AnimatedNumber: React.FC<AnimatedNumberProps> = ({ value, style, prefix = '', suffix = '' }) => {
   const previousValue = useRef(value);
-  const scale = useSharedValue(1);
+  const opacity = useSharedValue(1);
+  const translateY = useSharedValue(0);
 
   useEffect(() => {
     // Only animate when value actually changes and it's not the initial render
     if (previousValue.current !== value && previousValue.current !== 0) {
-      // Quick, professional bounce: scale up to 1.15x then back to 1x
-      scale.value = withSequence(
-        withSpring(1.15, {
-          damping: 12,
-          stiffness: 180,
+      // Determine direction based on increase/decrease
+      const direction = value > previousValue.current ? -8 : 8;
+
+      // Quick fade out + slide
+      opacity.value = withSequence(
+        withTiming(0, {
+          duration: 100,
+          easing: Easing.out(Easing.ease),
         }),
-        withSpring(1, {
-          damping: 15,
-          stiffness: 150,
+        withTiming(1, {
+          duration: 150,
+          easing: Easing.in(Easing.ease),
+        })
+      );
+
+      translateY.value = withSequence(
+        withTiming(direction, {
+          duration: 100,
+          easing: Easing.out(Easing.ease),
+        }),
+        withTiming(0, {
+          duration: 150,
+          easing: Easing.out(Easing.cubic),
         })
       );
     }
@@ -34,12 +49,13 @@ export const AnimatedNumber: React.FC<AnimatedNumberProps> = ({ value, style, pr
   }, [value]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
   }));
 
   return (
     <Animated.View style={animatedStyle}>
-      <Text style={style}>
+      <Text style={style} allowFontScaling={false}>
         {prefix}
         {value}
         {suffix}
