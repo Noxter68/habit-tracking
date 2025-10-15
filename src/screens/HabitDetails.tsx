@@ -249,19 +249,6 @@ const HabitDetails: React.FC = () => {
                   <LinearGradient colors={theme.gradient.map((c) => c + 'cc')} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`absolute inset-0 rounded-3xl`} />
                   <TierCard tierInfo={currentTierData.tier} currentStreak={debugStreak !== null ? debugStreak : habit.currentStreak} nextMilestone={milestoneStatus.next} />
                 </ImageBackground>
-
-                {/* Overall Progress Card - IMPROVED COLORS */}
-                <View style={tw`bg-sand rounded-3xl p-5 shadow-sm border border-stone-100`}>
-                  <JourneyCard
-                    overallProgress={overallProgress}
-                    completedDays={habit.completedDays.length}
-                    totalDays={habit.totalDays}
-                    bestStreak={habit.bestStreak}
-                    perfectDays={performanceMetrics?.perfectDayRate || 0}
-                    consistency={completionRate}
-                    tier={currentTierData.tier.name}
-                  />
-                </View>
               </Animated.View>
             )}
 

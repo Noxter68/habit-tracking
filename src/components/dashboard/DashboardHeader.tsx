@@ -220,8 +220,20 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               </View>
 
               {/* Achievement Badge */}
-              <View style={{ position: 'absolute', right: 0, top: 0 }}>
-                <AchievementBadge achievement={currentAchievement} onPress={handleAchievementPress} tierTheme={tierTheme} />
+              <View
+                style={{
+                  position: 'absolute',
+                  right: 0,
+                  top: -20, // Moves it higher, overlapping the card edge
+                  zIndex: 20,
+                }}
+              >
+                <AchievementBadge
+                  achievement={currentAchievement}
+                  onPress={handleAchievementPress}
+                  tierTheme={tierTheme}
+                  size={80} // Make it bigger since there's no border
+                />
               </View>
             </View>
           </View>
