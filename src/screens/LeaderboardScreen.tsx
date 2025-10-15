@@ -171,7 +171,7 @@ const LeaderboardScreen = () => {
                         {mode === 'weekly' ? (topThree[0].weeklyXP || 0).toLocaleString() : topThree[0].total_xp.toLocaleString()} XP
                       </Text>
                       <View style={{ backgroundColor: `${TIER_COLORS[1].bg}30`, paddingHorizontal: 12, paddingVertical: 5, borderRadius: 10 }}>
-                        <Text style={{ fontSize: 12, fontWeight: '800', color: TIER_COLORS[1].light }}>LV {topThree[0].current_level}</Text>
+                        <Text style={{ fontSize: 12, fontWeight: '800', color: TIER_COLORS[1].light }}>LVL {topThree[0].current_level}</Text>
                       </View>
                     </View>
                   </View>
@@ -210,7 +210,7 @@ const LeaderboardScreen = () => {
                     </Text>
 
                     <View style={{ backgroundColor: `${TIER_COLORS[2].bg}30`, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginTop: 8 }}>
-                      <Text style={{ fontSize: 10, fontWeight: '800', color: TIER_COLORS[2].light }}>LV {topThree[1].current_level}</Text>
+                      <Text style={{ fontSize: 10, fontWeight: '800', color: TIER_COLORS[2].light }}>LVL {topThree[1].current_level}</Text>
                     </View>
                   </LinearGradient>
                 </Animated.View>
@@ -245,7 +245,7 @@ const LeaderboardScreen = () => {
                     </Text>
 
                     <View style={{ backgroundColor: `${TIER_COLORS[3].bg}30`, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginTop: 8 }}>
-                      <Text style={{ fontSize: 10, fontWeight: '800', color: TIER_COLORS[3].light }}>LV {topThree[2].current_level}</Text>
+                      <Text style={{ fontSize: 10, fontWeight: '800', color: TIER_COLORS[3].light }}>LVL {topThree[2].current_level}</Text>
                     </View>
                   </LinearGradient>
                 </Animated.View>

@@ -2,7 +2,7 @@
 import React from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
-import Svg, { Path, Circle, Rect, G, Polyline } from 'react-native-svg';
+import Svg, { Path, Circle, Rect, G, Line, Polygon } from 'react-native-svg';
 import tw from '../lib/tailwind';
 
 interface TabBarIconProps {
@@ -13,24 +13,24 @@ interface TabBarIconProps {
 }
 
 export const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, focused, size = 24 }) => {
-  // Sand/Stone color scheme - warm and calming
-  const activeColor = focused ? '#726454' : '#BFB3A3'; // sand-700 : sand-400
-  const strokeWidth = focused ? 2.3 : 2;
+  // Dark slate color scheme matching screens
+  const activeColor = focused ? '#1e293b' : '#64748b'; // slate-800 : slate-500
+  const strokeWidth = focused ? 2.2 : 1.8;
 
   // Smooth animated styles for the icon container
   const animatedIconStyle = useAnimatedStyle(() => {
     return {
       transform: [
         {
-          scale: withSpring(focused ? 1.08 : 1, {
-            damping: 18,
-            stiffness: 320,
-            mass: 0.8,
+          scale: withSpring(focused ? 1.1 : 1, {
+            damping: 15,
+            stiffness: 300,
+            mass: 0.7,
           }),
         },
       ],
-      opacity: withTiming(focused ? 1 : 0.7, {
-        duration: 220,
+      opacity: withTiming(focused ? 1 : 0.65, {
+        duration: 200,
       }),
     };
   });
@@ -41,28 +41,58 @@ export const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, focused, si
       case 'home':
         return (
           <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+            {/* Modern house with clean lines */}
             <Path
-              d="M3 12L5 10M5 10L12 3L19 10M5 10V20C5 20.5523 5.44772 21 6 21H9M19 10L21 12M19 10V20C19 20.5523 18.5523 21 18 21H15M9 21C9.55228 21 10 20.5523 10 20V16C10 15.4477 10.4477 15 11 15H13C13.5523 15 14 15.4477 14 16V20C14 20.5523 14.4477 21 15 21M9 21H15"
+              d="M3 10L12 2L21 10V20C21 20.5523 20.5523 21 20 21H4C3.44772 21 3 20.5523 3 20V10Z"
               stroke={activeColor}
               strokeWidth={strokeWidth}
               strokeLinecap="round"
               strokeLinejoin="round"
+              fill={focused ? activeColor : 'none'}
+              fillOpacity={focused ? 0.08 : 0}
             />
-            {focused && <Circle cx="12" cy="3" r="1.2" fill={activeColor} opacity="0.4" />}
+            {/* Door */}
+            <Path d="M9 21V14C9 13.4477 9.44772 13 10 13H14C14.5523 13 15 13.4477 15 14V21" stroke={activeColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+            {/* Roof accent */}
+            {focused && <Circle cx="12" cy="2" r="1.5" fill={activeColor} opacity="0.5" />}
           </Svg>
         );
 
       case 'calendar':
         return (
           <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-            <Rect x="3" y="6" width="18" height="15" rx="2" stroke={activeColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
-            <Path d="M3 10H21M8 3V6M16 3V6" stroke={activeColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
-            {focused && (
+            {/* Calendar body */}
+            <Rect
+              x="3"
+              y="5"
+              width="18"
+              height="16"
+              rx="2"
+              stroke={activeColor}
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill={focused ? activeColor : 'none'}
+              fillOpacity={focused ? 0.06 : 0}
+            />
+            {/* Header separator */}
+            <Path d="M3 9H21" stroke={activeColor} strokeWidth={strokeWidth} strokeLinecap="round" />
+            {/* Hooks */}
+            <Path d="M7 3V7M17 3V7" stroke={activeColor} strokeWidth={strokeWidth} strokeLinecap="round" />
+            {/* Calendar dots - professional grid pattern */}
+            {focused ? (
               <G>
-                <Rect x="7" y="13" width="2" height="2" rx="0.5" fill={activeColor} />
-                <Rect x="11" y="13" width="2" height="2" rx="0.5" fill={activeColor} />
-                <Rect x="15" y="13" width="2" height="2" rx="0.5" fill={activeColor} />
-                <Rect x="7" y="17" width="2" height="2" rx="0.5" fill={activeColor} opacity="0.6" />
+                <Circle cx="7.5" cy="13" r="1.2" fill={activeColor} opacity="0.7" />
+                <Circle cx="12" cy="13" r="1.2" fill={activeColor} opacity="0.7" />
+                <Circle cx="16.5" cy="13" r="1.2" fill={activeColor} opacity="0.7" />
+                <Circle cx="7.5" cy="17" r="1.2" fill={activeColor} opacity="0.5" />
+                <Circle cx="12" cy="17" r="1.2" fill={activeColor} opacity="0.5" />
+              </G>
+            ) : (
+              <G>
+                <Circle cx="7.5" cy="13" r="0.8" fill={activeColor} opacity="0.5" />
+                <Circle cx="12" cy="13" r="0.8" fill={activeColor} opacity="0.5" />
+                <Circle cx="16.5" cy="13" r="0.8" fill={activeColor} opacity="0.5" />
               </G>
             )}
           </Svg>
@@ -71,45 +101,56 @@ export const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, focused, si
       case 'chart':
         return (
           <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-            <Path d="M3 3V21H21" stroke={activeColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
-            <Path d="M7 17V14M12 17V11M17 17V7" stroke={activeColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+            {/* Modern bar chart with gradient effect */}
+            <Path
+              d="M3 20V4C3 3.44772 3.44772 3 4 3H20C20.5523 3 21 3.44772 21 4V20C21 20.5523 20.5523 21 20 21H4C3.44772 21 3 20.5523 3 20Z"
+              stroke={activeColor}
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill={focused ? activeColor : 'none'}
+              fillOpacity={focused ? 0.04 : 0}
+            />
+            {/* Bars */}
+            <Path d="M7 16V11M12 16V8M17 16V13" stroke={activeColor} strokeWidth={strokeWidth + 0.5} strokeLinecap="round" />
+            {/* Accent dots on bars when focused */}
             {focused && (
               <G>
-                <Circle cx="7" cy="14" r="1.2" fill={activeColor} opacity="0.5" />
-                <Circle cx="12" cy="11" r="1.2" fill={activeColor} opacity="0.5" />
-                <Circle cx="17" cy="7" r="1.2" fill={activeColor} opacity="0.5" />
+                <Circle cx="7" cy="11" r="1.3" fill={activeColor} opacity="0.6" />
+                <Circle cx="12" cy="8" r="1.3" fill={activeColor} opacity="0.6" />
+                <Circle cx="17" cy="13" r="1.3" fill={activeColor} opacity="0.6" />
               </G>
             )}
           </Svg>
         );
 
       case 'settings':
+        // User profile icon - more relevant for app settings
         return (
           <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+            {/* User head */}
             <Circle
               cx="12"
-              cy="12"
-              r="3"
+              cy="8"
+              r="4"
               stroke={activeColor}
               strokeWidth={strokeWidth}
               strokeLinecap="round"
               strokeLinejoin="round"
               fill={focused ? activeColor : 'none'}
-              fillOpacity={focused ? 0.2 : 0}
+              fillOpacity={focused ? 0.12 : 0}
             />
-            <Path
-              d="M12 1V3M12 21V23M4.22 4.22L5.64 5.64M18.36 18.36L19.78 19.78M1 12H3M21 12H23M4.22 19.78L5.64 18.36M18.36 5.64L19.78 4.22"
-              stroke={activeColor}
-              strokeWidth={strokeWidth}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            {/* User body/shoulders */}
+            <Path d="M4 21C4 17.134 7.58172 14 12 14C16.4183 14 20 17.134 20 21" stroke={activeColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+            {/* Settings gear overlay when focused */}
             {focused && (
-              <G>
-                <Circle cx="12" cy="1" r="0.8" fill={activeColor} opacity="0.4" />
-                <Circle cx="12" cy="23" r="0.8" fill={activeColor} opacity="0.4" />
-                <Circle cx="1" cy="12" r="0.8" fill={activeColor} opacity="0.4" />
-                <Circle cx="23" cy="12" r="0.8" fill={activeColor} opacity="0.4" />
+              <G opacity="0.35">
+                <Circle cx="17" cy="7" r="3" fill="#FFFFFF" />
+                <Circle cx="17" cy="7" r="2" stroke={activeColor} strokeWidth="1.2" fill="none" />
+                <Line x1="17" y1="5" x2="17" y2="4.5" stroke={activeColor} strokeWidth="1" />
+                <Line x1="17" y1="9.5" x2="17" y2="9" stroke={activeColor} strokeWidth="1" />
+                <Line x1="19" y1="7" x2="19.5" y2="7" stroke={activeColor} strokeWidth="1" />
+                <Line x1="14.5" y1="7" x2="15" y2="7" stroke={activeColor} strokeWidth="1" />
               </G>
             )}
           </Svg>
@@ -118,30 +159,28 @@ export const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, focused, si
       case 'leaderboard':
         return (
           <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-            {/* Trophy Cup */}
-            <Path d="M6 9C6 10.5 6.5 13 9 13M18 9C18 10.5 17.5 13 15 13" stroke={activeColor} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
-            <Path
-              d="M9 4H15C15.5523 4 16 4.44772 16 5V10C16 12.2091 14.2091 14 12 14C9.79086 14 8 12.2091 8 10V5C8 4.44772 8.44772 4 9 4Z"
-              stroke={activeColor}
-              strokeWidth={strokeWidth}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill={focused ? activeColor : 'none'}
-              fillOpacity={focused ? 0.15 : 0}
-            />
-            {/* Base */}
-            <Path
-              d="M10 14V17H14V14M8 20H16C16.5523 20 17 19.5523 17 19V18C17 17.4477 16.5523 17 16 17H8C7.44772 17 7 17.4477 7 18V19C7 19.5523 7.44772 20 8 20Z"
-              stroke={activeColor}
-              strokeWidth={strokeWidth}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            {focused && (
-              <G>
-                <Path d="M10.5 7.5L11.5 9L13 8.5" stroke={activeColor} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" opacity="0.6" />
-              </G>
-            )}
+            {/* Podium style leaderboard - more professional */}
+            <G>
+              {/* 1st place - tallest */}
+              <Rect x="9" y="6" width="6" height="15" rx="1" stroke={activeColor} strokeWidth={strokeWidth} fill={focused ? activeColor : 'none'} fillOpacity={focused ? 0.15 : 0} />
+              {/* Crown/star on top */}
+              <Path d="M12 3L12.7 5.3L15 6L12.7 6.7L12 9L11.3 6.7L9 6L11.3 5.3L12 3Z" fill={activeColor} opacity={focused ? 0.8 : 0.6} />
+
+              {/* 2nd place - medium */}
+              <Rect x="2" y="11" width="6" height="10" rx="1" stroke={activeColor} strokeWidth={strokeWidth} fill={focused ? activeColor : 'none'} fillOpacity={focused ? 0.08 : 0} />
+
+              {/* 3rd place - shortest */}
+              <Rect x="16" y="14" width="6" height="7" rx="1" stroke={activeColor} strokeWidth={strokeWidth} fill={focused ? activeColor : 'none'} fillOpacity={focused ? 0.05 : 0} />
+
+              {/* Rankings numbers */}
+              {focused && (
+                <G>
+                  <Circle cx="5" cy="13.5" r="1.5" fill={activeColor} opacity="0.3" />
+                  <Circle cx="12" cy="8.5" r="1.5" fill={activeColor} opacity="0.4" />
+                  <Circle cx="19" cy="16.5" r="1.5" fill={activeColor} opacity="0.25" />
+                </G>
+              )}
+            </G>
           </Svg>
         );
 

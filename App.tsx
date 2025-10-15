@@ -1,4 +1,4 @@
-// App.tsx - Sand/Stone Theme Version
+// App.tsx - Dark Slate Theme Version
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -90,34 +90,48 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
 
 function MainTabs() {
-  const tabBarHeight = Platform.OS === 'ios' ? 88 : 68;
-
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        // Sand/Stone theme colors
-        tabBarActiveTintColor: '#726454', // sand-700
-        tabBarInactiveTintColor: '#BFB3A3', // sand-400
+        // Dark slate theme colors matching LeaderboardScreen
+        tabBarActiveTintColor: '#1e293b', // slate-800
+        tabBarInactiveTintColor: '#64748b', // slate-500
         tabBarStyle: {
-          backgroundColor: '#FFFFFF', // white
-          borderTopWidth: 1,
-          borderTopColor: '#F5F2ED', // sand-100
-          elevation: 0,
-          shadowOpacity: 0,
-          height: tabBarHeight,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
-          paddingTop: 12,
+          position: 'absolute',
+          bottom: Platform.OS === 'ios' ? 24 : 20,
+          left: 20,
+          right: 20,
+          backgroundColor: '#FFFFFF',
+          borderRadius: 28,
+          height: Platform.OS === 'ios' ? 64 : 58,
+          paddingBottom: Platform.OS === 'ios' ? 8 : 6,
+          paddingTop: 6,
+          paddingHorizontal: 12,
+          borderWidth: 2,
+          borderColor: '#cbd5e1', // slate-300 - more visible border
+          // Shadow for elevation
+          shadowColor: '#1e293b',
+          shadowOffset: {
+            width: 0,
+            height: 8,
+          },
+          shadowOpacity: 0.12,
+          shadowRadius: 16,
+          elevation: 12,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
+          fontSize: 9,
           fontWeight: '600',
-          marginTop: 2,
+          marginTop: 1,
           letterSpacing: 0.5,
           textTransform: 'uppercase',
         },
         tabBarIconStyle: {
-          marginTop: 4,
+          marginTop: 0,
+        },
+        tabBarItemStyle: {
+          paddingVertical: 2,
         },
       }}
     >
@@ -201,11 +215,11 @@ function AppNavigator() {
     }
   };
 
-  // Loading state - Updated with sand colors
+  // Loading state - Updated with slate colors
   if (loading || isCheckingFirstLaunch) {
     return (
-      <View style={tw`flex-1 items-center justify-center bg-sand-50`}>
-        <ActivityIndicator size="large" color="#726454" />
+      <View style={tw`flex-1 items-center justify-center bg-slate-50`}>
+        <ActivityIndicator size="large" color="#1e293b" />
       </View>
     );
   }
@@ -290,7 +304,7 @@ function useNotificationSetup() {
           name: 'default',
           importance: Notifications.AndroidImportance.MAX,
           vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#726454', // sand-700
+          lightColor: '#1e293b', // slate-800
         });
       }
     };
