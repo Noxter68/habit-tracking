@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
+// src/hooks/useHabitDetails.ts
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { HabitProgressionService, TierInfo, HabitMilestone } from '@/services/habitProgressionService';
 
 interface UseHabitDetailsResult {
@@ -38,67 +39,66 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
   const [performanceMetrics, setPerformanceMetrics] = useState<UseHabitDetailsResult['performanceMetrics']>(null);
   const [loading, setLoading] = useState(true);
 
+  // ✅ FIX: Calculate tier immediately from currentStreak (synchronous)
+  // This ensures tierInfo is available immediately on mount
+  const immediateTierInfo = useMemo(() => {
+    return HabitProgressionService.calculateTierFromStreak(currentStreak);
+  }, [currentStreak]);
+
+  // ✅ FIX: Set initial values immediately before async operations
+  useEffect(() => {
+    // Set tier info synchronously to prevent flash
+    setTierInfo(immediateTierInfo.tier);
+    setTierProgress(immediateTierInfo.progress);
+    setNextTier(HabitProgressionService.getNextTier(immediateTierInfo.tier));
+
+    // Set initial performance metrics with streak data
+    setPerformanceMetrics({
+      avgTasksPerDay: 0,
+      perfectDayRate: 0,
+      currentTier: immediateTierInfo.tier,
+      tierProgress: immediateTierInfo.progress,
+      consistency: 0,
+      totalXPEarned: 0,
+      currentStreak: currentStreak,
+      bestStreak: currentStreak,
+    });
+  }, [currentStreak, immediateTierInfo]);
+
   const fetchData = useCallback(async () => {
     if (!habitId || !userId) return;
 
     try {
-      setLoading(true);
+      // ✅ Don't set loading to true on subsequent fetches if we already have data
+      // This prevents the "flash" of loading state
+      if (!performanceMetrics) {
+        setLoading(true);
+      }
 
-      // 1. Tier from streak
-      const { tier, progress } = HabitProgressionService.calculateTierFromStreak(currentStreak);
-      setTierInfo(tier);
-      setTierProgress(progress);
-      setNextTier(HabitProgressionService.getNextTier(tier));
+      // Fetch async data in parallel
+      const [progression, metrics] = await Promise.all([HabitProgressionService.getOrCreateProgression(habitId, userId), HabitProgressionService.getPerformanceMetrics(habitId, userId)]);
 
-      // 2. Milestones from DB
-      const progression = await HabitProgressionService.getOrCreateProgression(habitId, userId);
+      // Update milestones
       if (progression) {
         const status = await HabitProgressionService.getMilestoneStatus(currentStreak, progression.milestones_unlocked || []);
         setMilestoneStatus(status);
       }
 
-      // 3. Performance metrics
-      const metrics = await HabitProgressionService.getPerformanceMetrics(habitId, userId);
-
+      // Update performance metrics with real data
       if (metrics) {
-        // ✅ Always use real-time currentStreak from props
         setPerformanceMetrics({
           ...metrics,
-          currentStreak: currentStreak, // Override with real-time value
-          bestStreak: Math.max(metrics.bestStreak || 0, currentStreak), // Take the maximum
-        });
-      } else {
-        // ✅ If metrics are null, create a basic object with streak info
-        setPerformanceMetrics({
-          avgTasksPerDay: 0,
-          perfectDayRate: 0,
-          currentTier: tier,
-          tierProgress: progress,
-          consistency: 0,
-          totalXPEarned: 0,
-          currentStreak: currentStreak,
-          bestStreak: currentStreak,
+          currentStreak: currentStreak, // Always use real-time value
+          bestStreak: Math.max(metrics.bestStreak || 0, currentStreak),
         });
       }
     } catch (err) {
       console.error('useHabitDetails error', err);
-
-      // ✅ Set fallback metrics on error
-      const { tier, progress } = HabitProgressionService.calculateTierFromStreak(currentStreak);
-      setPerformanceMetrics({
-        avgTasksPerDay: 0,
-        perfectDayRate: 0,
-        currentTier: tier,
-        tierProgress: progress,
-        consistency: 0,
-        totalXPEarned: 0,
-        currentStreak: currentStreak,
-        bestStreak: currentStreak,
-      });
+      // Keep the initial values set in useEffect above
     } finally {
       setLoading(false);
     }
-  }, [habitId, userId, currentStreak]);
+  }, [habitId, userId, currentStreak, performanceMetrics]);
 
   useEffect(() => {
     fetchData();
