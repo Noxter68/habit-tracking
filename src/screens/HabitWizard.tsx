@@ -21,6 +21,7 @@ import { getCategoryName } from '../utils/habitHelpers';
 import { NotificationService } from '../services/notificationService';
 import HabitTypeCards from '@/components/wizard/HabitTypeSelector';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSubscription } from '@/context/SubscriptionContext';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'HabitWizard'>;
 
@@ -41,6 +42,8 @@ const HabitWizard: React.FC = () => {
     tasks: [],
     dailyTasks: {},
   });
+
+  const { canCreateHabit, habitCount, maxHabits, isPremium, checkHabitLimit } = useSubscription();
 
   const totalSteps = 6;
   const isFirstStep = step === 1;
@@ -80,47 +83,62 @@ const HabitWizard: React.FC = () => {
     if (step < totalSteps) {
       setStep(step + 1);
     } else {
-      setIsCreating(true);
+      // FINAL STEP - CREATE HABIT
+      await handleCreateHabit();
+    }
+  };
 
-      // Auto-generate name based on category and type
-      const habitName = getCategoryName(habitData.category!, habitData.type!);
+  const handleCreateHabit = async () => {
+    // ✅ CHECK HABIT LIMIT BEFORE CREATING
+    const canCreate = await checkHabitLimit();
 
-      // Create the habit
-      const newHabit: Habit = {
-        id: Date.now().toString(),
-        name: habitName,
-        type: habitData.type || 'good',
-        category: habitData.category || 'health',
-        tasks: habitData.tasks || [],
-        dailyTasks: {},
-        frequency: habitData.frequency || 'daily',
-        notifications: habitData.notifications || false,
-        notificationTime: habitData.notificationTime,
-        hasEndGoal: habitData.hasEndGoal || false,
-        endGoalDays: habitData.endGoalDays,
-        totalDays: habitData.totalDays || 61,
-        currentStreak: 0,
-        bestStreak: 0,
-        completedDays: [],
-        createdAt: new Date(),
-        customDays: habitData.customDays,
-      };
+    if (!canCreate) {
+      // User has reached their limit - redirect to paywall
+      navigation.navigate('Paywall', { source: 'habit_limit' });
+      return;
+    }
 
-      try {
-        // Add habit to database
-        await addHabit(newHabit);
+    setIsCreating(true);
 
-        // Schedule notifications if enabled
-        if (newHabit.notifications && newHabit.notificationTime) {
-          await NotificationService.scheduleHabitNotifications(newHabit);
-        }
+    // Auto-generate name based on category and type
+    const habitName = getCategoryName(habitData.category!, habitData.type!);
 
-        // Navigate to dashboard
-        navigation.replace('MainTabs');
-      } catch (error) {
-        setIsCreating(false);
-        Alert.alert('Error', 'Failed to create habit. Please try again.');
+    // Create the habit
+    const newHabit: Habit = {
+      id: Date.now().toString(),
+      name: habitName,
+      type: habitData.type || 'good',
+      category: habitData.category || 'health',
+      tasks: habitData.tasks || [],
+      dailyTasks: {},
+      frequency: habitData.frequency || 'daily',
+      notifications: habitData.notifications || false,
+      notificationTime: habitData.notificationTime,
+      hasEndGoal: habitData.hasEndGoal || false,
+      endGoalDays: habitData.endGoalDays,
+      totalDays: habitData.totalDays || 61,
+      currentStreak: 0,
+      bestStreak: 0,
+      completedDays: [],
+      createdAt: new Date(),
+      customDays: habitData.customDays,
+    };
+
+    try {
+      // Add habit to database
+      await addHabit(newHabit);
+
+      // Schedule notifications if enabled
+      if (newHabit.notifications && newHabit.notificationTime) {
+        await NotificationService.scheduleHabitNotifications(newHabit);
       }
+
+      // Navigate to dashboard
+      navigation.replace('MainTabs');
+    } catch (error) {
+      console.error('Error creating habit:', error);
+      setIsCreating(false);
+      Alert.alert('Error', 'Failed to create habit. Please try again.');
     }
   };
 
@@ -186,6 +204,13 @@ const HabitWizard: React.FC = () => {
         {/* Header */}
         <View style={tw`px-5 py-4`}>
           <ProgressIndicator current={step} total={totalSteps} />
+          {!isPremium && (
+            <View style={tw`mt-3 mx-5 bg-amber-50 border border-amber-200 rounded-xl p-3`}>
+              <Text style={tw`text-sm text-amber-800 text-center font-medium`}>
+                Free plan: {habitCount} of {maxHabits} habits created
+              </Text>
+            </View>
+          )}
         </View>
         {/* Content */}
         <ScrollView style={tw`flex-1`} showsVerticalScrollIndicator={false} contentContainerStyle={tw`pb-4`}>

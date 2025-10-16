@@ -20,6 +20,7 @@ import { getAchievementByLevel } from '@/utils/achievements';
 
 import { useLevelUp } from '@/context/LevelUpContext';
 import { DebugButton } from '@/components/debug/DebugButton';
+import { useSubscription } from '@/context/SubscriptionContext';
 
 const Dashboard: React.FC = () => {
   const navigation = useNavigation();
@@ -36,7 +37,9 @@ const Dashboard: React.FC = () => {
   } | null>(null);
 
   const [testLevel, setTestLevel] = useState(1);
-  const { triggerLevelUp } = useLevelUp(); // For testing purposes
+  const { triggerLevelUp } = useLevelUp();
+
+  const { checkHabitLimit, habitCount, maxHabits, isPremium } = useSubscription();
 
   const renderCount = useRef(0);
   renderCount.current++;
@@ -99,9 +102,16 @@ const Dashboard: React.FC = () => {
     [navigation]
   );
 
-  const handleCreateHabit = useCallback(() => {
-    navigation.navigate('HabitWizard' as never);
-  }, [navigation]);
+  const handleCreateHabit = async () => {
+    const canCreate = await checkHabitLimit();
+
+    if (!canCreate) {
+      navigation.navigate('Paywall', { source: 'habit_limit' });
+      return;
+    }
+
+    navigation.navigate('HabitWizard');
+  };
 
   // Loading state (first load)
   if ((habitsLoading || statsLoading) && habits.length === 0) {
@@ -145,6 +155,15 @@ const Dashboard: React.FC = () => {
 
         {/* Habits Section */}
         <Animated.View entering={FadeInUp.delay(200)} style={tw`mt-6`}>
+          <View>
+            {!isPremium && habitCount > 0 && (
+              <View style={tw`mx-6 mb-3 px-4 py-2 rounded-xl ${habitCount >= maxHabits ? 'bg-amber-100 border border-amber-300' : 'bg-blue-50 border border-blue-200'}`}>
+                <Text style={tw`text-xs font-semibold text-center ${habitCount >= maxHabits ? 'text-amber-800' : 'text-blue-800'}`}>
+                  {habitCount >= maxHabits ? '🔒 Habit limit reached - Upgrade for unlimited' : `📊 Using ${habitCount} of ${maxHabits} free habits`}
+                </Text>
+              </View>
+            )}
+          </View>
           {/* Section Header */}
           <View style={tw`flex-row items-center justify-between mb-4`}>
             <View>

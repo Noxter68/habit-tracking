@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Switch, SafeAreaView, StatusBar, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Switch, SafeAreaView, StatusBar, ActivityIndicator, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import Svg, { Path, Circle } from 'react-native-svg';
 import tw from 'twrnc';
 import { useAuth } from '@/context/AuthContext';
+import { useSubscription } from '@/context/SubscriptionContext';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
+import PremiumBadge from '@/components/premium/PremiumBadge';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '@/navigation/types';
 
 // Types
 interface IconProps {
@@ -32,6 +37,8 @@ interface SettingsItemProps {
   isLast?: boolean;
   color: string;
 }
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 // Custom Icon Component
 const Icon: React.FC<IconProps> = ({ name, size = 22, color = '#9333EA' }) => {
@@ -174,6 +181,9 @@ const SettingsScreen: React.FC = () => {
   const [notifications, setNotifications] = useState(true);
   const { signOut, loading } = useAuth();
 
+  const { isPremium, subscription } = useSubscription();
+  const navigation = useNavigation<NavigationProp>();
+
   const handleToggle = (setter: React.Dispatch<React.SetStateAction<boolean>>, value: boolean) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setter(value);
@@ -202,6 +212,43 @@ const SettingsScreen: React.FC = () => {
             <Text style={tw`text-4xl font-black text-gray-800 text-center`}>Settings</Text>
           </View>
         </Animated.View>
+
+        {/* PREMIUM SECTION */}
+        {!isPremium ? (
+          <SettingsSection title="Premium" delay={100} gradient={['#78716C', '#57534E']}>
+            <SettingsItem
+              icon="crown"
+              title="Upgrade to Premium"
+              subtitle="Unlock unlimited habits & features"
+              onPress={() => navigation.navigate('Paywall', { source: 'settings' })}
+              trailing={
+                <View style={tw`px-3 py-1.5 bg-stone-700 rounded-lg`}>
+                  <Text style={tw`text-white text-xs font-bold`}>UPGRADE</Text>
+                </View>
+              }
+              color="#78716C"
+            />
+          </SettingsSection>
+        ) : (
+          <SettingsSection title="Subscription" delay={100} gradient={['#78716C', '#57534E']}>
+            <SettingsItem
+              icon="crown"
+              title="Premium Member"
+              subtitle={subscription?.startDate ? `Active since ${new Date(subscription.startDate).toLocaleDateString()}` : 'Premium Active'}
+              trailing={<PremiumBadge size="small" />}
+              color="#78716C"
+            />
+            <SettingsItem
+              icon="settings"
+              title="Manage Subscription"
+              subtitle="View billing & payment options"
+              onPress={() => {
+                Alert.alert('Manage Subscription', 'To manage your subscription, please visit the App Store settings.', [{ text: 'OK', style: 'default' }]);
+              }}
+              color="#78716C"
+            />
+          </SettingsSection>
+        )}
 
         {/* Profile Section */}
         <Animated.View entering={FadeInDown.delay(100).duration(600).springify()}>

@@ -41,6 +41,8 @@ import { useDebugMode } from '@/hooks/useDebugMode';
 import { DebugButton } from '@/components/debug/DebugButton';
 import DebugScreen from '@/screens/debugScreen';
 import { DEBUG_MODE } from '@env';
+import { SubscriptionProvider } from '@/context/SubscriptionContext';
+import PaywallScreen from '@/screens/PaywallScreen';
 
 // Type Definitions
 export type RootStackParamList = {
@@ -50,6 +52,7 @@ export type RootStackParamList = {
   MainTabs: undefined;
   HabitDetails: { habitId: string };
   Achievements: undefined;
+  Paywall: { source?: 'habit_limit' | 'streak_saver' | 'settings' | 'stats' };
 };
 
 export type TabParamList = {
@@ -260,6 +263,14 @@ function AppNavigator() {
             presentation: 'modal',
           }}
         />
+        <Stack.Screen
+          name="Paywall"
+          component={PaywallScreen}
+          options={{
+            presentation: 'modal', // Opens as modal overlay
+            animation: 'slide_from_bottom',
+          }}
+        />
         {showDebugScreen && (
           <Stack.Screen
             name="Debug"
@@ -374,21 +385,21 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <AuthProvider>
-          <StatsProvider>
-            <HabitProvider>
-              <AchievementProvider>
-                <LevelUpProvider>
-                  <NavigationContainer>
-                    {/* Status Bar Configuration */}
-                    <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
-
-                    {/* Main App */}
-                    <AppNavigator />
-                  </NavigationContainer>
-                </LevelUpProvider>
-              </AchievementProvider>
-            </HabitProvider>
-          </StatsProvider>
+          <SubscriptionProvider>
+            <StatsProvider>
+              <HabitProvider>
+                <AchievementProvider>
+                  <LevelUpProvider>
+                    <NavigationContainer>
+                      {/* Status Bar Configuration */}
+                      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
+                      <AppNavigator />
+                    </NavigationContainer>
+                  </LevelUpProvider>
+                </AchievementProvider>
+              </HabitProvider>
+            </StatsProvider>
+          </SubscriptionProvider>
         </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

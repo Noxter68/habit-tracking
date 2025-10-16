@@ -5,6 +5,7 @@ import { Alert, Platform } from 'react-native';
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import * as AppleAuthentication from 'expo-apple-authentication';
+import { RevenueCatService } from '@/services/RevenueCatService';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -220,13 +221,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signOut = async () => {
     try {
-      setLoading(true);
+      // Logout from RevenueCat first
+      await RevenueCatService.logout();
+
+      // Then logout from Supabase
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+
+      // Clear local state
+      setUser(null);
+      setSession(null);
     } catch (error: any) {
-      Alert.alert('Error', error.message);
-    } finally {
-      setLoading(false);
+      console.error('Sign out error:', error);
+      Alert.alert('Error', 'Failed to sign out. Please try again.');
     }
   };
 
