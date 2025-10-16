@@ -9,8 +9,12 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import tw from '@/lib/tailwind';
 import { RootStackParamList } from '@/navigation/types';
-import { RevenueCatService, SubscriptionOffering } from '@/services/RevenueCatService';
+import { RevenueCatService, SubscriptionPackage } from '@/services/RevenueCatService';
 import { useSubscription } from '@/context/SubscriptionContext';
+
+// ============================================================================
+// Types
+// ============================================================================
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -20,65 +24,108 @@ interface Feature {
   description: string;
 }
 
-const features: Feature[] = [
-  { icon: Target, title: 'Unlimited Habits', description: 'Track as many habits as you want' },
-  { icon: Sparkles, title: 'Unlimited Streak Savers', description: 'Never lose your progress' },
-  { icon: TrendingUp, title: 'Advanced Analytics', description: 'Detailed charts & insights' },
-  { icon: Lock, title: 'Priority Support', description: 'Get help when you need it' },
-];
-
 interface PaywallScreenProps {
   route?: {
     params?: {
-      source?: string;
+      source?: string; // Track where paywall was opened from
     };
   };
 }
 
+// ============================================================================
+// Premium Features
+// ============================================================================
+
+const features: Feature[] = [
+  {
+    icon: Target,
+    title: 'Unlimited Habits',
+    description: 'Track as many habits as you want',
+  },
+  {
+    icon: Sparkles,
+    title: '3 Streak Savers/Month',
+    description: 'Never lose your progress',
+  },
+  {
+    icon: TrendingUp,
+    title: 'Advanced Analytics',
+    description: 'Detailed charts & insights',
+  },
+  {
+    icon: Lock,
+    title: 'Priority Support',
+    description: 'Get help when you need it',
+  },
+];
+
+// ============================================================================
+// Paywall Screen
+// ============================================================================
+
+/**
+ * Paywall Screen
+ *
+ * Displays subscription options and handles purchases
+ * Features:
+ * - Loads available subscription packages from RevenueCat
+ * - Shows pricing with savings calculations
+ * - Handles purchase flow
+ * - Supports purchase restoration
+ */
 const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
   const navigation = useNavigation<NavigationProp>();
   const { refreshSubscription } = useSubscription();
+
+  // State
   const [loading, setLoading] = useState(false);
   const [loadingOfferings, setLoadingOfferings] = useState(true);
-  const [offerings, setOfferings] = useState<SubscriptionOffering[]>([]);
-  const [selectedOffering, setSelectedOffering] = useState<SubscriptionOffering | null>(null);
+  const [packages, setPackages] = useState<SubscriptionPackage[]>([]);
+  const [selectedPackage, setSelectedPackage] = useState<SubscriptionPackage | null>(null);
 
-  // Load offerings from RevenueCat
+  // ==========================================================================
+  // Load Offerings
+  // ==========================================================================
+
   useEffect(() => {
     loadOfferings();
   }, []);
 
+  /**
+   * Load available subscription packages from RevenueCat
+   */
   const loadOfferings = async () => {
     setLoadingOfferings(true);
     try {
-      const availableOfferings = await RevenueCatService.getOfferings();
-      console.log(availableOfferings);
-      if (availableOfferings.length === 0) {
+      const availablePackages = await RevenueCatService.getOfferings();
+
+      if (!availablePackages || availablePackages.length === 0) {
         Alert.alert('Error', 'No subscription plans available. Please try again later.');
-        setLoadingOfferings(false);
         return;
       }
 
-      setOfferings(availableOfferings);
+      setPackages(availablePackages);
 
-      // Auto-select yearly plan if available (better value), otherwise monthly
-      const yearlyPlan = availableOfferings.find((o) => o.identifier === '$rc_annual' || o.product.title.toLowerCase().includes('year'));
-
-      setSelectedOffering(yearlyPlan || availableOfferings[0]);
+      // Auto-select yearly plan (better value) or first available
+      const yearlyPlan = availablePackages.find((pkg) => pkg.packageType === 'ANNUAL');
+      setSelectedPackage(yearlyPlan || availablePackages[0]);
     } catch (error) {
-      console.error('Error loading offerings:', error);
+      console.error('❌ [Paywall] Failed to load offerings');
       Alert.alert('Error', 'Failed to load subscription options. Please try again.');
     } finally {
       setLoadingOfferings(false);
     }
   };
 
-  const handleClose = () => {
-    navigation.goBack();
-  };
+  // ==========================================================================
+  // Purchase Flow
+  // ==========================================================================
 
+  /**
+   * Handle subscription purchase
+   */
   const handleSubscribe = async () => {
-    if (!selectedOffering) {
+    if (!selectedPackage) {
       Alert.alert('Error', 'Please select a subscription plan');
       return;
     }
@@ -86,10 +133,10 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
     setLoading(true);
 
     try {
-      const result = await RevenueCatService.purchasePackage(selectedOffering.package);
+      const result = await RevenueCatService.purchasePackage(selectedPackage);
 
       if (result.success) {
-        // Refresh subscription status
+        // Refresh subscription to sync with database
         await refreshSubscription();
 
         // Show success message
@@ -100,29 +147,79 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
           },
         ]);
       } else if (result.error !== 'cancelled') {
-        Alert.alert('Purchase Failed', 'Unable to complete purchase. Please try again.');
+        Alert.alert('Purchase Failed', result.error || 'Unable to complete purchase. Please try again.');
       }
     } catch (error) {
-      console.error('Purchase error:', error);
+      console.error('❌ [Paywall] Purchase error');
       Alert.alert('Error', 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  /**
+   * Handle purchase restoration
+   * For users who reinstalled or changed devices
+   */
   const handleRestore = async () => {
     setLoading(true);
     try {
       const result = await RevenueCatService.restorePurchases();
 
       if (result.success) {
-        await refreshSubscription();
-        navigation.goBack();
+        Alert.alert('✅ Success', 'Your purchases have been restored!', [
+          {
+            text: 'Continue',
+            onPress: async () => {
+              await refreshSubscription();
+              navigation.goBack();
+            },
+          },
+        ]);
+      } else {
+        Alert.alert('No Purchases Found', "We couldn't find any previous purchases to restore.");
       }
+    } catch (error) {
+      console.error('❌ [Paywall] Restore error');
+      Alert.alert('Error', 'Failed to restore purchases. Please try again.');
     } finally {
       setLoading(false);
     }
   };
+
+  /**
+   * Close paywall
+   */
+  const handleClose = () => {
+    navigation.goBack();
+  };
+
+  // ==========================================================================
+  // Loading State
+  // ==========================================================================
+
+  if (loadingOfferings) {
+    return (
+      <View style={tw`flex-1 bg-sand-50 items-center justify-center`}>
+        <ActivityIndicator size="large" color="#78716C" />
+        <Text style={tw`mt-4 text-stone-600`}>Loading subscription options...</Text>
+      </View>
+    );
+  }
+
+  // ==========================================================================
+  // Calculations
+  // ==========================================================================
+
+  const monthlyPackage = packages.find((pkg) => pkg.packageType === 'MONTHLY');
+  const yearlyPackage = packages.find((pkg) => pkg.packageType === 'ANNUAL');
+
+  // Calculate savings percentage for yearly plan
+  const savingsPercentage = monthlyPackage && yearlyPackage ? Math.round((1 - yearlyPackage.product.price / 12 / monthlyPackage.product.price) * 100) : 0;
+
+  // ==========================================================================
+  // Render
+  // ==========================================================================
 
   return (
     <View style={tw`flex-1 bg-sand-50`}>
@@ -145,7 +242,7 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
 
             <Text style={tw`text-3xl font-bold text-stone-800 text-center mb-2`}>Unlock Your Full Potential</Text>
 
-            <Text style={tw`text-base text-stone-600 text-center px-4`}>Get unlimited habits and advanced features to build better routines</Text>
+            <Text style={tw`text-base text-stone-600 text-center px-4`}>Get unlimited habits and streak savers to build better routines</Text>
           </Animated.View>
 
           {/* Features List */}
@@ -168,18 +265,18 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
             ))}
           </Animated.View>
 
-          {/* Pricing Card */}
-          {/* Plan Selection - Only show if we have multiple plans */}
-          {offerings.length > 1 && (
+          {/* Plan Selection */}
+          {packages.length > 0 && (
             <View style={tw`mb-6`}>
-              {offerings.map((offering) => {
-                const isYearly = offering.identifier === '$rc_annual' || offering.product.title.toLowerCase().includes('year');
-                const isSelected = selectedOffering?.identifier === offering.identifier;
+              {packages.map((pkg) => {
+                const isYearly = pkg.packageType === 'ANNUAL';
+                const isSelected = selectedPackage?.identifier === pkg.identifier;
+                const monthlyPrice = isYearly ? pkg.product.price / 12 : pkg.product.price;
 
                 return (
                   <Pressable
-                    key={offering.identifier}
-                    onPress={() => setSelectedOffering(offering)}
+                    key={pkg.identifier}
+                    onPress={() => setSelectedPackage(pkg)}
                     style={({ pressed }) => [
                       tw`mb-3 p-4 rounded-xl border-2 flex-row items-center justify-between`,
                       isSelected ? tw`border-stone-600 bg-stone-50` : tw`border-stone-200 bg-white`,
@@ -187,16 +284,18 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
                     ]}
                   >
                     <View style={tw`flex-1`}>
-                      <Text style={tw`text-base font-semibold text-stone-800 mb-1`}>{isYearly ? 'Yearly' : 'Monthly'}</Text>
+                      <View style={tw`flex-row items-center mb-1`}>
+                        <Text style={tw`text-base font-semibold text-stone-800`}>{pkg.product.title}</Text>
+                        {isYearly && savingsPercentage > 0 && (
+                          <View style={tw`ml-2 px-2 py-0.5 bg-emerald-100 rounded-full`}>
+                            <Text style={tw`text-xs font-bold text-emerald-700`}>Save {savingsPercentage}%</Text>
+                          </View>
+                        )}
+                      </View>
                       <Text style={tw`text-lg font-bold text-stone-900`}>
-                        {offering.priceString}
-                        {isYearly && <Text style={tw`text-sm font-normal text-stone-600`}> ({(offering.price / 12).toFixed(2)}/mo)</Text>}
+                        {pkg.product.priceString}
+                        {isYearly && <Text style={tw`text-sm font-normal text-stone-600`}> (${monthlyPrice.toFixed(2)}/mo)</Text>}
                       </Text>
-                      {isYearly && (
-                        <Text style={tw`text-xs font-medium text-emerald-600 mt-1`}>
-                          Save {Math.round((1 - offering.price / 12 / offerings.find((o) => !o.product.title.toLowerCase().includes('year'))!.price) * 100)}%
-                        </Text>
-                      )}
                     </View>
 
                     <View style={[tw`w-6 h-6 rounded-full border-2 items-center justify-center`, isSelected ? tw`border-stone-600 bg-stone-600` : tw`border-stone-300`]}>
@@ -208,9 +307,20 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
             </View>
           )}
 
+          {/* Subscribe Button */}
+          <Animated.View entering={FadeInUp.delay(700)}>
+            <Pressable
+              onPress={handleSubscribe}
+              disabled={loading || !selectedPackage}
+              style={({ pressed }) => [tw`bg-stone-800 rounded-xl py-4 items-center justify-center mb-4 shadow-lg`, pressed && tw`opacity-80`, (loading || !selectedPackage) && tw`opacity-50`]}
+            >
+              {loading ? <ActivityIndicator color="#fff" /> : <Text style={tw`text-white text-base font-bold`}>Start Premium</Text>}
+            </Pressable>
+          </Animated.View>
+
           {/* Trust Indicators */}
           <Animated.View entering={FadeInUp.delay(800)} style={tw`items-center mb-4`}>
-            <Text style={tw`text-xs text-stone-500 text-center px-8`}>Join thousands of users building better habits. Secure payment via App Store.</Text>
+            <Text style={tw`text-xs text-stone-500 text-center px-8`}>Join thousands of users building better habits. Secure payment via App Store. Cancel anytime.</Text>
           </Animated.View>
 
           {/* Restore Purchases Button */}

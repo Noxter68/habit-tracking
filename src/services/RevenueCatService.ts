@@ -1,401 +1,347 @@
 // src/services/RevenueCatService.ts
-import Purchases, { PurchasesOffering, PurchasesPackage, CustomerInfo, LOG_LEVEL } from 'react-native-purchases';
-import { Platform, Alert } from 'react-native';
-import { supabase } from '@/lib/supabase';
-import { REVENUECAT_IOS_API_KEY } from '@env';
+import Purchases, { LOG_LEVEL, CustomerInfo, PurchasesPackage } from 'react-native-purchases';
+import { Platform } from 'react-native';
 
-// Get RevenueCat API Keys from environment
-const REVENUECAT_API_KEY = Platform.select({
-  ios: REVENUECAT_IOS_API_KEY,
-  default: '',
-}) as string;
+const REVENUECAT_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || '';
 
-export interface SubscriptionOffering {
-  identifier: string;
-  package: PurchasesPackage;
-  priceString: string;
-  price: number;
-  product: {
-    title: string;
-    description: string;
-  };
+// ============================================================================
+// Types & Interfaces
+// ============================================================================
+
+interface SubscriptionState {
+  isSubscribed: boolean;
+  entitlementId: string | null;
+  expirationDate: string | null;
 }
 
+/**
+ * Simplified subscription package for UI consumption
+ * Maps RevenueCat's complex package structure to a simpler format
+ */
+export interface SubscriptionPackage {
+  identifier: string; // e.g., '$rc_monthly'
+  packageType: string; // 'MONTHLY' | 'ANNUAL'
+  product: {
+    identifier: string; // e.g., 'premium_monthly'
+    title: string;
+    description: string;
+    price: number;
+    priceString: string; // Formatted price with currency
+    currencyCode: string;
+  };
+  rcPackage: PurchasesPackage; // Original package for purchase operations
+}
+
+/**
+ * Result object returned after purchase or restore operations
+ */
+export interface PurchaseResult {
+  success: boolean;
+  error?: string;
+  customerInfo?: CustomerInfo;
+  hasPremium?: boolean;
+}
+
+// ============================================================================
+// RevenueCat Service
+// ============================================================================
+
+/**
+ * Service class for managing RevenueCat subscriptions and purchases
+ *
+ * This service handles:
+ * - SDK initialization
+ * - User authentication
+ * - Product offerings retrieval
+ * - Purchase processing
+ * - Subscription status checking
+ * - Purchase restoration
+ */
 export class RevenueCatService {
   private static initialized = false;
-  private static initPromise: Promise<void> | null = null;
+  private static initializationPromise: Promise<void> | null = null;
+
+  // ==========================================================================
+  // Initialization
+  // ==========================================================================
 
   /**
-   * Debug: Check if API key is valid
+   * Initialize RevenueCat SDK
+   * Should be called once on app startup
+   *
+   * @param userId - Optional user ID for identifying the user in RevenueCat
+   * @returns Promise that resolves when initialization is complete
    */
-  static debugAPIKey(): void {
-    console.log('=== RevenueCat API Key Debug ===');
-    console.log('Platform:', Platform.OS);
-    console.log('API Key exists:', !!REVENUECAT_API_KEY);
-    console.log('API Key length:', REVENUECAT_API_KEY?.length || 0);
-    console.log('API Key preview:', REVENUECAT_API_KEY?.substring(0, 10) + '...');
-    console.log('Starts with appl_:', REVENUECAT_API_KEY?.startsWith('appl_'));
-    console.log('ENV import successful:', typeof REVENUECAT_IOS_API_KEY !== 'undefined');
-    console.log('================================');
-  }
-
-  /**
-   * Initialize RevenueCat - call once on app start
-   */
-  static async initialize(userId: string): Promise<void> {
-    console.log('🔵 [RevenueCat] Initialize called for user:', userId);
-
-    // Debug API key first
-    this.debugAPIKey();
-
-    // Return existing initialization promise if already in progress
-    if (this.initPromise) {
-      console.log('⚠️ [RevenueCat] Already initializing, returning existing promise');
-      return this.initPromise;
+  static initialize(userId?: string): Promise<void> {
+    // Return existing promise if already initializing
+    if (this.initializationPromise) {
+      return this.initializationPromise;
     }
 
+    // Return immediately if already initialized
     if (this.initialized) {
-      console.log('✅ [RevenueCat] Already initialized');
       return Promise.resolve();
     }
 
-    this.initPromise = (async () => {
-      try {
-        // Validate API key
-        if (!REVENUECAT_API_KEY) {
-          throw new Error('❌ RevenueCat API key is empty or undefined. Check your .env file has REVENUECAT_IOS_API_KEY.');
-        }
+    // Create and store initialization promise
+    this.initializationPromise = this.performInitialization(userId);
+    return this.initializationPromise;
+  }
 
-        if (!REVENUECAT_API_KEY.startsWith('appl_')) {
-          throw new Error('❌ Invalid iOS API key format. Should start with "appl_"');
-        }
-
-        console.log('🔵 [RevenueCat] Setting log level to DEBUG');
-        Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.DEBUG : LOG_LEVEL.INFO);
-
-        console.log('🔵 [RevenueCat] Calling Purchases.configure()...');
-        await Purchases.configure({
-          apiKey: REVENUECAT_API_KEY,
-          appUserID: userId,
-        });
-
-        this.initialized = true;
-        console.log('✅ [RevenueCat] Initialized successfully');
-        console.log('✅ [RevenueCat] User ID set to:', userId);
-
-        // Add listener
-        console.log('🔵 [RevenueCat] Adding customer info update listener');
-        Purchases.addCustomerInfoUpdateListener(this.handleCustomerInfoUpdate);
-
-        // Test that SDK is working by getting customer info
-        console.log('🔵 [RevenueCat] Testing SDK by fetching customer info...');
-        const customerInfo = await Purchases.getCustomerInfo();
-        console.log('✅ [RevenueCat] SDK test successful. Customer info:', {
-          originalAppUserId: customerInfo.originalAppUserId,
-          activeEntitlements: Object.keys(customerInfo.entitlements.active),
-          allEntitlements: Object.keys(customerInfo.entitlements.all),
-        });
-      } catch (error) {
-        console.error('❌ [RevenueCat] Initialization error:', error);
-        console.error('❌ [RevenueCat] Error details:', JSON.stringify(error, null, 2));
-        this.initPromise = null;
-        this.initialized = false;
-        throw error;
+  /**
+   * Internal initialization logic
+   * Configures the SDK and verifies connection
+   */
+  private static async performInitialization(userId?: string): Promise<void> {
+    try {
+      // Validate API key
+      if (!REVENUECAT_API_KEY) {
+        throw new Error('RevenueCat API key is missing. Check your .env file.');
       }
-    })();
 
-    return this.initPromise;
+      const expectedPrefix = Platform.OS === 'ios' ? 'appl_' : 'goog_';
+      if (!REVENUECAT_API_KEY.startsWith(expectedPrefix)) {
+        console.warn(`⚠️ [RevenueCat] API key doesn't match expected prefix for ${Platform.OS}`);
+      }
+
+      // Enable debug logging in development
+      Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.DEBUG : LOG_LEVEL.INFO);
+
+      // Configure SDK
+      Purchases.configure({
+        apiKey: REVENUECAT_API_KEY,
+        appUserID: userId,
+      });
+
+      this.initialized = true;
+
+      // Verify initialization by fetching customer info
+      try {
+        const customerInfo = await Purchases.getCustomerInfo();
+        console.log('✅ [RevenueCat] Initialized successfully');
+      } catch (verifyError) {
+        console.warn('⚠️ [RevenueCat] Initialized but verification failed');
+      }
+
+      // Listen for subscription changes
+      Purchases.addCustomerInfoUpdateListener(this.handleCustomerInfoUpdate);
+    } catch (error) {
+      console.error('❌ [RevenueCat] Initialization failed:', error);
+      this.initialized = false;
+      this.initializationPromise = null;
+      throw error;
+    }
   }
 
   /**
-   * Ensure RevenueCat is initialized before calling
+   * Callback for customer info updates
+   * Triggered when subscription status changes
    */
-  private static async ensureInitialized(): Promise<void> {
-    console.log('🔵 [RevenueCat] ensureInitialized called');
-    console.log('🔵 [RevenueCat] Current state - initialized:', this.initialized, 'initPromise:', !!this.initPromise);
-
-    if (!this.initialized && !this.initPromise) {
-      throw new Error('❌ RevenueCat not initialized. Call RevenueCatService.initialize() first.');
+  private static handleCustomerInfoUpdate = (customerInfo: CustomerInfo) => {
+    const activeEntitlements = Object.keys(customerInfo.entitlements.active);
+    if (activeEntitlements.length > 0) {
+      console.log('🔔 [RevenueCat] Subscription status updated:', activeEntitlements);
     }
-
-    if (this.initPromise) {
-      console.log('⏳ [RevenueCat] Waiting for initialization to complete...');
-      await this.initPromise;
-      console.log('✅ [RevenueCat] Initialization complete');
-    }
-  }
+  };
 
   /**
-   * Get available subscription offerings
+   * Check if SDK is initialized
    */
-  static async getOfferings(): Promise<SubscriptionOffering[]> {
-    console.log('🔵 [RevenueCat] getOfferings called');
+  static isInitialized(): boolean {
+    return this.initialized;
+  }
+
+  // ==========================================================================
+  // Offerings & Products
+  // ==========================================================================
+
+  /**
+   * Fetch available subscription offerings
+   * Returns a simplified array of packages ready for UI display
+   *
+   * @returns Array of subscription packages, empty array if none available
+   */
+  static async getOfferings(): Promise<SubscriptionPackage[]> {
+    // Wait for initialization if in progress
+    if (this.initializationPromise) {
+      await this.initializationPromise;
+    }
 
     try {
-      await this.ensureInitialized();
+      const offeringsResponse = await Purchases.getOfferings();
 
-      console.log('🔵 [RevenueCat] Fetching offerings from RevenueCat...');
-      const offerings = await Purchases.getOfferings();
-
-      console.log('📦 [RevenueCat] Raw offerings response:', {
-        hasOfferings: !!offerings,
-        hasCurrent: !!offerings?.current,
-        allOfferingsKeys: offerings?.all ? Object.keys(offerings.all) : [],
-      });
-
-      if (offerings?.all) {
-        console.log(
-          '📦 [RevenueCat] All offerings:',
-          Object.keys(offerings.all).map((key) => ({
-            identifier: key,
-            packagesCount: offerings.all[key]?.availablePackages?.length || 0,
-          }))
-        );
-      }
-
-      if (!offerings) {
-        console.warn('⚠️ [RevenueCat] Offerings object is null/undefined');
+      if (!offeringsResponse.current || !offeringsResponse.current.availablePackages) {
+        console.warn('⚠️ [RevenueCat] No offerings available');
         return [];
       }
 
-      if (!offerings.current) {
-        console.warn('⚠️ [RevenueCat] No current offering found');
-        console.log('💡 [RevenueCat] Make sure you have:');
-        console.log('   1. Created products in App Store Connect');
-        console.log('   2. Created products in RevenueCat dashboard');
-        console.log('   3. Created an Offering in RevenueCat');
-        console.log('   4. Set an offering as "Current"');
-        console.log('   5. Added packages to your offering');
-        return [];
-      }
-
-      console.log('✅ [RevenueCat] Current offering found:', {
-        identifier: offerings.current.identifier,
-        packagesCount: offerings.current.availablePackages.length,
-      });
-
-      // Log each package
-      offerings.current.availablePackages.forEach((pkg, index) => {
-        console.log(`📦 [RevenueCat] Package ${index + 1}:`, {
-          identifier: pkg.identifier,
-          productId: pkg.product.identifier,
-          title: pkg.product.title,
+      // Map RevenueCat packages to simplified format
+      const packages = offeringsResponse.current.availablePackages.map((pkg) => ({
+        identifier: pkg.identifier,
+        packageType: pkg.packageType,
+        product: {
+          identifier: pkg.product.identifier,
+          title: pkg.product.title || (pkg.packageType === 'ANNUAL' ? 'Yearly Plan' : 'Monthly Plan'),
+          description: pkg.product.description || '',
           price: pkg.product.price,
           priceString: pkg.product.priceString,
-        });
-      });
-
-      const packages = offerings.current.availablePackages.map((pkg) => ({
-        identifier: pkg.identifier,
-        package: pkg,
-        priceString: pkg.product.priceString,
-        price: pkg.product.price,
-        product: {
-          title: pkg.product.title,
-          description: pkg.product.description,
+          currencyCode: pkg.product.currencyCode,
         },
+        rcPackage: pkg, // Keep original for purchase
       }));
 
-      console.log('✅ [RevenueCat] Returning', packages.length, 'packages');
+      console.log(`✅ [RevenueCat] Loaded ${packages.length} subscription packages`);
       return packages;
     } catch (error) {
       console.error('❌ [RevenueCat] Error fetching offerings:', error);
-      console.error('❌ [RevenueCat] Error details:', JSON.stringify(error, null, 2));
       return [];
     }
   }
 
+  // ==========================================================================
+  // Purchase Operations
+  // ==========================================================================
+
   /**
    * Purchase a subscription package
+   *
+   * @param pkg - The subscription package to purchase
+   * @returns Result object with success status and customer info
    */
-  static async purchasePackage(packageToPurchase: PurchasesPackage): Promise<{ success: boolean; customerInfo?: CustomerInfo; error?: string }> {
+  static async purchasePackage(pkg: SubscriptionPackage): Promise<PurchaseResult> {
     try {
-      await this.ensureInitialized();
+      const { customerInfo } = await Purchases.purchasePackage(pkg.rcPackage);
 
-      console.log('💳 [RevenueCat] Starting purchase for:', packageToPurchase.identifier);
-      const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
+      const hasPremium = !!customerInfo.entitlements.active['premium'];
 
       console.log('✅ [RevenueCat] Purchase successful');
-      await this.syncSubscriptionStatus(customerInfo);
 
-      return { success: true, customerInfo };
+      return {
+        success: true,
+        customerInfo,
+        hasPremium,
+      };
     } catch (error: any) {
-      console.error('❌ [RevenueCat] Purchase error:', error);
-
       if (error.userCancelled) {
-        console.log('ℹ️ [RevenueCat] User cancelled purchase');
-        return { success: false, error: 'cancelled' };
+        return {
+          success: false,
+          error: 'cancelled',
+        };
       }
 
-      return { success: false, error: error.message };
+      console.error('❌ [RevenueCat] Purchase failed:', error.message);
+      return {
+        success: false,
+        error: error.message || 'Purchase failed',
+      };
     }
   }
 
   /**
-   * Restore purchases
+   * Restore previous purchases
+   * Useful for users who reinstalled the app or switched devices
+   *
+   * @returns Result object with success status
    */
-  static async restorePurchases(): Promise<{ success: boolean; error?: string }> {
+  static async restorePurchases(): Promise<PurchaseResult> {
     try {
-      await this.ensureInitialized();
-
-      console.log('🔄 [RevenueCat] Restoring purchases...');
       const customerInfo = await Purchases.restorePurchases();
-
-      await this.syncSubscriptionStatus(customerInfo);
-      const hasPremium = this.checkPremiumStatus(customerInfo);
+      const hasPremium = !!customerInfo.entitlements.active['premium'];
 
       if (hasPremium) {
         console.log('✅ [RevenueCat] Purchases restored successfully');
-        Alert.alert('✅ Purchases Restored', 'Your premium subscription has been restored!');
-        return { success: true };
-      } else {
-        console.log('ℹ️ [RevenueCat] No active purchases found');
-        Alert.alert('No Purchases Found', 'No active subscriptions were found to restore.');
-        return { success: false, error: 'no_purchases' };
       }
+
+      return {
+        success: hasPremium,
+        customerInfo,
+        error: hasPremium ? undefined : 'No purchases found',
+      };
     } catch (error: any) {
-      console.error('❌ [RevenueCat] Restore error:', error);
-      Alert.alert('Error', 'Failed to restore purchases. Please try again.');
-      return { success: false, error: error.message };
+      console.error('❌ [RevenueCat] Restore failed:', error.message);
+      return {
+        success: false,
+        error: error.message || 'Restore failed',
+      };
     }
   }
 
-  /**
-   * Get current customer info
-   */
-  static async getCustomerInfo(): Promise<CustomerInfo | null> {
-    try {
-      await this.ensureInitialized();
+  // ==========================================================================
+  // Subscription Status
+  // ==========================================================================
 
-      console.log('🔵 [RevenueCat] Fetching customer info...');
+  /**
+   * Get current subscription status
+   * Checks if user has active premium entitlement
+   *
+   * @returns Subscription state with entitlement details
+   */
+  static async getSubscriptionStatus(): Promise<SubscriptionState> {
+    try {
       const customerInfo = await Purchases.getCustomerInfo();
+      const premiumEntitlement = customerInfo.entitlements.active['premium'];
 
-      console.log('✅ [RevenueCat] Customer info retrieved:', {
-        userId: customerInfo.originalAppUserId,
-        activeEntitlements: Object.keys(customerInfo.entitlements.active),
-      });
-
-      return customerInfo;
+      return {
+        isSubscribed: !!premiumEntitlement,
+        entitlementId: premiumEntitlement?.identifier || null,
+        expirationDate: premiumEntitlement?.expirationDate || null,
+      };
     } catch (error) {
-      console.error('❌ [RevenueCat] Error fetching customer info:', error);
-      return null;
+      console.error('❌ [RevenueCat] Error fetching subscription status');
+      return {
+        isSubscribed: false,
+        entitlementId: null,
+        expirationDate: null,
+      };
     }
   }
 
   /**
-   * Check if user has active premium subscription
-   */
-  static checkPremiumStatus(customerInfo: CustomerInfo): boolean {
-    const hasPremium = typeof customerInfo.entitlements.active['premium'] !== 'undefined';
-    console.log('🔵 [RevenueCat] Premium status:', hasPremium);
-    return hasPremium;
-  }
-
-  /**
-   * Sync subscription status to Supabase
-   */
-  private static async syncSubscriptionStatus(customerInfo: CustomerInfo): Promise<void> {
-    try {
-      const userId = customerInfo.originalAppUserId;
-      const hasPremium = this.checkPremiumStatus(customerInfo);
-
-      console.log('🔵 [RevenueCat] Syncing subscription to Supabase for user:', userId);
-
-      if (hasPremium) {
-        const entitlement = customerInfo.entitlements.active['premium'];
-        const expirationDate = entitlement.expirationDate;
-
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            subscription_tier: 'premium',
-            subscription_status: 'active',
-            subscription_start_date: entitlement.latestPurchaseDate || new Date().toISOString(),
-            subscription_end_date: expirationDate,
-            platform: Platform.OS as 'ios' | 'android',
-            transaction_id: entitlement.originalPurchaseDate || null,
-          })
-          .eq('id', userId);
-
-        if (profileError) throw profileError;
-
-        const { error: subError } = await supabase.from('subscriptions').upsert(
-          {
-            user_id: userId,
-            tier: 'premium',
-            status: 'active',
-            platform: Platform.OS as 'ios' | 'android',
-            product_id: entitlement.productIdentifier,
-            transaction_id: entitlement.originalPurchaseDate || '',
-            current_period_start: entitlement.latestPurchaseDate || new Date().toISOString(),
-            current_period_end: expirationDate,
-            updated_at: new Date().toISOString(),
-          },
-          {
-            onConflict: 'user_id,transaction_id',
-          }
-        );
-
-        if (subError) throw subError;
-
-        console.log('✅ [RevenueCat] Subscription synced to Supabase');
-      } else {
-        const { error } = await supabase
-          .from('profiles')
-          .update({
-            subscription_tier: 'free',
-            subscription_status: 'inactive',
-          })
-          .eq('id', userId);
-
-        if (error) throw error;
-        console.log('✅ [RevenueCat] Free tier synced to Supabase');
-      }
-    } catch (error) {
-      console.error('❌ [RevenueCat] Error syncing subscription to Supabase:', error);
-    }
-  }
-
-  /**
-   * Handle customer info updates (listener)
-   */
-  private static async handleCustomerInfoUpdate(customerInfo: CustomerInfo): Promise<void> {
-    console.log('📱 [RevenueCat] Customer info updated:', customerInfo);
-    await this.syncSubscriptionStatus(customerInfo);
-  }
-
-  /**
-   * Check subscription status and sync with Supabase
+   * Check subscription status and return boolean
+   * Convenience method for quick premium checks
+   *
+   * @param userId - User ID to check
+   * @returns True if user has active premium subscription
    */
   static async checkAndSyncSubscription(userId: string): Promise<boolean> {
     try {
-      console.log('🔵 [RevenueCat] Checking and syncing subscription for:', userId);
-      const customerInfo = await this.getCustomerInfo();
-
-      if (!customerInfo) return false;
-
-      const hasPremium = this.checkPremiumStatus(customerInfo);
-      await this.syncSubscriptionStatus(customerInfo);
-
-      return hasPremium;
+      const status = await this.getSubscriptionStatus();
+      return status.isSubscribed;
     } catch (error) {
-      console.error('❌ [RevenueCat] Error checking subscription:', error);
       return false;
     }
   }
 
+  // ==========================================================================
+  // User Management
+  // ==========================================================================
+
   /**
-   * Log out user (clear RevenueCat cache)
+   * Associate user ID with RevenueCat
+   * Call this after user logs in
+   *
+   * @param userId - The user's unique identifier
    */
-  static async logout(): Promise<void> {
+  static async setAppUserId(userId: string): Promise<void> {
     try {
-      console.log('🔵 [RevenueCat] Logging out...');
-      await Purchases.logOut();
-      this.initialized = false;
-      this.initPromise = null;
-      console.log('✅ [RevenueCat] Logged out successfully');
+      await Purchases.logIn(userId);
+      console.log('✅ [RevenueCat] User authenticated');
     } catch (error) {
-      console.error('❌ [RevenueCat] Error logging out:', error);
+      console.error('❌ [RevenueCat] Error setting user ID');
+      throw error;
+    }
+  }
+
+  /**
+   * Clear user ID from RevenueCat
+   * Call this when user logs out
+   */
+  static async clearAppUserId(): Promise<void> {
+    try {
+      await Purchases.logOut();
+      console.log('✅ [RevenueCat] User logged out');
+    } catch (error) {
+      console.error('❌ [RevenueCat] Error logging out');
     }
   }
 }

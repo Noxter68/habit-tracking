@@ -1,14 +1,17 @@
-// App.tsx - Dark Slate Theme Version
+// App.tsx - With RevenueCat Initialization
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { View, ActivityIndicator, Platform, LogBox, StatusBar } from 'react-native';
+import { View, ActivityIndicator, Platform, LogBox, StatusBar, AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
+import Purchases, { LOG_LEVEL } from 'react-native-purchases';
+import { REVENUECAT_IOS_API_KEY, REVENUECAT_ANDROID_API_KEY } from '@env';
+import { diagnoseRevenueCatSetup } from './src/utils/RevenueCatDiagnostic';
 import tw from './src/lib/tailwind';
 
 // Screens
@@ -43,6 +46,7 @@ import DebugScreen from '@/screens/debugScreen';
 import { DEBUG_MODE } from '@env';
 import { SubscriptionProvider } from '@/context/SubscriptionContext';
 import PaywallScreen from '@/screens/PaywallScreen';
+import { RevenueCatService } from '@/services/RevenueCatService';
 
 // Type Definitions
 export type RootStackParamList = {
@@ -97,9 +101,8 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        // Dark slate theme colors matching LeaderboardScreen
-        tabBarActiveTintColor: '#1e293b', // slate-800
-        tabBarInactiveTintColor: '#64748b', // slate-500
+        tabBarActiveTintColor: '#1e293b',
+        tabBarInactiveTintColor: '#64748b',
         tabBarStyle: {
           position: 'absolute',
           bottom: Platform.OS === 'ios' ? 24 : 20,
@@ -112,8 +115,7 @@ function MainTabs() {
           paddingTop: 6,
           paddingHorizontal: 12,
           borderWidth: 2,
-          borderColor: '#cbd5e1', // slate-300 - more visible border
-          // Shadow for elevation
+          borderColor: '#cbd5e1',
           shadowColor: '#1e293b',
           shadowOffset: {
             width: 0,
@@ -218,7 +220,6 @@ function AppNavigator() {
     }
   };
 
-  // Loading state - Updated with slate colors
   if (loading || isCheckingFirstLaunch) {
     return (
       <View style={tw`flex-1 items-center justify-center bg-slate-50`}>
@@ -227,7 +228,6 @@ function AppNavigator() {
     );
   }
 
-  // Auth Navigation
   if (!user) {
     return (
       <Stack.Navigator
@@ -241,7 +241,6 @@ function AppNavigator() {
     );
   }
 
-  // Main App Navigation
   return (
     <>
       <Stack.Navigator
@@ -267,7 +266,7 @@ function AppNavigator() {
           name="Paywall"
           component={PaywallScreen}
           options={{
-            presentation: 'modal', // Opens as modal overlay
+            presentation: 'modal',
             animation: 'slide_from_bottom',
           }}
         />
@@ -284,7 +283,6 @@ function AppNavigator() {
         )}
       </Stack.Navigator>
 
-      {/* Global Components */}
       <EpicLevelUpModal />
     </>
   );
@@ -315,7 +313,7 @@ function useNotificationSetup() {
           name: 'default',
           importance: Notifications.AndroidImportance.MAX,
           vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#1e293b', // slate-800
+          lightColor: '#1e293b',
         });
       }
     };
@@ -341,17 +339,87 @@ function useNotificationSetup() {
   }, []);
 }
 
+// ============================================
+// CRITICAL: RevenueCat Initialization Hook
+// ============================================
+function useRevenueCatSetup() {
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  useEffect(() => {
+    const initRevenueCat = () => {
+      try {
+        // Check if we're in Expo Go (where RevenueCat won't work)
+        const isExpoGo = typeof expo !== 'undefined' && expo?.modules?.ExpoGo;
+
+        if (isExpoGo) {
+          console.warn('⚠️  [App] Running in Expo Go - RevenueCat will NOT work!');
+          console.warn('⚠️  [App] You need to build a development build to test purchases');
+          console.warn('⚠️  [App] Run: npx expo run:ios or eas build --profile development');
+          return;
+        }
+
+        // DIAGNOSTIC: Run this first to check your setup
+        if (__DEV__) {
+          diagnoseRevenueCatSetup();
+        }
+
+        console.log('🔵 [App] Initializing RevenueCat...');
+
+        // Get the correct API key for the platform
+        const apiKey = Platform.OS === 'ios' ? REVENUECAT_IOS_API_KEY : REVENUECAT_ANDROID_API_KEY;
+
+        if (!apiKey) {
+          console.error('❌ [App] RevenueCat API key not found for platform:', Platform.OS);
+          console.error('❌ [App] Check your .env file has REVENUECAT_IOS_API_KEY or REVENUECAT_ANDROID_API_KEY');
+          return;
+        }
+
+        // Validate API key format
+        const expectedPrefix = Platform.OS === 'ios' ? 'appl_' : 'goog_';
+        if (!apiKey.startsWith(expectedPrefix)) {
+          console.error(`❌ [App] Invalid API key format for ${Platform.OS}. Should start with "${expectedPrefix}"`);
+          console.error(`❌ [App] Got: ${apiKey.substring(0, 10)}...`);
+          return;
+        }
+
+        console.log('🔵 [App] API Key validated:', {
+          platform: Platform.OS,
+          keyPrefix: apiKey.substring(0, 10) + '...',
+          keyLength: apiKey.length,
+        });
+
+        // Set log level BEFORE configuring
+        Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.DEBUG : LOG_LEVEL.INFO);
+        console.log('🔵 [App] Log level set to:', __DEV__ ? 'DEBUG' : 'INFO');
+
+        // Configure RevenueCat - SYNCHRONOUS, don't await
+        console.log('🔵 [App] Calling Purchases.configure...');
+        Purchases.configure({ apiKey });
+
+        setIsInitialized(true);
+        console.log('✅ [App] RevenueCat initialized successfully');
+      } catch (error) {
+        console.error('❌ [App] Failed to initialize RevenueCat:', error);
+        console.error('❌ [App] Error details:', JSON.stringify(error, null, 2));
+      }
+    };
+
+    // Initialize RevenueCat immediately on app start
+    initRevenueCat();
+  }, []); // Empty deps - only run once on mount
+
+  return isInitialized;
+}
+
 function usePerformanceMonitoring() {
   useEffect(() => {
     if (!AppConfig.debug.enabled) return;
 
-    // Log initial app start
     if (AppConfig.debug.enabled) {
       console.log('🚀 App started in', AppConfig.env.name, 'mode');
       console.log('📝 Debug features:', AppConfig.debug);
     }
 
-    // Performance monitoring
     const reportInterval = setInterval(() => {
       console.log('📊 Performance Report:');
       PerformanceMonitor.getReport();
@@ -381,6 +449,35 @@ export default function App() {
   useNotificationSetup();
   usePerformanceMonitoring();
 
+  useEffect(() => {
+    // Initialize RevenueCat with proper async handling
+    const initRevenueCat = async () => {
+      try {
+        console.log('🚀 [App] Starting RevenueCat initialization...');
+        await RevenueCatService.initialize();
+        console.log('✅ [App] RevenueCat initialized successfully');
+      } catch (error) {
+        console.error('❌ [App] Failed to initialize RevenueCat:', error);
+      }
+    };
+
+    initRevenueCat();
+
+    // Listen to app state changes to sync purchases
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active' && RevenueCatService.isInitialized()) {
+        console.log('🔄 [App] App became active, syncing purchases...');
+        RevenueCatService.getSubscriptionStatus().catch((error) => {
+          console.error('❌ [App] Error syncing purchases:', error);
+        });
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
@@ -391,7 +488,6 @@ export default function App() {
                 <AchievementProvider>
                   <LevelUpProvider>
                     <NavigationContainer>
-                      {/* Status Bar Configuration */}
                       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
                       <AppNavigator />
                     </NavigationContainer>
