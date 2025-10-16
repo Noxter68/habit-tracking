@@ -170,11 +170,11 @@ const AuthScreen: React.FC = () => {
   const getModeGradient = () => {
     switch (mode) {
       case 'signup':
-        return ['#10b981', '#059669', '#047857']; // Jade - Green
+        return ['#10b981', '#059669', '#047857']; // Jade - Green for signup
       case 'reset':
-        return ['#ef4444', '#dc2626', '#991b1b']; // Ruby - Red
+        return ['#ef4444', '#dc2626', '#991b1b']; // Ruby - Red for reset
       default:
-        return ['#10b981', '#059669', '#047857']; // Jade - Green for signin
+        return ['#ef4444', '#dc2626', '#991b1b']; // Ruby - Red for signin
     }
   };
 

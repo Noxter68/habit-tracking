@@ -86,6 +86,24 @@ const LeaderboardScreen = () => {
       >
         {/* Header */}
         <LinearGradient colors={['#1F2937', '#111827', '#030712']} style={{ paddingHorizontal: 24, paddingTop: 60, paddingBottom: 32 }}>
+          {/* Crown with Gradient Background */}
+          <View style={{ alignItems: 'center', marginBottom: 24 }}>
+            <LinearGradient
+              colors={['rgba(251, 191, 36, 0.25)', 'rgba(251, 191, 36, 0.15)', 'rgba(251, 191, 36, 0.05)']}
+              style={{
+                width: 140,
+                height: 140,
+                borderRadius: 70,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: 2,
+                borderColor: 'rgba(251, 191, 36, 0.4)',
+              }}
+            >
+              <Image source={CROWN_IMAGE} style={{ width: 120, height: 120 }} resizeMode="contain" />
+            </LinearGradient>
+          </View>
+
           <View style={{ alignItems: 'center', marginBottom: 20 }}>
             <View
               style={{
@@ -132,14 +150,14 @@ const LeaderboardScreen = () => {
           >
             {/* 1st Place - Full Width Horizontal Card */}
             {topThree[0] && (
-              <Animated.View entering={FadeInDown.delay(100)} style={{ marginBottom: 20 }}>
+              <Animated.View entering={FadeInDown.delay(100)} style={{ marginBottom: 16 }}>
                 <LinearGradient
                   colors={['rgba(255, 255, 255, 0.15)', 'rgba(255, 255, 255, 0.1)']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={{
                     borderRadius: 20,
-                    padding: 20,
+                    padding: 18,
                     flexDirection: 'row',
                     alignItems: 'center',
                     borderWidth: 3,
@@ -151,27 +169,25 @@ const LeaderboardScreen = () => {
                   }}
                 >
                   {/* Gem Icon */}
-                  <Image source={TIER_COLORS[1].gem} style={{ width: 80, height: 80, marginRight: 16 }} resizeMode="contain" />
+                  <Image source={TIER_COLORS[1].gem} style={{ width: 72, height: 72, marginRight: 16 }} resizeMode="contain" />
 
                   {/* Content */}
                   <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                      <Image source={CROWN_IMAGE} style={{ width: 32, height: 32 }} resizeMode="contain" />
-                      <View style={{ backgroundColor: `${TIER_COLORS[1].bg}40`, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
-                        <Text style={{ fontSize: 11, fontWeight: '900', color: TIER_COLORS[1].light, letterSpacing: 0.5 }}>1ST PLACE</Text>
-                      </View>
+                    <View style={{ backgroundColor: `${TIER_COLORS[1].bg}40`, paddingHorizontal: 12, paddingVertical: 5, borderRadius: 8, alignSelf: 'flex-start', marginBottom: 10 }}>
+                      <Text style={{ fontSize: 11, fontWeight: '900', color: TIER_COLORS[1].light, letterSpacing: 0.5 }}>1ST PLACE</Text>
                     </View>
 
-                    <Text style={{ fontSize: 18, fontWeight: '900', color: '#FFFFFF', marginBottom: 8 }} numberOfLines={1}>
+                    <Text style={{ fontSize: 19, fontWeight: '900', color: '#FFFFFF', marginBottom: 10 }} numberOfLines={1}>
                       {topThree[0].username}
                     </Text>
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                      <Text style={{ fontSize: 32, fontWeight: '900', color: TIER_COLORS[1].light, letterSpacing: -1 }}>
-                        {mode === 'weekly' ? (topThree[0].weeklyXP || 0).toLocaleString() : topThree[0].total_xp.toLocaleString()} XP
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                      <Text style={{ fontSize: 28, fontWeight: '900', color: TIER_COLORS[1].light, letterSpacing: -1 }}>
+                        {mode === 'weekly' ? (topThree[0].weeklyXP || 0).toLocaleString() : topThree[0].total_xp.toLocaleString()}
                       </Text>
-                      <View style={{ backgroundColor: `${TIER_COLORS[1].bg}30`, paddingHorizontal: 12, paddingVertical: 5, borderRadius: 10 }}>
-                        <Text style={{ fontSize: 12, fontWeight: '800', color: TIER_COLORS[1].light }}>LVL {topThree[0].current_level}</Text>
+                      <Text style={{ fontSize: 14, fontWeight: '700', color: '#9CA3AF' }}>XP</Text>
+                      <View style={{ backgroundColor: `${TIER_COLORS[1].bg}30`, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
+                        <Text style={{ fontSize: 11, fontWeight: '800', color: TIER_COLORS[1].light }}>LVL {topThree[0].current_level}</Text>
                       </View>
                     </View>
                   </View>
@@ -206,8 +222,9 @@ const LeaderboardScreen = () => {
                     </Text>
 
                     <Text style={{ fontSize: 22, fontWeight: '900', color: TIER_COLORS[2].light, letterSpacing: -0.5 }}>
-                      {mode === 'weekly' ? (topThree[1].weeklyXP || 0).toLocaleString() : topThree[1].total_xp.toLocaleString()} XP
+                      {mode === 'weekly' ? (topThree[1].weeklyXP || 0).toLocaleString() : topThree[1].total_xp.toLocaleString()}
                     </Text>
+                    <Text style={{ fontSize: 10, color: '#9CA3AF', fontWeight: '600' }}>XP</Text>
 
                     <View style={{ backgroundColor: `${TIER_COLORS[2].bg}30`, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginTop: 8 }}>
                       <Text style={{ fontSize: 10, fontWeight: '800', color: TIER_COLORS[2].light }}>LVL {topThree[1].current_level}</Text>
@@ -241,8 +258,9 @@ const LeaderboardScreen = () => {
                     </Text>
 
                     <Text style={{ fontSize: 22, fontWeight: '900', color: TIER_COLORS[3].light, letterSpacing: -0.5 }}>
-                      {mode === 'weekly' ? (topThree[2].weeklyXP || 0).toLocaleString() : topThree[2].total_xp.toLocaleString()} XP
+                      {mode === 'weekly' ? (topThree[2].weeklyXP || 0).toLocaleString() : topThree[2].total_xp.toLocaleString()}
                     </Text>
+                    <Text style={{ fontSize: 10, color: '#9CA3AF', fontWeight: '600' }}>XP</Text>
 
                     <View style={{ backgroundColor: `${TIER_COLORS[3].bg}30`, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginTop: 8 }}>
                       <Text style={{ fontSize: 10, fontWeight: '800', color: TIER_COLORS[3].light }}>LVL {topThree[2].current_level}</Text>
