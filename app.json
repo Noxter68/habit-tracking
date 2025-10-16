@@ -13,7 +13,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.david.mindfulhabits",
+      "bundleIdentifier": "com.davidplanchon.nuvaria",
       "usesAppleSignIn": true,
       "buildNumber": "1.0.0"
     },
@@ -22,7 +22,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#6366f1"
       },
-      "package": "com.david.mindfulhabits",
+      "package": "com.davidplanchon.nuvaria",
       "versionCode": 1
     },
     "plugins": ["expo-web-browser", "expo-apple-authentication"],

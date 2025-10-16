@@ -52,14 +52,19 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
     setLoadingOfferings(true);
     try {
       const availableOfferings = await RevenueCatService.getOfferings();
+      console.log(availableOfferings);
+      if (availableOfferings.length === 0) {
+        Alert.alert('Error', 'No subscription plans available. Please try again later.');
+        setLoadingOfferings(false);
+        return;
+      }
+
       setOfferings(availableOfferings);
 
-      // Auto-select first (usually monthly) offering
-      if (availableOfferings.length > 0) {
-        setSelectedOffering(availableOfferings[0]);
-      } else {
-        Alert.alert('Error', 'No subscription plans available at the moment. Please try again later.');
-      }
+      // Auto-select yearly plan if available (better value), otherwise monthly
+      const yearlyPlan = availableOfferings.find((o) => o.identifier === '$rc_annual' || o.product.title.toLowerCase().includes('year'));
+
+      setSelectedOffering(yearlyPlan || availableOfferings[0]);
     } catch (error) {
       console.error('Error loading offerings:', error);
       Alert.alert('Error', 'Failed to load subscription options. Please try again.');
@@ -164,33 +169,44 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
           </Animated.View>
 
           {/* Pricing Card */}
-          <Animated.View entering={FadeInUp.delay(700)} style={tw`mb-6`}>
-            <View style={tw`bg-white rounded-3xl p-6 shadow-lg border-2 border-stone-200`}>
-              <View style={tw`items-center mb-6`}>
-                <Text style={tw`text-sm font-semibold text-stone-600 uppercase tracking-wide mb-2`}>Premium Plan</Text>
+          {/* Plan Selection - Only show if we have multiple plans */}
+          {offerings.length > 1 && (
+            <View style={tw`mb-6`}>
+              {offerings.map((offering) => {
+                const isYearly = offering.identifier === '$rc_annual' || offering.product.title.toLowerCase().includes('year');
+                const isSelected = selectedOffering?.identifier === offering.identifier;
 
-                {loadingOfferings ? (
-                  <ActivityIndicator size="large" color="#78716C" style={tw`my-4`} />
-                ) : (
-                  <>
-                    <View style={tw`flex-row items-baseline`}>
-                      <Text style={tw`text-5xl font-bold text-stone-800`}>{selectedOffering?.priceString || '$5.99'}</Text>
-                      <Text style={tw`text-xl text-stone-600 ml-2`}>/month</Text>
+                return (
+                  <Pressable
+                    key={offering.identifier}
+                    onPress={() => setSelectedOffering(offering)}
+                    style={({ pressed }) => [
+                      tw`mb-3 p-4 rounded-xl border-2 flex-row items-center justify-between`,
+                      isSelected ? tw`border-stone-600 bg-stone-50` : tw`border-stone-200 bg-white`,
+                      pressed && tw`opacity-70`,
+                    ]}
+                  >
+                    <View style={tw`flex-1`}>
+                      <Text style={tw`text-base font-semibold text-stone-800 mb-1`}>{isYearly ? 'Yearly' : 'Monthly'}</Text>
+                      <Text style={tw`text-lg font-bold text-stone-900`}>
+                        {offering.priceString}
+                        {isYearly && <Text style={tw`text-sm font-normal text-stone-600`}> ({(offering.price / 12).toFixed(2)}/mo)</Text>}
+                      </Text>
+                      {isYearly && (
+                        <Text style={tw`text-xs font-medium text-emerald-600 mt-1`}>
+                          Save {Math.round((1 - offering.price / 12 / offerings.find((o) => !o.product.title.toLowerCase().includes('year'))!.price) * 100)}%
+                        </Text>
+                      )}
                     </View>
 
-                    <Text style={tw`text-sm text-stone-500 mt-2`}>Cancel anytime</Text>
-                  </>
-                )}
-              </View>
-
-              {/* CTA Button */}
-              <Pressable onPress={handleSubscribe} disabled={loading || loadingOfferings} style={({ pressed }) => [pressed && tw`opacity-90 scale-98`]}>
-                <LinearGradient colors={['#78716C', '#57534E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-2xl py-4 px-6 items-center justify-center shadow-lg`}>
-                  {loading ? <ActivityIndicator color="#ffffff" /> : <Text style={tw`text-white text-lg font-bold`}>Start Premium</Text>}
-                </LinearGradient>
-              </Pressable>
+                    <View style={[tw`w-6 h-6 rounded-full border-2 items-center justify-center`, isSelected ? tw`border-stone-600 bg-stone-600` : tw`border-stone-300`]}>
+                      {isSelected && <Check size={14} color="#fff" strokeWidth={3} />}
+                    </View>
+                  </Pressable>
+                );
+              })}
             </View>
-          </Animated.View>
+          )}
 
           {/* Trust Indicators */}
           <Animated.View entering={FadeInUp.delay(800)} style={tw`items-center mb-4`}>
