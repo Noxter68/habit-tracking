@@ -59,9 +59,9 @@ import {
   BedSingle,
   Clock3 as AlarmClockOff,
   Droplets,
-  GlassWater,
+  Wine as GlassWater,
   Coffee as Cup,
-  Bottle,
+  Milk as Bottle,
   Citrus,
   Wine,
   BeerOff,
@@ -71,7 +71,6 @@ import {
   Carrot,
   ClipboardList,
   ShoppingBasket,
-  Ban,
   CarOff,
   XCircle,
   Wallet,
@@ -98,10 +97,7 @@ import {
   HomeX as HomeOff,
   MoonStar,
   Sun as SunMedium,
-  AlarmSmoke,
-  Sparkles,
-  Sunrise,
-  PersonStanding,
+  Bell as AlarmSmoke,
 } from 'lucide-react-native';
 
 // ============================================================================
@@ -305,7 +301,7 @@ export const getTasksForCategory = (category: string, type: HabitType): Task[] =
   const taskLibrary: Record<string, { good: Task[]; bad: Task[] }> = {
     fitness: {
       good: [
-        { id: 'morning-run', name: 'Morning Run', description: 'Go for a run or jog', icon: PersonStanding, duration: '30 min' },
+        { id: 'morning-run', name: 'Morning Run', description: 'Go for a run or jog', icon: User, duration: '30 min' },
         { id: 'gym-workout', name: 'Gym Workout', description: 'Complete gym session', icon: Dumbbell, duration: '45 min' },
         { id: 'yoga-session', name: 'Yoga Practice', description: 'Complete yoga routine', icon: Flower2, duration: '20 min' },
         { id: 'push-ups', name: '50 Push-ups', description: 'Do 50 push-ups throughout the day', icon: Activity, duration: '10 min' },
@@ -320,7 +316,7 @@ export const getTasksForCategory = (category: string, type: HabitType): Task[] =
     },
     health: {
       good: [
-        { id: 'meditation', name: 'Meditation', description: 'Mindful meditation practice', icon: Sparkles, duration: '15 min' },
+        { id: 'meditation', name: 'Meditation', description: 'Mindful meditation practice', icon: Stars, duration: '15 min' },
         { id: 'deep-breathing', name: 'Deep Breathing', description: '5 minutes of breathing exercises', icon: Wind, duration: '5 min' },
         { id: 'cold-shower', name: 'Cold Shower', description: 'Take a cold shower', icon: Droplet, duration: '5 min' },
         { id: 'vitamins', name: 'Take Vitamins', description: 'Daily vitamin supplements', icon: Pill, duration: '1 min' },
@@ -335,7 +331,7 @@ export const getTasksForCategory = (category: string, type: HabitType): Task[] =
     },
     nutrition: {
       good: [
-        { id: 'healthy-breakfast', name: 'Healthy Breakfast', description: 'Nutritious morning meal', icon: Sunrise, duration: '20 min' },
+        { id: 'healthy-breakfast', name: 'Healthy Breakfast', description: 'Nutritious morning meal', icon: Sun, duration: '20 min' },
         { id: 'fruit-serving', name: 'Eat Fruits', description: '2-3 servings of fruit', icon: Apple, duration: '5 min' },
         { id: 'vegetables', name: 'Eat Vegetables', description: '5 servings of vegetables', icon: Salad, duration: 'Meals' },
         { id: 'meal-prep', name: 'Meal Prep', description: 'Prepare healthy meals', icon: ChefHat, duration: '30 min' },
@@ -380,7 +376,7 @@ export const getTasksForCategory = (category: string, type: HabitType): Task[] =
     },
     mindfulness: {
       good: [
-        { id: 'meditation', name: 'Meditation', description: 'Mindful meditation', icon: Sparkles, duration: '15 min' },
+        { id: 'meditation', name: 'Meditation', description: 'Mindful meditation', icon: Stars, duration: '15 min' },
         { id: 'gratitude', name: 'Gratitude Practice', description: 'List 3 things', icon: Heart, duration: '5 min' },
         { id: 'breathing', name: 'Breathing Exercise', description: 'Deep breathing', icon: Wind, duration: '5 min' },
         { id: 'nature-walk', name: 'Nature Walk', description: 'Mindful walking', icon: Trees, duration: '20 min' },
@@ -420,7 +416,6 @@ export const getTasksForCategory = (category: string, type: HabitType): Task[] =
         { id: 'no-energy-drinks', name: 'No Energy Drinks', description: 'Avoid energy drinks', icon: Zap, duration: 'All day' },
       ],
     },
-    // BAD HABIT CATEGORIES
     smoking: {
       good: [
         { id: 'breathing-exercises', name: 'Breathing Exercises', description: 'Deep breathing when cravings hit', icon: Wind, duration: '5 min' },
@@ -440,7 +435,7 @@ export const getTasksForCategory = (category: string, type: HabitType): Task[] =
         { id: 'grocery-smart', name: 'Smart Shopping', description: 'Buy whole foods only', icon: ShoppingBasket, duration: 'Weekly' },
       ],
       bad: [
-        { id: 'no-junk-food', name: 'No Junk Food', description: 'Avoid processed foods', icon: Ban, duration: 'All day' },
+        { id: 'no-junk-food', name: 'No Junk Food', description: 'Avoid processed foods', icon: BanIcon, duration: 'All day' },
         { id: 'no-drive-thru', name: 'No Drive-Thrus', description: 'Skip fast food restaurants', icon: CarOff, duration: 'All day' },
         { id: 'no-vending-machine', name: 'No Vending Machines', description: 'Avoid unhealthy snacks', icon: XCircle, duration: 'All day' },
       ],
@@ -483,7 +478,7 @@ export const getTasksForCategory = (category: string, type: HabitType): Task[] =
     },
     'negative-thinking': {
       good: [
-        { id: 'positive-affirmations', name: 'Positive Affirmations', description: 'Practice daily affirmations', icon: Sparkles, duration: '5 min' },
+        { id: 'positive-affirmations', name: 'Positive Affirmations', description: 'Practice daily affirmations', icon: Stars, duration: '5 min' },
         { id: 'gratitude-journal', name: 'Gratitude Journal', description: 'Write 3 grateful things', icon: NotebookPen, duration: '10 min' },
         { id: 'reframe-thoughts', name: 'Reframe Thoughts', description: 'Find positive perspectives', icon: RefreshCw, duration: 'As needed' },
       ],
@@ -508,7 +503,7 @@ export const getTasksForCategory = (category: string, type: HabitType): Task[] =
     oversleeping: {
       good: [
         { id: 'consistent-bedtime', name: 'Consistent Bedtime', description: 'Sleep at same time', icon: MoonStar, duration: 'Evening' },
-        { id: 'morning-routine', name: 'Morning Routine', description: 'Exciting morning activities', icon: Sunrise, duration: '30 min' },
+        { id: 'morning-routine', name: 'Morning Routine', description: 'Exciting morning activities', icon: Sun, duration: '30 min' },
         { id: 'sunlight-exposure', name: 'Get Sunlight', description: 'Expose to morning light', icon: SunMedium, duration: '15 min' },
       ],
       bad: [
