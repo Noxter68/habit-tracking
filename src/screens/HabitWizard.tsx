@@ -1,16 +1,18 @@
-// src/screens/HabitWizard.tsx (Improved Navigation Section)
+// src/screens/HabitWizard.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, ScrollView, Alert, ImageBackground } from 'react-native';
+import { View, Text, Pressable, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { ChevronLeft, ChevronRight, X, Check } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import tw from '../lib/tailwind';
 import { Habit, HabitType } from '../types';
 import { useHabits } from '../context/HabitContext';
 import { RootStackParamList } from '../../App';
 
+import HabitTypeCards from '@/components/wizard/HabitTypeSelector';
 import HabitCategorySelector from '../components/wizard/HabitCategorySelector';
 import TaskSelector from '../components/wizard/TaskSelector';
 import GoalSetting from '../components/wizard/GoalSetting';
@@ -19,15 +21,12 @@ import NotificationSetup from '../components/wizard/NotificationSetup';
 import ProgressIndicator from '../components/ProgressIndicator';
 import { getCategoryName } from '../utils/habitHelpers';
 import { NotificationService } from '../services/notificationService';
-import HabitTypeCards from '@/components/wizard/HabitTypeSelector';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useSubscription } from '@/context/SubscriptionContext';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'HabitWizard'>;
 
 const HabitWizard: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const { addHabit, habits } = useHabits();
+  const { addHabit } = useHabits();
   const [step, setStep] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
   const [previousCategory, setPreviousCategory] = useState<string | undefined>();
@@ -43,8 +42,6 @@ const HabitWizard: React.FC = () => {
     dailyTasks: {},
   });
 
-  const { canCreateHabit, habitCount, maxHabits, isPremium, checkHabitLimit } = useSubscription();
-
   const totalSteps = 6;
   const isFirstStep = step === 1;
   const isLastStep = step === totalSteps;
@@ -56,10 +53,9 @@ const HabitWizard: React.FC = () => {
     }
   }, [step]);
 
-  // CRITICAL FIX: Reset tasks when category changes
+  // Reset tasks when category changes
   useEffect(() => {
     if (habitData.category && habitData.category !== previousCategory) {
-      // Category has changed, reset the tasks
       setHabitData((prev) => ({ ...prev, tasks: [] }));
       setPreviousCategory(habitData.category);
     }
@@ -83,62 +79,47 @@ const HabitWizard: React.FC = () => {
     if (step < totalSteps) {
       setStep(step + 1);
     } else {
-      // FINAL STEP - CREATE HABIT
-      await handleCreateHabit();
-    }
-  };
+      setIsCreating(true);
 
-  const handleCreateHabit = async () => {
-    // ✅ CHECK HABIT LIMIT BEFORE CREATING
-    const canCreate = await checkHabitLimit();
+      // Auto-generate name based on category and type
+      const habitName = getCategoryName(habitData.category!, habitData.type!);
 
-    if (!canCreate) {
-      // User has reached their limit - redirect to paywall
-      navigation.navigate('Paywall', { source: 'habit_limit' });
-      return;
-    }
+      // Create the habit
+      const newHabit: Habit = {
+        id: Date.now().toString(),
+        name: habitName,
+        type: habitData.type || 'good',
+        category: habitData.category || 'health',
+        tasks: habitData.tasks || [],
+        dailyTasks: {},
+        frequency: habitData.frequency || 'daily',
+        notifications: habitData.notifications || false,
+        notificationTime: habitData.notificationTime,
+        hasEndGoal: habitData.hasEndGoal || false,
+        endGoalDays: habitData.endGoalDays,
+        totalDays: habitData.totalDays || 61,
+        currentStreak: 0,
+        bestStreak: 0,
+        completedDays: [],
+        createdAt: new Date(),
+        customDays: habitData.customDays,
+      };
 
-    setIsCreating(true);
+      try {
+        // Add habit to database
+        await addHabit(newHabit);
 
-    // Auto-generate name based on category and type
-    const habitName = getCategoryName(habitData.category!, habitData.type!);
+        // Schedule notifications if enabled
+        if (newHabit.notifications && newHabit.notificationTime) {
+          await NotificationService.scheduleHabitNotifications(newHabit);
+        }
 
-    // Create the habit
-    const newHabit: Habit = {
-      id: Date.now().toString(),
-      name: habitName,
-      type: habitData.type || 'good',
-      category: habitData.category || 'health',
-      tasks: habitData.tasks || [],
-      dailyTasks: {},
-      frequency: habitData.frequency || 'daily',
-      notifications: habitData.notifications || false,
-      notificationTime: habitData.notificationTime,
-      hasEndGoal: habitData.hasEndGoal || false,
-      endGoalDays: habitData.endGoalDays,
-      totalDays: habitData.totalDays || 61,
-      currentStreak: 0,
-      bestStreak: 0,
-      completedDays: [],
-      createdAt: new Date(),
-      customDays: habitData.customDays,
-    };
-
-    try {
-      // Add habit to database
-      await addHabit(newHabit);
-
-      // Schedule notifications if enabled
-      if (newHabit.notifications && newHabit.notificationTime) {
-        await NotificationService.scheduleHabitNotifications(newHabit);
+        // Navigate to dashboard
+        navigation.replace('MainTabs');
+      } catch (error) {
+        setIsCreating(false);
+        Alert.alert('Error', 'Failed to create habit. Please try again.');
       }
-
-      // Navigate to dashboard
-      navigation.replace('MainTabs');
-    } catch (error) {
-      console.error('Error creating habit:', error);
-      setIsCreating(false);
-      Alert.alert('Error', 'Failed to create habit. Please try again.');
     }
   };
 
@@ -198,35 +179,52 @@ const HabitWizard: React.FC = () => {
     }
   };
 
+  // Get gradient colors based on step
+  const getStepGradient = () => {
+    switch (step) {
+      case 1:
+        return ['#8b5cf6', '#7c3aed']; // Amethyst
+      case 2:
+        return habitData.type === 'good' ? ['#10b981', '#059669'] : ['#ef4444', '#dc2626']; // Jade or Ruby
+      case 3:
+        return habitData.type === 'good' ? ['#fbbf24', '#f59e0b'] : ['#8b5cf6', '#7c3aed']; // Topaz or Amethyst
+      case 4:
+        return ['#ef4444', '#dc2626']; // Ruby
+      case 5:
+        return ['#06b6d4', '#0891b2']; // Cyan
+      case 6:
+        return ['#fbbf24', '#f59e0b']; // Topaz
+      default:
+        return ['#8b5cf6', '#7c3aed'];
+    }
+  };
+
+  const gradientColors = getStepGradient();
+
   return (
-    <SafeAreaView style={tw`flex-1 bg-stone-50`}>
+    <SafeAreaView style={tw`flex-1 bg-stone-50`} edges={['top']}>
       <View style={tw`flex-1`}>
-        {/* Header */}
+        {/* Header with Progress */}
         <View style={tw`px-5 py-4`}>
           <ProgressIndicator current={step} total={totalSteps} />
-          {!isPremium && (
-            <View style={tw`mt-3 mx-5 bg-amber-50 border border-amber-200 rounded-xl p-3`}>
-              <Text style={tw`text-sm text-amber-800 text-center font-medium`}>
-                Free plan: {habitCount} of {maxHabits} habits created
-              </Text>
-            </View>
-          )}
         </View>
+
         {/* Content */}
-        <ScrollView style={tw`flex-1`} showsVerticalScrollIndicator={false} contentContainerStyle={tw`pb-4`}>
+        <ScrollView style={tw`flex-1`} showsVerticalScrollIndicator={false} contentContainerStyle={tw`pb-4 mt-4`}>
           <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)} key={step}>
             {renderStep()}
           </Animated.View>
         </ScrollView>
 
-        <View style={tw`bg-quartz-50 border-t border-quartz-200`}>
-          <ImageBackground source={require('../../assets/interface/quartz-texture.png')} style={tw`px-5 py-4`} imageStyle={{ opacity: 0.05 }} resizeMode="cover">
+        {/* Navigation Footer */}
+        <View style={tw`bg-white border-t border-quartz-200 pb-0`}>
+          <View style={tw`px-5 pt-4 pb-2`}>
             <View style={tw`flex-row gap-3`}>
               {/* Back/Cancel Button */}
               <Pressable
                 onPress={handleBack}
                 disabled={isCreating}
-                style={({ pressed }) => [tw`flex-1 py-4 rounded-2xl`, tw`bg-sand border border-quartz-200`, pressed && tw`opacity-80`, isCreating && tw`opacity-50`]}
+                style={({ pressed }) => [tw`flex-1 py-4 rounded-2xl bg-stone-100 border border-stone-200`, pressed && tw`opacity-80`, isCreating && tw`opacity-50`]}
               >
                 <View style={tw`flex-row items-center justify-center`}>
                   {isFirstStep ? (
@@ -245,7 +243,7 @@ const HabitWizard: React.FC = () => {
 
               {/* Next/Create Button */}
               <Pressable onPress={handleNext} disabled={isCreating} style={({ pressed }) => [tw`flex-1 py-4 rounded-2xl overflow-hidden`, pressed && tw`opacity-90`, isCreating && tw`opacity-50`]}>
-                <LinearGradient colors={isLastStep ? ['#9CA3AF', '#6B7280'] : ['#6B7280', '#4B5563']} style={tw`absolute inset-0`} />
+                <LinearGradient colors={gradientColors} style={tw`absolute inset-0`} />
                 <View style={tw`flex-row items-center justify-center`}>
                   {isCreating ? (
                     <Text style={tw`text-white font-medium text-base`}>Creating...</Text>
@@ -270,7 +268,7 @@ const HabitWizard: React.FC = () => {
                 Step {step} of {totalSteps}
               </Text>
             </View>
-          </ImageBackground>
+          </View>
         </View>
       </View>
     </SafeAreaView>
