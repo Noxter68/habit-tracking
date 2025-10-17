@@ -2,7 +2,7 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { TrendingUp, ShieldOff, Zap } from 'lucide-react-native';
+import { TrendingUp, ShieldOff, Target, CheckCircle2, XCircle } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import tw from '../../lib/tailwind';
 import { HabitType } from '../../types';
@@ -13,9 +13,9 @@ interface HabitTypeCardsProps {
   onSelect: (type: HabitType) => void;
 }
 
-// Get icon for habit type
+// Get icon for habit type with better semantic meaning
 const getIcon = (type: HabitType) => {
-  return type === 'good' ? TrendingUp : ShieldOff;
+  return type === 'good' ? CheckCircle2 : XCircle;
 };
 
 // Get quote based on selection
@@ -55,7 +55,7 @@ const HabitTypeCards: React.FC<HabitTypeCardsProps> = ({ selected, onSelect }) =
               <Pressable onPress={() => onSelect(type.id)} style={({ pressed }) => [tw`rounded-3xl overflow-hidden`, pressed && tw`opacity-90`]}>
                 <LinearGradient
                   colors={isSelected ? type.gradient : ['#F9FAFB', '#F3F4F6']}
-                  style={[tw`p-5`, isSelected ? { borderWidth: 2, borderColor: type.gradient[1] + 'CC' } : { borderWidth: 2, borderColor: '#E5E7EB' }]}
+                  style={[tw`p-5 rounded-3xl`, isSelected ? { borderWidth: 2, borderColor: type.gradient[1] + 'CC' } : { borderWidth: 1, borderColor: '#D1D5DB' }]}
                 >
                   <View style={tw`flex-row items-center justify-between`}>
                     <View style={tw`flex-row items-center flex-1`}>
@@ -90,14 +90,11 @@ const HabitTypeCards: React.FC<HabitTypeCardsProps> = ({ selected, onSelect }) =
         })}
       </View>
 
-      {/* Professional Tip Section */}
-      <View style={tw`bg-amber-50 rounded-2xl p-4 border-l-3 border-l-amber-500`}>
-        <View style={tw`flex-row items-center mb-2`}>
-          <Zap size={18} color="#f59e0b" strokeWidth={2} style={tw`mr-2`} />
-          <Text style={tw`text-sm font-semibold text-amber-900`}>{tips.habitType[0].title}</Text>
-        </View>
-        <Text style={tw`text-sm text-amber-800 leading-5`}>{tips.habitType[0].content}</Text>
-      </View>
+      {/* Professional Tip Section - Simplified without icon */}
+      <LinearGradient colors={['#fbbf24', '#f59e0b', '#d97706']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-2xl p-4 border border-sky-200`}>
+        <Text style={tw`text-sm font-semibold text-white mb-1.5`}>{tips.habitType[0].title}</Text>
+        <Text style={tw`text-sm text-white leading-5`}>{tips.habitType[0].content}</Text>
+      </LinearGradient>
     </View>
   );
 };

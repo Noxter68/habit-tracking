@@ -3,7 +3,7 @@ import React from 'react';
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Calendar, CalendarDays, CalendarRange, TrendingUp } from 'lucide-react-native';
+import { Calendar, CalendarDays, CalendarClock, Award, Sparkles } from 'lucide-react-native';
 import tw from '../../lib/tailwind';
 import { quotes, tips } from '../../utils/habitHelpers';
 
@@ -38,7 +38,7 @@ const FrequencySelector: React.FC<FrequencySelectorProps> = ({ selected, customD
       title: 'Custom Schedule',
       subtitle: 'Choose specific days',
       description: 'Flexible schedule around commitments',
-      icon: CalendarRange,
+      icon: CalendarClock,
       gradient: ['#8b5cf6', '#7c3aed'],
       stats: 'Adapt to your lifestyle',
     },
@@ -62,42 +62,45 @@ const FrequencySelector: React.FC<FrequencySelectorProps> = ({ selected, customD
         </View>
 
         {/* Frequency Cards */}
-        <View style={tw`gap-4 mb-6`}>
+        <View style={tw`gap-3 mb-6`}>
           {frequencies.map((frequency, index) => {
             const Icon = frequency.icon;
             const isSelected = selected === frequency.id;
 
             return (
-              <Animated.View key={frequency.id} entering={FadeInDown.delay(index * 100).duration(500)}>
-                <Pressable onPress={() => onSelect(frequency.id)} style={({ pressed }) => [tw`rounded-2xl overflow-hidden`, pressed && tw`opacity-90`]}>
-                  <LinearGradient
-                    colors={isSelected ? [frequency.gradient[0] + 'E6', frequency.gradient[1]] : ['#FAFAFA', '#F5F5F5']}
-                    style={[tw`p-5`, isSelected ? { borderWidth: 2, borderColor: frequency.gradient[1] + 'DD' } : { borderWidth: 2, borderColor: '#E5E7EB' }]}
-                  >
-                    <View style={tw`flex-row items-start justify-between mb-3`}>
-                      <View style={tw`flex-row items-center flex-1`}>
-                        <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-4`, isSelected ? tw`bg-white/25` : tw`bg-quartz-50`]}>
-                          <Icon size={24} color={isSelected ? '#ffffff' : '#6B7280'} strokeWidth={2} />
-                        </View>
-
-                        <View style={tw`flex-1`}>
-                          <Text style={[tw`text-lg font-semibold mb-0.5`, isSelected ? tw`text-white` : tw`text-quartz-800`]}>{frequency.title}</Text>
-                          <Text style={[tw`text-sm`, isSelected ? tw`text-white/80` : tw`text-quartz-600`]}>{frequency.subtitle}</Text>
-                        </View>
+              <Animated.View key={frequency.id} entering={FadeInDown.delay(index * 30).duration(400)}>
+                <Pressable
+                  onPress={() => onSelect(frequency.id)}
+                  style={({ pressed }) => [tw`rounded-2xl overflow-hidden`, { borderWidth: 1, borderColor: isSelected ? 'transparent' : '#e5e7eb' }, pressed && tw`opacity-90`]}
+                >
+                  <LinearGradient colors={isSelected ? [frequency.gradient[0], `${frequency.gradient[1]}dd`] : ['#ffffff', '#f9fafb']} style={tw`p-4`}>
+                    <View style={tw`flex-row items-start`}>
+                      {/* Icon Container */}
+                      <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-3.5`, isSelected ? tw`bg-white/25` : tw`bg-quartz-100`]}>
+                        <Icon size={24} color={isSelected ? '#ffffff' : '#6B7280'} strokeWidth={2} />
                       </View>
 
-                      <View style={[tw`w-6 h-6 rounded-full border-2`, isSelected ? tw`border-white bg-white/30` : tw`border-quartz-300`]}>
-                        {isSelected && <View style={tw`w-2.5 h-2.5 bg-white rounded-full m-auto`} />}
+                      {/* Text Content */}
+                      <View style={tw`flex-1 mr-3 pt-0.5`}>
+                        <Text style={[tw`text-base font-semibold mb-0.5`, isSelected ? tw`text-white` : tw`text-quartz-800`]}>{frequency.title}</Text>
+                        <Text style={[tw`text-sm leading-5 mb-1.5`, isSelected ? tw`text-white/90` : tw`text-quartz-600`]}>{frequency.subtitle}</Text>
+                        <Text style={[tw`text-sm leading-5`, isSelected ? tw`text-white/85` : tw`text-quartz-600`]}>{frequency.description}</Text>
+
+                        {isSelected && (
+                          <View style={tw`flex-row items-center mt-2`}>
+                            <Sparkles size={12} color="#ffffff" strokeWidth={2} style={tw`mr-1.5`} />
+                            <Text style={tw`text-xs text-white/90 font-medium`}>{frequency.stats}</Text>
+                          </View>
+                        )}
                       </View>
+
+                      {/* Selection Indicator */}
+                      {isSelected && (
+                        <View style={tw`w-5.5 h-5.5 rounded-full bg-white/30 items-center justify-center flex-shrink-0 mt-0.5`}>
+                          <View style={tw`w-2 h-2 bg-white rounded-full`} />
+                        </View>
+                      )}
                     </View>
-
-                    <Text style={[tw`text-sm leading-5 mb-2`, isSelected ? tw`text-white/90` : tw`text-quartz-600`]}>{frequency.description}</Text>
-
-                    {isSelected && (
-                      <View style={tw`bg-white/10 rounded-lg px-3 py-2 mt-2`}>
-                        <Text style={tw`text-xs text-white/90 font-medium`}>✨ {frequency.stats}</Text>
-                      </View>
-                    )}
                   </LinearGradient>
                 </Pressable>
               </Animated.View>
@@ -111,17 +114,17 @@ const FrequencySelector: React.FC<FrequencySelectorProps> = ({ selected, customD
             <Text style={tw`text-sm font-medium text-quartz-700 mb-3`}>Select days of the week:</Text>
             <View style={tw`flex-row flex-wrap gap-2`}>
               {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => {
-                const isSelected = customDays?.includes(index);
+                const isDaySelected = customDays?.includes(index);
                 return (
                   <Pressable
                     key={day}
                     onPress={() => {
-                      const newDays = isSelected ? customDays?.filter((d) => d !== index) : [...(customDays || []), index];
+                      const newDays = isDaySelected ? customDays?.filter((d) => d !== index) : [...(customDays || []), index];
                       onSelect('custom', newDays);
                     }}
-                    style={[tw`px-4 py-3 rounded-xl`, isSelected ? tw`bg-purple-500` : tw`bg-quartz-100`]}
+                    style={({ pressed }) => [tw`px-4 py-3 rounded-xl`, isDaySelected ? tw`bg-purple-500` : tw`bg-quartz-100`, pressed && tw`opacity-80`]}
                   >
-                    <Text style={[tw`text-sm font-semibold`, isSelected ? tw`text-white` : tw`text-quartz-600`]}>{day}</Text>
+                    <Text style={[tw`text-sm font-semibold`, isDaySelected ? tw`text-white` : tw`text-quartz-600`]}>{day}</Text>
                   </Pressable>
                 );
               })}
@@ -130,9 +133,9 @@ const FrequencySelector: React.FC<FrequencySelectorProps> = ({ selected, customD
         )}
 
         {/* Professional Tip */}
-        <View style={tw`bg-emerald-50 rounded-2xl p-4 border-l-3 border-l-emerald-500`}>
+        <LinearGradient colors={['#d1fae5', '#a7f3d0', '#6ee7b7']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-2xl p-4 border border-emerald-200`}>
           <View style={tw`flex-row items-center mb-2`}>
-            <TrendingUp size={18} color="#059669" strokeWidth={2} style={tw`mr-2`} />
+            <Award size={18} color="#047857" strokeWidth={2} style={tw`mr-2`} />
             <Text style={tw`text-sm font-semibold text-emerald-900`}>{tips.frequency[0].title}</Text>
           </View>
           <Text style={tw`text-sm text-emerald-800 leading-5`}>
@@ -142,7 +145,7 @@ const FrequencySelector: React.FC<FrequencySelectorProps> = ({ selected, customD
               ? tips.frequency[1].content
               : 'Custom schedules are perfect for working around existing commitments and building sustainable routines.'}
           </Text>
-        </View>
+        </LinearGradient>
       </ScrollView>
     </View>
   );
