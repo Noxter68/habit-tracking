@@ -6,6 +6,7 @@ import { CheckCircle2 } from 'lucide-react-native';
 import { XPService } from '../../services/xpService';
 import { supabase } from '../../lib/supabase';
 import { useDebugMode } from '@/hooks/useDebugMode';
+import { getTodayString } from '@/utils/dateHelpers';
 
 interface TierTheme {
   gradient: string[];
@@ -50,7 +51,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
 
   const checkCollectionStatus = async () => {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayString();
 
       const { data, error } = await supabase.from('daily_challenges').select('xp_collected').eq('user_id', userId).eq('date', today).single();
 
@@ -93,7 +94,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
 
   const handleDebugReset = async () => {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayString();
 
       const { error } = await supabase
         .from('daily_challenges')

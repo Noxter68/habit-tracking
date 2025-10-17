@@ -29,6 +29,7 @@ import { tierThemes } from '@/utils/tierTheme';
 import { ImageBackground } from 'expo-image';
 import { TierCelebration } from '@/components/habits/TierCelebration';
 import { DebugButton } from '@/components/debug/DebugButton';
+import { getTodayString } from '@/utils/dateHelpers';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'HabitDetails'>;
 type RouteProps = RouteProp<RootStackParamList, 'HabitDetails'>;
@@ -83,7 +84,7 @@ const HabitDetails: React.FC = () => {
     setPrevTier(currentTierData.tier.name);
   }, [currentTierData.tier.name]);
 
-  const today = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const today = useMemo(() => getTodayString(), []);
   const todayTasks: DailyTaskProgress = habit.dailyTasks?.[today] || {
     completedTasks: [],
     allCompleted: false,

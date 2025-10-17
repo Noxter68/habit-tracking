@@ -1,5 +1,6 @@
 // src/services/habitProgressionService.ts - UPDATED FOR 6 TIERS
 import { supabase } from '@/lib/supabase';
+import { getLocalDateString } from '@/utils/dateHelpers';
 
 // ✅ Keep both tier systems!
 // Visual tiers for UI (3 tiers - gems)
@@ -149,7 +150,7 @@ export class HabitProgressionService {
     try {
       const from = new Date();
       from.setDate(from.getDate() - 30);
-      const fromIso = from.toISOString().split('T')[0];
+      const fromIso = getLocalDateString(from);
 
       const { data, error } = await supabase
         .from('task_completions')

@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Award, Target, TrendingUp, Calendar } from 'lucide-react-native';
 import tw from '@/lib/tailwind';
 import { Habit } from '@/types';
+import { getLocalDateString, getTodayString } from '@/utils/dateHelpers';
 
 interface DateDetailsCardProps {
   selectedDate: Date;
@@ -13,7 +14,7 @@ interface DateDetailsCardProps {
 }
 
 const DateDetailsCard: React.FC<DateDetailsCardProps> = ({ selectedDate, habit, onToggleDay }) => {
-  const dateString = selectedDate.toISOString().split('T')[0];
+  const dateString = getLocalDateString(selectedDate);
 
   // Get completion status for selected date
   const getCompletionStatus = () => {

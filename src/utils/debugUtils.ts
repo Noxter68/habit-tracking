@@ -1,5 +1,6 @@
 // src/utils/debugUtils.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getTodayString } from './dateHelpers';
 
 /**
  * Debug utilities for development and testing
@@ -11,7 +12,7 @@ export const DebugUtils = {
    */
   clearDailyChallengeForUser: async (userId: string): Promise<void> => {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayString();
       const collectedKey = `daily_challenge_${userId}_${today}`;
       await AsyncStorage.removeItem(collectedKey);
       console.log(`✅ Cleared daily challenge for user ${userId} on ${today}`);
@@ -44,7 +45,7 @@ export const DebugUtils = {
    */
   viewDailyChallengeStatus: async (userId: string): Promise<void> => {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayString();
       const collectedKey = `daily_challenge_${userId}_${today}`;
       const value = await AsyncStorage.getItem(collectedKey);
 
