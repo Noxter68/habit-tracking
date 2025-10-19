@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CheckCircle2 } from 'lucide-react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withSequence, Easing, runOnJS } from 'react-native-reanimated';
 import { XPService } from '../../services/xpService';
 import { supabase } from '../../lib/supabase';
 import { useDebugMode } from '@/hooks/useDebugMode';
@@ -29,13 +30,19 @@ interface DailyChallengeProps {
 const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTasksToday, onCollect, userId, currentLevelXP, xpForNextLevel, onLevelUp, debugMode = false, tierTheme }) => {
   const [isCollected, setIsCollected] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showXPBadge, setShowXPBadge] = useState(false);
 
   const isComplete = completedToday >= totalTasksToday && totalTasksToday > 0;
   const completionPercentage = totalTasksToday > 0 ? Math.min(100, Math.round((completedToday / totalTasksToday) * 100)) : 0;
 
   const { showTestButtons } = useDebugMode();
 
-  // Default to Amethyst if no tier theme provided
+  // Animation values
+  const cardScale = useSharedValue(1);
+  const cardTranslateY = useSharedValue(0);
+  const badgeTranslateY = useSharedValue(0);
+  const badgeOpacity = useSharedValue(0);
+
   const defaultTheme = {
     gradient: ['#9333EA', '#7C3AED'],
     accent: '#9333EA',
@@ -44,7 +51,6 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
 
   const theme = tierTheme || defaultTheme;
 
-  // Check collection status from DATABASE
   useEffect(() => {
     checkCollectionStatus();
   }, [userId, completedToday, totalTasksToday]);
@@ -66,29 +72,65 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
     }
   };
 
+  const hideBadge = () => {
+    setShowXPBadge(false);
+  };
+
   const handleCollect = async () => {
     if (!isComplete || isCollected || isAnimating) return;
 
     setIsAnimating(true);
 
+    // Quick bouncy bubble effect - like a playful jump
+    cardScale.value = withSequence(
+      withTiming(1.02, { duration: 60, easing: Easing.out(Easing.ease) }),
+      withSpring(0.98, { damping: 10, stiffness: 400 }),
+      withSpring(1, { damping: 12, stiffness: 300 })
+    );
+
+    cardTranslateY.value = withSequence(withTiming(-5, { duration: 75, easing: Easing.out(Easing.ease) }), withSpring(0, { damping: 10, stiffness: 350 }));
+
     try {
       const success = await XPService.collectDailyChallenge(userId);
 
       if (success) {
+        // Update local state immediately to prevent re-render jump
         setIsCollected(true);
-        onCollect(20);
+        setShowXPBadge(true);
 
-        // Check for level up
-        if (currentLevelXP + 20 >= xpForNextLevel && onLevelUp) {
-          setTimeout(() => {
-            onLevelUp();
-          }, 500);
-        }
+        // XP Badge float up animation
+        badgeTranslateY.value = 0;
+        badgeOpacity.value = 0;
+
+        badgeOpacity.value = withTiming(1, { duration: 200 });
+        badgeTranslateY.value = withSequence(
+          withTiming(-50, { duration: 1200, easing: Easing.out(Easing.cubic) }),
+          withTiming(-50, { duration: 0 }, (finished) => {
+            if (finished) {
+              runOnJS(hideBadge)();
+            }
+          })
+        );
+
+        badgeOpacity.value = withSequence(withTiming(1, { duration: 200 }), withTiming(1, { duration: 600 }), withTiming(0, { duration: 400 }));
+
+        // Delay the parent callback to avoid interrupting the animation
+        setTimeout(() => {
+          onCollect(20);
+
+          if (currentLevelXP + 20 >= xpForNextLevel && onLevelUp) {
+            setTimeout(() => {
+              onLevelUp();
+            }, 100);
+          }
+        }, 1300);
       }
     } catch (error) {
       console.error('Error collecting daily challenge:', error);
     } finally {
-      setIsAnimating(false);
+      setTimeout(() => {
+        setIsAnimating(false);
+      }, 1300);
     }
   };
 
@@ -114,7 +156,6 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
     }
   };
 
-  // Determine gradient and styles based on state
   const getCardStyle = () => {
     if (isCollected) {
       return {
@@ -138,7 +179,6 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
         borderColor: 'rgba(6, 182, 212, 0.4)',
       };
     }
-    // In progress - use tier theme
     return {
       gradient: [`${theme.accent}08`, `${theme.accent}05`, '#FAF9F7'],
       iconBg: `${theme.accent}15`,
@@ -154,160 +194,183 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
 
   const cardStyle = getCardStyle();
 
+  const cardAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: cardScale.value }, { translateY: cardTranslateY.value }],
+  }));
+
+  const badgeAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: badgeTranslateY.value }],
+    opacity: badgeOpacity.value,
+  }));
+
   return (
     <View>
-      <Pressable
-        onPress={handleCollect}
-        disabled={!isComplete || isCollected || isAnimating}
-        style={({ pressed }) => [
-          {
-            transform: [{ scale: pressed && isComplete && !isCollected ? 0.98 : 1 }],
-          },
-        ]}
-      >
-        {/* Card with gradient, border and shadow */}
-        <LinearGradient
-          colors={cardStyle.gradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{
-            borderRadius: 16,
-            padding: 16,
-            borderWidth: 1.5,
-            borderColor: cardStyle.borderColor,
-            shadowColor: cardStyle.shadowColor,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.12,
-            shadowRadius: 10,
-            elevation: 4,
-          }}
-        >
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-          >
-            {/* Left side: Icon + Text */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-              {/* Icon */}
-              <View
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 16,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: cardStyle.iconBg,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.08,
-                  shadowRadius: 4,
-                }}
-              >
-                {isCollected ? (
-                  <CheckCircle2 size={28} color="#9CA3AF" />
-                ) : isComplete ? (
-                  <Image source={require('../../../assets/interface/consumable-xp.png')} style={{ width: 40, height: 40 }} />
-                ) : (
-                  <Image source={require('../../../assets/interface/challenge.png')} style={{ width: 40, height: 40 }} />
-                )}
-              </View>
-
-              {/* Text */}
-              <View style={{ marginLeft: 12, flex: 1 }}>
-                <Text
-                  style={{
-                    fontSize: 11,
-                    fontWeight: '800',
-                    textTransform: 'uppercase',
-                    letterSpacing: 1,
-                    color: cardStyle.textPrimary,
-                  }}
-                >
-                  Daily Challenge
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    marginTop: 2,
-                    color: cardStyle.textSecondary,
-                    fontWeight: '600',
-                  }}
-                >
-                  {isCollected ? 'Collected! See you tomorrow' : isComplete ? 'Tap to claim 20 XP!' : `${totalTasksToday - completedToday} tasks to go`}
-                </Text>
-              </View>
-            </View>
-
-            {/* Right side: XP Badge */}
-            <View
-              style={{
-                borderRadius: 20,
+      <View style={{ position: 'relative' }}>
+        {/* Floating XP Badge */}
+        {showXPBadge && (
+          <Animated.View
+            style={[
+              {
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                marginLeft: -40,
+                marginTop: -20,
+                zIndex: 10,
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: '#06B6D4',
                 paddingHorizontal: 12,
                 paddingVertical: 6,
-                backgroundColor: cardStyle.badgeBg,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
+                borderRadius: 20,
+                shadowColor: '#06B6D4',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.4,
+                shadowRadius: 8,
+                elevation: 8,
+              },
+              badgeAnimatedStyle,
+            ]}
+          >
+            <Image source={require('../../../assets/interface/consumable-xp.png')} style={{ width: 20, height: 20, marginRight: 6 }} />
+            <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '700' }}>+20 XP</Text>
+          </Animated.View>
+        )}
+
+        <Animated.View style={cardAnimatedStyle}>
+          <Pressable
+            onPress={handleCollect}
+            disabled={!isComplete || isCollected || isAnimating}
+            style={({ pressed }) => [
+              {
+                transform: [{ scale: pressed && isComplete && !isCollected ? 0.98 : 1 }],
+              },
+            ]}
+          >
+            <LinearGradient
+              colors={cardStyle.gradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                borderRadius: 16,
+                padding: 16,
+                borderWidth: 1.5,
+                borderColor: cardStyle.borderColor,
+                shadowColor: cardStyle.shadowColor,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.12,
+                shadowRadius: 10,
+                elevation: 4,
               }}
             >
-              <Text
-                style={{
-                  fontSize: 13,
-                  fontWeight: '800',
-                  color: '#FFFFFF',
-                }}
-              >
-                {isCollected ? '✓' : '20 XP'}
-              </Text>
-            </View>
-          </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                  <View
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 16,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: cardStyle.iconBg,
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.08,
+                      shadowRadius: 4,
+                    }}
+                  >
+                    {isCollected ? (
+                      <CheckCircle2 size={28} color="#9CA3AF" />
+                    ) : isComplete ? (
+                      <Image source={require('../../../assets/interface/consumable-xp.png')} style={{ width: 40, height: 40 }} />
+                    ) : (
+                      <Image source={require('../../../assets/interface/challenge.png')} style={{ width: 40, height: 40 }} />
+                    )}
+                  </View>
 
-          {/* Progress bar - only show if not complete and not collected */}
-          {!isComplete && !isCollected && (
-            <View style={{ marginTop: 12 }}>
-              <View
-                style={{
-                  height: 8,
-                  borderRadius: 20,
-                  overflow: 'hidden',
-                  backgroundColor: cardStyle.progressBg || `${theme.accent}15`,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: 0.05,
-                  shadowRadius: 2,
-                }}
-              >
-                <LinearGradient
-                  colors={cardStyle.progressGradient || theme.gradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
+                  <View style={{ marginLeft: 12, flex: 1 }}>
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        fontWeight: '800',
+                        textTransform: 'uppercase',
+                        letterSpacing: 1,
+                        color: cardStyle.textPrimary,
+                      }}
+                    >
+                      Daily Challenge
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        marginTop: 2,
+                        color: cardStyle.textSecondary,
+                        fontWeight: '600',
+                      }}
+                    >
+                      {isCollected ? 'Collected! See you tomorrow' : isComplete ? 'Tap to claim 20 XP!' : `${totalTasksToday - completedToday} tasks to go`}
+                    </Text>
+                  </View>
+                </View>
+
+                <View
                   style={{
-                    height: '100%',
-                    width: `${completionPercentage}%`,
+                    borderRadius: 20,
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    backgroundColor: cardStyle.badgeBg,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 4,
                   }}
-                />
+                >
+                  <Text style={{ fontSize: 13, fontWeight: '800', color: '#FFFFFF' }}>{isCollected ? '✓' : '20 XP'}</Text>
+                </View>
               </View>
-              <Text
-                style={{
-                  fontSize: 11,
-                  color: '#6B7280',
-                  marginTop: 6,
-                  textAlign: 'center',
-                  fontWeight: '600',
-                }}
-              >
-                {completionPercentage}% Complete
-              </Text>
-            </View>
-          )}
-        </LinearGradient>
-      </Pressable>
 
-      {/* Debug Reset Button */}
+              {!isComplete && !isCollected && (
+                <View style={{ marginTop: 12 }}>
+                  <View
+                    style={{
+                      height: 8,
+                      borderRadius: 20,
+                      overflow: 'hidden',
+                      backgroundColor: cardStyle.progressBg || `${theme.accent}15`,
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.05,
+                      shadowRadius: 2,
+                    }}
+                  >
+                    <LinearGradient
+                      colors={cardStyle.progressGradient || theme.gradient}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={{
+                        height: '100%',
+                        width: `${completionPercentage}%`,
+                      }}
+                    />
+                  </View>
+                  <Text
+                    style={{
+                      fontSize: 11,
+                      color: '#6B7280',
+                      marginTop: 6,
+                      textAlign: 'center',
+                      fontWeight: '600',
+                    }}
+                  >
+                    {completionPercentage}% Complete
+                  </Text>
+                </View>
+              )}
+            </LinearGradient>
+          </Pressable>
+        </Animated.View>
+      </View>
+
       {showTestButtons && isCollected && (
         <Pressable
           onPress={handleDebugReset}
@@ -318,16 +381,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
             padding: 8,
           }}
         >
-          <Text
-            style={{
-              color: '#FFFFFF',
-              fontSize: 11,
-              textAlign: 'center',
-              fontWeight: '700',
-            }}
-          >
-            Reset (Debug)
-          </Text>
+          <Text style={{ color: '#FFFFFF', fontSize: 11, textAlign: 'center', fontWeight: '700' }}>Reset (Debug)</Text>
         </Pressable>
       )}
     </View>
