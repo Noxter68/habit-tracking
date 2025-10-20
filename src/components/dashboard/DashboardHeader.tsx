@@ -54,14 +54,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 }) => {
   const navigation = useNavigation();
   const { user } = useAuth();
-  const { refreshStats } = useStats();
+  const { refreshStats, updateStatsOptimistically } = useStats();
   const greeting = getGreeting();
 
   // Get tier theme based on current level
   const getCurrentTier = (): AchievementTierName => {
     const title = achievementTitles.find((t) => userLevel >= t.level && userLevel < (achievementTitles.find((next) => next.level > t.level)?.level || Infinity));
 
-    // FIX: Use title.tier instead of title.name
     return (title?.tier as AchievementTierName) || 'Novice';
   };
 
@@ -71,7 +70,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   // Create light variants for the background gradient
   const getLightGradient = () => {
     const baseColors = tierTheme.gradient;
-    // Convert hex to lighter tints for background
     return [
       `${baseColors[0]}15`, // 15% opacity of primary
       `${baseColors[1]}10`, // 10% opacity of secondary
@@ -84,20 +82,38 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   };
 
   const handleXPCollect = async (amount: number) => {
+    console.log('DashboardHeader: XP collected, updating optimistically', { amount });
+
+    // ✅ Update stats optimistically (instant UI update, no backend call)
+    const result = updateStatsOptimistically(amount);
+
+    // Notify parent if needed (optional)
     if (onXPCollected) {
       onXPCollected(amount);
     }
 
-    setTimeout(async () => {
-      await refreshStats(true);
-      if (onStatsRefresh) {
-        onStatsRefresh();
-      }
-    }, 200);
+    // ✅ NO REFRESH! Let optimistic update handle everything
+    // The backend already updated via XPService.collectDailyChallenge()
+    // If you need eventual consistency, do it much later (5+ seconds)
+
+    // Handle level up if it occurred
+    if (result?.leveledUp) {
+      console.log('DashboardHeader: Level up detected!', { newLevel: result.newLevel });
+
+      // Small delay to let the XP animation finish
+      setTimeout(() => {
+        if (onStatsRefresh) {
+          onStatsRefresh();
+        }
+      }, 1500);
+    }
   };
 
   const handleLevelUp = async () => {
-    await refreshStats(true);
+    console.log('DashboardHeader: Level up callback triggered');
+
+    // No immediate refresh needed since we updated optimistically
+    // Just notify parent for any additional actions (like showing level-up modal)
     if (onStatsRefresh) {
       onStatsRefresh();
     }
@@ -107,133 +123,54 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const xpToNextLevel = xpForNextLevel - currentLevelXP;
 
   const displayXP = currentLevelXP > xpForNextLevel ? currentLevelXP % xpForNextLevel : currentLevelXP;
-  const displayProgress = xpForNextLevel > 0 ? (displayXP / xpForNextLevel) * 100 : 0;
+  const displayProgress = xpForNextLevel > 0 ? Math.min((displayXP / xpForNextLevel) * 100, 100) : 0;
 
   return (
-    <Animated.View entering={FadeIn} style={{ position: 'relative', marginBottom: 16 }}>
+    <Animated.View entering={FadeIn} style={{ marginBottom: 20 }}>
       <LinearGradient
         colors={getLightGradient()}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 0, y: 1 }}
         style={{
           borderRadius: 24,
-          overflow: 'hidden',
-          borderWidth: 1.5,
-          borderColor: `${tierTheme.accent}20`,
-          shadowColor: tierTheme.accent,
-          shadowOffset: { width: 0, height: 6 },
-          shadowOpacity: 0.15,
-          shadowRadius: 16,
+          padding: 20,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.08,
+          shadowRadius: 12,
+          elevation: 4,
         }}
       >
-        <View style={{ padding: 24, paddingBottom: 0 }}>
-          {/* Greeting and Level Section */}
-          <View style={{ marginBottom: 20 }}>
+        <View>
+          {/* Greeting */}
+          <View style={{ marginBottom: 16 }}>
             <Text
               style={{
-                fontSize: 13,
-                fontWeight: '700',
-                color: tierTheme.accent,
-                letterSpacing: 2,
+                fontSize: 14,
+                color: '#6B7280',
+                fontWeight: '600',
+                marginBottom: 4,
               }}
             >
-              {greeting.toUpperCase()}
+              {greeting}
             </Text>
-
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginTop: 8,
-              }}
-            >
-              <View style={{ flex: 1, paddingRight: 80 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <View style={{ flex: 1 }}>
                 <Text
                   style={{
-                    fontSize: 28,
-                    fontWeight: '900',
+                    fontSize: 24,
+                    fontWeight: '800',
                     color: '#1F2937',
-                    lineHeight: 32,
+                    marginBottom: 4,
                   }}
                 >
                   {userTitle}
                 </Text>
-
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 8,
-                    marginTop: 10,
-                  }}
-                >
-                  {/* Level Badge - Tier colored */}
-                  <LinearGradient
-                    colors={tierTheme.gradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={{
-                      borderRadius: 20,
-                      paddingHorizontal: 12,
-                      paddingVertical: 6,
-                      shadowColor: tierTheme.accent,
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.3,
-                      shadowRadius: 6,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 11,
-                        fontWeight: '800',
-                        color: '#FFFFFF',
-                        letterSpacing: 0.5,
-                      }}
-                    >
-                      LEVEL {userLevel}
-                    </Text>
-                  </LinearGradient>
-
-                  {/* Total XP Display */}
-                  <View
-                    style={{
-                      backgroundColor: `${tierTheme.accent}15`,
-                      borderRadius: 20,
-                      paddingHorizontal: 12,
-                      paddingVertical: 6,
-                      borderWidth: 1,
-                      borderColor: `${tierTheme.accent}30`,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 11,
-                        fontWeight: '700',
-                        color: tierTheme.accent,
-                      }}
-                    >
-                      {totalXP.toLocaleString()} XP
-                    </Text>
-                  </View>
-                </View>
               </View>
 
               {/* Achievement Badge */}
-              <View
-                style={{
-                  position: 'absolute',
-                  right: 0,
-                  top: -20, // Moves it higher, overlapping the card edge
-                  zIndex: 20,
-                }}
-              >
-                <AchievementBadge
-                  achievement={currentAchievement}
-                  onPress={handleAchievementPress}
-                  tierTheme={tierTheme}
-                  size={80} // Make it bigger since there's no border
-                />
+              <View style={{ marginLeft: 12 }}>
+                <AchievementBadge achievement={currentAchievement} onPress={handleAchievementPress} tierTheme={tierTheme} size={80} />
               </View>
             </View>
           </View>
@@ -245,7 +182,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             </View>
           )}
 
-          {/* Stats Grid - NOW WITH TIER THEME */}
+          {/* Stats Grid */}
           <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
             <StatsCard label="Streak" value={totalStreak} image="streak" subtitle="days" isStreak={true} streakValue={totalStreak} tierTheme={tierTheme} />
             <StatsCard label="Active" value={activeHabits} image="active" subtitle="Quests" tierTheme={tierTheme} />

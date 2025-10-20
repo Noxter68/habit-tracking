@@ -81,7 +81,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
 
     setIsAnimating(true);
 
-    // Quick bouncy bubble effect - like a playful jump
+    // Quick bouncy bubble effect
     cardScale.value = withSequence(
       withTiming(1.02, { duration: 60, easing: Easing.out(Easing.ease) }),
       withSpring(0.98, { damping: 10, stiffness: 400 }),
@@ -94,7 +94,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
       const success = await XPService.collectDailyChallenge(userId);
 
       if (success) {
-        // Update local state immediately to prevent re-render jump
+        // ✅ Update local state immediately
         setIsCollected(true);
         setShowXPBadge(true);
 
@@ -114,16 +114,18 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
 
         badgeOpacity.value = withSequence(withTiming(1, { duration: 200 }), withTiming(1, { duration: 600 }), withTiming(0, { duration: 400 }));
 
-        // Delay the parent callback to avoid interrupting the animation
+        // ✅ Call parent callback AFTER animation starts (not immediately)
+        // This triggers optimistic update in DashboardHeader
         setTimeout(() => {
-          onCollect(20);
+          onCollect(20); // This now calls optimistic update, no full refresh!
 
+          // Check level up
           if (currentLevelXP + 20 >= xpForNextLevel && onLevelUp) {
             setTimeout(() => {
               onLevelUp();
             }, 100);
           }
-        }, 1300);
+        }, 300); // Small delay so card animation starts first
       }
     } catch (error) {
       console.error('Error collecting daily challenge:', error);
@@ -133,7 +135,6 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
       }, 1300);
     }
   };
-
   const handleDebugReset = async () => {
     try {
       const today = getTodayString();

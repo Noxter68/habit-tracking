@@ -221,19 +221,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signOut = async () => {
     try {
-      // Logout from RevenueCat first
-      await RevenueCatService.logout();
-
-      // Then logout from Supabase
+      setLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-
-      // Clear local state
-      setUser(null);
-      setSession(null);
     } catch (error: any) {
-      console.error('Sign out error:', error);
-      Alert.alert('Error', 'Failed to sign out. Please try again.');
+      Alert.alert('Error', error.message);
+    } finally {
+      setLoading(false);
     }
   };
 

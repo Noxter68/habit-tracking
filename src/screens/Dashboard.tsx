@@ -148,9 +148,8 @@ const Dashboard: React.FC = () => {
           currentLevelXP={stats?.currentLevelXP ?? 0}
           xpForNextLevel={stats?.xpForNextLevel ?? 100}
           levelProgress={stats?.levelProgress ?? 0}
-          onStatsRefresh={() => refreshStats(true)}
+          onStatsRefresh={() => {}} // ✅ Empty - no immediate refresh
           totalXP={stats?.totalXP ?? 0}
-          onXPCollected={() => refreshStats(true)}
         />
 
         {/* Habits Section */}
