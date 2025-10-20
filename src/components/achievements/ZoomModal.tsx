@@ -15,29 +15,36 @@ interface ZoomModalProps {
 
 export const ZoomModal: React.FC<ZoomModalProps> = ({ visible, onClose, currentLevel, currentTitle }) => {
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={tw`flex-1 bg-black/85 items-center justify-center`} onPress={onClose}>
-        <View style={tw`w-full px-8`}>
-          <View style={tw`items-center`}>
-            {/* Large Achievement Badge */}
-            <AchievementBadge level={currentLevel} achievement={currentTitle} isUnlocked={true} size={SCREEN_WIDTH - 64} showLock={false} />
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
+      <Pressable style={tw`flex-1 bg-slate-900/95 items-center justify-center px-6`} onPress={onClose}>
+        <View style={tw`w-full max-w-sm`}>
+          <Pressable style={tw`bg-slate-50 rounded-3xl p-8 shadow-2xl`} onPress={(e) => e.stopPropagation()}>
+            {/* Achievement Badge */}
+            <View style={tw`items-center -mt-20 mb-6`}>
+              <View style={tw`bg-slate-50 rounded-full p-4 shadow-xl`}>
+                <AchievementBadge level={currentLevel} achievement={currentTitle} isUnlocked={true} size={SCREEN_WIDTH * 0.45} showLock={false} />
+              </View>
+            </View>
 
             {/* Achievement Title */}
-            <Text style={tw`text-quartz-100 text-xl font-bold mt-6 text-center`}>{currentTitle?.title}</Text>
+            <Text style={tw`text-slate-900 text-2xl font-semibold text-center leading-tight`}>{currentTitle?.title}</Text>
+
+            {/* Description if available */}
+            {currentTitle?.description && <Text style={tw`text-slate-600 text-sm text-center mt-3 leading-relaxed`}>{currentTitle.description}</Text>}
 
             {/* Level and Tier Pills */}
-            <View style={tw`flex-row gap-3 mt-3`}>
-              <View style={tw`bg-quartz-700/30 rounded-full px-3 py-1.5 border border-quartz-600/20`}>
-                <Text style={tw`text-quartz-200 text-sm font-medium`}>Level {currentLevel}</Text>
+            <View style={tw`flex-row gap-2 mt-6 justify-center`}>
+              <View style={tw`bg-slate-100 rounded-full px-4 py-2`}>
+                <Text style={tw`text-slate-700 text-sm font-medium`}>Level {currentLevel}</Text>
               </View>
-              <View style={tw`bg-quartz-700/30 rounded-full px-3 py-1.5 border border-quartz-600/20`}>
-                <Text style={tw`text-quartz-200 text-sm font-medium`}>{currentTitle?.tier || 'Novice'}</Text>
+              <View style={tw`bg-slate-100 rounded-full px-4 py-2`}>
+                <Text style={tw`text-slate-700 text-sm font-medium`}>{currentTitle?.tier || 'Novice'}</Text>
               </View>
             </View>
 
             {/* Close Hint */}
-            <Text style={tw`text-quartz-400/60 text-xs mt-4`}>Tap anywhere to close</Text>
-          </View>
+            <Text style={tw`text-slate-400 text-xs text-center mt-6`}>Tap anywhere to close</Text>
+          </Pressable>
         </View>
       </Pressable>
     </Modal>

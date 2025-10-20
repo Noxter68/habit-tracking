@@ -237,12 +237,6 @@ const HabitDetails: React.FC = () => {
                     tier={currentTierData.tier.name}
                   />
                 )}
-
-                {/* Achievement Status with Real Tier - DARKER AMBER */}
-                <ImageBackground source={theme.texture} style={tw`rounded-3xl p-5 mb-4 overflow-hidden`} imageStyle={tw`rounded-3xl opacity-90`} resizeMode="cover">
-                  <LinearGradient colors={theme.gradient.map((c) => c + 'cc')} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`absolute inset-0 rounded-3xl`} />
-                  <TierCard tierInfo={currentTierData.tier} currentStreak={debugStreak !== null ? debugStreak : habit.currentStreak} nextMilestone={milestoneStatus.next} />
-                </ImageBackground>
               </Animated.View>
             )}
 
