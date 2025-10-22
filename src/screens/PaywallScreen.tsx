@@ -89,16 +89,16 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
   const loadOfferings = async () => {
     setLoadingOfferings(true);
     try {
-      const availablePackages = await RevenueCatService.getOfferings();
+      const { subscriptions } = await RevenueCatService.getAllOfferings();
 
-      if (!availablePackages || availablePackages.length === 0) {
+      if (!subscriptions || subscriptions.length === 0) {
         Alert.alert('Error', 'No subscription plans available. Please try again later.');
         return;
       }
 
-      setPackages(availablePackages);
-      const yearlyPlan = availablePackages.find((pkg) => pkg.packageType === 'ANNUAL');
-      setSelectedPackage(yearlyPlan || availablePackages[0]);
+      setPackages(subscriptions);
+      const yearlyPlan = subscriptions.find((pkg) => pkg.packageType === 'ANNUAL');
+      setSelectedPackage(yearlyPlan || subscriptions[0]);
     } catch (error) {
       console.error('❌ [Paywall] Failed to load offerings');
       Alert.alert('Error', 'Failed to load subscription options. Please try again.');

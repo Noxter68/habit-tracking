@@ -1,6 +1,6 @@
 // src/screens/Dashboard.tsx
 import React, { useCallback, useRef, useEffect, useState } from 'react';
-import { ScrollView, RefreshControl, View, Text, ActivityIndicator, Pressable, ImageBackground, Dimensions } from 'react-native';
+import { ScrollView, RefreshControl, View, Text, ActivityIndicator, Pressable, ImageBackground, Dimensions, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
@@ -21,6 +21,10 @@ import { getAchievementByLevel } from '@/utils/achievements';
 import { useLevelUp } from '@/context/LevelUpContext';
 import { DebugButton } from '@/components/debug/DebugButton';
 import { useSubscription } from '@/context/SubscriptionContext';
+import { StreakSaverBadge } from '@/components/streakSaver/StreakSaverBadge';
+import { StreakSaverService } from '@/services/StreakSaverService';
+import { StreakSaverShopModal } from '@/components/streakSaver/StreakSaverShopModal';
+import { Image } from 'react-native';
 
 const Dashboard: React.FC = () => {
   const navigation = useNavigation();
@@ -35,6 +39,8 @@ const Dashboard: React.FC = () => {
     previousLevel: number;
     achievement: any;
   } | null>(null);
+  const [badgeRefresh, setBadgeRefresh] = useState(0);
+  const [showShop, setShowShop] = useState(false);
 
   const [testLevel, setTestLevel] = useState(1);
   const { triggerLevelUp } = useLevelUp();
@@ -46,6 +52,29 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     console.log(`Dashboard render #${renderCount.current}`);
   });
+
+  // Handler for when badge is pressed
+  const handleStreakSaverPress = async () => {
+    const saveable = await StreakSaverService.getSaveableHabits(user!.id);
+    if (saveable.length > 0) {
+      navigation.navigate('HabitDetails', { habitId: saveable[0].habitId });
+    }
+  };
+
+  const handleShopPress = () => {
+    setShowShop(true);
+  };
+
+  const handlePurchase = (packageId: string) => {
+    console.log('Purchase:', packageId);
+    // TODO: Implement RevenueCat purchase
+    setShowShop(false);
+  };
+
+  // Refresh badge when habits change
+  useEffect(() => {
+    setBadgeRefresh((prev) => prev + 1);
+  }, [habits]);
 
   // Track level changes
   useEffect(() => {
@@ -152,6 +181,19 @@ const Dashboard: React.FC = () => {
           totalXP={stats?.totalXP ?? 0}
         />
 
+        <StreakSaverBadge
+          onPress={handleStreakSaverPress}
+          onShopPress={() => setShowShop(true)} // <-- This must be a function
+          refreshTrigger={badgeRefresh}
+        />
+
+        <StreakSaverShopModal
+          visible={showShop}
+          onClose={() => setShowShop(false)}
+          onPurchaseSuccess={() => {
+            setBadgeRefresh((prev) => prev + 1); // Force badge reload
+          }}
+        />
         {/* Habits Section */}
         <Animated.View entering={FadeInUp.delay(200)} style={tw`mt-6`}>
           <View>
@@ -174,9 +216,7 @@ const Dashboard: React.FC = () => {
 
             {habits.length > 0 && (
               <Pressable onPress={handleCreateHabit} style={({ pressed }) => [tw`w-10 h-10 rounded-xl items-center justify-center`, pressed && tw`scale-95`]}>
-                <LinearGradient colors={['#9CA3AF', '#6B7280']} style={tw`w-full h-full rounded-xl items-center justify-center shadow-sm`}>
-                  <Plus size={20} color="#ffffff" strokeWidth={2.5} />
-                </LinearGradient>
+                <Image source={require('../../assets/interface/add-habit-button.png')} style={{ width: 40, height: 40 }} resizeMode="contain" />
               </Pressable>
             )}
           </View>

@@ -30,6 +30,8 @@ import { ImageBackground } from 'expo-image';
 import { TierCelebration } from '@/components/habits/TierCelebration';
 import { DebugButton } from '@/components/debug/DebugButton';
 import { getTodayString } from '@/utils/dateHelpers';
+import { useStreakSaver } from '@/hooks/useStreakSaver';
+import { StreakSaverModal } from '@/components/streakSaver/StreakSaverModal';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'HabitDetails'>;
 type RouteProps = RouteProp<RootStackParamList, 'HabitDetails'>;
@@ -41,6 +43,7 @@ const HabitDetails: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
   const { habits, toggleTask, processingTasks, xpEarnedTasks, checkTaskXPStatus, refreshHabits } = useHabits();
+  const { habitId } = route.params;
   const { user } = useAuth();
 
   const [selectedTab, setSelectedTab] = useState<TabType>('overview');
@@ -54,6 +57,31 @@ const HabitDetails: React.FC = () => {
   const heroScale = useSharedValue(1);
 
   const habit = habits.find((h: Habit) => h.id === route.params.habitId);
+
+  // ✅ ADD THIS - Streak Saver Integration
+  const streakSaver = useStreakSaver({
+    habitId: route.params.habitId,
+    userId: user?.id || '',
+    enabled: !!habit && !!user,
+    onStreakRestored: (newStreak) => {
+      console.log('🎉 Streak restored to:', newStreak);
+      refreshHabits();
+      setTimeout(() => {
+        navigation.goBack();
+      }, 2000);
+    },
+  });
+
+  useEffect(() => {
+    console.log('🔍 HabitDetails Debug:', {
+      habitId: route.params.habitId,
+      habitName: habit?.name,
+      currentStreak: habit?.currentStreak,
+      eligibility: streakSaver.eligibility,
+      inventory: streakSaver.inventory,
+      showModal: streakSaver.showModal,
+    });
+  }, [habit, streakSaver.eligibility, streakSaver.showModal]);
 
   if (!habit || !user) {
     return (
@@ -95,17 +123,9 @@ const HabitDetails: React.FC = () => {
   // The hook will re-fetch when these values change
   const { tierInfo, tierProgress, nextTier, milestoneStatus, performanceMetrics, refreshProgression, loading } = useHabitDetails(habit.id, user.id, habit.currentStreak, completedTasksToday);
 
-  // Safe tier info with fallback
-  const safeTierInfo = tierInfo ?? HabitProgressionService.TIERS[0];
-
-  const taskProgress = totalTasks > 0 ? (completedTasksToday / totalTasks) * 100 : 0;
-  const overallProgress = (habit.completedDays.length / habit.totalDays) * 100;
-
   const tierMultiplier = tierInfo?.multiplier ?? 1.0;
   const totalXPEarned = performanceMetrics?.totalXPEarned || 0;
   const completionRate = performanceMetrics?.consistency || 0;
-
-  const theme = tierThemes[currentTierData.tier.name];
 
   const animatedGradientStyle = useAnimatedStyle(() => {
     const scale = 1 + heroScale.value * 0.1;
@@ -209,6 +229,18 @@ const HabitDetails: React.FC = () => {
                     completionRate={completionRate ?? 0}
                   />
                 </View>
+
+                <StreakSaverModal
+                  visible={streakSaver.showModal}
+                  habitName={streakSaver.eligibility.habitName || habit?.name || 'Habit'}
+                  previousStreak={streakSaver.eligibility.previousStreak || 0}
+                  availableSavers={streakSaver.inventory.available}
+                  loading={streakSaver.using}
+                  success={streakSaver.success}
+                  newStreak={streakSaver.newStreak}
+                  onUse={streakSaver.useStreakSaver}
+                  onClose={streakSaver.closeModal}
+                />
               </Animated.View>
             </SafeAreaView>
           </LinearGradient>

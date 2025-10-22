@@ -161,8 +161,10 @@ export class RevenueCatService {
    *
    * @returns Array of subscription packages, empty array if none available
    */
-  static async getOfferings(): Promise<SubscriptionPackage[]> {
-    // Wait for initialization if in progress
+  static async getAllOfferings(): Promise<{
+    subscriptions: SubscriptionPackage[];
+    consumables: SubscriptionPackage[];
+  }> {
     if (this.initializationPromise) {
       await this.initializationPromise;
     }
@@ -170,31 +172,38 @@ export class RevenueCatService {
     try {
       const offeringsResponse = await Purchases.getOfferings();
 
-      if (!offeringsResponse.current || !offeringsResponse.current.availablePackages) {
-        console.warn('⚠️ [RevenueCat] No offerings available');
-        return [];
-      }
+      const subscriptions: SubscriptionPackage[] = [];
+      const consumables: SubscriptionPackage[] = [];
 
-      // Map RevenueCat packages to simplified format
-      const packages = offeringsResponse.current.availablePackages.map((pkg) => ({
-        identifier: pkg.identifier,
-        packageType: pkg.packageType,
-        product: {
-          identifier: pkg.product.identifier,
-          title: pkg.product.title || (pkg.packageType === 'ANNUAL' ? 'Yearly Plan' : 'Monthly Plan'),
-          description: pkg.product.description || '',
-          price: pkg.product.price,
-          priceString: pkg.product.priceString,
-          currencyCode: pkg.product.currencyCode,
-        },
-        rcPackage: pkg, // Keep original for purchase
-      }));
+      Object.values(offeringsResponse.all).forEach((offering) => {
+        offering.availablePackages?.forEach((pkg) => {
+          const mapped = {
+            identifier: pkg.identifier,
+            packageType: pkg.packageType,
+            product: {
+              identifier: pkg.product.identifier,
+              title: pkg.product.title || getDefaultTitle(pkg),
+              description: pkg.product.description || '',
+              price: pkg.product.price,
+              priceString: pkg.product.priceString,
+              currencyCode: pkg.product.currencyCode,
+            },
+            rcPackage: pkg,
+          };
 
-      console.log(`✅ [RevenueCat] Loaded ${packages.length} subscription packages`);
-      return packages;
+          // Separate by product type
+          if (pkg.product.identifier.includes('streak_saver')) {
+            consumables.push(mapped);
+          } else {
+            subscriptions.push(mapped);
+          }
+        });
+      });
+
+      return { subscriptions, consumables };
     } catch (error) {
-      console.error('❌ [RevenueCat] Error fetching offerings:', error);
-      return [];
+      console.error('❌ [RevenueCat] Error:', error);
+      return { subscriptions: [], consumables: [] };
     }
   }
 
@@ -344,4 +353,13 @@ export class RevenueCatService {
       console.error('❌ [RevenueCat] Error logging out');
     }
   }
+}
+
+function getDefaultTitle(pkg: any): string {
+  if (pkg.packageType === 'ANNUAL') return 'Yearly Plan';
+  if (pkg.packageType === 'MONTHLY') return 'Monthly Plan';
+  if (pkg.product.identifier.includes('streak_saver_3')) return '3 Streak Savers';
+  if (pkg.product.identifier.includes('streak_saver_10')) return '10 Streak Savers';
+  if (pkg.product.identifier.includes('streak_saver_25')) return '25 Streak Savers';
+  return pkg.product.identifier;
 }
