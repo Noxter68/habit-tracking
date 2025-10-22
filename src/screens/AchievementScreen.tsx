@@ -145,14 +145,14 @@ const AchievementsScreen: React.FC = () => {
               onPress={() => navigation.goBack()}
               style={({ pressed }) => [tw`p-2 -ml-2 rounded-xl`, { backgroundColor: pressed ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.15)' }]}
             >
-              <ChevronLeft size={24} color={textColors.iconColor} />
+              <ChevronLeft size={24} color="#FFFFFF" />
             </Pressable>
 
             <View style={tw`items-center flex-1`}>
-              <Text style={[tw`text-lg font-black tracking-tight`, tw`${textColors.primary}`]}>Achievements</Text>
+              <Text style={[tw`text-lg font-black tracking-tight text-white`]}>Achievements</Text>
               <View style={tw`flex-row items-center gap-1.5 mt-0.5`}>
                 <View style={[tw`h-1 w-1 rounded-full`, { backgroundColor: currentTierTheme.accent }]} />
-                <Text style={[tw`text-[9px] font-bold uppercase tracking-wider`, tw`${textColors.secondary}`]}>{currentTierTheme.gemName} Tier</Text>
+                <Text style={[tw`text-[9px] font-bold uppercase tracking-wider text-white/70`]}>{currentTierTheme.gemName} Tier</Text>
               </View>
             </View>
 
@@ -163,14 +163,14 @@ const AchievementsScreen: React.FC = () => {
           <View style={tw`flex-row gap-2`}>
             {/* Unlocked Card */}
             <View style={[tw`flex-1 rounded-xl p-2.5`, { backgroundColor: 'rgba(255, 255, 255, 0.15)' }]}>
-              <Text style={[tw`text-[9px] font-bold uppercase tracking-wide mb-0.5`, tw`${textColors.secondary}`]} numberOfLines={1}>
+              <Text style={[tw`text-[9px] font-bold uppercase tracking-wide mb-0.5 text-white/70`]} numberOfLines={1}>
                 Unlocked
               </Text>
               <View style={tw`flex-row items-baseline gap-0.5`}>
-                <Text style={[tw`text-xl font-black`, tw`${textColors.primary}`]} numberOfLines={1}>
+                <Text style={[tw`text-xl font-black text-white`]} numberOfLines={1}>
                   {unlockedCount}
                 </Text>
-                <Text style={[tw`text-sm font-bold`, tw`${textColors.secondary}`]} numberOfLines={1}>
+                <Text style={[tw`text-sm font-bold text-white/70`]} numberOfLines={1}>
                   /{totalCount}
                 </Text>
               </View>
@@ -178,20 +178,20 @@ const AchievementsScreen: React.FC = () => {
 
             {/* Completions Card */}
             <View style={[tw`flex-1 rounded-xl p-2.5`, { backgroundColor: 'rgba(255, 255, 255, 0.15)' }]}>
-              <Text style={[tw`text-[9px] font-bold uppercase tracking-wide mb-0.5`, tw`${textColors.secondary}`]} numberOfLines={1}>
+              <Text style={[tw`text-[9px] font-bold uppercase tracking-wide mb-0.5 text-white/70`]} numberOfLines={1}>
                 Total
               </Text>
-              <Text style={[tw`text-xl font-black`, tw`${textColors.primary}`]} numberOfLines={1}>
+              <Text style={[tw`text-xl font-black text-white`]} numberOfLines={1}>
                 {totalCompletions}
               </Text>
             </View>
 
             {/* Total XP Card */}
             <View style={[tw`flex-1 rounded-xl p-2.5`, { backgroundColor: 'rgba(255, 255, 255, 0.15)' }]}>
-              <Text style={[tw`text-[9px] font-bold uppercase tracking-wide mb-0.5`, tw`${textColors.secondary}`]} numberOfLines={1}>
+              <Text style={[tw`text-[9px] font-bold uppercase tracking-wide mb-0.5 text-white/70`]} numberOfLines={1}>
                 XP
               </Text>
-              <Text style={[tw`text-xl font-black`, tw`${textColors.primary}`]} adjustsFontSizeToFit numberOfLines={1}>
+              <Text style={[tw`text-xl font-black text-white`]} adjustsFontSizeToFit numberOfLines={1}>
                 {totalXP > 999 ? `${(totalXP / 1000).toFixed(1)}k` : totalXP}
               </Text>
             </View>

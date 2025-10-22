@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
-import { Plus, Zap } from 'lucide-react-native';
+import { Lock, Plus, TrendingUp, TrendingUpIcon, Zap } from 'lucide-react-native';
 import tw from '../lib/tailwind';
 
 // Components
@@ -198,10 +198,29 @@ const Dashboard: React.FC = () => {
         <Animated.View entering={FadeInUp.delay(200)} style={tw`mt-6`}>
           <View>
             {!isPremium && habitCount > 0 && (
-              <View style={tw`mx-6 mb-3 px-4 py-2 rounded-xl ${habitCount >= maxHabits ? 'bg-amber-100 border border-amber-300' : 'bg-blue-50 border border-blue-200'}`}>
-                <Text style={tw`text-xs font-semibold text-center ${habitCount >= maxHabits ? 'text-amber-800' : 'text-blue-800'}`}>
-                  {habitCount >= maxHabits ? '🔒 Habit limit reached - Upgrade for unlimited' : `📊 Using ${habitCount} of ${maxHabits} free habits`}
-                </Text>
+              <View
+                style={[
+                  tw`mx-6 mb-3 px-4 py-3.5 rounded-2xl flex-row items-center justify-center gap-2.5`,
+                  {
+                    backgroundColor: habitCount >= maxHabits ? 'rgba(251, 146, 60, 0.08)' : 'rgba(59, 130, 246, 0.08)',
+                    borderWidth: 1,
+                    borderColor: habitCount >= maxHabits ? 'rgba(251, 146, 60, 0.2)' : 'rgba(59, 130, 246, 0.2)',
+                  },
+                ]}
+              >
+                {habitCount >= maxHabits ? (
+                  <>
+                    <Lock size={14} color="#EA580C" strokeWidth={2.5} />
+                    <Text style={tw`text-xs font-bold text-orange-700 tracking-wide`}>Habit limit reached • Upgrade for unlimited</Text>
+                  </>
+                ) : (
+                  <>
+                    <TrendingUpIcon size={14} color="#2563EB" strokeWidth={2.5} />
+                    <Text style={tw`text-xs font-bold text-blue-700 tracking-wide`}>
+                      {habitCount} of {maxHabits} free habits
+                    </Text>
+                  </>
+                )}
               </View>
             )}
           </View>

@@ -53,7 +53,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   totalXP = 0,
 }) => {
   const navigation = useNavigation();
-  const { user } = useAuth();
+  const { user, username } = useAuth();
   const { refreshStats, updateStatsOptimistically } = useStats();
   const greeting = getGreeting();
 
@@ -118,7 +118,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       onStatsRefresh();
     }
   };
-
+  console.log('USER DATA', user);
   const nextTitle = achievementTitles.find((title) => title.level > userLevel);
   const xpToNextLevel = xpForNextLevel - currentLevelXP;
 
@@ -143,25 +143,59 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       >
         <View>
           {/* Greeting */}
-          <View style={{ marginBottom: 16 }}>
+          <View style={{ marginBottom: 20 }}>
+            {/* Greeting */}
             <Text
               style={{
-                fontSize: 14,
-                color: '#6B7280',
-                fontWeight: '600',
-                marginBottom: 4,
+                fontSize: 18,
+                color: '#64748B',
+                fontWeight: '700',
+                letterSpacing: 1.5,
+                textTransform: 'uppercase',
+                textShadowColor: 'rgba(0, 0, 0, 0.08)',
+                textShadowOffset: { width: 0, height: 2 },
+                textShadowRadius: 4,
               }}
             >
               {greeting}
             </Text>
+
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <View style={{ flex: 1 }}>
+                {/* Username with Tier Indicator */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <View
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor: tierTheme.accent,
+                      shadowColor: tierTheme.accent,
+                      shadowOffset: { width: 0, height: 0 },
+                      shadowOpacity: 0.4,
+                      shadowRadius: 4,
+                    }}
+                  />
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: '700',
+                      color: '#0F172A',
+                      letterSpacing: 0.2,
+                    }}
+                  >
+                    {username}
+                  </Text>
+                </View>
+
+                {/* Title */}
                 <Text
                   style={{
-                    fontSize: 24,
-                    fontWeight: '800',
-                    color: '#1F2937',
-                    marginBottom: 4,
+                    fontSize: 22,
+                    fontWeight: '900',
+                    color: '#0A0A0A',
+                    letterSpacing: -0.5,
+                    lineHeight: 30,
                   }}
                 >
                   {userTitle}
@@ -169,7 +203,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               </View>
 
               {/* Achievement Badge */}
-              <View style={{ marginLeft: 12 }}>
+              <View style={{ marginLeft: 16 }}>
                 <AchievementBadge achievement={currentAchievement} onPress={handleAchievementPress} tierTheme={tierTheme} size={80} />
               </View>
             </View>
