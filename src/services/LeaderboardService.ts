@@ -1,4 +1,4 @@
-// src/services/leaderboardService.ts
+// src/services/LeaderboardService.ts
 import { supabase } from '@/lib/supabase';
 
 export interface LeaderboardEntry {
@@ -11,7 +11,7 @@ export interface LeaderboardEntry {
   avatar?: string;
   currentStreak?: number;
   perfectDays?: number;
-  weeklyXP?: number; // XP earned this week
+  weeklyXP?: number;
   isCurrentUser?: boolean;
 }
 
@@ -24,42 +24,39 @@ export interface LeaderboardStats {
 export class LeaderboardService {
   /**
    * Get global leaderboard ranked by total XP
-   * Includes current user's position even if outside top N
+   * Shows top 20 + current user if outside top 20
    */
   static async getGlobalLeaderboard(
     userId: string,
-    limit: number = 50
+    limit: number = 20
   ): Promise<{
     leaderboard: LeaderboardEntry[];
     currentUserRank: number;
     stats: LeaderboardStats;
   }> {
     try {
-      // Get top users by total_xp
       const { data: topUsers, error: topError } = await supabase.from('profiles').select('id, username, email, total_xp, current_level').order('total_xp', { ascending: false }).limit(limit);
 
       if (topError) throw topError;
 
-      // Get current user's rank
-      const { data: rankData, error: rankError } = await supabase.rpc('get_user_rank', { p_user_id: userId });
+      const { data: rankData, error: rankError } = await supabase.rpc('get_user_rank', {
+        p_user_id: userId,
+      });
 
       if (rankError) console.error('Error getting user rank:', rankError);
       const currentUserRank = rankData || 0;
 
-      // Get user streak data (from habits)
       const { data: streakData } = await supabase
         .from('habits')
         .select('current_streak, user_id')
         .in('user_id', topUsers?.map((u) => u.id) || []);
 
-      // Calculate best streak per user
       const streakMap = new Map<string, number>();
       streakData?.forEach((h) => {
         const current = streakMap.get(h.user_id) || 0;
         streakMap.set(h.user_id, Math.max(current, h.current_streak || 0));
       });
 
-      // Get perfect days from habit_progression
       const { data: progressionData } = await supabase
         .from('habit_progression')
         .select('user_id, performance_metrics')
@@ -72,7 +69,6 @@ export class LeaderboardService {
         perfectDaysMap.set(p.user_id, current + (metrics?.perfectDays || 0));
       });
 
-      // Get weekly XP (last 7 days)
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
 
@@ -88,7 +84,6 @@ export class LeaderboardService {
         weeklyXPMap.set(xp.user_id, current + xp.amount);
       });
 
-      // Build leaderboard entries
       const leaderboard: LeaderboardEntry[] = (topUsers || []).map((user, index) => ({
         id: user.id,
         username: user.username || user.email.split('@')[0],
@@ -103,12 +98,27 @@ export class LeaderboardService {
         isCurrentUser: user.id === userId,
       }));
 
-      // Add current user if not in top N
       const userInTop = leaderboard.some((u) => u.id === userId);
       if (!userInTop && currentUserRank > 0) {
         const { data: currentUser } = await supabase.from('profiles').select('id, username, email, total_xp, current_level').eq('id', userId).single();
 
         if (currentUser) {
+          const { data: userStreakData } = await supabase.from('habits').select('current_streak').eq('user_id', userId);
+
+          const maxStreak = Math.max(...(userStreakData?.map((h) => h.current_streak || 0) || [0]));
+
+          const { data: userProgressionData } = await supabase.from('habit_progression').select('performance_metrics').eq('user_id', userId);
+
+          const totalPerfectDays =
+            userProgressionData?.reduce((sum, p) => {
+              const metrics = p.performance_metrics as any;
+              return sum + (metrics?.perfectDays || 0);
+            }, 0) || 0;
+
+          const { data: userWeeklyXPData } = await supabase.from('xp_transactions').select('amount').eq('user_id', userId).gte('created_at', weekAgo.toISOString());
+
+          const userWeeklyXP = userWeeklyXPData?.reduce((sum, xp) => sum + xp.amount, 0) || 0;
+
           leaderboard.push({
             id: currentUser.id,
             username: currentUser.username || currentUser.email.split('@')[0],
@@ -117,15 +127,14 @@ export class LeaderboardService {
             current_level: currentUser.current_level || 1,
             rank: currentUserRank,
             avatar: this.generateAvatar(currentUser.username || currentUser.email),
-            currentStreak: streakMap.get(currentUser.id) || 0,
-            perfectDays: perfectDaysMap.get(currentUser.id) || 0,
-            weeklyXP: weeklyXPMap.get(currentUser.id) || 0,
+            currentStreak: maxStreak,
+            perfectDays: totalPerfectDays,
+            weeklyXP: userWeeklyXP,
             isCurrentUser: true,
           });
         }
       }
 
-      // Calculate stats
       const stats: LeaderboardStats = {
         totalUsers: topUsers?.length || 0,
         averageXP: topUsers?.length ? Math.round(topUsers.reduce((sum, u) => sum + (u.total_xp || 0), 0) / topUsers.length) : 0,
@@ -144,49 +153,81 @@ export class LeaderboardService {
   }
 
   /**
-   * Get weekly leaderboard (most XP this week)
+   * Get weekly leaderboard - ONLY users who earned XP in the last 7 days
+   * Shows top 20 + current user if outside top 20
    */
-  static async getWeeklyLeaderboard(userId: string, limit: number = 50): Promise<LeaderboardEntry[]> {
+  static async getWeeklyLeaderboard(
+    userId: string,
+    limit: number = 20
+  ): Promise<{
+    leaderboard: LeaderboardEntry[];
+    currentUserRank: number;
+  }> {
     try {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
 
-      // Get XP earned this week by user
+      // Get ALL XP transactions from the last 7 days
       const { data: weeklyXP, error } = await supabase.from('xp_transactions').select('user_id, amount').gte('created_at', weekAgo.toISOString());
 
       if (error) throw error;
 
-      // Aggregate by user
+      // If no XP earned this week, return empty
+      if (!weeklyXP || weeklyXP.length === 0) {
+        return { leaderboard: [], currentUserRank: 0 };
+      }
+
+      // Aggregate XP by user
       const xpByUser = new Map<string, number>();
-      weeklyXP?.forEach((xp) => {
+      weeklyXP.forEach((xp) => {
         const current = xpByUser.get(xp.user_id) || 0;
         xpByUser.set(xp.user_id, current + xp.amount);
       });
 
-      // Get user profiles
-      const userIds = Array.from(xpByUser.keys());
-      const { data: users } = await supabase.from('profiles').select('id, username, email, total_xp, current_level').in('id', userIds);
+      // Sort ALL users by weekly XP to calculate ranks
+      const sortedEntries = Array.from(xpByUser.entries()).sort((a, b) => b[1] - a[1]); // Sort by XP descending
 
-      // Build leaderboard
-      const leaderboard: LeaderboardEntry[] = (users || [])
+      const sortedUserIds = sortedEntries.map(([userId]) => userId);
+
+      // Find current user's rank among all active users
+      const currentUserRank = sortedUserIds.indexOf(userId) + 1;
+
+      // Get top N user IDs
+      const topUserIds = sortedUserIds.slice(0, limit);
+
+      // Add current user if not in top N but has XP this week
+      const userInTop = topUserIds.includes(userId);
+      if (!userInTop && currentUserRank > 0) {
+        topUserIds.push(userId);
+      }
+
+      // Fetch profiles for these users
+      const { data: users, error: profilesError } = await supabase.from('profiles').select('id, username, email, total_xp, current_level').in('id', topUserIds);
+
+      if (profilesError) throw profilesError;
+      if (!users) {
+        return { leaderboard: [], currentUserRank: 0 };
+      }
+
+      // Build leaderboard with proper ranks
+      const leaderboard: LeaderboardEntry[] = users
         .map((user) => ({
           id: user.id,
           username: user.username || user.email.split('@')[0],
           email: user.email,
           total_xp: user.total_xp || 0,
           current_level: user.current_level || 1,
-          rank: 0, // Will be assigned after sorting
+          rank: sortedUserIds.indexOf(user.id) + 1,
           weeklyXP: xpByUser.get(user.id) || 0,
           isCurrentUser: user.id === userId,
+          avatar: this.generateAvatar(user.username || user.email),
         }))
-        .sort((a, b) => (b.weeklyXP || 0) - (a.weeklyXP || 0))
-        .slice(0, limit)
-        .map((user, index) => ({ ...user, rank: index + 1 }));
+        .sort((a, b) => (b.weeklyXP || 0) - (a.weeklyXP || 0));
 
-      return leaderboard;
+      return { leaderboard, currentUserRank };
     } catch (error) {
       console.error('Error fetching weekly leaderboard:', error);
-      return [];
+      return { leaderboard: [], currentUserRank: 0 };
     }
   }
 

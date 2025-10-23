@@ -10,7 +10,6 @@ import AchievementBadge from './AchievementBadge';
 import DailyChallenge from './DailyChallenge';
 import LevelProgress from './LevelProgress';
 import StatsCard from './statsCard';
-import NextAchievement from './NextAchievement';
 
 // Utils & Services
 import { getGreeting } from '../../utils/progressStatus';
@@ -53,194 +52,286 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   totalXP = 0,
 }) => {
   const navigation = useNavigation();
-  const { user, username } = useAuth();
-  const { refreshStats, updateStatsOptimistically } = useStats();
+  const { user } = useAuth();
+  const { refreshStats } = useStats();
   const greeting = getGreeting();
+
+  // Optimistic update state
+  const [optimisticXP, setOptimisticXP] = React.useState(currentLevelXP);
+  const [optimisticTotalXP, setOptimisticTotalXP] = React.useState(totalXP);
+
+  // Update optimistic state when props change
+  React.useEffect(() => {
+    setOptimisticXP(currentLevelXP);
+    setOptimisticTotalXP(totalXP);
+  }, [currentLevelXP, totalXP]);
 
   // Get tier theme based on current level
   const getCurrentTier = (): AchievementTierName => {
     const title = achievementTitles.find((t) => userLevel >= t.level && userLevel < (achievementTitles.find((next) => next.level > t.level)?.level || Infinity));
-
     return (title?.tier as AchievementTierName) || 'Novice';
   };
 
   const currentTier = getCurrentTier();
   const tierTheme = getAchievementTierTheme(currentTier);
 
-  // Create light variants for the background gradient
-  const getLightGradient = () => {
-    const baseColors = tierTheme.gradient;
-    return [
-      `${baseColors[0]}15`, // 15% opacity of primary
-      `${baseColors[1]}10`, // 10% opacity of secondary
-      '#FAF9F7', // Warm white base
-    ];
+  // Determine text colors based on gem type (matching CurrentLevelHero logic)
+  const getTextColors = (gemName: string) => {
+    // Lighter gems need darker text for contrast
+    if (['Crystal', 'Topaz'].includes(gemName)) {
+      return {
+        primary: '#FFFFFF', // White title for all
+        secondary: '#374151', // stone-700
+        greeting: '#FFFFFF', // White greeting for all
+        levelBadgeText: '#1F2937', // Dark text on light badge
+        xpText: '#374151', // Dark text
+        levelBadgeBg: 'rgba(255, 255, 255, 0.85)', // More opaque for better contrast
+        xpBadgeBg: 'rgba(255, 255, 255, 0.75)',
+      };
+    }
+
+    // Darker gems need lighter text
+    return {
+      primary: '#FFFFFF',
+      secondary: 'rgba(255, 255, 255, 0.95)',
+      greeting: '#FFFFFF',
+      levelBadgeText: '#FFFFFF',
+      xpText: '#FFFFFF',
+      levelBadgeBg: 'rgba(255, 255, 255, 0.3)',
+      xpBadgeBg: 'rgba(255, 255, 255, 0.25)',
+    };
   };
+
+  const textColors = getTextColors(tierTheme.gemName);
 
   const handleAchievementPress = () => {
     navigation.navigate('Achievements' as never);
   };
 
   const handleXPCollect = async (amount: number) => {
-    console.log('DashboardHeader: XP collected, updating optimistically', { amount });
+    // Optimistic update - update UI immediately
+    setOptimisticXP((prev) => prev + amount);
+    setOptimisticTotalXP((prev) => prev + amount);
 
-    // ✅ Update stats optimistically (instant UI update, no backend call)
-    const result = updateStatsOptimistically(amount);
-
-    // Notify parent if needed (optional)
+    // Call parent callback if provided
     if (onXPCollected) {
       onXPCollected(amount);
     }
 
-    // ✅ NO REFRESH! Let optimistic update handle everything
-    // The backend already updated via XPService.collectDailyChallenge()
-    // If you need eventual consistency, do it much later (5+ seconds)
-
-    // Handle level up if it occurred
-    if (result?.leveledUp) {
-      console.log('DashboardHeader: Level up detected!', { newLevel: result.newLevel });
-
-      // Small delay to let the XP animation finish
-      setTimeout(() => {
-        if (onStatsRefresh) {
-          onStatsRefresh();
-        }
-      }, 1500);
-    }
+    // Background refresh without blocking UI (delayed to avoid race condition)
+    setTimeout(async () => {
+      // await refreshStats(true);
+      if (onStatsRefresh) {
+        onStatsRefresh();
+      }
+    }, 1000); // Increased delay to ensure DB is updated
   };
 
   const handleLevelUp = async () => {
-    console.log('DashboardHeader: Level up callback triggered');
-
-    // No immediate refresh needed since we updated optimistically
-    // Just notify parent for any additional actions (like showing level-up modal)
+    // For level up, we do need to refresh to get new level data
+    await refreshStats(true);
     if (onStatsRefresh) {
       onStatsRefresh();
     }
   };
-  console.log('USER DATA', user);
-  const nextTitle = achievementTitles.find((title) => title.level > userLevel);
-  const xpToNextLevel = xpForNextLevel - currentLevelXP;
 
-  const displayXP = currentLevelXP > xpForNextLevel ? currentLevelXP % xpForNextLevel : currentLevelXP;
-  const displayProgress = xpForNextLevel > 0 ? Math.min((displayXP / xpForNextLevel) * 100, 100) : 0;
+  const nextTitle = achievementTitles.find((title) => title.level > userLevel);
+  const xpToNextLevel = xpForNextLevel - optimisticXP;
+
+  const displayXP = optimisticXP > xpForNextLevel ? optimisticXP % xpForNextLevel : optimisticXP;
+  const displayProgress = xpForNextLevel > 0 ? (displayXP / xpForNextLevel) * 100 : 0;
 
   return (
-    <Animated.View entering={FadeIn} style={{ marginBottom: 20 }}>
+    <Animated.View entering={FadeIn} style={{ position: 'relative', marginBottom: 16 }}>
       <LinearGradient
-        colors={getLightGradient()}
+        colors={tierTheme.gradient}
         start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
+        end={{ x: 1, y: 1 }}
         style={{
-          borderRadius: 24,
-          padding: 20,
+          borderRadius: 20,
+          overflow: 'hidden',
+          borderWidth: 1.5,
+          borderColor: 'rgba(255, 255, 255, 0.2)',
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.08,
-          shadowRadius: 12,
-          elevation: 4,
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.3,
+          shadowRadius: 20,
         }}
       >
-        <View>
-          {/* Greeting */}
-          <View style={{ marginBottom: 20 }}>
-            {/* Greeting */}
+        {/* Subtle texture overlay for depth */}
+        <View
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.05)',
+          }}
+        />
+
+        <View style={{ padding: 20, paddingBottom: 0 }}>
+          {/* Greeting and Level Section */}
+          <View style={{ marginBottom: 16 }}>
+            {/* Greeting with username - Always white with strong shadow */}
             <Text
               style={{
-                fontSize: 18,
-                color: '#64748B',
+                fontSize: 11,
                 fontWeight: '700',
-                letterSpacing: 1.5,
-                textTransform: 'uppercase',
-                textShadowColor: 'rgba(0, 0, 0, 0.08)',
-                textShadowOffset: { width: 0, height: 2 },
+                color: '#FFFFFF',
+                letterSpacing: 2,
+                textShadowColor: 'rgba(0, 0, 0, 0.5)',
+                textShadowOffset: { width: 0, height: 1 },
                 textShadowRadius: 4,
+                marginBottom: 2,
               }}
             >
-              {greeting}
+              {greeting.toUpperCase()}
+              {user?.username && `, ${user.username.toUpperCase()}`}
             </Text>
 
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <View style={{ flex: 1 }}>
-                {/* Username with Tier Indicator */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <View
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: 4,
-                      backgroundColor: tierTheme.accent,
-                      shadowColor: tierTheme.accent,
-                      shadowOffset: { width: 0, height: 0 },
-                      shadowOpacity: 0.4,
-                      shadowRadius: 4,
-                    }}
-                  />
-                  <Text
-                    style={{
-                      fontSize: 18,
-                      fontWeight: '700',
-                      color: '#0F172A',
-                      letterSpacing: 0.2,
-                    }}
-                  >
-                    {username}
-                  </Text>
-                </View>
-
-                {/* Title */}
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginTop: 6,
+              }}
+            >
+              <View style={{ flex: 1, paddingRight: 75 }}>
+                {/* Title - Always white with strong shadow */}
                 <Text
                   style={{
-                    fontSize: 22,
+                    fontSize: 26,
                     fontWeight: '900',
-                    color: '#0A0A0A',
-                    letterSpacing: -0.5,
+                    color: '#FFFFFF',
                     lineHeight: 30,
+                    textShadowColor: 'rgba(0, 0, 0, 0.6)',
+                    textShadowOffset: { width: 0, height: 2 },
+                    textShadowRadius: 8,
                   }}
                 >
                   {userTitle}
                 </Text>
+
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                    marginTop: 8,
+                  }}
+                >
+                  {/* Level Badge - Dynamic background based on gem type */}
+                  <LinearGradient
+                    colors={[textColors.levelBadgeBg, textColors.levelBadgeBg]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{
+                      borderRadius: 16,
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
+                      borderWidth: 1,
+                      borderColor: textColors.levelBadgeText === '#1F2937' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.4)',
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 6,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 10,
+                        fontWeight: '800',
+                        color: textColors.levelBadgeText,
+                        letterSpacing: 0.5,
+                        textShadowColor: textColors.levelBadgeText === '#FFFFFF' ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.5)',
+                        textShadowOffset: { width: 0, height: 1 },
+                        textShadowRadius: 2,
+                      }}
+                    >
+                      LEVEL {userLevel}
+                    </Text>
+                  </LinearGradient>
+
+                  {/* Total XP Display */}
+                  <View
+                    style={{
+                      backgroundColor: textColors.xpBadgeBg,
+                      borderRadius: 16,
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
+                      borderWidth: 1,
+                      borderColor: textColors.xpText === '#374151' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.3)',
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 10,
+                        fontWeight: '700',
+                        color: textColors.xpText,
+                        textShadowColor: textColors.xpText === '#FFFFFF' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.5)',
+                        textShadowOffset: { width: 0, height: 1 },
+                        textShadowRadius: 2,
+                      }}
+                    >
+                      {optimisticTotalXP.toLocaleString()} XP
+                    </Text>
+                  </View>
+                </View>
               </View>
 
               {/* Achievement Badge */}
-              <View style={{ marginLeft: 16 }}>
-                <AchievementBadge achievement={currentAchievement} onPress={handleAchievementPress} tierTheme={tierTheme} size={80} />
+              <View
+                style={{
+                  position: 'absolute',
+                  right: 0,
+                  top: -16,
+                  zIndex: 20,
+                }}
+              >
+                <AchievementBadge achievement={currentAchievement} onPress={handleAchievementPress} tierTheme={tierTheme} size={70} />
               </View>
             </View>
           </View>
 
           {/* Level Progress Bar - Only show if level < 30 */}
           {userLevel < 30 && (
-            <View style={{ marginBottom: 20 }}>
-              <LevelProgress currentLevel={userLevel} currentLevelXP={displayXP} xpForNextLevel={xpForNextLevel} levelProgress={displayProgress} tierTheme={tierTheme} />
+            <View style={{ marginBottom: 16 }}>
+              <LevelProgress
+                currentLevel={userLevel}
+                currentLevelXP={displayXP}
+                xpForNextLevel={xpForNextLevel}
+                levelProgress={displayProgress}
+                tierTheme={tierTheme}
+                textColor={textColors.secondary}
+              />
             </View>
           )}
 
-          {/* Stats Grid */}
-          <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
-            <StatsCard label="Streak" value={totalStreak} image="streak" subtitle="days" isStreak={true} streakValue={totalStreak} tierTheme={tierTheme} />
-            <StatsCard label="Active" value={activeHabits} image="active" subtitle="Quests" tierTheme={tierTheme} />
+          {/* Stats Grid - NOW WITH DARKER THEME */}
+          <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
+            <StatsCard label="Streak" value={totalStreak} image="streak" subtitle="days" isStreak={true} streakValue={totalStreak} tierTheme={tierTheme} textColor={textColors.secondary} />
+            <StatsCard label="Active" value={activeHabits} image="active" subtitle="Quests" tierTheme={tierTheme} textColor={textColors.secondary} />
           </View>
 
           {/* Daily Challenge */}
           {user?.id && (
-            <View style={{ marginBottom: 16 }}>
+            <View style={{ marginBottom: 12 }}>
               <DailyChallenge
                 completedToday={completedTasksToday}
                 totalTasksToday={totalTasksToday}
                 onCollect={handleXPCollect}
                 userId={user.id}
-                currentLevelXP={currentLevelXP}
+                currentLevelXP={optimisticXP}
                 xpForNextLevel={xpForNextLevel}
                 onLevelUp={handleLevelUp}
                 debugMode={__DEV__}
                 tierTheme={tierTheme}
+                textColor={textColors.secondary}
               />
             </View>
           )}
-
-          {/* Next Achievement Preview */}
-          {/* {nextTitle && <NextAchievement nextTitle={nextTitle} xpToNextLevel={xpToNextLevel} tierTheme={tierTheme} />} */}
         </View>
       </LinearGradient>
     </Animated.View>

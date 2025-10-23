@@ -40,9 +40,9 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
   };
 
   const textColors = getTextColors(tierTheme.gemName);
-  const lockedGradient = [tierGradient[0] + '40', tierGradient[1] + '35', tierGradient[2] + '30'];
-  const lockedProgressGradient = [tierGradient[0] + '60', tierGradient[1] + '50'];
-  const lockedButtonGradient = [tierGradient[0] + '80', tierGradient[1] + '80'];
+  const lockedGradient = [tierGradient[0] + '70', tierGradient[1] + '65', tierGradient[2] + '60'];
+  const lockedProgressGradient = [tierGradient[0] + '85', tierGradient[1] + '75'];
+  const lockedButtonGradient = [tierGradient[0] + 'B0', tierGradient[1] + 'B0'];
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -73,7 +73,7 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
                           style={{
                             width: 250,
                             height: 180,
-                            opacity: isUnlocked ? 1 : 0.3,
+                            opacity: isUnlocked ? 1 : 0.5, // changed from 0.3
                           }}
                           resizeMode="contain"
                         />
@@ -86,7 +86,7 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
                               style={{
                                 width: 60,
                                 height: 60,
-                                opacity: 0.6,
+                                opacity: 0.85, // changed from 0.6
                               }}
                               resizeMode="contain"
                             />

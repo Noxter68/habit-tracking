@@ -177,7 +177,7 @@ const Dashboard: React.FC = () => {
           currentLevelXP={stats?.currentLevelXP ?? 0}
           xpForNextLevel={stats?.xpForNextLevel ?? 100}
           levelProgress={stats?.levelProgress ?? 0}
-          onStatsRefresh={() => {}} // ✅ Empty - no immediate refresh
+          onStatsRefresh={() => {}}
           totalXP={stats?.totalXP ?? 0}
         />
 

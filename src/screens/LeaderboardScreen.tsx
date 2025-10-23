@@ -15,9 +15,9 @@ const RUBY_GEM = require('../../assets/interface/gems/ruby-gem.png');
 const AMETHYST_GEM = require('../../assets/interface/gems/amethyst-gem.png');
 
 const TIER_COLORS = {
-  1: { bg: '#8b5cf6', light: '#a78bfa', border: '#7c3aed', gem: AMETHYST_GEM }, // Amethyst Purple
-  2: { bg: '#ef4444', light: '#f87171', border: '#dc2626', gem: RUBY_GEM }, // Ruby Red
-  3: { bg: '#60a5fa', light: '#93c5fd', border: '#3b82f6', gem: CRYSTAL_GEM }, // Crystal Blue
+  1: { bg: '#8b5cf6', light: '#a78bfa', border: '#7c3aed', gem: AMETHYST_GEM },
+  2: { bg: '#ef4444', light: '#f87171', border: '#dc2626', gem: RUBY_GEM },
+  3: { bg: '#60a5fa', light: '#93c5fd', border: '#3b82f6', gem: CRYSTAL_GEM },
 };
 
 type LeaderboardMode = 'global' | 'weekly';
@@ -45,12 +45,13 @@ const LeaderboardScreen = () => {
       else setLoading(true);
 
       if (mode === 'global') {
-        const { leaderboard: data, currentUserRank: rank } = await LeaderboardService.getGlobalLeaderboard(user.id, 50);
+        const { leaderboard: data, currentUserRank: rank } = await LeaderboardService.getGlobalLeaderboard(user.id, 20);
         setLeaderboard(data);
         setCurrentUserRank(rank);
       } else {
-        const data = await LeaderboardService.getWeeklyLeaderboard(user.id, 50);
+        const { leaderboard: data, currentUserRank: rank } = await LeaderboardService.getWeeklyLeaderboard(user.id, 20);
         setLeaderboard(data);
+        setCurrentUserRank(rank);
       }
     } catch (error) {
       console.error('Error loading leaderboard:', error);
@@ -86,7 +87,7 @@ const LeaderboardScreen = () => {
       >
         {/* Header */}
         <LinearGradient colors={['#1F2937', '#111827', '#030712']} style={{ paddingHorizontal: 24, paddingTop: 60, paddingBottom: 32 }}>
-          {/* Crown with Gradient Background */}
+          {/* Crown */}
           <View style={{ alignItems: 'center', marginBottom: 24 }}>
             <LinearGradient
               colors={['rgba(251, 191, 36, 0.25)', 'rgba(251, 191, 36, 0.15)', 'rgba(251, 191, 36, 0.05)']}
@@ -148,7 +149,7 @@ const LeaderboardScreen = () => {
               shadowRadius: 16,
             }}
           >
-            {/* 1st Place - Full Width Horizontal Card */}
+            {/* 1st Place */}
             {topThree[0] && (
               <Animated.View entering={FadeInDown.delay(100)} style={{ marginBottom: 16 }}>
                 <LinearGradient
@@ -161,22 +162,16 @@ const LeaderboardScreen = () => {
                     flexDirection: 'row',
                     alignItems: 'center',
                     borderWidth: 3,
-                    borderColor: `${TIER_COLORS[1].bg}70`,
+                    borderColor: `${TIER_COLORS[1].bg}80`,
                     shadowColor: TIER_COLORS[1].bg,
                     shadowOffset: { width: 0, height: 6 },
                     shadowOpacity: 0.6,
                     shadowRadius: 16,
                   }}
                 >
-                  {/* Gem Icon */}
-                  <Image source={TIER_COLORS[1].gem} style={{ width: 72, height: 72, marginRight: 16 }} resizeMode="contain" />
+                  <Image source={TIER_COLORS[1].gem} style={{ width: 80, height: 80, marginRight: 16 }} resizeMode="contain" />
 
-                  {/* Content */}
                   <View style={{ flex: 1 }}>
-                    <View style={{ backgroundColor: `${TIER_COLORS[1].bg}40`, paddingHorizontal: 12, paddingVertical: 5, borderRadius: 8, alignSelf: 'flex-start', marginBottom: 10 }}>
-                      <Text style={{ fontSize: 11, fontWeight: '900', color: TIER_COLORS[1].light, letterSpacing: 0.5 }}>1ST PLACE</Text>
-                    </View>
-
                     <Text style={{ fontSize: 19, fontWeight: '900', color: '#FFFFFF', marginBottom: 10 }} numberOfLines={1}>
                       {topThree[0].username}
                     </Text>
@@ -195,9 +190,9 @@ const LeaderboardScreen = () => {
               </Animated.View>
             )}
 
-            {/* 2nd and 3rd Place - Vertical Cards Side by Side */}
+            {/* 2nd and 3rd Place */}
             <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 10 }}>
-              {/* 2nd Place - RUBY */}
+              {/* 2nd Place */}
               {topThree[1] && (
                 <Animated.View entering={FadeInDown.delay(200)} style={{ flex: 1, alignItems: 'center' }}>
                   <LinearGradient
@@ -233,7 +228,7 @@ const LeaderboardScreen = () => {
                 </Animated.View>
               )}
 
-              {/* 3rd Place - CRYSTAL */}
+              {/* 3rd Place */}
               {topThree[2] && (
                 <Animated.View entering={FadeInDown.delay(300)} style={{ flex: 1, alignItems: 'center' }}>
                   <LinearGradient
@@ -315,8 +310,8 @@ const LeaderboardScreen = () => {
           </View>
         )}
 
-        {/* Your Position (if outside top rankings) */}
-        {currentUser && currentUser.rank > 10 && (
+        {/* Your Position (if outside top 20) */}
+        {currentUser && currentUser.rank > 20 && (
           <View style={{ paddingHorizontal: 20, marginTop: 20 }}>
             <LinearGradient colors={['#4B5563', '#374151']} style={{ borderRadius: 20, padding: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <View>
