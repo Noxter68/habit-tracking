@@ -51,41 +51,41 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
   }));
 
   const getGradientColors = () => {
-    // Lighter background for Ruby (red) and Topaz (yellow) gems
+    // Lighter background similar to DailyChallenge - semi-transparent white/green
     if (['Ruby', 'Topaz'].includes(theme.gemName)) {
-      return ['rgba(0, 20, 10, 0.25)', 'rgba(0, 30, 15, 0.35)'];
+      return ['rgba(255, 255, 255, 0.15)', 'rgba(255, 255, 255, 0.08)'];
     }
-    // Standard dark green gradient for other cards
-    return ['rgba(0, 20, 10, 0.4)', 'rgba(0, 30, 15, 0.5)'];
+    // Standard lighter background for all other cards
+    return ['rgba(255, 255, 255, 0.15)', 'rgba(255, 255, 255, 0.08)'];
   };
 
   const getBorderColor = () => {
-    // Lighter border for Ruby and Topaz
+    // Lighter border
     if (['Ruby', 'Topaz'].includes(theme.gemName)) {
-      return 'rgba(100, 200, 150, 0.2)';
+      return 'rgba(255, 255, 255, 0.25)';
     }
-    // Subtle green border
-    return 'rgba(100, 200, 150, 0.15)';
+    // Subtle border
+    return 'rgba(255, 255, 255, 0.2)';
   };
 
   const getTextColors = () => {
-    // Light text for dark background
-    return 'rgba(220, 255, 230, 1)';
+    // White text for lighter background
+    return 'rgba(255, 255, 255, 0.95)';
   };
 
   const getSubtextColors = () => {
-    // Muted green subtext
-    return 'rgba(150, 220, 180, 0.85)';
+    // Lighter subtext
+    return 'rgba(255, 255, 255, 0.85)';
   };
 
   const getIconBg = () => {
-    // Subtle green icon background
-    return 'rgba(100, 200, 150, 0.12)';
+    // Subtle white icon background
+    return 'rgba(255, 255, 255, 0.2)';
   };
 
   const getIconColor = () => {
-    // Light icon color
-    return 'rgba(200, 255, 220, 0.9)';
+    // White icon color
+    return 'rgba(255, 255, 255, 0.9)';
   };
 
   const getShadowColor = () => {
