@@ -47,6 +47,7 @@ import { DEBUG_MODE } from '@env';
 import { SubscriptionProvider } from '@/context/SubscriptionContext';
 import PaywallScreen from '@/screens/PaywallScreen';
 import { RevenueCatService } from '@/services/RevenueCatService';
+import HolidayModeScreen from '@/screens/HolidayModeScreen';
 
 // Type Definitions
 export type RootStackParamList = {
@@ -268,6 +269,15 @@ function AppNavigator() {
           options={{
             presentation: 'modal',
             animation: 'slide_from_bottom',
+          }}
+        />
+        <Stack.Screen
+          name="HolidayMode"
+          component={HolidayModeScreen}
+          options={{
+            headerShown: false,
+            presentation: 'card',
+            animation: 'slide_from_right',
           }}
         />
         {showDebugScreen && (

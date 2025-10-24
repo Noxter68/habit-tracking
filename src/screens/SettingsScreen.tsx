@@ -1,5 +1,5 @@
 // src/screens/SettingsScreen.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Switch, SafeAreaView, StatusBar, ActivityIndicator, Alert, Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -11,6 +11,7 @@ import { useSubscription } from '@/context/SubscriptionContext';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/types';
+import { HolidayModeService } from '@/services/holidayModeService';
 
 // ============================================================================
 // Types
@@ -24,7 +25,17 @@ interface IconProps {
   color?: string;
 }
 
-type IconName = 'notifications-outline' | 'language-outline' | 'information-circle-outline' | 'help-circle-outline' | 'log-out-outline' | 'chevron-forward' | 'crown' | 'sparkles' | 'credit-card';
+type IconName =
+  | 'notifications-outline'
+  | 'language-outline'
+  | 'information-circle-outline'
+  | 'help-circle-outline'
+  | 'log-out-outline'
+  | 'chevron-forward'
+  | 'crown'
+  | 'sparkles'
+  | 'credit-card'
+  | 'beach-outline';
 
 interface SettingsSectionProps {
   title: string;
@@ -101,6 +112,11 @@ const Icon: React.FC<IconProps> = ({ name, size = 22, color = '#9333EA' }) => {
       <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
         <Rect x="2" y="5" width="20" height="14" rx="2" stroke={color} strokeWidth={2} />
         <Path d="M2 10h20" stroke={color} strokeWidth={2} />
+      </Svg>
+    ),
+    'beach-outline': (
+      <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <Path d="M12 3L4 9h16l-8-6zm-8 8v10h16V11H4zm8 8c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
       </Svg>
     ),
   };
@@ -247,9 +263,22 @@ const SettingsItem: React.FC<SettingsItemProps> = ({ icon, title, subtitle, trai
 
 const SettingsScreen: React.FC = () => {
   const [notifications, setNotifications] = useState(true);
-  const { signOut, loading } = useAuth();
+  const [isOnHoliday, setIsOnHoliday] = useState(false);
+
+  const { signOut, loading, user } = useAuth();
   const { isPremium, subscription } = useSubscription();
   const navigation = useNavigation<NavigationProp>();
+
+  useEffect(() => {
+    const checkHolidayStatus = async () => {
+      if (user) {
+        const holidayStatus = await HolidayModeService.isOnHoliday(user.id);
+        setIsOnHoliday(holidayStatus);
+      }
+    };
+
+    checkHolidayStatus();
+  }, [user]);
 
   const handleToggle = (setter: React.Dispatch<React.SetStateAction<boolean>>, value: boolean) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -317,6 +346,29 @@ const SettingsScreen: React.FC = () => {
                 )
               }
               color="#78716C"
+              isLast
+            />
+          </SettingsSection>
+
+          <SettingsSection title="Break Mode" delay={200} gradient={['#6366F1', '#4F46E5']}>
+            <SettingsItem
+              icon="beach-outline"
+              title="Holiday Mode"
+              subtitle={isOnHoliday ? 'Active - Habits paused' : 'Pause habits without losing streaks'}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                navigation.navigate('HolidayMode');
+              }}
+              trailing={
+                isOnHoliday ? (
+                  <View style={tw`px-3 py-1.5 bg-indigo-600 rounded-lg`}>
+                    <Text style={tw`text-white text-xs font-bold`}>ACTIVE</Text>
+                  </View>
+                ) : (
+                  <Icon name="chevron-forward" size={20} color="#6366F1" />
+                )
+              }
+              color="#6366F1"
               isLast
             />
           </SettingsSection>

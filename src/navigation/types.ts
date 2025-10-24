@@ -20,6 +20,9 @@ export type RootStackParamList = {
   Profile: undefined;
   NotificationSettings: undefined;
 
+  // Holidays
+  HolidayMode: undefined;
+
   // Achievement & Stats
   Achievements: undefined;
   Statistics: undefined;
@@ -69,6 +72,7 @@ export type MainStackParamList = {
   };
   Settings: undefined;
   Achievements: undefined;
+  HolidayMode: undefined;
   Paywall: {
     source?: string;
   };
