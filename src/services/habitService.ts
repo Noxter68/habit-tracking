@@ -1,4 +1,5 @@
 // src/services/habitService.ts
+import { getLocalDateString, getTodayString } from '@/utils/dateHelpers';
 import { supabase } from '../lib/supabase';
 import { Habit, HabitProgression } from '../types';
 import { HabitProgressionService } from './habitProgressionService';
@@ -436,7 +437,7 @@ export class HabitService {
       let bestStreak = 0;
 
       if (completions && completions.length > 0) {
-        const today = new Date().toISOString().split('T')[0];
+        const today = getTodayString();
 
         // ✅ Get unique dates (any progress on that day)
         const dates = [...new Set(completions.map((c) => c.date))];
@@ -445,7 +446,7 @@ export class HabitService {
         const todayHasProgress = dates.includes(today) || date === today;
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().split('T')[0];
+        const yesterdayStr = getLocalDateString(yesterday);
         const yesterdayHasProgress = dates.includes(yesterdayStr);
 
         // Start counting if today OR yesterday has progress
@@ -458,7 +459,7 @@ export class HabitService {
           for (let i = 1; i < 365; i++) {
             const checkDate = new Date();
             checkDate.setDate(checkDate.getDate() - (i + startDay));
-            const dateStr = checkDate.toISOString().split('T')[0];
+            const dateStr = getLocalDateString(checkDate);
 
             if (dates.includes(dateStr)) {
               currentStreak++;
@@ -505,7 +506,7 @@ export class HabitService {
    */
   static async updateStreak(habitId: string, userId: string): Promise<void> {
     try {
-      const { currentStreak, bestStreak } = await this.calculateStreaks(habitId, userId, new Date().toISOString().split('T')[0], false);
+      const { currentStreak, bestStreak } = await this.calculateStreaks(habitId, userId, getTodayString(), false);
 
       await supabase
         .from('habits')
@@ -650,7 +651,7 @@ export class HabitService {
     totalTasks?: number;
   }> {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayString();
 
       // Get all habits for the user
       const { data: habits, error: habitsError } = await supabase.from('habits').select('id, tasks').eq('user_id', userId);
@@ -721,7 +722,7 @@ export class HabitService {
     totalXPAvailable: number;
   }> {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayString();
       const todayStats = await this.getTodayStats(userId);
 
       const allComplete = (todayStats.totalTasks ?? 0) > 0 && (todayStats.completedTasks ?? 0) === (todayStats.totalTasks ?? 0);
@@ -746,8 +747,8 @@ export class HabitService {
     try {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
-      const weekAgoStr = weekAgo.toISOString().split('T')[0];
-      const today = new Date().toISOString().split('T')[0];
+      const weekAgoStr = getLocalDateString(weekAgo);
+      const today = getTodayString();
 
       // Get completions for the past week
       const { data: completions, error } = await supabase.from('task_completions').select('date, all_completed, completed_tasks').eq('user_id', userId).gte('date', weekAgoStr).lte('date', today);

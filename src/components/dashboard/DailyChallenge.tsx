@@ -3,9 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CheckCircle2 } from 'lucide-react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withSequence, Easing, runOnJS } from 'react-native-reanimated';
 import { XPService } from '../../services/xpService';
 import { supabase } from '../../lib/supabase';
 import { useDebugMode } from '@/hooks/useDebugMode';
+import { getTodayString } from '@/utils/dateHelpers';
 
 interface TierTheme {
   gradient: string[];
@@ -23,16 +25,54 @@ interface DailyChallengeProps {
   onLevelUp?: () => void;
   debugMode?: boolean;
   tierTheme?: TierTheme;
+  textColor?: string;
 }
 
-const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTasksToday, onCollect, userId, currentLevelXP, xpForNextLevel, onLevelUp, debugMode = false, tierTheme }) => {
+const DailyChallenge: React.FC<DailyChallengeProps> = ({
+  completedToday,
+  totalTasksToday,
+  onCollect,
+  userId,
+  currentLevelXP,
+  xpForNextLevel,
+  onLevelUp,
+  debugMode = false,
+  tierTheme,
+  textColor = 'rgba(255, 255, 255, 0.95)',
+}) => {
   const [isCollected, setIsCollected] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showXPBadge, setShowXPBadge] = useState(false);
 
   const isComplete = completedToday >= totalTasksToday && totalTasksToday > 0;
   const completionPercentage = totalTasksToday > 0 ? Math.min(100, Math.round((completedToday / totalTasksToday) * 100)) : 0;
 
   const { showTestButtons } = useDebugMode();
+
+  // Animation values
+  const scale = useSharedValue(1);
+  const glowOpacity = useSharedValue(0);
+  const cardScale = useSharedValue(1);
+  const cardTranslateY = useSharedValue(0);
+  const badgeTranslateY = useSharedValue(0);
+  const badgeOpacity = useSharedValue(0);
+
+  const animatedButtonStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const animatedGlowStyle = useAnimatedStyle(() => ({
+    opacity: glowOpacity.value,
+  }));
+
+  const cardAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: cardScale.value }, { translateY: cardTranslateY.value }],
+  }));
+
+  const badgeAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: badgeTranslateY.value }],
+    opacity: badgeOpacity.value,
+  }));
 
   // Default to Amethyst if no tier theme provided
   const defaultTheme = {
@@ -43,6 +83,18 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
 
   const theme = tierTheme || defaultTheme;
 
+  // Glow animation when complete only
+  React.useEffect(() => {
+    if (isComplete && !isCollected) {
+      glowOpacity.value = withTiming(0.6, {
+        duration: 1000,
+        easing: Easing.inOut(Easing.ease),
+      });
+    } else {
+      glowOpacity.value = withTiming(0, { duration: 300 });
+    }
+  }, [isComplete, isCollected]);
+
   // Check collection status from DATABASE
   useEffect(() => {
     checkCollectionStatus();
@@ -50,7 +102,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
 
   const checkCollectionStatus = async () => {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayString();
 
       const { data, error } = await supabase.from('daily_challenges').select('xp_collected').eq('user_id', userId).eq('date', today).single();
 
@@ -65,35 +117,72 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
     }
   };
 
+  const hideBadge = () => {
+    setShowXPBadge(false);
+  };
+
   const handleCollect = async () => {
     if (!isComplete || isCollected || isAnimating) return;
 
     setIsAnimating(true);
 
+    // Quick bouncy bubble effect on card
+    cardScale.value = withSequence(
+      withTiming(1.02, { duration: 60, easing: Easing.out(Easing.ease) }),
+      withSpring(0.98, { damping: 10, stiffness: 400 }),
+      withSpring(1, { damping: 12, stiffness: 300 })
+    );
+
+    cardTranslateY.value = withSequence(withTiming(-5, { duration: 75, easing: Easing.out(Easing.ease) }), withSpring(0, { damping: 10, stiffness: 350 }));
+
     try {
       const success = await XPService.collectDailyChallenge(userId);
 
       if (success) {
+        // Update local state immediately
         setIsCollected(true);
-        onCollect(20);
+        setShowXPBadge(true);
 
-        // Check for level up
-        if (currentLevelXP + 20 >= xpForNextLevel && onLevelUp) {
-          setTimeout(() => {
-            onLevelUp();
-          }, 500);
-        }
+        // XP Badge float up animation
+        badgeTranslateY.value = 0;
+        badgeOpacity.value = 0;
+
+        badgeOpacity.value = withTiming(1, { duration: 200 });
+        badgeTranslateY.value = withSequence(
+          withTiming(-50, { duration: 1200, easing: Easing.out(Easing.cubic) }),
+          withTiming(-50, { duration: 0 }, (finished) => {
+            if (finished) {
+              runOnJS(hideBadge)();
+            }
+          })
+        );
+
+        badgeOpacity.value = withSequence(withTiming(1, { duration: 200 }), withTiming(1, { duration: 600 }), withTiming(0, { duration: 400 }));
+
+        // Call parent callback after animation starts
+        setTimeout(() => {
+          onCollect(20); // Triggers optimistic update
+
+          // Check level up
+          if (currentLevelXP + 20 >= xpForNextLevel && onLevelUp) {
+            setTimeout(() => {
+              onLevelUp();
+            }, 100);
+          }
+        }, 300);
       }
     } catch (error) {
       console.error('Error collecting daily challenge:', error);
     } finally {
-      setIsAnimating(false);
+      setTimeout(() => {
+        setIsAnimating(false);
+      }, 1300);
     }
   };
 
   const handleDebugReset = async () => {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayString();
 
       const { error } = await supabase
         .from('daily_challenges')
@@ -113,197 +202,261 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ completedToday, totalTa
     }
   };
 
-  // Determine gradient and styles based on state
-  const getCardStyle = () => {
-    if (isCollected) {
-      return {
-        gradient: ['#F9FAFB', '#F3F4F6', '#F9FAFB'],
-        iconBg: 'rgba(156, 163, 175, 0.15)',
-        textPrimary: '#6B7280',
-        textSecondary: '#9CA3AF',
-        badgeBg: '#D1D5DB',
-        shadowColor: '#9CA3AF',
-        borderColor: 'rgba(156, 163, 175, 0.25)',
-      };
-    }
-    if (isComplete) {
-      return {
-        gradient: ['#CFFAFE', '#A5F3FC', '#E0F2FE'],
-        iconBg: 'rgba(6, 182, 212, 0.15)',
-        textPrimary: '#0E7490',
-        textSecondary: '#0891B2',
-        badgeBg: '#06B6D4',
-        shadowColor: '#06B6D4',
-        borderColor: 'rgba(6, 182, 212, 0.4)',
-      };
-    }
-    // In progress - use tier theme
-    return {
-      gradient: [`${theme.accent}08`, `${theme.accent}05`, '#FAF9F7'],
-      iconBg: `${theme.accent}15`,
-      textPrimary: '#1F2937',
-      textSecondary: '#6B7280',
-      badgeBg: theme.accent,
-      shadowColor: theme.accent,
-      progressBg: `${theme.accent}15`,
-      progressGradient: theme.gradient,
-      borderColor: `${theme.accent}30`,
-    };
-  };
-
-  const cardStyle = getCardStyle();
-
   return (
-    <View>
-      <Pressable
-        onPress={handleCollect}
-        disabled={!isComplete || isCollected || isAnimating}
-        style={({ pressed }) => [
-          {
-            transform: [{ scale: pressed && isComplete && !isCollected ? 0.98 : 1 }],
-          },
-        ]}
-      >
-        {/* Card with gradient, border and shadow */}
-        <LinearGradient
-          colors={cardStyle.gradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{
-            borderRadius: 16,
-            padding: 16,
-            borderWidth: 1.5,
-            borderColor: cardStyle.borderColor,
-            shadowColor: cardStyle.shadowColor,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.12,
-            shadowRadius: 10,
-            elevation: 4,
-          }}
-        >
-          <View
-            style={{
+    <View style={{ position: 'relative' }}>
+      {/* Floating XP Badge */}
+      {showXPBadge && (
+        <Animated.View
+          style={[
+            {
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              marginLeft: -40,
+              marginTop: -20,
+              zIndex: 10,
               flexDirection: 'row',
               alignItems: 'center',
-              justifyContent: 'space-between',
+              backgroundColor: 'rgba(100, 200, 150, 0.95)',
+              paddingHorizontal: 14,
+              paddingVertical: 8,
+              borderRadius: 20,
+              borderWidth: 2,
+              borderColor: 'rgba(100, 200, 150, 1)',
+              shadowColor: 'rgba(100, 200, 150, 1)',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.6,
+              shadowRadius: 12,
+              elevation: 10,
+            },
+            badgeAnimatedStyle,
+          ]}
+        >
+          <Image source={require('../../../assets/interface/consumable-xp.png')} style={{ width: 22, height: 22, marginRight: 8 }} resizeMode="contain" />
+          <Text
+            style={{
+              color: '#FFFFFF',
+              fontSize: 15,
+              fontWeight: '800',
+              textShadowColor: 'rgba(0, 0, 0, 0.3)',
+              textShadowOffset: { width: 0, height: 1 },
+              textShadowRadius: 2,
             }}
           >
-            {/* Left side: Icon + Text */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-              {/* Icon */}
-              <View
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 16,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: cardStyle.iconBg,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.08,
-                  shadowRadius: 4,
-                }}
-              >
-                {isCollected ? (
-                  <CheckCircle2 size={28} color="#9CA3AF" />
-                ) : isComplete ? (
-                  <Image source={require('../../../assets/interface/consumable-xp.png')} style={{ width: 40, height: 40 }} />
-                ) : (
-                  <Image source={require('../../../assets/interface/challenge.png')} style={{ width: 40, height: 40 }} />
-                )}
+            +20 XP
+          </Text>
+        </Animated.View>
+      )}
+
+      {/* Glow effect when complete */}
+      {isComplete && !isCollected && (
+        <Animated.View
+          style={[
+            {
+              position: 'absolute',
+              top: -4,
+              left: -4,
+              right: -4,
+              bottom: -4,
+              borderRadius: 22,
+              backgroundColor: 'rgba(100, 200, 150, 0.3)',
+            },
+            animatedGlowStyle,
+          ]}
+        />
+      )}
+
+      <Pressable onPress={handleCollect} disabled={!isComplete || isCollected || isAnimating}>
+        <Animated.View style={[animatedButtonStyle, cardAnimatedStyle]}>
+          <LinearGradient
+            colors={
+              isCollected
+                ? ['rgba(255, 255, 255, 0.1)', 'rgba(255, 255, 255, 0.05)']
+                : isComplete
+                ? ['rgba(100, 200, 150, 0.25)', 'rgba(100, 200, 150, 0.15)']
+                : ['rgba(255, 255, 255, 0.15)', 'rgba(255, 255, 255, 0.08)']
+            }
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={{
+              borderRadius: 18,
+              padding: 14,
+              borderWidth: 1,
+              borderColor: isComplete && !isCollected ? 'rgba(100, 200, 150, 0.4)' : 'rgba(255, 255, 255, 0.2)',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 8,
+            }}
+          >
+            {/* Header */}
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 10,
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                {/* Flask Icon - BIGGER (no bounce animation) */}
+                <View style={{ width: 36, height: 36 }}>
+                  <View
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 18,
+                      backgroundColor: 'rgba(100, 200, 150, 0.15)',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderWidth: 1,
+                      borderColor: 'rgba(100, 200, 150, 0.25)',
+                    }}
+                  >
+                    {isCollected ? (
+                      <CheckCircle2 size={20} color="rgba(150, 220, 180, 0.85)" />
+                    ) : isComplete ? (
+                      <Image source={require('../../../assets/interface/consumable-xp.png')} style={{ width: 28, height: 28 }} resizeMode="contain" />
+                    ) : (
+                      <Image source={require('../../../assets/interface/challenge.png')} style={{ width: 28, height: 28 }} resizeMode="contain" />
+                    )}
+                  </View>
+                </View>
+
+                <View>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: '700',
+                      color: '#FFFFFF',
+                      letterSpacing: 0.3,
+                      textShadowColor: 'rgba(0, 0, 0, 0.2)',
+                      textShadowOffset: { width: 0, height: 1 },
+                      textShadowRadius: 2,
+                    }}
+                  >
+                    Daily Challenge
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 10,
+                      fontWeight: '600',
+                      color: textColor,
+                      opacity: 0.8,
+                      marginTop: 1,
+                    }}
+                  >
+                    {isCollected ? 'Collected!' : isComplete ? 'Complete!' : `${totalTasksToday - completedToday} tasks to go`}
+                  </Text>
+                </View>
               </View>
 
-              {/* Text */}
-              <View style={{ marginLeft: 12, flex: 1 }}>
+              {/* XP Reward Badge */}
+              <View
+                style={{
+                  backgroundColor: isComplete && !isCollected ? 'rgba(100, 200, 150, 0.3)' : 'rgba(255, 255, 255, 0.2)',
+                  paddingHorizontal: 10,
+                  paddingVertical: 5,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: 'rgba(255, 255, 255, 0.3)',
+                }}
+              >
                 <Text
                   style={{
                     fontSize: 11,
                     fontWeight: '800',
-                    textTransform: 'uppercase',
-                    letterSpacing: 1,
-                    color: cardStyle.textPrimary,
+                    color: '#FFFFFF',
+                    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+                    textShadowOffset: { width: 0, height: 1 },
+                    textShadowRadius: 2,
                   }}
                 >
-                  Daily Challenge
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    marginTop: 2,
-                    color: cardStyle.textSecondary,
-                    fontWeight: '600',
-                  }}
-                >
-                  {isCollected ? 'Collected! See you tomorrow' : isComplete ? 'Tap to claim 20 XP!' : `${totalTasksToday - completedToday} tasks to go`}
+                  {isCollected ? '✓' : '+20 XP'}
                 </Text>
               </View>
             </View>
 
-            {/* Right side: XP Badge */}
+            {/* Progress Bar */}
+            {!isCollected && (
+              <View
+                style={{
+                  height: 6,
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                  borderRadius: 6,
+                  overflow: 'hidden',
+                  marginBottom: 10,
+                  borderWidth: 1,
+                  borderColor: 'rgba(255, 255, 255, 0.2)',
+                }}
+              >
+                <LinearGradient
+                  colors={isComplete ? ['rgba(100, 200, 150, 0.9)', 'rgba(80, 180, 130, 0.7)'] : ['rgba(255, 255, 255, 0.9)', 'rgba(255, 255, 255, 0.7)']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{
+                    width: `${Math.min(completionPercentage, 100)}%`,
+                    height: '100%',
+                    borderRadius: 6,
+                  }}
+                />
+              </View>
+            )}
+
+            {/* Progress Text & Button */}
             <View
               style={{
-                borderRadius: 20,
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-                backgroundColor: cardStyle.badgeBg,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
               }}
             >
               <Text
                 style={{
-                  fontSize: 13,
-                  fontWeight: '800',
-                  color: '#FFFFFF',
-                }}
-              >
-                {isCollected ? '✓' : '20 XP'}
-              </Text>
-            </View>
-          </View>
-
-          {/* Progress bar - only show if not complete and not collected */}
-          {!isComplete && !isCollected && (
-            <View style={{ marginTop: 12 }}>
-              <View
-                style={{
-                  height: 8,
-                  borderRadius: 20,
-                  overflow: 'hidden',
-                  backgroundColor: cardStyle.progressBg || `${theme.accent}15`,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: 0.05,
-                  shadowRadius: 2,
-                }}
-              >
-                <LinearGradient
-                  colors={cardStyle.progressGradient || theme.gradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={{
-                    height: '100%',
-                    width: `${completionPercentage}%`,
-                  }}
-                />
-              </View>
-              <Text
-                style={{
                   fontSize: 11,
-                  color: '#6B7280',
-                  marginTop: 6,
-                  textAlign: 'center',
                   fontWeight: '600',
+                  color: textColor,
+                  opacity: 0.9,
                 }}
               >
-                {completionPercentage}% Complete
+                {isCollected ? 'See you tomorrow!' : `${completedToday} / ${totalTasksToday} Quests`}
               </Text>
+
+              {isComplete && !isCollected && (
+                <LinearGradient
+                  colors={['rgba(100, 200, 150, 0.35)', 'rgba(80, 180, 130, 0.25)']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    paddingHorizontal: 14,
+                    paddingVertical: 6,
+                    borderRadius: 14,
+                    borderWidth: 1.5,
+                    borderColor: 'rgba(100, 200, 150, 0.5)',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 4,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontWeight: '800',
+                      color: '#FFFFFF',
+                      letterSpacing: 0.5,
+                      textShadowColor: 'rgba(0, 0, 0, 0.3)',
+                      textShadowOffset: { width: 0, height: 1 },
+                      textShadowRadius: 2,
+                    }}
+                  >
+                    CLAIM
+                  </Text>
+                </LinearGradient>
+              )}
             </View>
-          )}
-        </LinearGradient>
+          </LinearGradient>
+        </Animated.View>
       </Pressable>
 
       {/* Debug Reset Button */}

@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Mindful Habits",
-    "slug": "mindful-habits",
+    "name": "Nuvoria",
+    "slug": "Nuvoria",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,7 +13,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yourname.mindfulhabits",
+      "bundleIdentifier": "com.davidplanchon.nuvoria",
       "usesAppleSignIn": true,
       "buildNumber": "1.0.0"
     },
@@ -22,7 +22,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#6366f1"
       },
-      "package": "com.yourname.mindfulhabits",
+      "package": "com.davidplanchon.nuvoria",
       "versionCode": 1
     },
     "plugins": [
@@ -31,7 +31,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "dce18d12-f105-4367-a9fd-51359484a713"
+        "projectId": "b814beca-39ec-424e-b3df-ede00d802c77"
       }
     }
   }

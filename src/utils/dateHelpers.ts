@@ -11,6 +11,13 @@ export const getLocalDateString = (date: Date): string => {
 };
 
 /**
+ * Get today's date in local timezone (shorthand)
+ */
+export const getTodayString = (): string => {
+  return getLocalDateString(new Date());
+};
+
+/**
  * Check if a date is today
  */
 export const isToday = (date: Date): boolean => {

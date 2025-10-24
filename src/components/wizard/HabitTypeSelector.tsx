@@ -1,80 +1,88 @@
+// src/components/wizard/HabitTypeSelector.tsx
 import React from 'react';
-import { View, Text, Pressable, ImageBackground } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { TrendingUp, ShieldOff } from 'lucide-react-native';
+import { TrendingUp, ShieldOff, Target, CheckCircle2, XCircle } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import tw from '../../lib/tailwind';
 import { HabitType } from '../../types';
+import { habitTypes, quotes, tips } from '../../utils/habitHelpers';
 
 interface HabitTypeCardsProps {
   selected?: HabitType;
   onSelect: (type: HabitType) => void;
 }
 
+// Get icon for habit type with better semantic meaning
+const getIcon = (type: HabitType) => {
+  return type === 'good' ? CheckCircle2 : XCircle;
+};
+
+// Get quote based on selection
+const getQuote = (type?: HabitType) => {
+  if (type === 'good') return quotes.good;
+  if (type === 'bad') return quotes.bad;
+  return quotes.start;
+};
+
 const HabitTypeCards: React.FC<HabitTypeCardsProps> = ({ selected, onSelect }) => {
-  const habitTypes = [
-    {
-      id: 'good' as HabitType,
-      title: 'Build a Good Habit',
-      subtitle: 'Start something positive for your life',
-      icon: TrendingUp,
-      gradient: ['#E5E7EB', '#D1D5DB'], // quartz-100 to quartz-200
-      selectedGradient: ['#9CA3AF', '#6B7280'], // quartz-300 to quartz-400
-    },
-    {
-      id: 'bad' as HabitType,
-      title: 'Quit a Bad Habit',
-      subtitle: 'Break free from what holds you back',
-      icon: ShieldOff,
-      gradient: ['#D1D5DB', '#9CA3AF'], // quartz-200 to quartz-300
-      selectedGradient: ['#6B7280', '#4B5563'], // quartz-400 to quartz-500
-    },
-  ];
+  const currentQuote = getQuote(selected);
 
   return (
     <View style={tw`px-5`}>
-      {/* Header with subtle gradient */}
-      <View style={tw`mb-6`}>
-        <Text style={tw`text-2xl font-light text-quartz-800 mb-2`}>Let's Get Started</Text>
-        <Text style={tw`text-quartz-600 leading-5`}>Choose your path to personal growth</Text>
+      {/* Hero Section with Quote Integrated */}
+      <View style={tw`mb-5`}>
+        <LinearGradient colors={['#8b5cf6', '#7c3aed', '#6d28d9']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-5 shadow-lg`}>
+          <Text style={tw`text-2xl font-light text-white mb-1.5 tracking-tight`}>Begin Your Journey</Text>
+          <Text style={tw`text-sm text-white/90 leading-5 mb-3`}>Every expert was once a beginner. Your transformation starts with a single choice.</Text>
+
+          {/* Integrated Quote */}
+          <View style={tw`border-t border-white/20 pt-3 mt-1`}>
+            <Text style={tw`text-xs text-white/70 italic leading-5`}>"{currentQuote.text}"</Text>
+            <Text style={tw`text-xs text-white/60 font-medium mt-1`}>— {currentQuote.author}</Text>
+          </View>
+        </LinearGradient>
       </View>
 
-      {/* Cards */}
-      <View style={tw`gap-3`}>
+      {/* Type Cards */}
+      <View style={tw`gap-4 mb-6`}>
         {habitTypes.map((type, index) => {
-          const Icon = type.icon;
+          const Icon = getIcon(type.id);
           const isSelected = selected === type.id;
 
           return (
-            <Animated.View key={type.id} entering={FadeInDown.delay(index * 100).duration(600)}>
+            <Animated.View key={type.id} entering={FadeInDown.delay(index * 100).duration(500)}>
               <Pressable onPress={() => onSelect(type.id)} style={({ pressed }) => [tw`rounded-3xl overflow-hidden`, pressed && tw`opacity-90`]}>
-                <LinearGradient colors={isSelected ? type.selectedGradient : type.gradient} style={tw`border border-quartz-200`}>
-                  <ImageBackground
-                    source={require('../../../assets/interface/quartz-texture.png')}
-                    style={tw`p-5`}
-                    imageStyle={{ opacity: isSelected ? 0.3 : 0.1, borderRadius: 24 }}
-                    resizeMode="cover"
-                  >
-                    <View style={tw`flex-row items-center justify-between`}>
-                      <View style={tw`flex-row items-center flex-1`}>
-                        {/* Icon Container */}
-                        <View style={[tw`w-12 h-12 rounded-2xl items-center justify-center mr-4`, isSelected ? tw`bg-sand/30` : tw`bg-quartz-50/50`]}>
-                          <Icon size={24} color={isSelected ? '#FFFFFF' : '#4B5563'} strokeWidth={1.5} />
-                        </View>
-
-                        {/* Text Content */}
-                        <View style={tw`flex-1`}>
-                          <Text style={[tw`text-base font-medium mb-1`, isSelected ? tw`text-white` : tw`text-quartz-800`]}>{type.title}</Text>
-                          <Text style={[tw`text-sm leading-5`, isSelected ? tw`text-white/80` : tw`text-quartz-600`]}>{type.subtitle}</Text>
-                        </View>
+                <LinearGradient
+                  colors={isSelected ? type.gradient : ['#F9FAFB', '#F3F4F6']}
+                  style={[tw`p-5 rounded-3xl`, isSelected ? { borderWidth: 2, borderColor: type.gradient[1] + 'CC' } : { borderWidth: 1, borderColor: '#D1D5DB' }]}
+                >
+                  <View style={tw`flex-row items-center justify-between`}>
+                    <View style={tw`flex-row items-center flex-1`}>
+                      {/* Icon Container */}
+                      <View style={[tw`w-14 h-14 rounded-2xl items-center justify-center mr-4`, isSelected ? tw`bg-white/20` : tw`bg-quartz-100`]}>
+                        <Icon size={28} color={isSelected ? '#ffffff' : '#6B7280'} strokeWidth={1.5} />
                       </View>
 
-                      {/* Selection Indicator */}
-                      <View style={[tw`w-6 h-6 rounded-full border-2`, isSelected ? tw`border-white bg-sand/20` : tw`border-quartz-300 bg-quartz-50/50`]}>
-                        {isSelected && <View style={tw`w-2.5 h-2.5 bg-sand rounded-full m-auto`} />}
+                      {/* Text Content */}
+                      <View style={tw`flex-1`}>
+                        <Text style={[tw`text-lg font-semibold mb-1`, isSelected ? tw`text-white` : tw`text-quartz-800`]}>{type.title}</Text>
+                        <Text style={[tw`text-sm leading-5`, isSelected ? tw`text-white/90` : tw`text-quartz-600`]}>{type.subtitle}</Text>
                       </View>
                     </View>
-                  </ImageBackground>
+
+                    {/* Selection Indicator */}
+                    <View style={[tw`w-6 h-6 rounded-full border-2`, isSelected ? tw`border-white bg-white/30` : tw`border-quartz-300 bg-transparent`]}>
+                      {isSelected && <View style={tw`w-2.5 h-2.5 bg-white rounded-full m-auto`} />}
+                    </View>
+                  </View>
+
+                  {/* Expanded Description when selected */}
+                  {isSelected && (
+                    <Animated.View entering={FadeInDown.duration(300)}>
+                      <Text style={tw`text-sm text-white/85 mt-3 leading-5`}>{type.description}</Text>
+                    </Animated.View>
+                  )}
                 </LinearGradient>
               </Pressable>
             </Animated.View>
@@ -82,13 +90,11 @@ const HabitTypeCards: React.FC<HabitTypeCardsProps> = ({ selected, onSelect }) =
         })}
       </View>
 
-      {/* Helper Section with Quartz Texture */}
-      <View style={tw`mt-6 bg-quartz-50 rounded-2xl overflow-hidden`}>
-        <ImageBackground source={require('../../../assets/interface/quartz-texture.png')} style={tw`p-4`} imageStyle={{ opacity: 0.05, borderRadius: 16 }} resizeMode="cover">
-          <Text style={tw`text-xs font-medium text-quartz-500 uppercase tracking-wider mb-2`}>Quick Tip</Text>
-          <Text style={tw`text-sm text-quartz-700 leading-5`}>Most people start with building good habits. You can always track multiple habits of both types.</Text>
-        </ImageBackground>
-      </View>
+      {/* Professional Tip Section - Simplified without icon */}
+      <LinearGradient colors={['#fbbf24', '#f59e0b', '#d97706']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-2xl p-4 border border-sky-200`}>
+        <Text style={tw`text-sm font-semibold text-white mb-1.5`}>{tips.habitType[0].title}</Text>
+        <Text style={tw`text-sm text-white leading-5`}>{tips.habitType[0].content}</Text>
+      </LinearGradient>
     </View>
   );
 };

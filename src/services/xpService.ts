@@ -1,5 +1,6 @@
 // src/services/xpService.ts - WITH VALIDATION
 
+import { getTodayString } from '@/utils/dateHelpers';
 import { supabase } from '../lib/supabase';
 
 export interface XPTransaction {
@@ -59,7 +60,7 @@ export class XPService {
     xpEarned: number;
   }> {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayString();
       const { data: challenge, error } = await supabase.from('daily_challenges').select('*').eq('user_id', userId).eq('date', today).single();
 
       if (error || !challenge) {
@@ -156,7 +157,7 @@ export class XPService {
 
   static async getDailyChallengeStatus(userId: string) {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayString();
       const { data, error } = await supabase.from('daily_challenges').select('*').eq('user_id', userId).eq('date', today).single();
 
       if (error && error.code !== 'PGRST116') {

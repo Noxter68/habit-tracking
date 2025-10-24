@@ -37,38 +37,54 @@ export const MilestoneZoomModal: React.FC<MilestoneZoomModalProps> = ({ visible,
   if (!milestone) return null;
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={tw`flex-1 bg-black/90 items-center justify-center`} onPress={onClose}>
-        <View style={tw`w-full px-8`}>
-          <View style={tw`items-center`}>
-            {/* Large milestone icon */}
-            <View style={[tw`w-48 h-48 rounded-3xl items-center justify-center mb-6`, isUnlocked ? tw`bg-sand-100` : tw`bg-stone-800`]}>
-              <Image source={tierIcons[milestoneIndex as keyof typeof tierIcons]} style={[tw`w-60 h-60`, !isUnlocked && tw`opacity-40`]} resizeMode="contain" />
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
+      <Pressable style={tw`flex-1 bg-black/90 items-center justify-center px-6`} onPress={onClose}>
+        <View style={tw`w-full max-w-sm`}>
+          <Pressable style={tw`bg-slate-50 rounded-3xl p-8 shadow-2xl`} onPress={(e) => e.stopPropagation()}>
+            {/* Large milestone icon - elevated above card */}
+            <View style={tw`items-center -mt-20 mb-6`}>
+              <View style={[tw`rounded-3xl p-6 shadow-xl items-center justify-center`, isUnlocked ? tw`bg-slate-50` : tw`bg-slate-200`]}>
+                <Image source={tierIcons[milestoneIndex as keyof typeof tierIcons]} style={[tw`w-32 h-32`, !isUnlocked && tw`opacity-30`]} resizeMode="contain" />
+              </View>
             </View>
 
             {/* Milestone title */}
-            <Text style={tw`text-white text-2xl font-bold text-center`}>{milestone.title}</Text>
+            <Text style={tw`text-slate-900 text-2xl font-semibold text-center leading-tight`}>{milestone.title}</Text>
 
             {/* Milestone description */}
-            <Text style={tw`text-gray-300 text-base mt-2 text-center`}>{milestone.description}</Text>
+            <Text style={tw`text-slate-600 text-sm text-center mt-3 leading-relaxed`}>{milestone.description}</Text>
 
             {/* Info badges */}
-            <View style={tw`flex-row gap-3 mt-4`}>
-              <View style={tw`bg-stone-900/30 rounded-full px-4 py-2`}>
-                <Text style={tw`text-stone-100 text-sm font-medium`}>Day {milestone.days}</Text>
+            <View style={tw`flex-row gap-2 mt-6 justify-center`}>
+              <View style={tw`bg-slate-100 rounded-full px-4 py-2`}>
+                <Text style={tw`text-slate-700 text-sm font-medium`}>Day {milestone.days}</Text>
               </View>
-              <View style={tw`bg-stone-900/30 rounded-full px-4 py-2`}>
-                <Text style={tw`text-stone-100 text-sm font-medium`}>+{milestone.xpReward} XP</Text>
+              <View style={tw`bg-slate-100 rounded-full px-4 py-2`}>
+                <Text style={tw`text-slate-700 text-sm font-medium`}>+{milestone.xpReward} XP</Text>
               </View>
+              {milestone.badge && (
+                <View style={tw`bg-slate-100 rounded-full px-4 py-2`}>
+                  <Text style={tw`text-slate-700 text-sm font-medium`}>{milestone.badge}</Text>
+                </View>
+              )}
             </View>
 
             {/* Status */}
-            <View style={tw`mt-4`}>
-              {isUnlocked ? <Text style={tw`text-green-400 text-sm font-semibold`}>✓ Achieved</Text> : <Text style={tw`text-stone-300 text-sm`}>Locked - Requires {milestone.days} day streak</Text>}
+            <View style={tw`mt-6 items-center`}>
+              {isUnlocked ? (
+                <View style={tw`bg-emerald-50 rounded-full px-4 py-2`}>
+                  <Text style={tw`text-emerald-700 text-sm font-semibold`}>✓ Achieved</Text>
+                </View>
+              ) : (
+                <View style={tw`bg-slate-100 rounded-xl px-4 py-2`}>
+                  <Text style={tw`text-slate-600 text-sm text-center`}>Locked · Requires {milestone.days} day streak</Text>
+                </View>
+              )}
             </View>
 
-            <Text style={tw`text-sand-500 text-xs mt-6`}>Tap anywhere to close</Text>
-          </View>
+            {/* Close Hint */}
+            <Text style={tw`text-slate-400 text-xs text-center mt-6`}>Tap anywhere to close</Text>
+          </Pressable>
         </View>
       </Pressable>
     </Modal>

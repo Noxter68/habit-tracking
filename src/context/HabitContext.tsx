@@ -7,6 +7,7 @@ import { HabitService } from '../services/habitService';
 import { HabitProgressionService } from '@/services/habitProgressionService';
 import { useStats } from './StatsContext';
 import { supabase } from '@/lib/supabase';
+import { getLocalDateString, getTodayString } from '@/utils/dateHelpers';
 
 interface ToggleTaskResult {
   success: boolean;
@@ -408,7 +409,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const loadXPStatus = useCallback(async () => {
     if (!user || habits.length === 0) return;
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayString();
     const xpStatusSet = new Set<string>();
 
     // Check XP status for all tasks

@@ -1,4 +1,5 @@
 import { HabitTier } from '@/services/habitProgressionService';
+import { LucideIcon } from 'lucide-react-native';
 
 // src/types/index.ts
 export interface User {
@@ -25,7 +26,7 @@ export interface Task {
   id: string;
   name: string;
   description?: string;
-  icon?: string;
+  icon?: LucideIcon;
   duration?: string;
   category?: string;
 }

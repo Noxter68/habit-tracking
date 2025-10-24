@@ -51,38 +51,46 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
   }));
 
   const getGradientColors = () => {
-    // Always use the same light background gradient for consistency
-    return theme.backgroundGradient || ['#FFFFFF', '#FAF9F7'];
+    // Lighter background similar to DailyChallenge - semi-transparent white/green
+    if (['Ruby', 'Topaz'].includes(theme.gemName)) {
+      return ['rgba(255, 255, 255, 0.15)', 'rgba(255, 255, 255, 0.08)'];
+    }
+    // Standard lighter background for all other cards
+    return ['rgba(255, 255, 255, 0.15)', 'rgba(255, 255, 255, 0.08)'];
   };
 
   const getBorderColor = () => {
-    // Always use subtle tier-themed border
-    return `${theme.accent}20`;
+    // Lighter border
+    if (['Ruby', 'Topaz'].includes(theme.gemName)) {
+      return 'rgba(255, 255, 255, 0.25)';
+    }
+    // Subtle border
+    return 'rgba(255, 255, 255, 0.2)';
   };
 
   const getTextColors = () => {
-    // Always use dark text for consistency
-    return '#1F2937';
+    // White text for lighter background
+    return 'rgba(255, 255, 255, 0.95)';
   };
 
   const getSubtextColors = () => {
-    // Always use gray subtext
-    return '#9CA3AF';
+    // Lighter subtext
+    return 'rgba(255, 255, 255, 0.85)';
   };
 
   const getIconBg = () => {
-    // Always use tier-themed icon background
-    return `${theme.accent}15`;
+    // Subtle white icon background
+    return 'rgba(255, 255, 255, 0.2)';
   };
 
   const getIconColor = () => {
-    // Always use tier accent color
-    return theme.accent;
+    // White icon color
+    return 'rgba(255, 255, 255, 0.9)';
   };
 
   const getShadowColor = () => {
-    // Always use tier accent for shadow
-    return theme.accent;
+    // Dark shadow
+    return '#000';
   };
 
   const isOnFire = isStreak && streakValue >= 7;
@@ -246,7 +254,7 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
         borderColor: getBorderColor(),
         shadowColor: getShadowColor(),
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
+        shadowOpacity: 0.25,
         shadowRadius: 12,
       }}
     >

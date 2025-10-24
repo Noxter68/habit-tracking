@@ -1,5 +1,6 @@
 // src/utils/dashboardStats.ts
 import { Habit } from '../types';
+import { getLocalDateString, getTodayString } from './dateHelpers';
 
 export interface DashboardStats {
   currentStreak: number;
@@ -30,7 +31,7 @@ export const calculateTotalStreak = (habits: Habit[]): number => {
     // Max 365 days to prevent infinite loop
     const checkDate = new Date(today);
     checkDate.setDate(checkDate.getDate() - i);
-    const dateStr = checkDate.toISOString().split('T')[0];
+    const dateStr = getLocalDateString(checkDate);
 
     // Check if ALL active habits were completed on this date
     const allCompletedOnDate = habits.every((habit) => {
@@ -73,7 +74,7 @@ export const calculateWeekProgress = (habits: Habit[]): number => {
   const last7Days = Array.from({ length: 7 }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() - i);
-    return date.toISOString().split('T')[0];
+    return getLocalDateString(date);
   });
 
   const completions = last7Days.map((date) => {
@@ -99,7 +100,7 @@ export const calculateTodayCompleted = (habits: Habit[]): number => {
     return 0;
   }
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getTodayString();
 
   return habits.filter((habit) => {
     if (!habit) return false;
@@ -156,7 +157,7 @@ export const getHabitStats = (
     };
   }
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getTodayString();
 
   // Check if completed today
   let isCompleteToday = false;
@@ -197,7 +198,7 @@ export const getRecentStats = (
   const dates = Array.from({ length: days }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() - (days - 1 - i));
-    return date.toISOString().split('T')[0];
+    return getLocalDateString(date);
   });
 
   const completions = dates.map((date) => {

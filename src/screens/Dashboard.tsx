@@ -1,11 +1,11 @@
 // src/screens/Dashboard.tsx
 import React, { useCallback, useRef, useEffect, useState } from 'react';
-import { ScrollView, RefreshControl, View, Text, ActivityIndicator, Pressable, ImageBackground, Dimensions } from 'react-native';
+import { ScrollView, RefreshControl, View, Text, ActivityIndicator, Pressable, ImageBackground, Dimensions, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
-import { Plus, Zap } from 'lucide-react-native';
+import { Lock, Plus, TrendingUp, TrendingUpIcon, Zap } from 'lucide-react-native';
 import tw from '../lib/tailwind';
 
 // Components
@@ -20,6 +20,11 @@ import { getAchievementByLevel } from '@/utils/achievements';
 
 import { useLevelUp } from '@/context/LevelUpContext';
 import { DebugButton } from '@/components/debug/DebugButton';
+import { useSubscription } from '@/context/SubscriptionContext';
+import { StreakSaverBadge } from '@/components/streakSaver/StreakSaverBadge';
+import { StreakSaverService } from '@/services/StreakSaverService';
+import { StreakSaverShopModal } from '@/components/streakSaver/StreakSaverShopModal';
+import { Image } from 'react-native';
 
 const Dashboard: React.FC = () => {
   const navigation = useNavigation();
@@ -34,15 +39,42 @@ const Dashboard: React.FC = () => {
     previousLevel: number;
     achievement: any;
   } | null>(null);
+  const [badgeRefresh, setBadgeRefresh] = useState(0);
+  const [showShop, setShowShop] = useState(false);
 
   const [testLevel, setTestLevel] = useState(1);
-  const { triggerLevelUp } = useLevelUp(); // For testing purposes
+  const { triggerLevelUp } = useLevelUp();
+
+  const { checkHabitLimit, habitCount, maxHabits, isPremium } = useSubscription();
 
   const renderCount = useRef(0);
   renderCount.current++;
   useEffect(() => {
     console.log(`Dashboard render #${renderCount.current}`);
   });
+
+  // Handler for when badge is pressed
+  const handleStreakSaverPress = async () => {
+    const saveable = await StreakSaverService.getSaveableHabits(user!.id);
+    if (saveable.length > 0) {
+      navigation.navigate('HabitDetails', { habitId: saveable[0].habitId });
+    }
+  };
+
+  const handleShopPress = () => {
+    setShowShop(true);
+  };
+
+  const handlePurchase = (packageId: string) => {
+    console.log('Purchase:', packageId);
+    // TODO: Implement RevenueCat purchase
+    setShowShop(false);
+  };
+
+  // Refresh badge when habits change
+  useEffect(() => {
+    setBadgeRefresh((prev) => prev + 1);
+  }, [habits]);
 
   // Track level changes
   useEffect(() => {
@@ -99,9 +131,16 @@ const Dashboard: React.FC = () => {
     [navigation]
   );
 
-  const handleCreateHabit = useCallback(() => {
-    navigation.navigate('HabitWizard' as never);
-  }, [navigation]);
+  const handleCreateHabit = async () => {
+    const canCreate = await checkHabitLimit();
+
+    if (!canCreate) {
+      navigation.navigate('Paywall', { source: 'habit_limit' });
+      return;
+    }
+
+    navigation.navigate('HabitWizard');
+  };
 
   // Loading state (first load)
   if ((habitsLoading || statsLoading) && habits.length === 0) {
@@ -138,13 +177,53 @@ const Dashboard: React.FC = () => {
           currentLevelXP={stats?.currentLevelXP ?? 0}
           xpForNextLevel={stats?.xpForNextLevel ?? 100}
           levelProgress={stats?.levelProgress ?? 0}
-          onStatsRefresh={() => refreshStats(true)}
+          onStatsRefresh={() => {}}
           totalXP={stats?.totalXP ?? 0}
-          onXPCollected={() => refreshStats(true)}
         />
 
+        <StreakSaverBadge
+          onPress={handleStreakSaverPress}
+          onShopPress={() => setShowShop(true)} // <-- This must be a function
+          refreshTrigger={badgeRefresh}
+        />
+
+        <StreakSaverShopModal
+          visible={showShop}
+          onClose={() => setShowShop(false)}
+          onPurchaseSuccess={() => {
+            setBadgeRefresh((prev) => prev + 1); // Force badge reload
+          }}
+        />
         {/* Habits Section */}
         <Animated.View entering={FadeInUp.delay(200)} style={tw`mt-6`}>
+          <View>
+            {!isPremium && habitCount > 0 && (
+              <View
+                style={[
+                  tw`mx-6 mb-3 px-4 py-3.5 rounded-2xl flex-row items-center justify-center gap-2.5`,
+                  {
+                    backgroundColor: habitCount >= maxHabits ? 'rgba(251, 146, 60, 0.08)' : 'rgba(59, 130, 246, 0.08)',
+                    borderWidth: 1,
+                    borderColor: habitCount >= maxHabits ? 'rgba(251, 146, 60, 0.2)' : 'rgba(59, 130, 246, 0.2)',
+                  },
+                ]}
+              >
+                {habitCount >= maxHabits ? (
+                  <>
+                    <Lock size={14} color="#EA580C" strokeWidth={2.5} />
+                    <Text style={tw`text-xs font-bold text-orange-700 tracking-wide`}>Habit limit reached • Upgrade for unlimited</Text>
+                  </>
+                ) : (
+                  <>
+                    <TrendingUpIcon size={14} color="#2563EB" strokeWidth={2.5} />
+                    <Text style={tw`text-xs font-bold text-blue-700 tracking-wide`}>
+                      {habitCount} of {maxHabits} free habits
+                    </Text>
+                  </>
+                )}
+              </View>
+            )}
+          </View>
           {/* Section Header */}
           <View style={tw`flex-row items-center justify-between mb-4`}>
             <View>
@@ -156,9 +235,7 @@ const Dashboard: React.FC = () => {
 
             {habits.length > 0 && (
               <Pressable onPress={handleCreateHabit} style={({ pressed }) => [tw`w-10 h-10 rounded-xl items-center justify-center`, pressed && tw`scale-95`]}>
-                <LinearGradient colors={['#9CA3AF', '#6B7280']} style={tw`w-full h-full rounded-xl items-center justify-center shadow-sm`}>
-                  <Plus size={20} color="#ffffff" strokeWidth={2.5} />
-                </LinearGradient>
+                <Image source={require('../../assets/interface/add-habit-button.png')} style={{ width: 40, height: 40 }} resizeMode="contain" />
               </Pressable>
             )}
           </View>

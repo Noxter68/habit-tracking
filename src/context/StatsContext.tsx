@@ -24,6 +24,7 @@ interface StatsContextType {
   stats: Stats | null;
   loading: boolean;
   refreshStats: (forceRefresh?: boolean) => Promise<void>;
+  updateStatsOptimistically: (xpAmount: number) => { leveledUp: boolean; newLevel: number } | null;
   lastUpdated: number;
 }
 
@@ -122,6 +123,71 @@ export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     [user?.id]
   );
 
+  // Optimistic update method - updates UI immediately without backend call
+  const updateStatsOptimistically = useCallback(
+    (xpAmount: number) => {
+      if (!stats) {
+        console.warn('StatsContext: Cannot update optimistically, no stats available');
+        return null;
+      }
+
+      console.log('StatsContext: Optimistic update', {
+        currentXP: stats.currentLevelXP,
+        xpAmount,
+        xpForNextLevel: stats.xpForNextLevel,
+      });
+
+      const newCurrentLevelXP = stats.currentLevelXP + xpAmount;
+      let newLevel = stats.level;
+      let newXPForNextLevel = stats.xpForNextLevel;
+      let adjustedCurrentXP = newCurrentLevelXP;
+
+      // Check if leveled up
+      if (newCurrentLevelXP >= stats.xpForNextLevel) {
+        newLevel = stats.level + 1;
+        adjustedCurrentXP = newCurrentLevelXP - stats.xpForNextLevel;
+        newXPForNextLevel = getXPForNextLevel(newLevel);
+
+        console.log('StatsContext: LEVEL UP!', {
+          previousLevel: stats.level,
+          newLevel,
+          overflow: adjustedCurrentXP,
+        });
+      }
+
+      const newProgress = newXPForNextLevel > 0 ? Math.min((adjustedCurrentXP / newXPForNextLevel) * 100, 100) : 0;
+
+      const currentAchievement = getAchievementByLevel(newLevel);
+
+      // Update stats optimistically without backend call
+      const updatedStats: Stats = {
+        ...stats,
+        level: newLevel,
+        currentLevelXP: adjustedCurrentXP,
+        xpForNextLevel: newXPForNextLevel,
+        levelProgress: newProgress,
+        totalXP: stats.totalXP + xpAmount,
+        currentAchievement: currentAchievement || stats.currentAchievement,
+        title: currentAchievement?.title || stats.title,
+      };
+
+      setStats(updatedStats);
+
+      console.log('StatsContext: Optimistic update complete', {
+        newLevel,
+        newCurrentLevelXP: adjustedCurrentXP,
+        newProgress: `${newProgress.toFixed(1)}%`,
+      });
+
+      // Return whether user leveled up
+      return {
+        leveledUp: newLevel > stats.level,
+        newLevel,
+      };
+    },
+    [stats]
+  );
+
   // Initial load when user changes
   useEffect(() => {
     if (user?.id) {
@@ -139,6 +205,7 @@ export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         stats,
         loading,
         refreshStats,
+        updateStatsOptimistically,
         lastUpdated: lastUpdatedRef.current,
       }}
     >

@@ -1,175 +1,154 @@
 // src/components/dashboard/LevelProgress.tsx
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, Text } from 'react-native';
-import Animated, { useAnimatedStyle, withSpring, useSharedValue, withTiming } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-
-interface TierTheme {
-  gradient: string[];
-  accent: string;
-  gemName: string;
-}
+import Animated, { FadeIn } from 'react-native-reanimated';
 
 interface LevelProgressProps {
   currentLevel: number;
   currentLevelXP: number;
   xpForNextLevel: number;
   levelProgress: number;
-  tierTheme?: TierTheme;
+  tierTheme?: any;
+  textColor?: string;
 }
 
-const AnimatedView = Animated.View;
-
-const LevelProgress: React.FC<LevelProgressProps> = ({ currentLevel, currentLevelXP, xpForNextLevel, levelProgress, tierTheme }) => {
-  // Default to Amethyst if no tier theme provided
-  const defaultTheme = {
-    gradient: ['#9333EA', '#7C3AED'],
-    accent: '#9333EA',
-    gemName: 'Amethyst',
-  };
-
-  const theme = tierTheme || defaultTheme;
-  const xpToNextLevel = Math.max(0, xpForNextLevel - currentLevelXP);
-
-  const progress = useSharedValue(0);
-  const opacity = useSharedValue(0);
-
-  const calculateProgress = () => {
-    if (!xpForNextLevel || xpForNextLevel <= 0) return 0;
-    const rawProgress = (currentLevelXP / xpForNextLevel) * 100;
-    return Math.min(Math.max(0, rawProgress), 99.9);
-  };
-
-  const progressPercentage = calculateProgress();
-
-  useEffect(() => {
-    if (xpForNextLevel > 0) {
-      opacity.value = withTiming(1, { duration: 300 });
-
-      setTimeout(() => {
-        progress.value = withSpring(progressPercentage, {
-          damping: 15,
-          stiffness: 100,
-          mass: 1,
-        });
-      }, 100);
-    } else {
-      opacity.value = 0;
-      progress.value = 0;
-    }
-  }, [progressPercentage, xpForNextLevel]);
-
-  const animatedBarStyle = useAnimatedStyle(() => {
-    return {
-      width: `${progress.value}%`,
-    };
-  });
-
-  const animatedContainerStyle = useAnimatedStyle(() => {
-    return {
-      opacity: opacity.value,
-    };
-  });
-
-  if (!xpForNextLevel || xpForNextLevel <= 0) {
-    return (
-      <View style={{ marginBottom: 16, height: 48 }}>
-        <View
-          style={{
-            height: 20,
-            backgroundColor: `${theme.accent}10`,
-            borderRadius: 20,
-          }}
-        />
-      </View>
-    );
-  }
+const LevelProgress: React.FC<LevelProgressProps> = ({ currentLevel, currentLevelXP, xpForNextLevel, levelProgress, tierTheme, textColor = 'rgba(255, 255, 255, 0.95)' }) => {
+  const progressPercent = Math.min(levelProgress, 100);
+  const xpRemaining = xpForNextLevel - currentLevelXP;
 
   return (
-    <Animated.View style={[animatedContainerStyle]}>
-      {/* Header */}
+    <Animated.View entering={FadeIn.delay(200)}>
       <View
         style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 8,
+          backgroundColor: 'rgba(255, 255, 255, 0.15)',
+          borderRadius: 16,
+          padding: 12,
+          borderWidth: 1,
+          borderColor: 'rgba(255, 255, 255, 0.2)',
         }}
       >
-        <Text
-          style={{
-            fontSize: 11,
-            fontWeight: '700',
-            color: theme.accent,
-            letterSpacing: 0.5,
-          }}
-        >
-          Progress to Level {currentLevel + 1}
-        </Text>
+        {/* Header */}
         <View
           style={{
-            backgroundColor: `${theme.accent}10`,
-            borderRadius: 20,
-            paddingHorizontal: 10,
-            paddingVertical: 4,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 8,
+          }}
+        >
+          <View>
+            <Text
+              style={{
+                fontSize: 10,
+                fontWeight: '600',
+                color: textColor,
+                opacity: 0.8,
+                letterSpacing: 0.5,
+                textTransform: 'uppercase',
+                marginBottom: 2,
+              }}
+            >
+              Level Progress
+            </Text>
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: '700',
+                color: '#FFFFFF',
+                textShadowColor: 'rgba(0, 0, 0, 0.2)',
+                textShadowOffset: { width: 0, height: 1 },
+                textShadowRadius: 2,
+              }}
+            >
+              Level {currentLevel} → {currentLevel + 1}
+            </Text>
+          </View>
+
+          <View
+            style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.25)',
+              paddingHorizontal: 10,
+              paddingVertical: 5,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: 'rgba(255, 255, 255, 0.3)',
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 10,
+                fontWeight: '800',
+                color: '#FFFFFF',
+                textShadowColor: 'rgba(0, 0, 0, 0.2)',
+                textShadowOffset: { width: 0, height: 1 },
+                textShadowRadius: 2,
+              }}
+            >
+              {Math.round(progressPercent)}%
+            </Text>
+          </View>
+        </View>
+
+        {/* Progress Bar */}
+        <View
+          style={{
+            height: 10,
+            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            borderRadius: 8,
+            overflow: 'hidden',
             borderWidth: 1,
-            borderColor: `${theme.accent}30`,
+            borderColor: 'rgba(255, 255, 255, 0.25)',
+            marginBottom: 6,
+          }}
+        >
+          <LinearGradient
+            colors={['rgba(255, 255, 255, 0.95)', 'rgba(255, 255, 255, 0.75)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{
+              width: `${progressPercent}%`,
+              height: '100%',
+              borderRadius: 8,
+              shadowColor: '#FFFFFF',
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.5,
+              shadowRadius: 4,
+            }}
+          />
+        </View>
+
+        {/* XP Stats */}
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
           }}
         >
           <Text
             style={{
               fontSize: 11,
-              fontWeight: '800',
-              color: theme.accent,
+              fontWeight: '600',
+              color: textColor,
+              opacity: 0.85,
             }}
           >
-            {currentLevelXP}/{xpForNextLevel} XP
+            {currentLevelXP.toLocaleString()} / {xpForNextLevel.toLocaleString()} XP
+          </Text>
+
+          <Text
+            style={{
+              fontSize: 10,
+              fontWeight: '600',
+              color: textColor,
+              opacity: 0.75,
+            }}
+          >
+            {xpRemaining.toLocaleString()} XP to go
           </Text>
         </View>
       </View>
-
-      {/* Progress bar container */}
-      <View
-        style={{
-          height: 20,
-          borderRadius: 20,
-          overflow: 'hidden',
-          backgroundColor: `${theme.accent}10`,
-          shadowColor: theme.accent,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 6,
-        }}
-      >
-        <AnimatedView
-          style={[
-            {
-              height: '100%',
-              borderRadius: 20,
-              overflow: 'hidden',
-            },
-            animatedBarStyle,
-          ]}
-        >
-          {/* Tier-based gradient fill */}
-          <LinearGradient colors={theme.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ height: '100%', width: '100%' }} />
-        </AnimatedView>
-      </View>
-
-      {/* Remaining XP */}
-      {xpToNextLevel > 0 && (
-        <Text
-          style={{
-            fontSize: 11,
-            color: '#9CA3AF',
-            marginTop: 6,
-            textAlign: 'center',
-            fontWeight: '600',
-          }}
-        >
-          {xpToNextLevel} XP to next level
-        </Text>
-      )}
     </Animated.View>
   );
 };

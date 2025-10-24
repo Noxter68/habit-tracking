@@ -27,21 +27,21 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
   // Determine text colors based on gem type
   const getTextColors = (gemName: string) => {
     // Lighter gems need darker text for contrast
-    if (['Crystal', 'Topaz'].includes(gemName)) {
+    if (['Crystal', 'Topaz', 'Ruby', 'Amethyst', 'Jade', 'Obsidian'].includes(gemName)) {
       return {
-        primary: 'text-stone-800',
-        secondary: 'text-stone-700',
-        badge: 'text-stone-800',
-        badgeBg: 'bg-white/70',
+        primary: 'text-white',
+        secondary: 'text-white/90',
+        badge: 'text-white',
+        badgeBg: 'bg-white/20',
       };
     }
 
     // Darker gems need lighter text
     return {
-      primary: 'text-white',
-      secondary: 'text-white/90',
-      badge: 'text-white',
-      badgeBg: 'bg-white/20',
+      primary: 'text-stone-800',
+      secondary: 'text-stone-700',
+      badge: 'text-stone-800',
+      badgeBg: 'bg-white/70',
     };
   };
 

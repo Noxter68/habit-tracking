@@ -8,6 +8,7 @@ import { HabitProgressionService, HabitTier } from '@/services/habitProgressionS
 import { tierThemes } from '@/utils/tierTheme';
 
 import { Habit, DailyTaskProgress } from '@/types';
+import { getTodayString } from '@/utils/dateHelpers';
 
 interface HabitCardProps {
   habit: Habit;
@@ -24,7 +25,7 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onToggleDay, onToggleTask,
   const completeStateScale = useSharedValue(1);
 
   // Get today's progress
-  const today = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const today = useMemo(() => getTodayString(), []);
   const todayTasks: DailyTaskProgress = habit.dailyTasks?.[today] || {
     completedTasks: [],
     allCompleted: false,

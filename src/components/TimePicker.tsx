@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, Pressable, Platform, Animated, PanResponder, Dimensions } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { LinearGradient } from 'expo-linear-gradient';
 import tw from '../lib/tailwind';
 
 interface TimePickerProps {
@@ -27,7 +28,7 @@ const TimePicker: React.FC<TimePickerProps> = ({ initialHour = 9, initialMinute 
 
   const [selectedTime, setSelectedTime] = useState(getInitialDate());
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(300)).current; // Start closer
+  const slideAnim = useRef(new Animated.Value(300)).current;
   const dragY = useRef(new Animated.Value(0)).current;
 
   // Pan responder for swipe to dismiss
@@ -63,7 +64,6 @@ const TimePicker: React.FC<TimePickerProps> = ({ initialHour = 9, initialMinute 
   ).current;
 
   useEffect(() => {
-    // Use requestAnimationFrame for 120fps support
     requestAnimationFrame(() => {
       Animated.parallel([
         Animated.timing(fadeAnim, {
@@ -173,37 +173,41 @@ const TimePicker: React.FC<TimePickerProps> = ({ initialHour = 9, initialMinute 
           },
         ]}
       >
-        <View style={tw`bg-sand rounded-t-3xl shadow-2xl`}>
+        <View style={tw`bg-white rounded-t-3xl shadow-2xl`}>
           {/* Swipeable header area */}
           <View {...panResponder.panHandlers}>
             {/* Handle */}
             <View style={tw`items-center pt-3 pb-2`}>
-              <View style={tw`h-1 w-12 bg-stone-300 rounded-full`} />
+              <View style={tw`h-1 w-12 bg-quartz-200 rounded-full`} />
             </View>
 
             {/* Header */}
             <View style={tw`flex-row items-center justify-between px-6 py-4`}>
               <Pressable onPress={handleCancel} style={({ pressed }) => [tw`px-4 py-2 -ml-4`, pressed && tw`opacity-50`]}>
-                <Text style={tw`text-base text-sand-500`}>Cancel</Text>
+                <Text style={tw`text-base text-quartz-500`}>Cancel</Text>
               </Pressable>
 
-              <Text style={tw`text-lg font-semibold text-stone-800`}>Select Time</Text>
+              <Text style={tw`text-lg font-semibold text-quartz-800`}>Select Time</Text>
 
-              <Pressable onPress={handleConfirm} style={({ pressed }) => [tw`px-4 py-2 bg-teal-500 rounded-full`, pressed && tw`bg-teal-600`]}>
-                <Text style={tw`text-white font-medium`}>Done</Text>
+              <Pressable onPress={handleConfirm} style={({ pressed }) => [pressed && tw`opacity-80`]}>
+                <LinearGradient colors={['#10b981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`px-5 py-2 rounded-full`}>
+                  <Text style={tw`text-white font-semibold`}>Done</Text>
+                </LinearGradient>
               </Pressable>
             </View>
           </View>
 
-          {/* Display Time */}
-          <View style={tw`py-3 mb-2`}>
-            <Text style={tw`text-center text-2xl font-bold text-stone-800`}>{formatDisplayTime()}</Text>
+          {/* Display Time with Cyan gradient background */}
+          <View style={tw`mx-6 mb-4 overflow-hidden rounded-2xl`}>
+            <LinearGradient colors={['#06b6d4', '#0891b2']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`py-4`}>
+              <Text style={tw`text-center text-3xl font-bold text-white`}>{formatDisplayTime()}</Text>
+            </LinearGradient>
           </View>
 
           {/* iOS Picker */}
           <View style={tw`px-6 pb-6`}>
-            <View style={tw`bg-stone-50 rounded-2xl p-2`}>
-              <DateTimePicker value={selectedTime} mode="time" display="spinner" onChange={onChange} style={{ height: 200 }} textColor="#111827" locale="en" />
+            <View style={tw`bg-quartz-50 rounded-2xl p-2`}>
+              <DateTimePicker value={selectedTime} mode="time" display="spinner" onChange={onChange} style={{ height: 200 }} textColor="#57534e" locale="en" />
             </View>
           </View>
         </View>

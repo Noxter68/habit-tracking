@@ -4,4 +4,5 @@ declare module '@env' {
   export const DEBUG_MODE: string;
   export const API_URL: string;
   export const ENVIRONMENT: string;
+  export const REVENUECAT_IOS_API_KEY: string;
 }

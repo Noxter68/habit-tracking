@@ -1,12 +1,6 @@
-// src/navigation/types.ts
+// src/navigation/types.ts (Add Paywall screen)
 import { Habit } from '../types';
 
-/**
- * RootStackParamList defines all the screens in your navigation stack
- * and their parameters (if any).
- *
- * This ensures type safety when navigating between screens.
- */
 export type RootStackParamList = {
   // Auth Stack
   Welcome: undefined;
@@ -18,7 +12,7 @@ export type RootStackParamList = {
   HabitWizard: undefined;
   HabitDetails: {
     habitId: string;
-    habit?: Habit; // Optional: pass the habit object directly
+    habit?: Habit;
   };
 
   // Settings & Profile
@@ -30,12 +24,17 @@ export type RootStackParamList = {
   Achievements: undefined;
   Statistics: undefined;
 
-  // Debug (if applicable)
+  // Premium & Subscription
+  Paywall: {
+    source?: 'habit_limit' | 'streak_saver' | 'settings' | 'stats';
+  };
+
+  // Debug
   Debug: undefined;
 
   // Calendar View
   Calendar: {
-    habitId?: string; // Optional: focus on a specific habit
+    habitId?: string;
   };
 
   // Edit Habit
@@ -45,14 +44,8 @@ export type RootStackParamList = {
   };
 };
 
-/**
- * Type helpers for navigation
- */
 export type ScreenName = keyof RootStackParamList;
 
-/**
- * Tab Navigator Param List (if using bottom tabs)
- */
 export type TabParamList = {
   Home: undefined;
   Habits: undefined;
@@ -60,9 +53,6 @@ export type TabParamList = {
   Profile: undefined;
 };
 
-/**
- * Auth Stack Param List
- */
 export type AuthStackParamList = {
   Welcome: undefined;
   Login: undefined;
@@ -70,9 +60,6 @@ export type AuthStackParamList = {
   ForgotPassword: undefined;
 };
 
-/**
- * Main Stack Param List (after authentication)
- */
 export type MainStackParamList = {
   Dashboard: undefined;
   HabitWizard: undefined;
@@ -82,4 +69,7 @@ export type MainStackParamList = {
   };
   Settings: undefined;
   Achievements: undefined;
+  Paywall: {
+    source?: string;
+  };
 };
