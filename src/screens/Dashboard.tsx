@@ -11,6 +11,7 @@ import tw from '../lib/tailwind';
 // Components
 import DashboardHeader from '../components/dashboard/DashboardHeader';
 import SwipeableHabitCard from '../components/SwipeableHabitCard';
+import { HolidayModeDisplay } from '../components/dashboard/HolidayModeDisplay';
 
 // Contexts
 import { useAuth } from '../context/AuthContext';
@@ -25,6 +26,7 @@ import { StreakSaverBadge } from '@/components/streakSaver/StreakSaverBadge';
 import { StreakSaverService } from '@/services/StreakSaverService';
 import { StreakSaverShopModal } from '@/components/streakSaver/StreakSaverShopModal';
 import { Image } from 'react-native';
+import { HolidayModeService, HolidayPeriod } from '@/services/holidayModeService';
 
 const Dashboard: React.FC = () => {
   const navigation = useNavigation();
@@ -42,12 +44,18 @@ const Dashboard: React.FC = () => {
   const [badgeRefresh, setBadgeRefresh] = useState(0);
   const [showShop, setShowShop] = useState(false);
 
+  // Holiday Mode State
+  const [activeHoliday, setActiveHoliday] = useState<HolidayPeriod | null>(null);
+  const [holidayLoading, setHolidayLoading] = useState(true);
+  const isFetchingHolidayRef = useRef(false); // Prevent concurrent fetches
+
   const [testLevel, setTestLevel] = useState(1);
   const { triggerLevelUp } = useLevelUp();
 
   const { checkHabitLimit, habitCount, maxHabits, isPremium } = useSubscription();
 
   const renderCount = useRef(0);
+
   renderCount.current++;
   useEffect(() => {
     console.log(`Dashboard render #${renderCount.current}`);
@@ -104,6 +112,47 @@ const Dashboard: React.FC = () => {
     }
   }, [stats?.level]);
 
+  // Check for active holiday mode on mount
+  useEffect(() => {
+    const checkHolidayStatus = async () => {
+      if (!user?.id || isFetchingHolidayRef.current) return;
+
+      try {
+        isFetchingHolidayRef.current = true;
+        setHolidayLoading(true);
+        const holiday = await HolidayModeService.getActiveHoliday(user.id);
+        setActiveHoliday(holiday);
+      } catch (error) {
+        console.error('Error checking holiday status:', error);
+      } finally {
+        setHolidayLoading(false);
+        isFetchingHolidayRef.current = false;
+      }
+    };
+
+    checkHolidayStatus();
+  }, [user?.id]);
+
+  // Refresh holiday status when screen comes into focus (loop-safe)
+  const refreshHolidayStatus = useCallback(async () => {
+    if (!user?.id || isFetchingHolidayRef.current) return;
+
+    try {
+      isFetchingHolidayRef.current = true;
+      const holiday = await HolidayModeService.getActiveHoliday(user.id);
+      setActiveHoliday(holiday);
+    } catch (error) {
+      console.error('Error refreshing holiday status:', error);
+    } finally {
+      isFetchingHolidayRef.current = false;
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', refreshHolidayStatus);
+    return unsubscribe;
+  }, [navigation, refreshHolidayStatus]);
+
   // Initialize previous level on mount
   useEffect(() => {
     if (stats?.level && previousLevelRef.current === null) {
@@ -120,8 +169,22 @@ const Dashboard: React.FC = () => {
 
   // Pull-to-refresh handler
   const handleRefresh = useCallback(async () => {
+    // Refresh holiday status (with safety check)
+    if (!isFetchingHolidayRef.current && user?.id) {
+      try {
+        isFetchingHolidayRef.current = true;
+        const holiday = await HolidayModeService.getActiveHoliday(user.id);
+        setActiveHoliday(holiday);
+      } catch (error) {
+        console.error('Error refreshing holiday status:', error);
+      } finally {
+        isFetchingHolidayRef.current = false;
+      }
+    }
+
+    // Refresh habits and stats
     await Promise.all([refreshStats(true), refreshHabits()]);
-  }, [refreshStats, refreshHabits]);
+  }, [user?.id, refreshStats, refreshHabits]);
 
   // Navigation handlers
   const handleHabitPress = useCallback(
@@ -130,6 +193,11 @@ const Dashboard: React.FC = () => {
     },
     [navigation]
   );
+
+  // Optimistic update for ending holiday early
+  const handleOptimisticEndHoliday = () => {
+    setActiveHoliday(null);
+  };
 
   const handleCreateHabit = async () => {
     const canCreate = await checkHabitLimit();
@@ -143,7 +211,7 @@ const Dashboard: React.FC = () => {
   };
 
   // Loading state (first load)
-  if ((habitsLoading || statsLoading) && habits.length === 0) {
+  if ((habitsLoading || statsLoading || holidayLoading) && habits.length === 0) {
     return (
       <SafeAreaView style={tw`flex-1 bg-quartz-50`}>
         <View style={tw`flex-1 items-center justify-center`}>
@@ -181,11 +249,7 @@ const Dashboard: React.FC = () => {
           totalXP={stats?.totalXP ?? 0}
         />
 
-        <StreakSaverBadge
-          onPress={handleStreakSaverPress}
-          onShopPress={() => setShowShop(true)} // <-- This must be a function
-          refreshTrigger={badgeRefresh}
-        />
+        <StreakSaverBadge onPress={handleStreakSaverPress} onShopPress={() => setShowShop(true)} refreshTrigger={badgeRefresh} />
 
         <StreakSaverShopModal
           visible={showShop}
@@ -227,21 +291,24 @@ const Dashboard: React.FC = () => {
           {/* Section Header */}
           <View style={tw`flex-row items-center justify-between mb-4`}>
             <View>
-              <Text style={tw`text-xl font-bold text-quartz-700`}>Today's Habits</Text>
+              <Text style={tw`text-xl font-bold text-quartz-700`}>{activeHoliday ? 'On Holiday' : habits.length > 0 ? "Today's Habits" : 'Get Started'}</Text>
               <Text style={tw`text-sm text-quartz-500 mt-0.5`}>
-                {habits.length > 0 ? `${stats?.completedTasksToday ?? 0} of ${stats?.totalTasksToday ?? 0} tasks done` : 'Start building your first habit'}
+                {activeHoliday ? 'Your habits are paused' : habits.length > 0 ? `${stats?.completedTasksToday ?? 0} of ${stats?.totalTasksToday ?? 0} tasks done` : 'Start building your first habit'}
               </Text>
             </View>
 
-            {habits.length > 0 && (
+            {habits.length > 0 && !activeHoliday && (
               <Pressable onPress={handleCreateHabit} style={({ pressed }) => [tw`w-10 h-10 rounded-xl items-center justify-center`, pressed && tw`scale-95`]}>
                 <Image source={require('../../assets/interface/add-habit-button.png')} style={{ width: 40, height: 40 }} resizeMode="contain" />
               </Pressable>
             )}
           </View>
 
-          {/* Habit Cards or Empty State */}
-          {habits.length > 0 ? (
+          {/* HOLIDAY MODE DISPLAY */}
+          {activeHoliday ? (
+            <HolidayModeDisplay endDate={activeHoliday.endDate} reason={activeHoliday.reason} onEndEarly={handleOptimisticEndHoliday} />
+          ) : habits.length > 0 ? (
+            /* Habit Cards */
             <View style={tw`gap-3`}>
               {habits.map((habit, index) => (
                 <SwipeableHabitCard
@@ -256,23 +323,25 @@ const Dashboard: React.FC = () => {
               ))}
             </View>
           ) : (
-            // Empty State
-            <Pressable onPress={handleCreateHabit} style={({ pressed }) => [pressed && tw`scale-[0.98]`]}>
-              <LinearGradient colors={['rgba(243, 244, 246, 0.5)', 'rgba(229, 231, 235, 0.3)']} style={tw`rounded-2xl p-8 items-center border border-quartz-200`}>
-                <View style={tw`w-16 h-16 mb-4`}>
-                  <LinearGradient colors={['#9CA3AF', '#6B7280']} style={tw`w-full h-full rounded-2xl items-center justify-center shadow-lg`}>
-                    <Plus size={28} color="#ffffff" strokeWidth={2.5} />
-                  </LinearGradient>
-                </View>
+            /* Empty State */
+            <View style={tw`px-5`}>
+              <Pressable onPress={handleCreateHabit} style={({ pressed }) => [pressed && tw`scale-[0.98]`]}>
+                <LinearGradient colors={['rgba(243, 244, 246, 0.5)', 'rgba(229, 231, 235, 0.3)']} style={tw`rounded-2xl p-8 items-center border border-quartz-200`}>
+                  <View style={tw`w-16 h-16 mb-4`}>
+                    <LinearGradient colors={['#9CA3AF', '#6B7280']} style={tw`w-full h-full rounded-2xl items-center justify-center shadow-lg`}>
+                      <Plus size={28} color="#ffffff" strokeWidth={2.5} />
+                    </LinearGradient>
+                  </View>
 
-                <Text style={tw`text-lg font-bold text-quartz-700 mb-2`}>Create Your First Habit</Text>
-                <Text style={tw`text-sm text-quartz-500 text-center px-4`}>Start your journey to build better habits and earn achievements!</Text>
+                  <Text style={tw`text-lg font-bold text-quartz-700 mb-2`}>Create Your First Habit</Text>
+                  <Text style={tw`text-sm text-quartz-500 text-center px-4`}>Start your journey to build better habits and earn achievements!</Text>
 
-                <View style={tw`mt-4 px-6 py-2 bg-sand rounded-full border border-quartz-300 shadow-sm`}>
-                  <Text style={tw`text-sm font-semibold text-quartz-600`}>Tap to Begin →</Text>
-                </View>
-              </LinearGradient>
-            </Pressable>
+                  <View style={tw`mt-4 px-6 py-2 bg-sand rounded-full border border-quartz-300 shadow-sm`}>
+                    <Text style={tw`text-sm font-semibold text-quartz-600`}>Tap to Begin →</Text>
+                  </View>
+                </LinearGradient>
+              </Pressable>
+            </View>
           )}
         </Animated.View>
       </ScrollView>
