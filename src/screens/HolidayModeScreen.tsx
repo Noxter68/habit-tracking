@@ -1,18 +1,25 @@
 // src/screens/HolidayModeScreen.tsx
+// Phase 2: Complete integration with granular control
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, ActivityIndicator, Alert, Platform, Modal, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import tw from 'twrnc';
+import tw from '@/lib/tailwind';
 import { useAuth } from '../context/AuthContext';
 import { useSubscription } from '../context/SubscriptionContext';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
-import { HolidayModeService, HolidayPeriod, HolidayStats } from '../services/holidayModeService';
+import { HolidayModeService, HolidayPeriod, HolidayStats, HolidayScope, HabitWithTasks } from '../services/holidayModeService';
 import { ChevronLeft, Umbrella, Diamond, Info, Calendar, Sparkles } from 'lucide-react-native';
+
+// Phase 2 Components
+import { ScopeSelector } from '../components/holidays/ScopeSelector';
+import { HabitSelector } from '../components/holidays/HabitSelector';
+import { TaskSelector } from '../components/holidays/TaskSelector';
 
 // ============================================================================
 // Types
@@ -41,6 +48,15 @@ const HolidayModeScreen: React.FC = () => {
   const [activePickerType, setActivePickerType] = useState<DatePickerType>(null);
 
   // ============================================================================
+  // Phase 2: Granular Control States
+  // ============================================================================
+
+  const [scope, setScope] = useState<HolidayScope>('all');
+  const [habits, setHabits] = useState<HabitWithTasks[]>([]);
+  const [selectedHabits, setSelectedHabits] = useState<Set<string>>(new Set());
+  const [selectedTasks, setSelectedTasks] = useState<Map<string, Set<string>>>(new Map());
+
+  // ============================================================================
   // Load Data
   // ============================================================================
 
@@ -49,13 +65,19 @@ const HolidayModeScreen: React.FC = () => {
 
     try {
       setLoading(true);
-      const [holiday, holidayStats] = await Promise.all([HolidayModeService.getActiveHoliday(user.id), HolidayModeService.getHolidayStats(user.id)]);
+      const [holiday, holidayStats, userHabits] = await Promise.all([
+        HolidayModeService.getActiveHoliday(user.id),
+        HolidayModeService.getHolidayStats(user.id),
+        HolidayModeService.getUserHabitsWithTasks(user.id),
+      ]);
 
       console.log('🏖️ Active Holiday Data:', holiday);
       console.log('📊 Holiday Stats:', holidayStats);
+      console.log('📋 User Habits:', userHabits);
 
       setActiveHoliday(holiday);
       setStats(holidayStats);
+      setHabits(userHabits);
 
       // Set default end date to tomorrow
       const tomorrow = new Date();
@@ -106,97 +128,250 @@ const HolidayModeScreen: React.FC = () => {
   };
 
   // ============================================================================
+  // Phase 2: Selection Handlers
+  // ============================================================================
+
+  const handleToggleTask = (habitId: string, taskId: string) => {
+    setSelectedTasks((prev) => {
+      const newMap = new Map(prev);
+      const habitTasks = newMap.get(habitId) || new Set<string>();
+
+      if (habitTasks.has(taskId)) {
+        habitTasks.delete(taskId);
+        if (habitTasks.size === 0) {
+          newMap.delete(habitId);
+        } else {
+          newMap.set(habitId, habitTasks);
+        }
+      } else {
+        habitTasks.add(taskId);
+        newMap.set(habitId, habitTasks);
+      }
+
+      return newMap;
+    });
+  };
+
+  const handleToggleAllTasks = (habitId: string) => {
+    setSelectedTasks((prev) => {
+      const newMap = new Map(prev);
+      const habit = habits.find((h) => h.id === habitId);
+      if (!habit) return prev;
+
+      const habitTasks = newMap.get(habitId);
+      const allSelected = habitTasks?.size === habit.tasks.length;
+
+      if (allSelected) {
+        newMap.delete(habitId);
+      } else {
+        newMap.set(habitId, new Set(habit.tasks.map((t) => t.id)));
+      }
+
+      return newMap;
+    });
+  };
+
+  const handleScopeChange = (newScope: HolidayScope) => {
+    setScope(newScope);
+    // Reset selections when changing scope
+    if (newScope === 'all') {
+      setSelectedHabits(new Set());
+      setSelectedTasks(new Map());
+    }
+  };
+
+  const handleHabitToggle = (habitId: string) => {
+    const newSelection = new Set(selectedHabits);
+    if (newSelection.has(habitId)) {
+      newSelection.delete(habitId);
+    } else {
+      newSelection.add(habitId);
+    }
+    setSelectedHabits(newSelection);
+  };
+
+  const handleTaskToggle = (habitId: string, taskId: string) => {
+    const newSelectedTasks = new Map(selectedTasks);
+    const habitTasks = newSelectedTasks.get(habitId) || new Set<string>();
+
+    if (habitTasks.has(taskId)) {
+      habitTasks.delete(taskId);
+    } else {
+      habitTasks.add(taskId);
+    }
+
+    if (habitTasks.size === 0) {
+      newSelectedTasks.delete(habitId);
+    } else {
+      newSelectedTasks.set(habitId, habitTasks);
+    }
+
+    setSelectedTasks(newSelectedTasks);
+  };
+
+  const handleSelectAllTasks = (habitId: string) => {
+    const habit = habits.find((h) => h.id === habitId);
+    if (!habit) return;
+
+    const newSelectedTasks = new Map(selectedTasks);
+    const allTaskIds = new Set(habit.tasks.map((t) => t.id));
+    newSelectedTasks.set(habitId, allTaskIds);
+    setSelectedTasks(newSelectedTasks);
+  };
+
+  // ============================================================================
+  // Validation
+  // ============================================================================
+
+  const validateSelection = (): { valid: boolean; message?: string } => {
+    if (scope === 'habits') {
+      if (selectedHabits.size === 0) {
+        return { valid: false, message: 'Please select at least one habit to freeze' };
+      }
+    } else if (scope === 'tasks') {
+      let totalTasks = 0;
+      selectedTasks.forEach((tasks) => (totalTasks += tasks.size));
+      if (totalTasks === 0) {
+        return { valid: false, message: 'Please select at least one task to freeze' };
+      }
+    }
+    return { valid: true };
+  };
+
+  // ============================================================================
   // Holiday Actions
   // ============================================================================
 
   const handleCreateHoliday = async () => {
     if (!user) return;
 
+    // Validate selection
+    const validation = validateSelection();
+    if (!validation.valid) {
+      Alert.alert('Selection Required', validation.message);
+      return;
+    }
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     const startDateStr = startDate.toISOString().split('T')[0];
     const endDateStr = endDate.toISOString().split('T')[0];
 
-    const validation = HolidayModeService.validateDateRange(startDateStr, endDateStr);
-    if (!validation.isValid) {
-      Alert.alert('Invalid Dates', validation.error);
+    const dateValidation = HolidayModeService.validateDateRange(startDateStr, endDateStr);
+    if (!dateValidation.isValid) {
+      Alert.alert('Invalid Dates', dateValidation.error);
       return;
     }
 
     const duration = HolidayModeService.calculateDuration(startDateStr, endDateStr);
 
-    Alert.alert('Activate Holiday Mode?', `All habits will be paused from ${HolidayModeService.formatDate(startDateStr)} to ${HolidayModeService.formatDate(endDateStr)} (${duration} days).`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Activate',
-        style: 'default',
-        onPress: async () => {
-          try {
-            setSubmitting(true);
+    // Build selection message
+    let selectionMessage = '';
+    if (scope === 'habits') {
+      selectionMessage = `\n\nFreezing ${selectedHabits.size} habit${selectedHabits.size > 1 ? 's' : ''}`;
+    } else if (scope === 'tasks') {
+      let totalTasks = 0;
+      selectedTasks.forEach((tasks) => (totalTasks += tasks.size));
+      selectionMessage = `\n\nFreezing ${totalTasks} task${totalTasks > 1 ? 's' : ''} across ${selectedTasks.size} habit${selectedTasks.size > 1 ? 's' : ''}`;
+    }
 
-            // ✅ OPTIMISTIC UPDATE - Show holiday immediately
-            const optimisticHoliday: HolidayPeriod = {
-              id: 'temp-' + Date.now(),
-              userId: user.id,
-              startDate: startDateStr,
-              endDate: endDateStr,
-              reason: undefined,
-              createdAt: new Date().toISOString(),
-              isActive: true,
-              daysRemaining: duration,
-            };
-            setActiveHoliday(optimisticHoliday);
+    Alert.alert(
+      'Activate Holiday Mode?',
+      `All ${scope === 'all' ? 'habits' : 'selected items'} will be paused from ${HolidayModeService.formatDate(startDateStr)} to ${HolidayModeService.formatDate(
+        endDateStr
+      )} (${duration} days).${selectionMessage}`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Activate',
+          style: 'default',
+          onPress: async () => {
+            try {
+              setSubmitting(true);
 
-            const result = await HolidayModeService.createHolidayPeriod(user.id, startDateStr, endDateStr, undefined);
+              // ✅ OPTIMISTIC UPDATE
+              const optimisticHoliday: HolidayPeriod = {
+                id: 'temp-' + Date.now(),
+                userId: user.id,
+                startDate: startDateStr,
+                endDate: endDateStr,
+                appliesToAll: scope === 'all',
+                frozenHabits: scope === 'habits' ? Array.from(selectedHabits) : null,
+                frozenTasks:
+                  scope === 'tasks'
+                    ? Array.from(selectedTasks.entries()).map(([habitId, taskIds]) => ({
+                        habitId,
+                        taskIds: Array.from(taskIds),
+                      }))
+                    : null,
+                reason: undefined,
+                createdAt: new Date().toISOString(),
+                isActive: true,
+                daysRemaining: duration,
+              };
+              setActiveHoliday(optimisticHoliday);
 
-            if (result.success) {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              // Reload to get actual data from server
-              await loadData();
-            } else if (result.requiresPremium) {
-              // Revert optimistic update
+              // Create with Phase 2 parameters
+              const result = await HolidayModeService.createHolidayPeriod({
+                userId: user.id,
+                startDate: startDateStr,
+                endDate: endDateStr,
+                scope,
+                frozenHabits: scope === 'habits' ? Array.from(selectedHabits) : undefined,
+                frozenTasks:
+                  scope === 'tasks'
+                    ? Array.from(selectedTasks.entries()).map(([habitId, taskIds]) => ({
+                        habitId,
+                        taskIds: Array.from(taskIds),
+                      }))
+                    : undefined,
+              });
+
+              if (result.success) {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                // Reload to get actual data from server
+                await loadData();
+              } else if (result.requiresPremium) {
+                setActiveHoliday(null);
+                Alert.alert('Premium Feature', result.error || 'This feature requires Premium.', [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'Upgrade',
+                    onPress: () => navigation.navigate('Paywall', { source: 'settings' }),
+                  },
+                ]);
+              } else {
+                setActiveHoliday(null);
+                Alert.alert('Error', result.error || 'Failed to create holiday');
+              }
+            } catch (error: any) {
               setActiveHoliday(null);
-              Alert.alert('Premium Feature', result.error || 'This feature requires Premium.', [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                  text: 'Upgrade',
-                  onPress: () => navigation.navigate('Paywall', { source: 'settings' }),
-                },
-              ]);
-            } else {
-              // Revert optimistic update
-              setActiveHoliday(null);
-              Alert.alert('Error', result.error || 'Failed to create holiday');
+              Alert.alert('Error', error.message || 'Failed to create holiday');
+            } finally {
+              setSubmitting(false);
             }
-          } catch (error: any) {
-            setActiveHoliday(null);
-            Alert.alert('Error', error.message || 'Failed to create holiday');
-          } finally {
-            setSubmitting(false);
-          }
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   const handleCancelHoliday = async () => {
     if (!user || !activeHoliday) return;
 
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    Alert.alert('End Holiday Mode?', 'Your habits will become active again immediately.', [
-      { text: 'No', style: 'cancel' },
+    Alert.alert('End Holiday Early?', 'Your habits will resume tracking immediately.', [
+      { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Yes, Resume',
+        text: 'End Holiday',
         style: 'destructive',
         onPress: async () => {
           try {
             setSubmitting(true);
-
-            const result = await HolidayModeService.cancelHoliday(user.id, activeHoliday.id);
+            const result = await HolidayModeService.cancelHoliday(activeHoliday.id, user.id);
 
             if (result.success) {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              setActiveHoliday(null);
               await loadData();
             } else {
               Alert.alert('Error', result.error || 'Failed to cancel holiday');
@@ -212,37 +387,35 @@ const HolidayModeScreen: React.FC = () => {
   };
 
   // ============================================================================
-  // Render Date Picker
+  // Date Picker Rendering
   // ============================================================================
 
   const renderDatePicker = () => {
     if (!activePickerType) return null;
 
-    const currentDate = activePickerType === 'start' ? startDate : endDate;
-    const minimumDate = activePickerType === 'start' ? new Date() : startDate;
-
-    if (Platform.OS === 'ios') {
-      return (
-        <Modal visible={true} transparent animationType="fade" onRequestClose={closeDatePicker}>
-          <Pressable style={tw`flex-1 bg-black/50 justify-end`} onPress={closeDatePicker}>
-            <Pressable onPress={(e) => e.stopPropagation()}>
-              <View style={tw`bg-white rounded-t-3xl p-4`}>
-                <View style={tw`flex-row justify-between items-center mb-4`}>
-                  <Text style={tw`text-lg font-bold text-gray-800`}>Select {activePickerType === 'start' ? 'Start' : 'End'} Date</Text>
-                  <TouchableOpacity onPress={closeDatePicker} style={tw`bg-indigo-100 px-4 py-2 rounded-xl`}>
-                    <Text style={tw`text-indigo-700 font-bold`}>Done</Text>
-                  </TouchableOpacity>
-                </View>
-                <DateTimePicker value={currentDate} mode="date" display="spinner" minimumDate={minimumDate} onChange={handleDateChange} textColor="#374151" />
-              </View>
-            </Pressable>
-          </Pressable>
-        </Modal>
-      );
+    if (Platform.OS === 'android') {
+      return <DateTimePicker value={activePickerType === 'start' ? startDate : endDate} mode="date" display="default" onChange={handleDateChange} minimumDate={new Date()} />;
     }
 
-    // Android shows system picker
-    return <DateTimePicker value={currentDate} mode="date" display="default" minimumDate={minimumDate} onChange={handleDateChange} />;
+    // iOS Modal
+    return (
+      <Modal visible={true} animationType="slide" transparent={true}>
+        <Pressable style={tw`flex-1 bg-black/50 justify-end`} onPress={closeDatePicker}>
+          <View style={tw`bg-white rounded-t-3xl p-6`} onStartShouldSetResponder={() => true}>
+            <View style={tw`flex-row justify-between items-center mb-4`}>
+              <TouchableOpacity onPress={closeDatePicker}>
+                <Text style={tw`text-base text-gray-500`}>Cancel</Text>
+              </TouchableOpacity>
+              <Text style={tw`text-lg font-bold text-gray-800`}>Select Date</Text>
+              <TouchableOpacity onPress={closeDatePicker}>
+                <Text style={tw`text-base text-indigo-600 font-bold`}>Done</Text>
+              </TouchableOpacity>
+            </View>
+            <DateTimePicker value={activePickerType === 'start' ? startDate : endDate} mode="date" display="spinner" onChange={handleDateChange} minimumDate={new Date()} style={tw`h-50`} />
+          </View>
+        </Pressable>
+      </Modal>
+    );
   };
 
   // ============================================================================
@@ -251,10 +424,8 @@ const HolidayModeScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <SafeAreaView style={tw`flex-1 bg-[#FAF9F7]`}>
-        <View style={tw`flex-1 items-center justify-center`}>
-          <ActivityIndicator size="large" color="#6366F1" />
-        </View>
+      <SafeAreaView style={tw`flex-1 bg-[#FAF9F7] items-center justify-center`}>
+        <ActivityIndicator size="large" color="#6366F1" />
       </SafeAreaView>
     );
   }
@@ -284,7 +455,7 @@ const HolidayModeScreen: React.FC = () => {
           <Text style={tw`text-base text-gray-500`}>Pause habits without losing progress</Text>
         </Animated.View>
 
-        {/* Active Holiday Card - Shows at top with optimistic update */}
+        {/* Active Holiday Card */}
         {activeHoliday && (
           <Animated.View entering={FadeInDown.delay(100).duration(400)} style={tw`px-6 mb-6`}>
             <LinearGradient colors={['#6366F1', '#4F46E5']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-6 shadow-lg`}>
@@ -309,6 +480,20 @@ const HolidayModeScreen: React.FC = () => {
                 </Text>
               </View>
 
+              {/* Phase 2: Show what's frozen */}
+              {!activeHoliday.appliesToAll && (
+                <View style={tw`mb-4`}>
+                  <Text style={tw`text-indigo-200 text-sm mb-1`}>Frozen Items</Text>
+                  <Text style={tw`text-white text-sm`}>
+                    {activeHoliday.frozenHabits?.length
+                      ? `${activeHoliday.frozenHabits.length} habits`
+                      : activeHoliday.frozenTasks?.length
+                      ? `${activeHoliday.frozenTasks.reduce((sum, ft) => sum + ft.taskIds.length, 0)} tasks`
+                      : 'Custom selection'}
+                  </Text>
+                </View>
+              )}
+
               <TouchableOpacity onPress={handleCancelHoliday} disabled={submitting} style={tw`bg-white rounded-xl py-3 ${submitting ? 'opacity-50' : ''}`}>
                 {submitting ? <ActivityIndicator color="#6366F1" /> : <Text style={tw`text-indigo-600 font-bold text-center`}>End Early</Text>}
               </TouchableOpacity>
@@ -316,12 +501,11 @@ const HolidayModeScreen: React.FC = () => {
           </Animated.View>
         )}
 
-        {/* Stats Card - Different for Free vs Premium */}
+        {/* Stats Card */}
         {stats && !activeHoliday && (
           <Animated.View entering={FadeInDown.delay(100).duration(400)} style={tw`px-6 mb-6`}>
             <View style={tw`bg-white rounded-3xl p-6 shadow-sm`}>
               {isPremium ? (
-                // Premium: Simple elegant message
                 <>
                   <View style={tw`flex-row items-center justify-between mb-4`}>
                     <Text style={tw`text-lg font-bold text-gray-800`}>Premium</Text>
@@ -333,7 +517,6 @@ const HolidayModeScreen: React.FC = () => {
                   <Text style={tw`text-gray-500 text-sm`}>Create unlimited holidays with no duration restrictions</Text>
                 </>
               ) : (
-                // Free: Show remaining allowance
                 <>
                   <Text style={tw`text-lg font-bold text-gray-800 mb-4`}>Your Allowance</Text>
                   <View style={tw`flex-row items-center gap-4`}>
@@ -353,7 +536,7 @@ const HolidayModeScreen: React.FC = () => {
           </Animated.View>
         )}
 
-        {/* Create Holiday Form - Only show if no active holiday */}
+        {/* Create Holiday Form */}
         {!activeHoliday && (
           <View style={tw`px-6`}>
             <Animated.View entering={FadeInDown.delay(200).duration(400)} style={tw`bg-white rounded-3xl p-6 shadow-sm mb-6`}>
@@ -377,16 +560,39 @@ const HolidayModeScreen: React.FC = () => {
               </View>
 
               {/* Duration Display */}
-              <View style={tw`bg-indigo-50 rounded-xl p-3 mb-4`}>
+              <View style={tw`bg-indigo-50 rounded-xl p-3 mb-6`}>
                 <Text style={tw`text-indigo-700 text-sm font-semibold text-center`}>
                   {HolidayModeService.calculateDuration(startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0])} days total
                 </Text>
               </View>
 
+              {/* Phase 2: Scope Selector */}
+              <ScopeSelector selectedScope={scope} onScopeChange={handleScopeChange} />
+
+              {/* Phase 2: Habit Selector */}
+              {scope === 'habits' && habits.length > 0 && (
+                <View style={tw`mt-6`}>
+                  <HabitSelector habits={habits} selectedHabits={selectedHabits} onToggle={handleHabitToggle} />
+                </View>
+              )}
+
+              {/* Phase 2: Task Selector */}
+              {scope === 'tasks' && habits.length > 0 && (
+                <View style={tw`mt-6`}>
+                  <TaskSelector habits={habits} selectedTasks={selectedTasks} onToggleTask={handleToggleTask} onToggleAllTasks={handleToggleAllTasks} />
+                </View>
+              )}
+
               {/* Info */}
-              <View style={tw`bg-amber-50 rounded-xl p-3 mb-6 flex-row items-start`}>
+              <View style={tw`bg-amber-50 rounded-xl p-3 mb-6 flex-row items-start mt-6`}>
                 <Info size={16} color="#D97706" style={tw`mt-0.5`} />
-                <Text style={tw`text-amber-700 text-xs ml-2 flex-1`}>All habits paused. Streaks preserved.</Text>
+                <Text style={tw`text-amber-700 text-xs ml-2 flex-1`}>
+                  {scope === 'all'
+                    ? 'All habits paused. Streaks preserved.'
+                    : scope === 'habits'
+                    ? 'Selected habits paused. Others continue normally.'
+                    : 'Selected tasks paused. Others continue normally.'}
+                </Text>
               </View>
 
               {/* Activate Button */}
@@ -404,7 +610,7 @@ const HolidayModeScreen: React.FC = () => {
               </TouchableOpacity>
             </Animated.View>
 
-            {/* Premium Upsell - Only for Free Users */}
+            {/* Premium Upsell */}
             {!isPremium && (
               <Animated.View entering={FadeInDown.delay(300).duration(400)}>
                 <TouchableOpacity

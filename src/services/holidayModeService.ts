@@ -1,8 +1,10 @@
 // src/services/HolidayModeService.ts
+// Complete service with Phase 1 helpers + Phase 2 granular control
+
 import { supabase } from '../lib/supabase';
 
 // ============================================================================
-// Types
+// Phase 1 Types (Base)
 // ============================================================================
 
 export interface HolidayPeriod {
@@ -10,6 +12,12 @@ export interface HolidayPeriod {
   userId: string;
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
+  appliesToAll: boolean;
+
+  // Phase 2: Granular control fields
+  frozenHabits?: string[] | null;
+  frozenTasks?: FrozenTask[] | null;
+
   reason?: string;
   createdAt: string;
   isActive: boolean;
@@ -21,7 +29,11 @@ export interface HolidayStats {
   holidaysThisYear: number;
   totalDaysThisYear: number;
   remainingAllowance: number; // -1 for unlimited (premium)
-  maxDuration: number; // -1 for unlimited (premium), 14 for free
+  maxDuration: number; // 14 for free, 30 for premium
+
+  // Phase 2: Granular stats
+  totalHabits: number;
+  totalTasks: number;
 }
 
 export interface ValidationResult {
@@ -45,14 +57,159 @@ export interface CancelHolidayResult {
 }
 
 // ============================================================================
+// Phase 2 Types (Granular Control)
+// ============================================================================
+
+export type HolidayScope = 'all' | 'habits' | 'tasks';
+
+export interface FrozenTask {
+  habitId: string;
+  taskIds: string[];
+}
+
+export interface HabitWithTasks {
+  id: string;
+  name: string;
+  category: string;
+  type: 'good' | 'bad';
+  tasks: TaskInfo[];
+  currentStreak: number;
+}
+
+export interface TaskInfo {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+export interface CreateHolidayRequest {
+  userId: string;
+  startDate: string;
+  endDate: string;
+  scope: HolidayScope;
+  frozenHabits?: string[];
+  frozenTasks?: FrozenTask[];
+  reason?: string;
+}
+
+export interface HolidaySelectionState {
+  scope: HolidayScope;
+  selectedHabits: Set<string>;
+  selectedTasks: Map<string, Set<string>>; // habitId -> Set of taskIds
+}
+
+// ============================================================================
+// Helper Functions for Selection State
+// ============================================================================
+
+export const isHabitPartiallySelected = (habitId: string, habitTaskCount: number, selectedTasks: Map<string, Set<string>>): boolean => {
+  const tasks = selectedTasks.get(habitId);
+  if (!tasks || tasks.size === 0) return false;
+  return tasks.size < habitTaskCount;
+};
+
+export const isHabitFullySelected = (habitId: string, habitTaskCount: number, selectedTasks: Map<string, Set<string>>): boolean => {
+  const tasks = selectedTasks.get(habitId);
+  if (!tasks) return false;
+  return tasks.size === habitTaskCount;
+};
+
+export const selectionStateToRequest = (state: HolidaySelectionState): Pick<CreateHolidayRequest, 'scope' | 'frozenHabits' | 'frozenTasks'> => {
+  if (state.scope === 'all') {
+    return {
+      scope: 'all',
+      frozenHabits: undefined,
+      frozenTasks: undefined,
+    };
+  }
+
+  if (state.scope === 'habits') {
+    return {
+      scope: 'habits',
+      frozenHabits: Array.from(state.selectedHabits),
+      frozenTasks: undefined,
+    };
+  }
+
+  // scope === 'tasks'
+  const frozenTasks: FrozenTask[] = [];
+  state.selectedTasks.forEach((taskIds, habitId) => {
+    if (taskIds.size > 0) {
+      frozenTasks.push({
+        habitId,
+        taskIds: Array.from(taskIds),
+      });
+    }
+  });
+
+  return {
+    scope: 'tasks',
+    frozenHabits: undefined,
+    frozenTasks,
+  };
+};
+
+export const getSelectionSummary = (state: HolidaySelectionState, habits: HabitWithTasks[]): string => {
+  if (state.scope === 'all') {
+    return `All ${habits.length} habits`;
+  }
+
+  if (state.scope === 'habits') {
+    const count = state.selectedHabits.size;
+    return `${count} ${count === 1 ? 'habit' : 'habits'}`;
+  }
+
+  // scope === 'tasks'
+  let totalTasks = 0;
+  state.selectedTasks.forEach((tasks) => {
+    totalTasks += tasks.size;
+  });
+  return `${totalTasks} ${totalTasks === 1 ? 'task' : 'tasks'} across ${state.selectedTasks.size} ${state.selectedTasks.size === 1 ? 'habit' : 'habits'}`;
+};
+
+// ============================================================================
 // Holiday Mode Service
 // ============================================================================
 
 export class HolidayModeService {
+  // ==========================================================================
+  // Phase 2: Granular Control Methods
+  // ==========================================================================
+
+  /**
+   * Get user's habits with their tasks for selection UI
+   */
+  static async getUserHabitsWithTasks(userId: string): Promise<HabitWithTasks[]> {
+    try {
+      const { data: habits, error } = await supabase.from('habits').select('id, name, category, type, tasks, current_streak').eq('user_id', userId).eq('is_active', true).order('name');
+
+      if (error) throw error;
+
+      return (habits || []).map((habit) => ({
+        id: habit.id,
+        name: habit.name,
+        category: habit.category,
+        type: habit.type as 'good' | 'bad',
+        tasks: Array.isArray(habit.tasks)
+          ? habit.tasks.map((task: any, index: number) => ({
+              id: typeof task === 'string' ? task : task.id || `task-${index}`,
+              name: typeof task === 'string' ? task : task.name || task,
+              description: typeof task === 'object' ? task.description : undefined,
+            }))
+          : [],
+        currentStreak: habit.current_streak || 0,
+      }));
+    } catch (error) {
+      console.error('Error fetching habits with tasks:', error);
+      return [];
+    }
+  }
+
   /**
    * Check if user can create a holiday with given parameters
+   * Phase 2: Includes granular selection validation
    */
-  static async canCreateHoliday(userId: string, startDate: string, endDate: string): Promise<ValidationResult> {
+  static async canCreateHoliday(userId: string, startDate: string, endDate: string, scope: HolidayScope = 'all', frozenHabits?: string[], frozenTasks?: FrozenTask[]): Promise<ValidationResult> {
     try {
       const { data, error } = await supabase.rpc('can_create_holiday', {
         p_user_id: userId,
@@ -61,6 +218,30 @@ export class HolidayModeService {
       });
 
       if (error) throw error;
+
+      // Additional client-side validation for granular selections
+      if (scope !== 'all') {
+        if (!frozenHabits && !frozenTasks) {
+          return {
+            canCreate: false,
+            reason: 'You must select at least one habit or task to freeze.',
+          };
+        }
+
+        if (scope === 'habits' && (!frozenHabits || frozenHabits.length === 0)) {
+          return {
+            canCreate: false,
+            reason: 'You must select at least one habit to freeze.',
+          };
+        }
+
+        if (scope === 'tasks' && (!frozenTasks || frozenTasks.length === 0)) {
+          return {
+            canCreate: false,
+            reason: 'You must select at least one task to freeze.',
+          };
+        }
+      }
 
       return {
         canCreate: data.can_create || false,
@@ -77,67 +258,120 @@ export class HolidayModeService {
   }
 
   /**
-   * Create a new holiday period
+   * Create a new holiday period with granular control
+   * Phase 2: Supports habit and task-level freezing
    */
-  static async createHolidayPeriod(userId: string, startDate: string, endDate: string, reason?: string): Promise<CreateHolidayResult> {
+  static async createHolidayPeriod(request: CreateHolidayRequest): Promise<CreateHolidayResult> {
     try {
+      const { userId, startDate, endDate, scope, frozenHabits, frozenTasks, reason } = request;
+
+      // Determine applies_to_all based on scope
+      const appliesToAll = scope === 'all';
+
       const { data, error } = await supabase.rpc('create_holiday_period', {
         p_user_id: userId,
         p_start_date: startDate,
         p_end_date: endDate,
+        p_applies_to_all: appliesToAll,
+        p_frozen_habits: frozenHabits || null,
+        p_frozen_tasks: frozenTasks ? frozenTasks : null,
         p_reason: reason || null,
       });
 
       if (error) throw error;
 
+      if (!data.success) {
+        return {
+          success: false,
+          error: data.error,
+          message: data.message,
+          requiresPremium: data.requires_premium,
+        };
+      }
+
       return {
-        success: data.success || false,
+        success: true,
         holidayId: data.holiday_id,
-        error: data.error,
-        requiresPremium: data.requires_premium || false,
         message: data.message,
       };
     } catch (error: any) {
-      console.error('Error creating holiday:', error);
+      console.error('Error creating holiday period:', error);
       return {
         success: false,
-        error: error.message || 'Failed to create holiday',
+        error: 'create_failed',
+        message: error.message || 'Failed to create holiday period',
       };
     }
   }
 
   /**
-   * Get the currently active holiday for a user
+   * Check if specific habit is frozen on given date
+   * Phase 2: Checks granular freezing
    */
-  static async getActiveHoliday(userId: string): Promise<HolidayPeriod | null> {
+  static async isHabitFrozen(userId: string, habitId: string, date: string, taskId?: string): Promise<boolean> {
     try {
-      const { data, error } = await supabase.rpc('get_active_holiday', {
+      const { data, error } = await supabase.rpc('is_habit_frozen', {
         p_user_id: userId,
+        p_habit_id: habitId,
+        p_date: date,
+        p_task_id: taskId || null,
       });
 
       if (error) throw error;
-      if (!data) return null;
 
-      // Handle both camelCase and snake_case from database
-      const startDate = data.startDate || data.start_date;
-      const endDate = data.endDate || data.end_date;
-      const createdAt = data.createdAt || data.created_at;
+      return data || false;
+    } catch (error) {
+      console.error('Error checking if habit is frozen:', error);
+      return false;
+    }
+  }
+
+  // ==========================================================================
+  // Phase 1: Core Methods (Updated for Phase 2 compatibility)
+  // ==========================================================================
+
+  /**
+   * Get the currently active holiday for a user
+   * Phase 2: Includes granular control fields
+   */
+  static async getActiveHoliday(userId: string): Promise<HolidayPeriod | null> {
+    try {
+      const { data, error } = await supabase
+        .from('holiday_periods')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .gte('end_date', new Date().toISOString().split('T')[0])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') return null; // No rows returned
+        throw error;
+      }
+
+      if (!data) return null;
 
       // Calculate days remaining (client-side for reliability)
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const end = new Date(endDate);
+      const end = new Date(data.end_date);
       end.setHours(0, 0, 0, 0);
       const daysRemaining = Math.max(0, Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
 
+      // Map database fields (snake_case) to TypeScript (camelCase)
       return {
         id: data.id,
-        userId: userId,
-        startDate: startDate,
-        endDate: endDate,
+        userId: data.user_id,
+        startDate: data.start_date,
+        endDate: data.end_date,
+        appliesToAll: data.applies_to_all,
+        frozenHabits: data.frozen_habits,
+        frozenTasks: data.frozen_tasks,
         reason: data.reason,
-        createdAt: createdAt,
-        isActive: true,
+        createdAt: data.created_at,
+        isActive: data.is_active,
         daysRemaining: daysRemaining,
       };
     } catch (error) {
@@ -160,6 +394,9 @@ export class HolidayModeService {
         userId: item.user_id,
         startDate: item.start_date,
         endDate: item.end_date,
+        appliesToAll: item.applies_to_all,
+        frozenHabits: item.frozen_habits,
+        frozenTasks: item.frozen_tasks,
         reason: item.reason,
         createdAt: item.created_at,
         isActive: item.is_active,
@@ -173,25 +410,26 @@ export class HolidayModeService {
   /**
    * Cancel an active holiday early
    */
-  static async cancelHoliday(userId: string, holidayId: string): Promise<CancelHolidayResult> {
+  static async cancelHoliday(holidayId: string, userId: string): Promise<CancelHolidayResult> {
     try {
-      const { data, error } = await supabase.rpc('cancel_holiday', {
-        p_user_id: userId,
+      const { data, error } = await supabase.rpc('cancel_holiday_period', {
         p_holiday_id: holidayId,
+        p_user_id: userId,
       });
 
       if (error) throw error;
 
       return {
         success: data.success || false,
-        error: data.error,
         message: data.message,
+        error: data.error,
       };
     } catch (error: any) {
-      console.error('Error cancelling holiday:', error);
+      console.error('Error canceling holiday:', error);
       return {
         success: false,
-        error: error.message || 'Failed to cancel holiday',
+        error: 'cancel_failed',
+        message: error.message || 'Failed to cancel holiday',
       };
     }
   }
@@ -201,13 +439,8 @@ export class HolidayModeService {
    */
   static async isOnHoliday(userId: string): Promise<boolean> {
     try {
-      const { data, error } = await supabase.rpc('is_on_holiday', {
-        p_user_id: userId,
-        p_check_date: new Date().toISOString().split('T')[0],
-      });
-
-      if (error) throw error;
-      return data || false;
+      const holiday = await this.getActiveHoliday(userId);
+      return holiday !== null;
     } catch (error) {
       console.error('Error checking holiday status:', error);
       return false;
@@ -216,6 +449,7 @@ export class HolidayModeService {
 
   /**
    * Get holiday statistics for the user
+   * Phase 2: Includes habit/task counts
    */
   static async getHolidayStats(userId: string): Promise<HolidayStats> {
     try {
@@ -225,12 +459,23 @@ export class HolidayModeService {
 
       if (error) throw error;
 
+      // Get total habits and tasks count
+      const { data: habits } = await supabase.from('habits').select('id, tasks').eq('user_id', userId).eq('is_active', true);
+
+      const totalHabits = habits?.length || 0;
+      const totalTasks =
+        habits?.reduce((sum, habit) => {
+          return sum + (Array.isArray(habit.tasks) ? habit.tasks.length : 0);
+        }, 0) || 0;
+
       return {
-        isPremium: data.isPremium || false,
-        holidaysThisYear: data.holidaysThisYear || 0,
-        totalDaysThisYear: data.totalDaysThisYear || 0,
-        remainingAllowance: data.remainingAllowance || 0,
-        maxDuration: data.maxDuration || 14,
+        isPremium: data.is_premium || false,
+        holidaysThisYear: data.holidays_this_year || 0,
+        totalDaysThisYear: data.total_days_this_year || 0,
+        remainingAllowance: data.remaining_allowance ?? -1,
+        maxDuration: data.max_duration ?? -1,
+        totalHabits,
+        totalTasks,
       };
     } catch (error) {
       console.error('Error fetching holiday stats:', error);
@@ -238,11 +483,17 @@ export class HolidayModeService {
         isPremium: false,
         holidaysThisYear: 0,
         totalDaysThisYear: 0,
-        remainingAllowance: 0,
+        remainingAllowance: 14,
         maxDuration: 14,
+        totalHabits: 0,
+        totalTasks: 0,
       };
     }
   }
+
+  // ==========================================================================
+  // Helper Functions (Phase 1)
+  // ==========================================================================
 
   /**
    * Format date for display (e.g., "Jan 15, 2025")
