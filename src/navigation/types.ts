@@ -12,7 +12,7 @@ export type RootStackParamList = {
   HabitWizard: undefined;
   HabitDetails: {
     habitId: string;
-    habit?: Habit;
+    pausedTasks?: Record<string, { pausedUntil: string; reason?: string }>;
   };
 
   // Settings & Profile

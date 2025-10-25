@@ -1,5 +1,5 @@
 // src/services/HolidayModeService.ts
-// Complete service with Phase 1 helpers + Phase 2 granular control
+// Complete service with Phase 1 helpers + Phase 2 granular control + Active Holiday Fix
 
 import { supabase } from '../lib/supabase';
 
@@ -15,8 +15,8 @@ export interface HolidayPeriod {
   appliesToAll: boolean;
 
   // Phase 2: Granular control fields
-  frozenHabits?: string[] | null;
-  frozenTasks?: FrozenTask[] | null;
+  frozenHabits: string[] | null; // ✅ Array of habit IDs that are frozen
+  frozenTasks: any | null;
 
   reason?: string;
   createdAt: string;
@@ -305,63 +305,39 @@ export class HolidayModeService {
   }
 
   /**
-   * Check if specific habit is frozen on given date
-   * Phase 2: Checks granular freezing
-   */
-  static async isHabitFrozen(userId: string, habitId: string, date: string, taskId?: string): Promise<boolean> {
-    try {
-      const { data, error } = await supabase.rpc('is_habit_frozen', {
-        p_user_id: userId,
-        p_habit_id: habitId,
-        p_date: date,
-        p_task_id: taskId || null,
-      });
-
-      if (error) throw error;
-
-      return data || false;
-    } catch (error) {
-      console.error('Error checking if habit is frozen:', error);
-      return false;
-    }
-  }
-
-  // ==========================================================================
-  // Phase 1: Core Methods (Updated for Phase 2 compatibility)
-  // ==========================================================================
-
-  /**
-   * Get the currently active holiday for a user
-   * Phase 2: Includes granular control fields
+   * ✅ NEW: Get the active holiday period for a user
+   * This is the missing method that the Dashboard needs!
    */
   static async getActiveHoliday(userId: string): Promise<HolidayPeriod | null> {
     try {
+      const today = new Date().toISOString().split('T')[0];
+
       const { data, error } = await supabase
         .from('holiday_periods')
         .select('*')
         .eq('user_id', userId)
         .eq('is_active', true)
-        .gte('end_date', new Date().toISOString().split('T')[0])
+        .lte('start_date', today)
+        .gte('end_date', today)
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
 
       if (error) {
-        if (error.code === 'PGRST116') return null; // No rows returned
+        // No active holiday is not an error
+        if (error.code === 'PGRST116') {
+          console.log('📅 No active holiday found');
+          return null;
+        }
         throw error;
       }
 
-      if (!data) return null;
+      if (!data) {
+        console.log('📅 No active holiday found');
+        return null;
+      }
 
-      // Calculate days remaining (client-side for reliability)
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const end = new Date(data.end_date);
-      end.setHours(0, 0, 0, 0);
-      const daysRemaining = Math.max(0, Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
-
-      // Map database fields (snake_case) to TypeScript (camelCase)
-      return {
+      const holiday: HolidayPeriod = {
         id: data.id,
         userId: data.user_id,
         startDate: data.start_date,
@@ -372,13 +348,87 @@ export class HolidayModeService {
         reason: data.reason,
         createdAt: data.created_at,
         isActive: data.is_active,
-        daysRemaining: daysRemaining,
       };
+
+      console.log('✅ Active holiday found:', {
+        id: holiday.id,
+        appliesToAll: holiday.appliesToAll,
+        frozenHabits: holiday.frozenHabits,
+        frozenTasks: holiday.frozenTasks,
+        endDate: holiday.endDate,
+      });
+
+      return holiday;
     } catch (error) {
       console.error('Error fetching active holiday:', error);
       return null;
     }
   }
+
+  /**
+   * Check if a specific habit is currently frozen
+   */
+  static async isHabitFrozen(userId: string, habitId: string): Promise<boolean> {
+    try {
+      const activeHoliday = await this.getActiveHoliday(userId);
+
+      if (!activeHoliday) {
+        return false;
+      }
+
+      // If applies_to_all is true, all habits are frozen
+      if (activeHoliday.appliesToAll) {
+        return true;
+      }
+
+      // Check if habit is in frozen_habits array
+      if (activeHoliday.frozenHabits && Array.isArray(activeHoliday.frozenHabits)) {
+        return activeHoliday.frozenHabits.includes(habitId);
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Error checking if habit is frozen:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Check if a specific task is currently frozen
+   */
+  static async isTaskFrozen(userId: string, habitId: string, taskId: string): Promise<boolean> {
+    try {
+      const activeHoliday = await this.getActiveHoliday(userId);
+
+      if (!activeHoliday) {
+        return false;
+      }
+
+      // If habit is frozen entirely, task is frozen
+      const habitFrozen = await this.isHabitFrozen(userId, habitId);
+      if (habitFrozen) {
+        return true;
+      }
+
+      // Check frozen_tasks JSONB
+      if (activeHoliday.frozenTasks) {
+        // frozenTasks structure: [{ habitId: "xxx", taskIds: ["task1", "task2"] }]
+        const habitTasks = activeHoliday.frozenTasks.find((item: any) => item.habitId === habitId);
+        if (habitTasks && habitTasks.taskIds && Array.isArray(habitTasks.taskIds)) {
+          return habitTasks.taskIds.includes(taskId);
+        }
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Error checking if task is frozen:', error);
+      return false;
+    }
+  }
+
+  // ==========================================================================
+  // Phase 1: Core Methods (Updated for Phase 2 compatibility)
+  // ==========================================================================
 
   /**
    * Get all holidays for a user (history)
@@ -488,6 +538,32 @@ export class HolidayModeService {
         totalHabits: 0,
         totalTasks: 0,
       };
+    }
+  }
+
+  /**
+   * End a holiday period early
+   */
+  static async endHolidayEarly(holidayId: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('holiday_periods')
+        .update({
+          is_active: false,
+          end_date: new Date().toISOString().split('T')[0], // Set end date to today
+        })
+        .eq('id', holidayId);
+
+      if (error) {
+        console.error('Error ending holiday early:', error);
+        return false;
+      }
+
+      console.log('✅ Holiday ended early:', holidayId);
+      return true;
+    } catch (error) {
+      console.error('Error ending holiday early:', error);
+      return false;
     }
   }
 

@@ -394,24 +394,33 @@ const HolidayModeScreen: React.FC = () => {
     if (!activePickerType) return null;
 
     if (Platform.OS === 'android') {
-      return <DateTimePicker value={activePickerType === 'start' ? startDate : endDate} mode="date" display="default" onChange={handleDateChange} minimumDate={new Date()} />;
+      return <DateTimePicker value={activePickerType === 'start' ? startDate : endDate} mode="date" onChange={handleDateChange} minimumDate={activePickerType === 'start' ? new Date() : startDate} />;
     }
 
-    // iOS Modal
+    // iOS
     return (
-      <Modal visible={true} animationType="slide" transparent={true}>
+      <Modal visible={true} transparent={true} animationType="fade" onRequestClose={closeDatePicker}>
         <Pressable style={tw`flex-1 bg-black/50 justify-end`} onPress={closeDatePicker}>
-          <View style={tw`bg-white rounded-t-3xl p-6`} onStartShouldSetResponder={() => true}>
-            <View style={tw`flex-row justify-between items-center mb-4`}>
+          <View style={tw`bg-white rounded-t-3xl pb-6`}>
+            <View style={tw`flex-row justify-between items-center px-6 py-4 border-b border-gray-100`}>
               <TouchableOpacity onPress={closeDatePicker}>
-                <Text style={tw`text-base text-gray-500`}>Cancel</Text>
+                <Text style={tw`text-indigo-600 font-semibold`}>Cancel</Text>
               </TouchableOpacity>
-              <Text style={tw`text-lg font-bold text-gray-800`}>Select Date</Text>
+              <Text style={tw`font-bold text-gray-800`}>{activePickerType === 'start' ? 'Start Date' : 'End Date'}</Text>
               <TouchableOpacity onPress={closeDatePicker}>
-                <Text style={tw`text-base text-indigo-600 font-bold`}>Done</Text>
+                <Text style={tw`text-indigo-600 font-semibold`}>Done</Text>
               </TouchableOpacity>
             </View>
-            <DateTimePicker value={activePickerType === 'start' ? startDate : endDate} mode="date" display="spinner" onChange={handleDateChange} minimumDate={new Date()} style={tw`h-50`} />
+            <View style={tw`items-center justify-center w-full`}>
+              <DateTimePicker
+                value={activePickerType === 'start' ? startDate : endDate}
+                mode="date"
+                display="spinner"
+                onChange={handleDateChange}
+                minimumDate={activePickerType === 'start' ? new Date() : startDate}
+                style={{ width: '100%' }}
+              />
+            </View>
           </View>
         </Pressable>
       </Modal>

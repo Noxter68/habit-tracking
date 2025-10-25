@@ -46,6 +46,8 @@ const HabitDetails: React.FC = () => {
   const { habitId } = route.params;
   const { user } = useAuth();
 
+  const pausedTasks = route.params.pausedTasks || {};
+
   const [selectedTab, setSelectedTab] = useState<TabType>('overview');
   const [isLoadingXPStatus, setIsLoadingXPStatus] = useState(false);
   const [prevTier, setPrevTier] = useState<string | null>(null);
@@ -58,7 +60,15 @@ const HabitDetails: React.FC = () => {
 
   const habit = habits.find((h: Habit) => h.id === route.params.habitId);
 
-  // ✅ ADD THIS - Streak Saver Integration
+  useEffect(() => {
+    console.log('🔍 HabitDetails received pausedTasks:', {
+      habitId,
+      pausedTasks,
+      pausedTaskIds: Object.keys(pausedTasks),
+    });
+  }, [habitId, pausedTasks]);
+
+  // Streak Saver Integration
   const streakSaver = useStreakSaver({
     habitId: route.params.habitId,
     userId: user?.id || '',
@@ -91,21 +101,17 @@ const HabitDetails: React.FC = () => {
     );
   }
 
-  // ✅ Calculate tier reactively based on current habit data
+  // Calculate tier reactively based on current habit data
   const currentTierData = useMemo(() => {
     const streak = debugStreak !== null ? debugStreak : habit.currentStreak || 0;
-
-    // ✅ USE 'streak' HERE, not 'habit.currentStreak'!
     const { tier, progress } = HabitProgressionService.calculateTierFromStreak(streak);
     return { tier, progress };
   }, [habit.currentStreak, debugStreak]);
 
-  // ✅ Detect tier changes and trigger animations
+  // Detect tier changes and trigger animations
   useEffect(() => {
     if (prevTier && prevTier !== currentTierData.tier.name) {
       console.log(`🎉 TIER UP! ${prevTier} → ${currentTierData.tier.name}`);
-
-      // Show celebration modal
       setCelebrationTier(currentTierData.tier);
       setShowCelebration(true);
     }
@@ -120,7 +126,6 @@ const HabitDetails: React.FC = () => {
   const completedTasksToday = todayTasks.completedTasks?.length || 0;
   const totalTasks = habit.tasks?.length || 0;
 
-  // The hook will re-fetch when these values change
   const { tierInfo, tierProgress, nextTier, milestoneStatus, performanceMetrics, refreshProgression, loading } = useHabitDetails(habit.id, user.id, habit.currentStreak, completedTasksToday);
 
   const tierMultiplier = tierInfo?.multiplier ?? 1.0;
@@ -185,7 +190,6 @@ const HabitDetails: React.FC = () => {
                 <View style={tw`w-11`}>
                   <DebugButton
                     onPress={() => {
-                      // Cycle through test values: 10 → 49 → 50 → 100 → 149 → 150 → reset
                       const testValues = [10, 49, 50, 100, 149, 150];
                       const currentDebug = debugStreak !== null ? debugStreak : habit.currentStreak || 0;
                       const currentIndex = testValues.findIndex((v) => v >= currentDebug);
@@ -194,13 +198,12 @@ const HabitDetails: React.FC = () => {
                     }}
                     label={debugStreak !== null ? debugStreak.toString() : '🔧'}
                     variant="secondary"
-                    // Custom style for this specific button to make it fit in the header
                     customStyle={tw`w-11 h-11 rounded-2xl bg-sand/20 px-0 py-0 mb-0`}
                   />
                 </View>
               </View>
 
-              {/* Hero Card inside the big gradient block */}
+              {/* Hero Card */}
               <Animated.View
                 entering={FadeInDown.delay(100).springify()}
                 style={[
@@ -267,6 +270,8 @@ const HabitDetails: React.FC = () => {
                     processingTasks={processingTasks}
                     xpEarnedTasks={xpEarnedTasks}
                     tier={currentTierData.tier.name}
+                    // ✅ Pass paused task info
+                    pausedTasks={pausedTasks}
                   />
                 )}
               </Animated.View>
@@ -274,7 +279,6 @@ const HabitDetails: React.FC = () => {
 
             {selectedTab === 'tiers' && (
               <Animated.View entering={FadeInDown.duration(300)}>
-                {/* Milestones from Backend - Using Component */}
                 <MilestonesCard milestones={milestoneStatus?.all || []} currentStreak={debugStreak !== null ? debugStreak : habit.currentStreak} unlockedMilestones={milestoneStatus?.unlocked || []} />
               </Animated.View>
             )}
@@ -296,6 +300,7 @@ const HabitDetails: React.FC = () => {
           </View>
         </ScrollView>
       </ScrollView>
+
       {/* Tier Celebration Modal */}
       {celebrationTier && <TierCelebration visible={showCelebration} newTier={celebrationTier} onClose={() => setShowCelebration(false)} />}
     </View>

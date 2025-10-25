@@ -1,11 +1,13 @@
 // src/screens/Dashboard.tsx
-import React, { useCallback, useRef, useEffect, useState } from 'react';
-import { ScrollView, RefreshControl, View, Text, ActivityIndicator, Pressable, ImageBackground, Dimensions, Alert } from 'react-native';
+// ✅ COMPLETE SOLUTION: Auto-refresh holiday mode when returning from settings
+
+import React, { useCallback, useRef, useEffect, useState, useMemo } from 'react';
+import { ScrollView, RefreshControl, View, Text, ActivityIndicator, Pressable, ImageBackground, Dimensions, Alert, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
-import { useNavigation } from '@react-navigation/native';
-import { Lock, Plus, TrendingUp, TrendingUpIcon, Zap } from 'lucide-react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native'; // ✅ Added useFocusEffect
+import { Lock, Plus, TrendingUp, TrendingUpIcon, Zap, PauseCircle } from 'lucide-react-native';
 import tw from '../lib/tailwind';
 
 // Components
@@ -47,7 +49,9 @@ const Dashboard: React.FC = () => {
   // Holiday Mode State
   const [activeHoliday, setActiveHoliday] = useState<HolidayPeriod | null>(null);
   const [holidayLoading, setHolidayLoading] = useState(true);
-  const isFetchingHolidayRef = useRef(false); // Prevent concurrent fetches
+  const isFetchingHolidayRef = useRef(false);
+  const [frozenHabits, setFrozenHabits] = useState<Set<string>>(new Set());
+  const [frozenTasksMap, setFrozenTasksMap] = useState<Map<string, Record<string, { pausedUntil: string }>>>(new Map());
 
   const [testLevel, setTestLevel] = useState(1);
   const { triggerLevelUp } = useLevelUp();
@@ -60,6 +64,133 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     console.log(`Dashboard render #${renderCount.current}`);
   });
+
+  // ============================================================================
+  // ✅ REUSABLE HOLIDAY MODE LOADER
+  // ============================================================================
+  const loadHolidayModeData = useCallback(async () => {
+    if (!user?.id || isFetchingHolidayRef.current) return;
+
+    isFetchingHolidayRef.current = true;
+    setHolidayLoading(true);
+
+    try {
+      const holiday = await HolidayModeService.getActiveHoliday(user.id);
+      setActiveHoliday(holiday);
+
+      if (!holiday) {
+        console.log('📅 No active holiday');
+        setFrozenHabits(new Set());
+        setFrozenTasksMap(new Map());
+        return;
+      }
+
+      console.log('✅ Active holiday found:', {
+        id: holiday.id,
+        appliesToAll: holiday.appliesToAll,
+        frozenHabits: holiday.frozenHabits,
+        frozenTasks: holiday.frozenTasks,
+        endDate: holiday.endDate,
+      });
+
+      // SCENARIO 1: All habits frozen
+      if (holiday.appliesToAll) {
+        console.log('🔒 All habits frozen (applies_to_all)');
+        setFrozenHabits(new Set(habits.map((h) => h.id)));
+        setFrozenTasksMap(new Map());
+        return;
+      }
+
+      // SCENARIO 2: Specific habits frozen
+      if (holiday.frozenHabits && Array.isArray(holiday.frozenHabits) && holiday.frozenHabits.length > 0) {
+        console.log('🔒 Frozen habits:', holiday.frozenHabits);
+        setFrozenHabits(new Set(holiday.frozenHabits));
+      } else {
+        setFrozenHabits(new Set());
+      }
+
+      // SCENARIO 3: Specific tasks frozen
+      if (holiday.frozenTasks && Array.isArray(holiday.frozenTasks) && holiday.frozenTasks.length > 0) {
+        console.log('✅ Active holiday with frozen tasks:', holiday.frozenTasks);
+
+        const tasksMap = new Map<string, Record<string, { pausedUntil: string }>>();
+
+        holiday.frozenTasks.forEach((frozenTask: any) => {
+          const { habitId, taskIds } = frozenTask;
+
+          if (!habitId || !taskIds || !Array.isArray(taskIds)) {
+            console.warn('⚠️ Invalid frozen task structure:', frozenTask);
+            return;
+          }
+
+          const habitFrozenTasks: Record<string, { pausedUntil: string }> = {};
+
+          taskIds.forEach((taskId: string) => {
+            habitFrozenTasks[taskId] = {
+              pausedUntil: holiday.endDate,
+            };
+          });
+
+          tasksMap.set(habitId, habitFrozenTasks);
+          console.log(`🔒 Habit ${habitId} has ${taskIds.length} frozen tasks until ${holiday.endDate}`);
+        });
+
+        setFrozenTasksMap(tasksMap);
+        console.log('📊 Frozen tasks map created:', {
+          totalHabitsAffected: tasksMap.size,
+          habitIds: Array.from(tasksMap.keys()),
+        });
+      } else {
+        setFrozenTasksMap(new Map());
+      }
+    } catch (error) {
+      console.error('❌ Error loading holiday mode:', error);
+      setActiveHoliday(null);
+      setFrozenHabits(new Set());
+      setFrozenTasksMap(new Map());
+    } finally {
+      setHolidayLoading(false);
+      isFetchingHolidayRef.current = false;
+    }
+  }, [user?.id, habits]);
+
+  // ============================================================================
+  // ✅ INITIAL LOAD: Load holiday mode when component mounts
+  // ============================================================================
+  useEffect(() => {
+    loadHolidayModeData();
+  }, [user?.id, habits.length]); // Load on mount and when habits change
+
+  // ============================================================================
+  // ✅ AUTO-REFRESH: Reload holiday mode when returning to Dashboard
+  // ============================================================================
+  useFocusEffect(
+    useCallback(() => {
+      console.log('🔄 Dashboard focused - checking for holiday updates');
+      loadHolidayModeData();
+    }, [loadHolidayModeData])
+  );
+
+  // ✅ Filter habits based on frozen status
+  const { activeHabits, pausedHabitsCount, hasPartialPause } = useMemo(() => {
+    const active = habits.filter((habit) => !frozenHabits.has(habit.id));
+    const pausedCount = habits.length - active.length;
+    const partial = pausedCount > 0 && pausedCount < habits.length;
+
+    console.log('📊 Habit filtering:', {
+      total: habits.length,
+      frozen: pausedCount,
+      active: active.length,
+      frozenHabitsSet: Array.from(frozenHabits),
+      frozenTasksHabits: Array.from(frozenTasksMap.keys()),
+    });
+
+    return {
+      activeHabits: active,
+      pausedHabitsCount: pausedCount,
+      hasPartialPause: partial,
+    };
+  }, [habits, frozenHabits, frozenTasksMap]);
 
   // Handler for when badge is pressed
   const handleStreakSaverPress = async () => {
@@ -75,7 +206,6 @@ const Dashboard: React.FC = () => {
 
   const handlePurchase = (packageId: string) => {
     console.log('Purchase:', packageId);
-    // TODO: Implement RevenueCat purchase
     setShowShop(false);
   };
 
@@ -87,144 +217,96 @@ const Dashboard: React.FC = () => {
   // Track level changes
   useEffect(() => {
     if (stats?.level && previousLevelRef.current !== null) {
-      // Check if level increased
       if (stats.level > previousLevelRef.current) {
         console.log(`LEVEL UP! ${previousLevelRef.current} → ${stats.level}`);
 
-        // Get the achievement for the new level
         const newAchievement = getAchievementByLevel(stats.level);
 
-        // Set level up data
         setLevelUpData({
           newLevel: stats.level,
           previousLevel: previousLevelRef.current,
           achievement: newAchievement,
         });
 
-        // Show the modal
         setShowLevelUpModal(true);
       }
     }
 
-    // Update the ref for next comparison
-    if (stats?.level) {
-      previousLevelRef.current = stats.level;
-    }
+    previousLevelRef.current = stats?.level ?? null;
   }, [stats?.level]);
 
-  // Check for active holiday mode on mount
-  useEffect(() => {
-    const checkHolidayStatus = async () => {
-      if (!user?.id || isFetchingHolidayRef.current) return;
-
-      try {
-        isFetchingHolidayRef.current = true;
-        setHolidayLoading(true);
-        const holiday = await HolidayModeService.getActiveHoliday(user.id);
-        setActiveHoliday(holiday);
-      } catch (error) {
-        console.error('Error checking holiday status:', error);
-      } finally {
-        setHolidayLoading(false);
-        isFetchingHolidayRef.current = false;
-      }
-    };
-
-    checkHolidayStatus();
-  }, [user?.id]);
-
-  // Refresh holiday status when screen comes into focus (loop-safe)
-  const refreshHolidayStatus = useCallback(async () => {
-    if (!user?.id || isFetchingHolidayRef.current) return;
-
-    try {
-      isFetchingHolidayRef.current = true;
-      const holiday = await HolidayModeService.getActiveHoliday(user.id);
-      setActiveHoliday(holiday);
-    } catch (error) {
-      console.error('Error refreshing holiday status:', error);
-    } finally {
-      isFetchingHolidayRef.current = false;
-    }
-  }, [user?.id]);
-
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', refreshHolidayStatus);
-    return unsubscribe;
-  }, [navigation, refreshHolidayStatus]);
-
-  // Initialize previous level on mount
-  useEffect(() => {
-    if (stats?.level && previousLevelRef.current === null) {
-      previousLevelRef.current = stats.level;
-      console.log('Initial level set:', stats.level);
-    }
-  }, [stats?.level]);
-
-  // DEV MODE: Test level up modal
-  const handleTestLevelUp = () => {
-    const testLevel = (stats?.level || 1) + 1;
-    triggerLevelUp(testLevel, stats?.level || 1);
-  };
-
-  // Pull-to-refresh handler
   const handleRefresh = useCallback(async () => {
-    // Refresh holiday status (with safety check)
-    if (!isFetchingHolidayRef.current && user?.id) {
-      try {
-        isFetchingHolidayRef.current = true;
-        const holiday = await HolidayModeService.getActiveHoliday(user.id);
-        setActiveHoliday(holiday);
-      } catch (error) {
-        console.error('Error refreshing holiday status:', error);
-      } finally {
-        isFetchingHolidayRef.current = false;
-      }
-    }
+    await refreshHabits();
+    await refreshStats();
 
-    // Refresh habits and stats
-    await Promise.all([refreshStats(true), refreshHabits()]);
-  }, [user?.id, refreshStats, refreshHabits]);
+    // ✅ Reload holiday mode on pull-to-refresh
+    await loadHolidayModeData();
+  }, [refreshHabits, refreshStats, loadHolidayModeData]);
 
-  // Navigation handlers
-  const handleHabitPress = useCallback(
-    (habitId: string) => {
-      navigation.navigate('HabitDetails' as never, { habitId } as never);
-    },
-    [navigation]
-  );
-
-  // Optimistic update for ending holiday early
-  const handleOptimisticEndHoliday = () => {
-    setActiveHoliday(null);
-  };
-
-  const handleCreateHabit = async () => {
+  const handleCreateHabit = useCallback(async () => {
     const canCreate = await checkHabitLimit();
 
     if (!canCreate) {
-      navigation.navigate('Paywall', { source: 'habit_limit' });
+      Alert.alert('Habit Limit Reached', `Free users can create up to ${maxHabits} habits. Upgrade to Premium for unlimited habits!`, [
+        { text: 'OK' },
+        { text: 'Upgrade', onPress: () => navigation.navigate('Paywall') },
+      ]);
       return;
     }
 
-    navigation.navigate('HabitWizard');
+    navigation.navigate('CreateHabit');
+  }, [checkHabitLimit, maxHabits, navigation]);
+
+  const handleTestLevelUp = () => {
+    console.log(`Testing level ${testLevel} → ${testLevel + 1}`);
+    triggerLevelUp(testLevel, testLevel + 1, getAchievementByLevel(testLevel + 1));
+    setTestLevel(testLevel + 1);
   };
 
-  // Loading state (first load)
-  if ((habitsLoading || statsLoading || holidayLoading) && habits.length === 0) {
+  const handleOptimisticEndHoliday = async () => {
+    if (!activeHoliday) return;
+
+    // Optimistically clear holiday
+    setActiveHoliday(null);
+    setFrozenHabits(new Set());
+
+    try {
+      const result = await HolidayModeService.cancelHoliday(activeHoliday.id, user!.id);
+
+      if (!result.success) {
+        // Revert on failure
+        await loadHolidayModeData();
+        Alert.alert('Error', result.message || 'Failed to end holiday');
+      } else {
+        await refreshHabits();
+        // ✅ Reload to ensure UI is in sync
+        await loadHolidayModeData();
+      }
+    } catch (error) {
+      console.error('Error ending holiday:', error);
+      // Revert on error
+      await loadHolidayModeData();
+      Alert.alert('Error', 'Failed to end holiday early');
+    }
+  };
+
+  // ✅ Compute display modes
+  const showFullHolidayMode = !holidayLoading && habits.length > 0 && activeHabits.length === 0;
+  const showPartialPauseMode = !holidayLoading && hasPartialPause && activeHoliday !== null;
+  const hasTasksPaused = frozenTasksMap.size > 0;
+
+  if (habitsLoading && habits.length === 0) {
     return (
-      <SafeAreaView style={tw`flex-1 bg-quartz-50`}>
-        <View style={tw`flex-1 items-center justify-center`}>
-          <ActivityIndicator size="large" color={tw.color('quartz-400')} />
-        </View>
+      <SafeAreaView style={tw`flex-1 bg-stone-50 items-center justify-center`}>
+        <ActivityIndicator size="large" color={tw.color('quartz-400')} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-quartz-50`}>
-      {/* Subtle Gradient Overlay */}
-      <LinearGradient colors={['rgba(243, 244, 246, 0.6)', 'rgba(229, 231, 235, 0.2)', 'transparent']} style={tw`absolute top-0 left-0 right-0 h-80`} pointerEvents="none" />
+    <SafeAreaView style={tw`flex-1 bg-stone-50`} edges={['top']}>
+      <StatusBar barStyle="dark-content" />
+
       <ScrollView
         style={tw`flex-1`}
         contentContainerStyle={tw`px-4 pt-5 pb-24`}
@@ -233,6 +315,7 @@ const Dashboard: React.FC = () => {
       >
         {/* DEV MODE: Test Button */}
         <DebugButton onPress={handleTestLevelUp} label={`Test Level ${testLevel} → ${testLevel + 1}`} icon={Zap} variant="secondary" />
+
         {/* Dashboard Header */}
         <DashboardHeader
           userTitle={stats?.title ?? 'Novice'}
@@ -249,15 +332,50 @@ const Dashboard: React.FC = () => {
           totalXP={stats?.totalXP ?? 0}
         />
 
-        <StreakSaverBadge onPress={handleStreakSaverPress} onShopPress={() => setShowShop(true)} refreshTrigger={badgeRefresh} />
+        {!showPartialPauseMode && !hasTasksPaused && !showFullHolidayMode && (
+          <>
+            <StreakSaverBadge onPress={handleStreakSaverPress} onShopPress={() => setShowShop(true)} refreshTrigger={badgeRefresh} />
 
-        <StreakSaverShopModal
-          visible={showShop}
-          onClose={() => setShowShop(false)}
-          onPurchaseSuccess={() => {
-            setBadgeRefresh((prev) => prev + 1); // Force badge reload
-          }}
-        />
+            <StreakSaverShopModal
+              visible={showShop}
+              onClose={() => setShowShop(false)}
+              onPurchaseSuccess={() => {
+                setBadgeRefresh((prev) => prev + 1);
+              }}
+            />
+          </>
+        )}
+
+        {/* ✅ HOLIDAY MODE BANNER - Show when habits or tasks are paused */}
+        {(showPartialPauseMode || hasTasksPaused) && !showFullHolidayMode && (
+          <Animated.View entering={FadeInUp.delay(100)} style={tw`mt-4 mb-2`}>
+            <LinearGradient
+              colors={['rgba(59, 130, 246, 0.08)', 'rgba(37, 99, 235, 0.05)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[
+                tw`mx-1 px-4 py-3.5 rounded-2xl flex-row items-center gap-3`,
+                {
+                  borderWidth: 1,
+                  borderColor: 'rgba(59, 130, 246, 0.2)',
+                },
+              ]}
+            >
+              <View style={tw`w-9 h-9 bg-blue-100 rounded-xl items-center justify-center`}>
+                <PauseCircle size={18} color="#2563EB" strokeWidth={2.5} />
+              </View>
+              <View style={tw`flex-1`}>
+                <Text style={tw`text-sm font-bold text-blue-700`}>Holiday Mode Active</Text>
+                <Text style={tw`text-xs text-blue-600 mt-0.5`}>
+                  {pausedHabitsCount > 0 && `${pausedHabitsCount} ${pausedHabitsCount === 1 ? 'habit' : 'habits'} paused`}
+                  {pausedHabitsCount > 0 && hasTasksPaused && ' • '}
+                  {hasTasksPaused && `${frozenTasksMap.size} ${frozenTasksMap.size === 1 ? 'habit has' : 'habits have'} paused tasks`}
+                </Text>
+              </View>
+            </LinearGradient>
+          </Animated.View>
+        )}
+
         {/* Habits Section */}
         <Animated.View entering={FadeInUp.delay(200)} style={tw`mt-6`}>
           <View>
@@ -288,42 +406,65 @@ const Dashboard: React.FC = () => {
               </View>
             )}
           </View>
+
           {/* Section Header */}
           <View style={tw`flex-row items-center justify-between mb-4`}>
             <View>
-              <Text style={tw`text-xl font-bold text-quartz-700`}>{activeHoliday ? 'On Holiday' : habits.length > 0 ? "Today's Habits" : 'Get Started'}</Text>
+              <Text style={tw`text-xl font-bold text-quartz-700`}>{showFullHolidayMode ? 'On Holiday' : activeHabits.length > 0 ? "Today's Habits" : 'Get Started'}</Text>
               <Text style={tw`text-sm text-quartz-500 mt-0.5`}>
-                {activeHoliday ? 'Your habits are paused' : habits.length > 0 ? `${stats?.completedTasksToday ?? 0} of ${stats?.totalTasksToday ?? 0} tasks done` : 'Start building your first habit'}
+                {showFullHolidayMode
+                  ? 'All habits are paused'
+                  : activeHabits.length > 0
+                  ? `${stats?.completedTasksToday ?? 0} of ${stats?.totalTasksToday ?? 0} tasks done`
+                  : 'Start building your first habit'}
               </Text>
             </View>
 
-            {habits.length > 0 && !activeHoliday && (
+            {habits.length > 0 && !showFullHolidayMode && (
               <Pressable onPress={handleCreateHabit} style={({ pressed }) => [tw`w-10 h-10 rounded-xl items-center justify-center`, pressed && tw`scale-95`]}>
                 <Image source={require('../../assets/interface/add-habit-button.png')} style={{ width: 40, height: 40 }} resizeMode="contain" />
               </Pressable>
             )}
           </View>
 
-          {/* HOLIDAY MODE DISPLAY */}
-          {activeHoliday ? (
-            <HolidayModeDisplay endDate={activeHoliday.endDate} reason={activeHoliday.reason} onEndEarly={handleOptimisticEndHoliday} />
-          ) : habits.length > 0 ? (
-            /* Habit Cards */
+          {/* ✅ FULL HOLIDAY MODE - All habits paused */}
+          {showFullHolidayMode ? (
+            activeHoliday ? (
+              <HolidayModeDisplay endDate={activeHoliday.endDate} reason={activeHoliday.reason} onEndEarly={handleOptimisticEndHoliday} />
+            ) : (
+              <View style={tw`px-5`}>
+                <LinearGradient colors={['rgba(59, 130, 246, 0.08)', 'rgba(37, 99, 235, 0.05)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`rounded-3xl p-8 border border-blue-200/20`}>
+                  <View style={tw`items-center`}>
+                    <View style={tw`w-20 h-20 bg-blue-100 rounded-2xl items-center justify-center mb-5`}>
+                      <PauseCircle size={40} color="#2563EB" strokeWidth={2} />
+                    </View>
+                    <Text style={tw`text-2xl font-bold text-blue-800 mb-2`}>All Habits Paused</Text>
+                    <Text style={tw`text-sm text-blue-600 text-center px-4`}>All your habits are currently paused. They'll automatically resume when their pause periods end.</Text>
+                  </View>
+                </LinearGradient>
+              </View>
+            )
+          ) : activeHabits.length > 0 ? (
             <View style={tw`gap-3`}>
-              {habits.map((habit, index) => (
+              {activeHabits.map((habit, index) => (
                 <SwipeableHabitCard
                   key={habit.id}
                   habit={habit}
                   onToggleDay={toggleHabitDay}
                   onToggleTask={toggleTask}
                   onDelete={deleteHabit}
-                  onPress={() => handleHabitPress(habit.id)}
+                  onPress={() => {
+                    const habitFrozenTasks = frozenTasksMap.get(habit.id) || {};
+                    navigation.navigate('HabitDetails', {
+                      habitId: habit.id,
+                      pausedTasks: habitFrozenTasks,
+                    });
+                  }}
                   index={index}
                 />
               ))}
             </View>
           ) : (
-            /* Empty State */
             <View style={tw`px-5`}>
               <Pressable onPress={handleCreateHabit} style={({ pressed }) => [pressed && tw`scale-[0.98]`]}>
                 <LinearGradient colors={['rgba(243, 244, 246, 0.5)', 'rgba(229, 231, 235, 0.3)']} style={tw`rounded-2xl p-8 items-center border border-quartz-200`}>

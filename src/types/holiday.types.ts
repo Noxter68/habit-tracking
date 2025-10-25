@@ -6,12 +6,30 @@
  */
 export type HolidayScope = 'all' | 'habits' | 'tasks';
 
+export interface PausedTaskInfo {
+  /** ISO date string for when the pause ends */
+  pausedUntil: string;
+  /** Optional reason for the pause */
+  reason?: string;
+}
+
 /**
  * Frozen task structure for task-level freezing
  */
 export interface FrozenTask {
   habitId: string;
   taskIds: string[];
+}
+
+export interface HabitWithHolidayMode {
+  id: string;
+  name: string;
+
+  /** TRUE if the entire habit is paused/on holiday */
+  isHolidayPaused?: boolean;
+
+  /** Map of task IDs to their pause information */
+  pausedTasks?: Record<string, PausedTaskInfo>;
 }
 
 /**
