@@ -5,10 +5,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Sun, Calendar, Sparkles } from 'lucide-react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import tw from 'twrnc';
-import { format, differenceInDays } from 'date-fns';
+import { format } from 'date-fns';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
+import { HolidayModeService } from '../../services/holidayModeService';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -20,7 +21,8 @@ interface HolidayModeDisplayProps {
 export const HolidayModeDisplay: React.FC<HolidayModeDisplayProps> = ({ endDate, reason }) => {
   const navigation = useNavigation<NavigationProp>();
 
-  const daysRemaining = differenceInDays(new Date(endDate), new Date());
+  // ✅ Use the same calculation method as the service for consistency
+  const daysRemaining = HolidayModeService.getDaysRemaining(endDate);
   const formattedEndDate = format(new Date(endDate), 'MMM dd, yyyy');
 
   const handleViewDetails = () => {

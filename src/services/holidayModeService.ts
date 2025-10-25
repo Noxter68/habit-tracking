@@ -1,5 +1,5 @@
-// src/services/HolidayModeService.ts
-// Complete service with Phase 1 helpers + Phase 2 granular control + Active Holiday Fix
+// src/services/holidayModeService.ts
+// Complete service with Phase 1 helpers + Phase 2 granular control + Days Remaining Fix
 
 import { supabase } from '../lib/supabase';
 
@@ -21,7 +21,7 @@ export interface HolidayPeriod {
   reason?: string;
   createdAt: string;
   isActive: boolean;
-  daysRemaining?: number;
+  daysRemaining?: number; // ✅ Calculated client-side
 }
 
 export interface HolidayStats {
@@ -168,6 +168,41 @@ export const getSelectionSummary = (state: HolidaySelectionState, habits: HabitW
 };
 
 // ============================================================================
+// Date Utilities - Calculate Days Remaining
+// ============================================================================
+
+/**
+ * Calculate days remaining between today and end date
+ * Returns 0 if end date is today or in the past
+ *
+ * @param endDate - End date in YYYY-MM-DD format
+ * @returns Number of days remaining
+ */
+const calculateDaysRemaining = (endDate: string): number => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const end = new Date(endDate);
+    end.setHours(0, 0, 0, 0);
+
+    // If end date is today or in the past, return 0
+    if (end <= today) {
+      return 0;
+    }
+
+    // Calculate difference in days
+    const diffTime = end.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return diffDays;
+  } catch (error) {
+    console.error('Error calculating days remaining:', error);
+    return 0;
+  }
+};
+
+// ============================================================================
 // Holiday Mode Service
 // ============================================================================
 
@@ -274,25 +309,18 @@ export class HolidayModeService {
         p_end_date: endDate,
         p_applies_to_all: appliesToAll,
         p_frozen_habits: frozenHabits || null,
-        p_frozen_tasks: frozenTasks ? frozenTasks : null,
+        p_frozen_tasks: frozenTasks || null,
         p_reason: reason || null,
       });
 
       if (error) throw error;
 
-      if (!data.success) {
-        return {
-          success: false,
-          error: data.error,
-          message: data.message,
-          requiresPremium: data.requires_premium,
-        };
-      }
-
       return {
-        success: true,
+        success: data.success || false,
         holidayId: data.holiday_id,
         message: data.message,
+        error: data.error,
+        requiresPremium: data.requires_premium || false,
       };
     } catch (error: any) {
       console.error('Error creating holiday period:', error);
@@ -305,37 +333,27 @@ export class HolidayModeService {
   }
 
   /**
-   * ✅ NEW: Get the active holiday period for a user
-   * This is the missing method that the Dashboard needs!
+   * Get currently active holiday for user
+   * ✅ Now includes calculated daysRemaining
    */
   static async getActiveHoliday(userId: string): Promise<HolidayPeriod | null> {
     try {
-      const today = new Date().toISOString().split('T')[0];
-
-      const { data, error } = await supabase
-        .from('holiday_periods')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('is_active', true)
-        .lte('start_date', today)
-        .gte('end_date', today)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+      const { data, error } = await supabase.from('holiday_periods').select('*').eq('user_id', userId).eq('is_active', true).single();
 
       if (error) {
-        // No active holiday is not an error
         if (error.code === 'PGRST116') {
-          console.log('📅 No active holiday found');
+          // No active holiday found
           return null;
         }
         throw error;
       }
 
       if (!data) {
-        console.log('📅 No active holiday found');
         return null;
       }
+
+      // ✅ Calculate days remaining on the client side
+      const daysRemaining = calculateDaysRemaining(data.end_date);
 
       const holiday: HolidayPeriod = {
         id: data.id,
@@ -348,6 +366,7 @@ export class HolidayModeService {
         reason: data.reason,
         createdAt: data.created_at,
         isActive: data.is_active,
+        daysRemaining, // ✅ Properly calculated
       };
 
       console.log('✅ Active holiday found:', {
@@ -356,6 +375,7 @@ export class HolidayModeService {
         frozenHabits: holiday.frozenHabits,
         frozenTasks: holiday.frozenTasks,
         endDate: holiday.endDate,
+        daysRemaining: holiday.daysRemaining,
       });
 
       return holiday;
@@ -432,6 +452,7 @@ export class HolidayModeService {
 
   /**
    * Get all holidays for a user (history)
+   * ✅ Now includes calculated daysRemaining for each period
    */
   static async getHolidayHistory(userId: string): Promise<HolidayPeriod[]> {
     try {
@@ -450,6 +471,7 @@ export class HolidayModeService {
         reason: item.reason,
         createdAt: item.created_at,
         isActive: item.is_active,
+        daysRemaining: calculateDaysRemaining(item.end_date), // ✅ Calculate for history too
       }));
     } catch (error) {
       console.error('Error fetching holiday history:', error);
@@ -620,5 +642,13 @@ export class HolidayModeService {
     }
 
     return { isValid: true };
+  }
+
+  /**
+   * ✅ Get days remaining for a holiday period
+   * Public method to calculate days remaining for any date
+   */
+  static getDaysRemaining(endDate: string): number {
+    return calculateDaysRemaining(endDate);
   }
 }

@@ -1,17 +1,17 @@
 // src/screens/SettingsScreen.tsx
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Switch, SafeAreaView, StatusBar, ActivityIndicator, Alert, Linking } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Switch, SafeAreaView, StatusBar, ActivityIndicator, Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import Svg, { Path, Circle, Rect, Polygon } from 'react-native-svg';
+import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import tw from 'twrnc';
 import { useAuth } from '@/context/AuthContext';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/types';
-import { HolidayModeService } from '@/services/holidayModeService';
+import { HolidayModeService, HolidayPeriod } from '@/services/holidayModeService';
 
 // ============================================================================
 // Types
@@ -130,7 +130,7 @@ const Icon: React.FC<IconProps> = ({ name, size = 22, color = '#9333EA' }) => {
 
 const ProfileHeader: React.FC = () => {
   const { user } = useAuth();
-  const { isPremium, subscription } = useSubscription();
+  const { isPremium } = useSubscription();
 
   // Get user initials
   const getInitials = () => {
@@ -230,11 +230,11 @@ const SettingsItem: React.FC<SettingsItemProps> = ({ icon, title, subtitle, trai
   const content = (
     <>
       <View style={tw`flex-row items-center flex-1`}>
-        <View style={[tw`w-10 h-10 rounded-xl items-center justify-center mr-3.5`, { backgroundColor: `${color}15` }]}>
+        <View style={tw`w-10 h-10 bg-gray-50 rounded-xl items-center justify-center`}>
           <Icon name={icon} size={20} color={color} />
         </View>
 
-        <View style={tw`flex-1`}>
+        <View style={tw`flex-1 ml-3`}>
           <Text style={tw`text-gray-800 font-semibold text-base`}>{title}</Text>
           {subtitle && <Text style={tw`text-gray-400 text-xs mt-0.5`}>{subtitle}</Text>}
         </View>
@@ -263,21 +263,21 @@ const SettingsItem: React.FC<SettingsItemProps> = ({ icon, title, subtitle, trai
 
 const SettingsScreen: React.FC = () => {
   const [notifications, setNotifications] = useState(true);
-  const [isOnHoliday, setIsOnHoliday] = useState(false);
+  const [activeHoliday, setActiveHoliday] = useState<HolidayPeriod | null>(null);
 
   const { signOut, loading, user } = useAuth();
-  const { isPremium, subscription } = useSubscription();
+  const { isPremium } = useSubscription();
   const navigation = useNavigation<NavigationProp>();
 
   useEffect(() => {
-    const checkHolidayStatus = async () => {
+    const loadHolidayStatus = async () => {
       if (user) {
-        const holidayStatus = await HolidayModeService.isOnHoliday(user.id);
-        setIsOnHoliday(holidayStatus);
+        const holiday = await HolidayModeService.getActiveHoliday(user.id);
+        setActiveHoliday(holiday);
       }
     };
 
-    checkHolidayStatus();
+    loadHolidayStatus();
   }, [user]);
 
   const handleToggle = (setter: React.Dispatch<React.SetStateAction<boolean>>, value: boolean) => {
@@ -306,6 +306,25 @@ const SettingsScreen: React.FC = () => {
     } else {
       // Navigate to paywall for upgrade
       navigation.navigate('Paywall', { source: 'settings' });
+    }
+  };
+
+  /**
+   * Get holiday mode subtitle with days remaining
+   */
+  const getHolidaySubtitle = () => {
+    if (!activeHoliday) {
+      return 'Pause habits without losing streaks';
+    }
+
+    const daysRemaining = activeHoliday.daysRemaining || 0;
+
+    if (daysRemaining === 0) {
+      return 'Ending today';
+    } else if (daysRemaining === 1) {
+      return '1 day remaining';
+    } else {
+      return `${daysRemaining} days remaining`;
     }
   };
 
@@ -350,17 +369,18 @@ const SettingsScreen: React.FC = () => {
             />
           </SettingsSection>
 
+          {/* Holiday Mode Section */}
           <SettingsSection title="Break Mode" delay={200} gradient={['#6366F1', '#4F46E5']}>
             <SettingsItem
               icon="beach-outline"
               title="Holiday Mode"
-              subtitle={isOnHoliday ? 'Active - Habits paused' : 'Pause habits without losing streaks'}
+              subtitle={getHolidaySubtitle()}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 navigation.navigate('HolidayMode');
               }}
               trailing={
-                isOnHoliday ? (
+                activeHoliday ? (
                   <View style={tw`px-3 py-1.5 bg-indigo-600 rounded-lg`}>
                     <Text style={tw`text-white text-xs font-bold`}>ACTIVE</Text>
                   </View>
