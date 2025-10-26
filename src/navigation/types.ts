@@ -12,13 +12,16 @@ export type RootStackParamList = {
   HabitWizard: undefined;
   HabitDetails: {
     habitId: string;
-    habit?: Habit;
+    pausedTasks?: Record<string, { pausedUntil: string; reason?: string }>;
   };
 
   // Settings & Profile
   Settings: undefined;
   Profile: undefined;
   NotificationSettings: undefined;
+
+  // Holidays
+  HolidayMode: undefined;
 
   // Achievement & Stats
   Achievements: undefined;
@@ -69,6 +72,7 @@ export type MainStackParamList = {
   };
   Settings: undefined;
   Achievements: undefined;
+  HolidayMode: undefined;
   Paywall: {
     source?: string;
   };

@@ -1,16 +1,17 @@
 // src/screens/SettingsScreen.tsx
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Switch, SafeAreaView, StatusBar, ActivityIndicator, Alert, Linking } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Switch, SafeAreaView, StatusBar, ActivityIndicator, Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import Svg, { Path, Circle, Rect, Polygon } from 'react-native-svg';
+import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import tw from 'twrnc';
 import { useAuth } from '@/context/AuthContext';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/types';
+import { HolidayModeService, HolidayPeriod } from '@/services/holidayModeService';
 
 // ============================================================================
 // Types
@@ -24,7 +25,17 @@ interface IconProps {
   color?: string;
 }
 
-type IconName = 'notifications-outline' | 'language-outline' | 'information-circle-outline' | 'help-circle-outline' | 'log-out-outline' | 'chevron-forward' | 'crown' | 'sparkles' | 'credit-card';
+type IconName =
+  | 'notifications-outline'
+  | 'language-outline'
+  | 'information-circle-outline'
+  | 'help-circle-outline'
+  | 'log-out-outline'
+  | 'chevron-forward'
+  | 'crown'
+  | 'sparkles'
+  | 'credit-card'
+  | 'beach-outline';
 
 interface SettingsSectionProps {
   title: string;
@@ -103,6 +114,11 @@ const Icon: React.FC<IconProps> = ({ name, size = 22, color = '#9333EA' }) => {
         <Path d="M2 10h20" stroke={color} strokeWidth={2} />
       </Svg>
     ),
+    'beach-outline': (
+      <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <Path d="M12 3L4 9h16l-8-6zm-8 8v10h16V11H4zm8 8c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      </Svg>
+    ),
   };
 
   return icons[name] || null;
@@ -114,7 +130,7 @@ const Icon: React.FC<IconProps> = ({ name, size = 22, color = '#9333EA' }) => {
 
 const ProfileHeader: React.FC = () => {
   const { user } = useAuth();
-  const { isPremium, subscription } = useSubscription();
+  const { isPremium } = useSubscription();
 
   // Get user initials
   const getInitials = () => {
@@ -214,11 +230,11 @@ const SettingsItem: React.FC<SettingsItemProps> = ({ icon, title, subtitle, trai
   const content = (
     <>
       <View style={tw`flex-row items-center flex-1`}>
-        <View style={[tw`w-10 h-10 rounded-xl items-center justify-center mr-3.5`, { backgroundColor: `${color}15` }]}>
+        <View style={tw`w-10 h-10 bg-gray-50 rounded-xl items-center justify-center`}>
           <Icon name={icon} size={20} color={color} />
         </View>
 
-        <View style={tw`flex-1`}>
+        <View style={tw`flex-1 ml-3`}>
           <Text style={tw`text-gray-800 font-semibold text-base`}>{title}</Text>
           {subtitle && <Text style={tw`text-gray-400 text-xs mt-0.5`}>{subtitle}</Text>}
         </View>
@@ -247,9 +263,22 @@ const SettingsItem: React.FC<SettingsItemProps> = ({ icon, title, subtitle, trai
 
 const SettingsScreen: React.FC = () => {
   const [notifications, setNotifications] = useState(true);
-  const { signOut, loading } = useAuth();
-  const { isPremium, subscription } = useSubscription();
+  const [activeHoliday, setActiveHoliday] = useState<HolidayPeriod | null>(null);
+
+  const { signOut, loading, user } = useAuth();
+  const { isPremium } = useSubscription();
   const navigation = useNavigation<NavigationProp>();
+
+  useEffect(() => {
+    const loadHolidayStatus = async () => {
+      if (user) {
+        const holiday = await HolidayModeService.getActiveHoliday(user.id);
+        setActiveHoliday(holiday);
+      }
+    };
+
+    loadHolidayStatus();
+  }, [user]);
 
   const handleToggle = (setter: React.Dispatch<React.SetStateAction<boolean>>, value: boolean) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -277,6 +306,25 @@ const SettingsScreen: React.FC = () => {
     } else {
       // Navigate to paywall for upgrade
       navigation.navigate('Paywall', { source: 'settings' });
+    }
+  };
+
+  /**
+   * Get holiday mode subtitle with days remaining
+   */
+  const getHolidaySubtitle = () => {
+    if (!activeHoliday) {
+      return 'Pause habits without losing streaks';
+    }
+
+    const daysRemaining = activeHoliday.daysRemaining || 0;
+
+    if (daysRemaining === 0) {
+      return 'Ending today';
+    } else if (daysRemaining === 1) {
+      return '1 day remaining';
+    } else {
+      return `${daysRemaining} days remaining`;
     }
   };
 
@@ -317,6 +365,30 @@ const SettingsScreen: React.FC = () => {
                 )
               }
               color="#78716C"
+              isLast
+            />
+          </SettingsSection>
+
+          {/* Holiday Mode Section */}
+          <SettingsSection title="Break Mode" delay={200} gradient={['#6366F1', '#4F46E5']}>
+            <SettingsItem
+              icon="beach-outline"
+              title="Holiday Mode"
+              subtitle={getHolidaySubtitle()}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                navigation.navigate('HolidayMode');
+              }}
+              trailing={
+                activeHoliday ? (
+                  <View style={tw`px-3 py-1.5 bg-indigo-600 rounded-lg`}>
+                    <Text style={tw`text-white text-xs font-bold`}>ACTIVE</Text>
+                  </View>
+                ) : (
+                  <Icon name="chevron-forward" size={20} color="#6366F1" />
+                )
+              }
+              color="#6366F1"
               isLast
             />
           </SettingsSection>

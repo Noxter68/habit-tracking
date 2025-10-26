@@ -61,14 +61,14 @@ export const HabitHero: React.FC<HabitHeroProps> = ({ habitName, habitType, cate
       <View style={tw`flex-row items-center justify-between`}>
         <View style={tw`flex-1 pr-16`}>
           <Text style={tw`text-white/80 text-xs font-bold uppercase tracking-wider`}>{habitType === 'good' ? 'Building' : 'Breaking'}</Text>
-          <Text style={tw`text-white text-2xl font-black mt-1`} numberOfLines={1}>
+          <Text style={tw`text-white text-xl font-black mt-1`} numberOfLines={1}>
             {habitName}
           </Text>
           <View style={tw`flex-row items-center gap-2 mt-2.5`}>
-            <View style={tw`bg-sand/25 rounded-xl px-2.5 py-1`}>
+            <View style={tw`bg-white/25 rounded-xl px-2.5 py-1`}>
               <Text style={tw`text-white text-xs font-bold`}>{tierInfo.name}</Text>
             </View>
-            <View style={tw`bg-sand/25 rounded-xl px-2.5 py-1`}>
+            <View style={tw`bg-white/25 rounded-xl px-2.5 py-1`}>
               <Text style={tw`text-white text-xs font-bold`}>{category}</Text>
             </View>
             {tierMultiplier > 1 && (
