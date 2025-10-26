@@ -179,14 +179,6 @@ const Dashboard: React.FC = () => {
     const pausedCount = habits.length - active.length;
     const partial = pausedCount > 0 && pausedCount < habits.length;
 
-    console.log('📊 Habit filtering:', {
-      totalHabits: habits.length,
-      activeHabits: active.length,
-      pausedHabits: pausedCount,
-      hasPartialPause: partial,
-      frozenHabits: Array.from(frozenHabits),
-    });
-
     return {
       activeHabits: active,
       pausedHabitsCount: pausedCount,
@@ -194,105 +186,78 @@ const Dashboard: React.FC = () => {
     };
   }, [habits, frozenHabits]);
 
-  // ✅ Determine if we're in "full holiday mode" (all habits paused)
-  const showFullHolidayMode = habits.length > 0 && activeHabits.length === 0;
-
-  // ✅ Check if we have frozen tasks (but not full holiday mode)
-  const hasTasksPaused = !showFullHolidayMode && frozenTasksMap.size > 0;
-
-  // ✅ Show partial pause banner if some habits are paused (but not all)
+  const hasTasksPaused = frozenTasksMap.size > 0;
+  const showFullHolidayMode = activeHabits.length === 0 && habits.length > 0;
   const showPartialPauseMode = hasPartialPause && !showFullHolidayMode;
 
-  const handleOptimisticEndHoliday = async () => {
-    if (!activeHoliday || !user?.id) return;
+  const handleManualRefresh = useCallback(async () => {
+    await Promise.all([refreshHabits(), refreshStats(), loadHolidayModeData()]);
+  }, [refreshHabits, refreshStats, loadHolidayModeData]);
 
-    // Optimistic UI update
-    setActiveHoliday(null);
+  const handleTestLevelUp = () => {
+    const currentLevel = testLevel;
+    const newLevel = currentLevel + 1;
+    const achievement = getAchievementByLevel(newLevel);
+
+    setTestLevel(newLevel);
+    triggerLevelUp(newLevel, currentLevel, achievement);
+  };
+
+  const handleStreakSaverPress = async () => {
+    if (!user) return;
+    const { count } = await StreakSaverService.getStreakSavers(user.id);
+
+    if (count > 0) {
+      Alert.alert('Streak Savers', `You have ${count} Streak ${count === 1 ? 'Saver' : 'Savers'} available. They'll automatically protect your streaks if you miss a day.`, [
+        { text: 'Got it', style: 'cancel' },
+      ]);
+    } else {
+      setShowShop(true);
+    }
+  };
+
+  const handleOptimisticEndHoliday = async () => {
+    if (!activeHoliday || !user) return;
+
     setFrozenHabits(new Set());
     setFrozenTasksMap(new Map());
+    setActiveHoliday(null);
 
     try {
       await HolidayModeService.endHoliday(activeHoliday.id, user.id);
       await refreshHabits();
     } catch (error) {
-      console.error('❌ Error ending holiday:', error);
-      // Revert optimistic update if failed
+      console.error('Error ending holiday:', error);
       await loadHolidayModeData();
     }
   };
 
-  const handleStreakSaverPress = async () => {
-    if (!user?.id) return;
-
-    const result = await StreakSaverService.restoreStreaks(user.id);
-
-    if (result.success) {
-      Alert.alert('✅ Streak Restored!', `Successfully restored ${result.restored?.length || 0} habit(s).`, [{ text: 'Awesome!', style: 'default' }]);
-      refreshHabits();
-      setBadgeRefresh((prev) => prev + 1);
-    } else {
-      Alert.alert('❌ No Streaks to Restore', result.message || 'You have no missed habits to restore.', [{ text: 'OK', style: 'cancel' }]);
+  const handleCreateHabit = async () => {
+    const canCreate = await checkHabitLimit();
+    if (canCreate) {
+      navigation.navigate('HabitWizard');
     }
   };
 
-  useEffect(() => {
-    if (stats?.level && previousLevelRef.current !== null && stats.level > previousLevelRef.current) {
-      const achievement = getAchievementByLevel(stats.level);
-      if (achievement) {
-        setLevelUpData({
-          newLevel: stats.level,
-          previousLevel: previousLevelRef.current,
-          achievement,
-        });
-        setShowLevelUpModal(true);
-      }
-    }
-    previousLevelRef.current = stats?.level ?? null;
-  }, [stats?.level]);
-
-  const loading = habitsLoading || statsLoading;
-
-  const handleRefresh = useCallback(async () => {
-    await Promise.all([refreshHabits(), refreshStats(), loadHolidayModeData()]);
-  }, [refreshHabits, refreshStats, loadHolidayModeData]);
-
-  const handleCreateHabit = () => {
-    const canCreate = checkHabitLimit();
-    if (!canCreate) {
-      return;
-    }
-    navigation.navigate('HabitWizard');
-  };
-
-  const handleHabitPress = (habitId: string) => {
-    navigation.navigate('HabitDetails', { habitId });
-  };
-
-  const handleTestLevelUp = () => {
-    const newLevel = testLevel + 1;
-    const achievement = getAchievementByLevel(newLevel);
-
-    if (achievement) {
-      triggerLevelUp(newLevel, testLevel, achievement);
-      setTestLevel(newLevel);
-    }
-  };
-
-  // ✅ Show loading spinner only during initial load to prevent flicker
-  if (isInitialLoad && (loading || holidayLoading)) {
+  if (isInitialLoad && (habitsLoading || statsLoading || holidayLoading)) {
     return (
-      <SafeAreaView style={tw`flex-1 bg-stone-50 items-center justify-center`}>
-        <ActivityIndicator size="large" color="#78716C" />
+      <SafeAreaView style={tw`flex-1 bg-sand`}>
+        <View style={tw`flex-1 items-center justify-center`}>
+          <ActivityIndicator size="large" color="#3b82f6" />
+        </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-stone-50`}>
+    <SafeAreaView style={tw`flex-1 bg-sand`} edges={['top']}>
+      <StatusBar barStyle="dark-content" />
+
       <ScrollView
-        style={tw`flex-1 px-5 pt-4`}
-        refreshControl={<RefreshControl refreshing={loading && !isInitialLoad} onRefresh={handleRefresh} tintColor="#78716C" />}
+        style={tw`flex-1 px-5`}
+        refreshControl={<RefreshControl refreshing={false} onRefresh={handleManualRefresh} tintColor="#3b82f6" />}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={tw`pb-28`}
       >
         {/* DEV MODE: Test Button */}
         <DebugButton onPress={handleTestLevelUp} label={`Test Level ${testLevel} → ${testLevel + 1}`} icon={Zap} variant="secondary" />

@@ -1,10 +1,9 @@
 // src/screens/HabitWizard.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { View, Text, Pressable, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { ChevronLeft, ChevronRight, X, Check } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import tw from '../lib/tailwind';
@@ -14,6 +13,8 @@ import { RootStackParamList } from '../../App';
 
 import HabitTypeCards from '@/components/wizard/HabitTypeSelector';
 import HabitCategorySelector from '../components/wizard/HabitCategorySelector';
+import CustomHabitCreator from '../components/wizard/CustomHabitCreator';
+import CustomTaskCreator from '../components/wizard/CustomTaskCreator';
 import TaskSelector from '../components/wizard/TaskSelector';
 import GoalSetting from '../components/wizard/GoalSetting';
 import FrequencySelector from '../components/wizard/FrequencySelector';
@@ -21,8 +22,15 @@ import NotificationSetup from '../components/wizard/NotificationSetup';
 import ProgressIndicator from '../components/ProgressIndicator';
 import { getCategoryName } from '../utils/habitHelpers';
 import { NotificationService } from '../services/notificationService';
+import { getCustomIconComponent } from '../components/wizard/CustomHabitCreator';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'HabitWizard'>;
+
+interface CustomTask {
+  id: string;
+  name: string;
+  description: string;
+}
 
 const HabitWizard: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -30,6 +38,12 @@ const HabitWizard: React.FC = () => {
   const [step, setStep] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
   const [previousCategory, setPreviousCategory] = useState<string | undefined>();
+
+  // Custom habit state
+  const [isCustomHabit, setIsCustomHabit] = useState(false);
+  const [customHabitName, setCustomHabitName] = useState('');
+  const [customHabitIcon, setCustomHabitIcon] = useState('');
+  const [customTasks, setCustomTasks] = useState<CustomTask[]>([{ id: `custom-task-1`, name: '', description: '' }]);
 
   const [habitData, setHabitData] = useState<Partial<Habit>>({
     frequency: 'daily',
@@ -42,55 +56,123 @@ const HabitWizard: React.FC = () => {
     dailyTasks: {},
   });
 
-  const totalSteps = 6;
+  // Memoized calculations
+  const totalSteps = useMemo(() => (isCustomHabit ? 7 : 6), [isCustomHabit]);
   const isFirstStep = step === 1;
   const isLastStep = step === totalSteps;
 
-  // Request notification permissions when reaching notification step
+  // Scroll to top when step changes
+  const scrollViewRef = useRef<ScrollView>(null);
+
   useEffect(() => {
-    if (step === 6) {
-      NotificationService.registerForPushNotifications();
-    }
+    scrollViewRef.current?.scrollTo({ y: 0, animated: false });
   }, [step]);
 
-  // Reset tasks when category changes
+  // Request notification permissions when reaching notification step
   useEffect(() => {
-    if (habitData.category && habitData.category !== previousCategory) {
+    const notificationStep = isCustomHabit ? 7 : 6;
+    if (step === notificationStep) {
+      NotificationService.registerForPushNotifications();
+    }
+  }, [step, isCustomHabit]);
+
+  // Reset tasks when category changes (for standard habits)
+  useEffect(() => {
+    if (habitData.category && habitData.category !== previousCategory && !isCustomHabit) {
       setHabitData((prev) => ({ ...prev, tasks: [] }));
       setPreviousCategory(habitData.category);
     }
-  }, [habitData.category, previousCategory]);
+  }, [habitData.category, previousCategory, isCustomHabit]);
 
-  const handleNext = async () => {
-    // Validation
+  const handleCreateCustom = useCallback(() => {
+    setIsCustomHabit(true);
+    setHabitData((prev) => ({ ...prev, category: 'custom' }));
+    setStep(3);
+  }, []);
+
+  const handleNext = useCallback(async () => {
+    // Step 1: Habit Type Selection
     if (step === 1 && !habitData.type) {
       Alert.alert('Please select', 'Choose whether you want to build or quit a habit');
       return;
     }
-    if (step === 2 && !habitData.category) {
-      Alert.alert('Please select', 'Choose a category for your habit');
+
+    // Step 2: Category Selection (or custom creation trigger)
+    if (step === 2) {
+      if (!isCustomHabit && !habitData.category) {
+        Alert.alert('Please select', 'Choose a category for your habit');
+        return;
+      }
+    }
+
+    // Step 3: Custom Habit Creation (name & icon)
+    if (step === 3 && isCustomHabit) {
+      if (customHabitName.trim().length === 0) {
+        Alert.alert('Habit name required', 'Please enter a name for your habit');
+        return;
+      }
+      if (!customHabitIcon) {
+        Alert.alert('Icon required', 'Please select an icon for your habit');
+        return;
+      }
+      setStep(4);
       return;
     }
-    if (step === 3 && (!habitData.tasks || habitData.tasks.length === 0)) {
-      Alert.alert('Please select', 'Choose at least one task to track');
+
+    // Step 4: Custom Task Creation (3 tasks)
+    if (step === 4 && isCustomHabit) {
+      const validTasks = customTasks.filter((t) => t.name.trim() !== '');
+      if (validTasks.length === 0) {
+        Alert.alert('Tasks required', 'Please create at least one task for your habit');
+        return;
+      }
+      const taskIds = validTasks.map((t) => t.id);
+      setHabitData((prev) => ({ ...prev, tasks: taskIds }));
+      setStep(5);
       return;
     }
 
-    if (step < totalSteps) {
-      setStep(step + 1);
-    } else {
-      setIsCreating(true);
+    // Step 3 (standard): Task Selection - only for standard habits
+    if (step === 3 && !isCustomHabit) {
+      if (!habitData.tasks || habitData.tasks.length === 0) {
+        Alert.alert('Please select', 'Choose at least one task to track');
+        return;
+      }
+    }
 
-      // Auto-generate name based on category and type
-      const habitName = getCategoryName(habitData.category!, habitData.type!);
+    // Final step: Create habit
+    if (isLastStep) {
+      await createHabit();
+      return;
+    }
 
-      // Create the habit
+    // Move to next step
+    setStep(step + 1);
+  }, [step, habitData, isCustomHabit, customHabitName, customHabitIcon, customTasks, isLastStep]);
+
+  const createHabit = async () => {
+    setIsCreating(true);
+
+    try {
+      const habitName = isCustomHabit ? customHabitName : getCategoryName(habitData.category!, habitData.type!);
+
+      const tasks = isCustomHabit
+        ? customTasks
+            .filter((t) => t.name.trim() !== '')
+            .map((t) => ({
+              id: t.id,
+              name: t.name,
+              description: t.description,
+              icon: getCustomIconComponent(customHabitIcon),
+            }))
+        : habitData.tasks || [];
+
       const newHabit: Habit = {
         id: Date.now().toString(),
         name: habitName,
         type: habitData.type || 'good',
-        category: habitData.category || 'health',
-        tasks: habitData.tasks || [],
+        category: isCustomHabit ? 'custom' : habitData.category || 'health',
+        tasks: tasks,
         dailyTasks: {},
         frequency: habitData.frequency || 'daily',
         notifications: habitData.notifications || false,
@@ -103,54 +185,134 @@ const HabitWizard: React.FC = () => {
         completedDays: [],
         createdAt: new Date(),
         customDays: habitData.customDays,
+        ...(isCustomHabit && {
+          customIcon: customHabitIcon,
+          isCustom: true,
+        }),
       };
 
-      try {
-        // Add habit to database
-        await addHabit(newHabit);
+      await addHabit(newHabit);
 
-        // Schedule notifications if enabled
-        if (newHabit.notifications && newHabit.notificationTime) {
-          await NotificationService.scheduleHabitNotifications(newHabit);
-        }
+      if (newHabit.notifications && newHabit.notificationTime) {
+        await NotificationService.scheduleHabitNotifications(newHabit);
+      }
 
-        // Navigate to dashboard
-        navigation.replace('MainTabs');
-      } catch (error) {
-        setIsCreating(false);
-        Alert.alert('Error', 'Failed to create habit. Please try again.');
+      navigation.replace('MainTabs');
+    } catch (error) {
+      setIsCreating(false);
+      Alert.alert('Error', 'Failed to create habit. Please try again.');
+    }
+  };
+
+  const handleBack = useCallback(() => {
+    if (isCustomHabit) {
+      if (step === 3) {
+        setIsCustomHabit(false);
+        setCustomHabitName('');
+        setCustomHabitIcon('');
+        setCustomTasks([{ id: `custom-task-1`, name: '', description: '' }]);
+        setStep(2);
+      } else if (step > 1) {
+        setStep(step - 1);
+      } else {
+        navigation.goBack();
+      }
+    } else {
+      if (step > 1) {
+        setStep(step - 1);
+      } else {
+        navigation.goBack();
       }
     }
-  };
+  }, [step, isCustomHabit, navigation]);
 
-  const handleBack = () => {
-    if (step > 1) {
-      setStep(step - 1);
-    } else {
-      navigation.goBack();
+  const renderStep = useCallback(() => {
+    if (isCustomHabit) {
+      switch (step) {
+        case 1:
+          return <HabitTypeCards selected={habitData.type} onSelect={(type) => setHabitData((prev) => ({ ...prev, type }))} />;
+        case 2:
+          return (
+            <HabitCategorySelector
+              habitType={habitData.type!}
+              selected={habitData.category}
+              onSelect={(category) => setHabitData((prev) => ({ ...prev, category }))}
+              onCreateCustom={handleCreateCustom}
+            />
+          );
+        case 3:
+          return <CustomHabitCreator habitType={habitData.type!} habitName={customHabitName} selectedIcon={customHabitIcon} onNameChange={setCustomHabitName} onIconSelect={setCustomHabitIcon} />;
+        case 4:
+          return <CustomTaskCreator habitType={habitData.type!} habitName={customHabitName} tasks={customTasks} onTasksChange={setCustomTasks} />;
+        case 5:
+          return (
+            <FrequencySelector
+              selected={habitData.frequency || 'daily'}
+              customDays={habitData.customDays}
+              onSelect={(frequency, customDays) => {
+                setHabitData((prev) => ({ ...prev, frequency, customDays }));
+              }}
+            />
+          );
+        case 6:
+          return (
+            <GoalSetting
+              hasEndGoal={habitData.hasEndGoal || false}
+              endGoalDays={habitData.endGoalDays}
+              onChange={(hasEndGoal, days) => {
+                setHabitData((prev) => ({
+                  ...prev,
+                  hasEndGoal,
+                  endGoalDays: days,
+                  totalDays: days || 61,
+                }));
+              }}
+            />
+          );
+        case 7:
+          return (
+            <NotificationSetup
+              enabled={habitData.notifications || false}
+              time={habitData.notificationTime}
+              onChange={(enabled, time) => {
+                setHabitData((prev) => ({ ...prev, notifications: enabled, notificationTime: time }));
+              }}
+            />
+          );
+        default:
+          return null;
+      }
     }
-  };
 
-  const renderStep = () => {
+    // Standard habit flow
     switch (step) {
       case 1:
-        return <HabitTypeCards selected={habitData.type} onSelect={(type) => setHabitData({ ...habitData, type })} />;
+        return <HabitTypeCards selected={habitData.type} onSelect={(type) => setHabitData((prev) => ({ ...prev, type }))} />;
       case 2:
-        return <HabitCategorySelector habitType={habitData.type!} selected={habitData.category} onSelect={(category) => setHabitData({ ...habitData, category })} />;
+        return (
+          <HabitCategorySelector
+            habitType={habitData.type!}
+            selected={habitData.category}
+            onSelect={(category) => setHabitData((prev) => ({ ...prev, category }))}
+            onCreateCustom={handleCreateCustom}
+          />
+        );
       case 3:
-        return <TaskSelector category={habitData.category!} habitType={habitData.type!} selectedTasks={habitData.tasks || []} onSelectTasks={(tasks) => setHabitData({ ...habitData, tasks })} />;
+        return (
+          <TaskSelector category={habitData.category!} habitType={habitData.type!} selectedTasks={habitData.tasks || []} onSelectTasks={(tasks) => setHabitData((prev) => ({ ...prev, tasks }))} />
+        );
       case 4:
         return (
           <GoalSetting
             hasEndGoal={habitData.hasEndGoal || false}
             endGoalDays={habitData.endGoalDays}
             onChange={(hasEndGoal, days) => {
-              setHabitData({
-                ...habitData,
+              setHabitData((prev) => ({
+                ...prev,
                 hasEndGoal,
                 endGoalDays: days,
                 totalDays: days || 61,
-              });
+              }));
             }}
           />
         );
@@ -160,7 +322,7 @@ const HabitWizard: React.FC = () => {
             selected={habitData.frequency || 'daily'}
             customDays={habitData.customDays}
             onSelect={(frequency, customDays) => {
-              setHabitData({ ...habitData, frequency, customDays });
+              setHabitData((prev) => ({ ...prev, frequency, customDays }));
             }}
           />
         );
@@ -170,36 +332,26 @@ const HabitWizard: React.FC = () => {
             enabled={habitData.notifications || false}
             time={habitData.notificationTime}
             onChange={(enabled, time) => {
-              setHabitData({ ...habitData, notifications: enabled, notificationTime: time });
+              setHabitData((prev) => ({ ...prev, notifications: enabled, notificationTime: time }));
             }}
           />
         );
       default:
         return null;
     }
-  };
+  }, [step, isCustomHabit, habitData, customHabitName, customHabitIcon, customTasks, handleCreateCustom]);
 
-  // Get gradient colors based on step
-  const getStepGradient = () => {
-    switch (step) {
-      case 1:
-        return ['#8b5cf6', '#7c3aed']; // Amethyst
-      case 2:
-        return habitData.type === 'good' ? ['#10b981', '#059669'] : ['#ef4444', '#dc2626']; // Jade or Ruby
-      case 3:
-        return habitData.type === 'good' ? ['#fbbf24', '#f59e0b'] : ['#8b5cf6', '#7c3aed']; // Topaz or Amethyst
-      case 4:
-        return ['#ef4444', '#dc2626']; // Ruby
-      case 5:
-        return ['#06b6d4', '#0891b2']; // Cyan
-      case 6:
-        return ['#fbbf24', '#f59e0b']; // Topaz
-      default:
-        return ['#8b5cf6', '#7c3aed'];
-    }
-  };
-
-  const gradientColors = getStepGradient();
+  // Memoize gradient colors
+  const gradientColors = useMemo(() => {
+    if (step === 1) return ['#8b5cf6', '#7c3aed'];
+    if (step === 2) return habitData.type === 'good' ? ['#10b981', '#059669'] : ['#ef4444', '#dc2626'];
+    if (isCustomHabit && (step === 3 || step === 4)) return habitData.type === 'good' ? ['#06b6d4', '#0891b2'] : ['#f97316', '#ea580c'];
+    if ((isCustomHabit && step === 5) || (!isCustomHabit && step === 3)) return habitData.type === 'good' ? ['#fbbf24', '#f59e0b'] : ['#8b5cf6', '#7c3aed'];
+    if ((isCustomHabit && step === 6) || (!isCustomHabit && step === 4)) return ['#ef4444', '#dc2626'];
+    if (!isCustomHabit && step === 5) return ['#06b6d4', '#0891b2'];
+    if ((isCustomHabit && step === 7) || (!isCustomHabit && step === 6)) return ['#fbbf24', '#f59e0b'];
+    return ['#8b5cf6', '#7c3aed'];
+  }, [step, habitData.type, isCustomHabit]);
 
   return (
     <SafeAreaView style={tw`flex-1 bg-stone-50`} edges={['top']}>
@@ -209,11 +361,9 @@ const HabitWizard: React.FC = () => {
           <ProgressIndicator current={step} total={totalSteps} />
         </View>
 
-        {/* Content */}
-        <ScrollView style={tw`flex-1`} showsVerticalScrollIndicator={false} contentContainerStyle={tw`pb-4 mt-4`}>
-          <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)} key={step}>
-            {renderStep()}
-          </Animated.View>
+        {/* Content - NO KEY PROP TO PREVENT REMOUNTING */}
+        <ScrollView ref={scrollViewRef} style={tw`flex-1`} showsVerticalScrollIndicator={false} contentContainerStyle={tw`pb-4 mt-4`}>
+          <View style={tw`flex-1`}>{renderStep()}</View>
         </ScrollView>
 
         {/* Navigation Footer */}
