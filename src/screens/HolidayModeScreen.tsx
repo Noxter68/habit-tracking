@@ -1,5 +1,5 @@
 // src/screens/HolidayModeScreen.tsx
-// Phase 2: Complete integration with granular control
+// Redesigned with improved UX/UI
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, ActivityIndicator, Alert, Platform, Modal, Pressable } from 'react-native';
@@ -14,23 +14,13 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { HolidayModeService, HolidayPeriod, HolidayStats, HolidayScope, HabitWithTasks } from '../services/holidayModeService';
-import { ChevronLeft, Umbrella, Diamond, Info, Calendar, Sparkles } from 'lucide-react-native';
-
-// Phase 2 Components
+import { ChevronLeft, Umbrella, Diamond, Info, Calendar, Sparkles, Globe, CheckSquare, ListChecks } from 'lucide-react-native';
 import { ScopeSelector } from '../components/holidays/ScopeSelector';
 import { HabitSelector } from '../components/holidays/HabitSelector';
 import { TaskSelector } from '../components/holidays/TaskSelector';
 
-// ============================================================================
-// Types
-// ============================================================================
-
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type DatePickerType = 'start' | 'end' | null;
-
-// ============================================================================
-// Main Screen
-// ============================================================================
 
 const HolidayModeScreen: React.FC = () => {
   const { user } = useAuth();
@@ -42,23 +32,18 @@ const HolidayModeScreen: React.FC = () => {
   const [activeHoliday, setActiveHoliday] = useState<HolidayPeriod | null>(null);
   const [stats, setStats] = useState<HolidayStats | null>(null);
 
-  // Date picker states
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
-  const [activePickerType, setActivePickerType] = useState<DatePickerType>(null);
-
-  // ============================================================================
-  // Phase 2: Granular Control States
-  // ============================================================================
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
 
   const [scope, setScope] = useState<HolidayScope>('all');
   const [habits, setHabits] = useState<HabitWithTasks[]>([]);
   const [selectedHabits, setSelectedHabits] = useState<Set<string>>(new Set());
   const [selectedTasks, setSelectedTasks] = useState<Map<string, Set<string>>>(new Map());
 
-  // ============================================================================
-  // Load Data
-  // ============================================================================
+  // Calculate duration
+  const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -71,15 +56,10 @@ const HolidayModeScreen: React.FC = () => {
         HolidayModeService.getUserHabitsWithTasks(user.id),
       ]);
 
-      console.log('🏖️ Active Holiday Data:', holiday);
-      console.log('📊 Holiday Stats:', holidayStats);
-      console.log('📋 User Habits:', userHabits);
-
       setActiveHoliday(holiday);
       setStats(holidayStats);
       setHabits(userHabits);
 
-      // Set default end date to tomorrow
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       setEndDate(tomorrow);
@@ -94,42 +74,24 @@ const HolidayModeScreen: React.FC = () => {
     loadData();
   }, [loadData]);
 
-  // ============================================================================
-  // Date Picker Handlers
-  // ============================================================================
-
-  const openDatePicker = (type: DatePickerType) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setActivePickerType(type);
-  };
-
-  const closeDatePicker = () => {
-    setActivePickerType(null);
-  };
-
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    if (Platform.OS === 'android') {
-      closeDatePicker();
-    }
-
+  const handleStartDateChange = (event: any, selectedDate?: Date) => {
+    setShowStartPicker(Platform.OS === 'ios');
     if (selectedDate) {
-      if (activePickerType === 'start') {
-        setStartDate(selectedDate);
-        // Adjust end date if it's before the new start date
-        if (selectedDate > endDate) {
-          const newEndDate = new Date(selectedDate);
-          newEndDate.setDate(newEndDate.getDate() + 1);
-          setEndDate(newEndDate);
-        }
-      } else if (activePickerType === 'end') {
-        setEndDate(selectedDate);
+      setStartDate(selectedDate);
+      if (selectedDate >= endDate) {
+        const newEnd = new Date(selectedDate);
+        newEnd.setDate(newEnd.getDate() + 1);
+        setEndDate(newEnd);
       }
     }
   };
 
-  // ============================================================================
-  // Phase 2: Selection Handlers
-  // ============================================================================
+  const handleEndDateChange = (event: any, selectedDate?: Date) => {
+    setShowEndPicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setEndDate(selectedDate);
+    }
+  };
 
   const handleToggleTask = (habitId: string, taskId: string) => {
     setSelectedTasks((prev) => {
@@ -172,8 +134,8 @@ const HolidayModeScreen: React.FC = () => {
   };
 
   const handleScopeChange = (newScope: HolidayScope) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setScope(newScope);
-    // Reset selections when changing scope
     if (newScope === 'all') {
       setSelectedHabits(new Set());
       setSelectedTasks(new Map());
@@ -209,20 +171,6 @@ const HolidayModeScreen: React.FC = () => {
     setSelectedTasks(newSelectedTasks);
   };
 
-  const handleSelectAllTasks = (habitId: string) => {
-    const habit = habits.find((h) => h.id === habitId);
-    if (!habit) return;
-
-    const newSelectedTasks = new Map(selectedTasks);
-    const allTaskIds = new Set(habit.tasks.map((t) => t.id));
-    newSelectedTasks.set(habitId, allTaskIds);
-    setSelectedTasks(newSelectedTasks);
-  };
-
-  // ============================================================================
-  // Validation
-  // ============================================================================
-
   const validateSelection = (): { valid: boolean; message?: string } => {
     if (scope === 'habits') {
       if (selectedHabits.size === 0) {
@@ -238,14 +186,9 @@ const HolidayModeScreen: React.FC = () => {
     return { valid: true };
   };
 
-  // ============================================================================
-  // Holiday Actions
-  // ============================================================================
-
   const handleCreateHoliday = async () => {
     if (!user) return;
 
-    // Validate selection
     const validation = validateSelection();
     if (!validation.valid) {
       Alert.alert('Selection Required', validation.message);
@@ -263,9 +206,6 @@ const HolidayModeScreen: React.FC = () => {
       return;
     }
 
-    const duration = HolidayModeService.calculateDuration(startDateStr, endDateStr);
-
-    // Build selection message
     let selectionMessage = '';
     if (scope === 'habits') {
       selectionMessage = `\n\nFreezing ${selectedHabits.size} habit${selectedHabits.size > 1 ? 's' : ''}`;
@@ -289,7 +229,6 @@ const HolidayModeScreen: React.FC = () => {
             try {
               setSubmitting(true);
 
-              // ✅ OPTIMISTIC UPDATE
               const optimisticHoliday: HolidayPeriod = {
                 id: 'temp-' + Date.now(),
                 userId: user.id,
@@ -311,7 +250,6 @@ const HolidayModeScreen: React.FC = () => {
               };
               setActiveHoliday(optimisticHoliday);
 
-              // Create with Phase 2 parameters
               const result = await HolidayModeService.createHolidayPeriod({
                 userId: user.id,
                 startDate: startDateStr,
@@ -329,7 +267,6 @@ const HolidayModeScreen: React.FC = () => {
 
               if (result.success) {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                // Reload to get actual data from server
                 await loadData();
               } else if (result.requiresPremium) {
                 setActiveHoliday(null);
@@ -386,51 +323,6 @@ const HolidayModeScreen: React.FC = () => {
     ]);
   };
 
-  // ============================================================================
-  // Date Picker Rendering
-  // ============================================================================
-
-  const renderDatePicker = () => {
-    if (!activePickerType) return null;
-
-    if (Platform.OS === 'android') {
-      return <DateTimePicker value={activePickerType === 'start' ? startDate : endDate} mode="date" onChange={handleDateChange} minimumDate={activePickerType === 'start' ? new Date() : startDate} />;
-    }
-
-    // iOS
-    return (
-      <Modal visible={true} transparent={true} animationType="fade" onRequestClose={closeDatePicker}>
-        <Pressable style={tw`flex-1 bg-black/50 justify-end`} onPress={closeDatePicker}>
-          <View style={tw`bg-white rounded-t-3xl pb-6`}>
-            <View style={tw`flex-row justify-between items-center px-6 py-4 border-b border-gray-100`}>
-              <TouchableOpacity onPress={closeDatePicker}>
-                <Text style={tw`text-indigo-600 font-semibold`}>Cancel</Text>
-              </TouchableOpacity>
-              <Text style={tw`font-bold text-gray-800`}>{activePickerType === 'start' ? 'Start Date' : 'End Date'}</Text>
-              <TouchableOpacity onPress={closeDatePicker}>
-                <Text style={tw`text-indigo-600 font-semibold`}>Done</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={tw`items-center justify-center w-full`}>
-              <DateTimePicker
-                value={activePickerType === 'start' ? startDate : endDate}
-                mode="date"
-                display="spinner"
-                onChange={handleDateChange}
-                minimumDate={activePickerType === 'start' ? new Date() : startDate}
-                style={{ width: '100%' }}
-              />
-            </View>
-          </View>
-        </Pressable>
-      </Modal>
-    );
-  };
-
-  // ============================================================================
-  // Loading State
-  // ============================================================================
-
   if (loading) {
     return (
       <SafeAreaView style={tw`flex-1 bg-[#FAF9F7] items-center justify-center`}>
@@ -439,9 +331,15 @@ const HolidayModeScreen: React.FC = () => {
     );
   }
 
-  // ============================================================================
-  // Main Render
-  // ============================================================================
+  const ScopeButton = ({ value, icon: Icon, label }: { value: HolidayScope; icon: any; label: string }) => {
+    const isSelected = scope === value;
+    return (
+      <TouchableOpacity onPress={() => handleScopeChange(value)} activeOpacity={0.7} style={tw`flex-1 ${isSelected ? 'bg-indigo-500' : 'bg-gray-100'} rounded-2xl py-4 px-3 items-center`}>
+        <Icon size={24} color={isSelected ? '#FFFFFF' : '#9CA3AF'} strokeWidth={2.5} />
+        <Text style={tw`${isSelected ? 'text-white' : 'text-gray-600'} text-sm font-bold mt-2`}>{label}</Text>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={tw`flex-1 bg-[#FAF9F7]`}>
@@ -449,7 +347,7 @@ const HolidayModeScreen: React.FC = () => {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`pb-24`}>
         {/* Header */}
-        <Animated.View entering={FadeInDown.duration(400)} style={tw`px-6 pt-4 pb-8`}>
+        <Animated.View entering={FadeInDown.duration(400)} style={tw`px-6 pt-4 pb-6`}>
           <TouchableOpacity
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -489,7 +387,6 @@ const HolidayModeScreen: React.FC = () => {
                 </Text>
               </View>
 
-              {/* Phase 2: Show what's frozen */}
               {!activeHoliday.appliesToAll && (
                 <View style={tw`mb-4`}>
                   <Text style={tw`text-indigo-200 text-sm mb-1`}>Frozen Items</Text>
@@ -510,38 +407,36 @@ const HolidayModeScreen: React.FC = () => {
           </Animated.View>
         )}
 
-        {/* Stats Card */}
+        {/* Stats Card - Redesigned with calm blue gradient */}
         {stats && !activeHoliday && (
           <Animated.View entering={FadeInDown.delay(100).duration(400)} style={tw`px-6 mb-6`}>
-            <View style={tw`bg-white rounded-3xl p-6 shadow-sm`}>
-              {isPremium ? (
-                <>
-                  <View style={tw`flex-row items-center justify-between mb-4`}>
-                    <Text style={tw`text-lg font-bold text-gray-800`}>Premium</Text>
-                    <View style={tw`bg-stone-100 px-3 py-1 rounded-full flex-row items-center`}>
-                      <Diamond size={14} color="#78716C" />
-                      <Text style={tw`text-xs font-bold text-stone-700 ml-1`}>UNLIMITED</Text>
-                    </View>
+            {isPremium ? (
+              <LinearGradient colors={['#60A5FA', '#3B82F6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-6 shadow-sm`}>
+                <View style={tw`flex-row items-center justify-between mb-3`}>
+                  <Text style={tw`text-xl font-black text-white`}>Premium</Text>
+                  <View style={tw`bg-white/20 px-3 py-1.5 rounded-full flex-row items-center`}>
+                    <Diamond size={14} color="#FFFFFF" />
+                    <Text style={tw`text-xs font-bold text-white ml-1`}>UNLIMITED</Text>
                   </View>
-                  <Text style={tw`text-gray-500 text-sm`}>Create unlimited holidays with no duration restrictions</Text>
-                </>
-              ) : (
-                <>
-                  <Text style={tw`text-lg font-bold text-gray-800 mb-4`}>Your Allowance</Text>
-                  <View style={tw`flex-row items-center gap-4`}>
-                    <View style={tw`flex-1`}>
-                      <Text style={tw`text-3xl font-black text-indigo-600`}>{stats.remainingAllowance}</Text>
-                      <Text style={tw`text-xs text-gray-500 mt-1`}>Holidays left</Text>
-                    </View>
-                    <View style={tw`w-px h-12 bg-gray-200`} />
-                    <View style={tw`flex-1`}>
-                      <Text style={tw`text-3xl font-black text-indigo-600`}>{stats.maxDuration}</Text>
-                      <Text style={tw`text-xs text-gray-500 mt-1`}>Days max</Text>
-                    </View>
+                </View>
+                <Text style={tw`text-blue-100 text-sm`}>Create unlimited holidays with no duration restrictions</Text>
+              </LinearGradient>
+            ) : (
+              <View style={tw`bg-white rounded-3xl p-6 shadow-sm`}>
+                <Text style={tw`text-lg font-bold text-gray-800 mb-4`}>Your Allowance</Text>
+                <View style={tw`flex-row items-center gap-4`}>
+                  <View style={tw`flex-1`}>
+                    <Text style={tw`text-3xl font-black text-indigo-600`}>{stats.remainingAllowance}</Text>
+                    <Text style={tw`text-xs text-gray-500 mt-1`}>Holidays left</Text>
                   </View>
-                </>
-              )}
-            </View>
+                  <View style={tw`w-px h-12 bg-gray-200`} />
+                  <View style={tw`flex-1`}>
+                    <Text style={tw`text-3xl font-black text-indigo-600`}>{stats.maxDuration}</Text>
+                    <Text style={tw`text-xs text-gray-500 mt-1`}>Days max</Text>
+                  </View>
+                </View>
+              </View>
+            )}
           </Animated.View>
         )}
 
@@ -551,49 +446,68 @@ const HolidayModeScreen: React.FC = () => {
             <Animated.View entering={FadeInDown.delay(200).duration(400)} style={tw`bg-white rounded-3xl p-6 shadow-sm mb-6`}>
               <Text style={tw`text-lg font-bold text-gray-800 mb-6`}>Schedule Break</Text>
 
-              {/* Date Selection */}
-              <View style={tw`mb-4`}>
-                <Text style={tw`text-sm font-semibold text-gray-700 mb-2`}>Start Date</Text>
-                <TouchableOpacity onPress={() => openDatePicker('start')} style={tw`bg-gray-50 rounded-xl p-4 border border-gray-200 flex-row items-center justify-between`}>
-                  <Text style={tw`text-gray-800 font-medium`}>{HolidayModeService.formatDate(startDate.toISOString().split('T')[0])}</Text>
-                  <Calendar size={20} color="#9CA3AF" />
-                </TouchableOpacity>
+              {/* Duration Display - Above dates */}
+              <View style={tw`bg-indigo-50 rounded-2xl p-4 mb-6 items-center`}>
+                <Text style={tw`text-indigo-400 text-xs font-semibold uppercase mb-1`}>Total Duration</Text>
+                <Text style={tw`text-indigo-600 text-4xl font-black`}>{duration}</Text>
+                <Text style={tw`text-indigo-500 text-sm font-semibold`}>{duration === 1 ? 'day' : 'days'}</Text>
               </View>
 
-              <View style={tw`mb-4`}>
-                <Text style={tw`text-sm font-semibold text-gray-700 mb-2`}>End Date</Text>
-                <TouchableOpacity onPress={() => openDatePicker('end')} style={tw`bg-gray-50 rounded-xl p-4 border border-gray-200 flex-row items-center justify-between`}>
-                  <Text style={tw`text-gray-800 font-medium`}>{HolidayModeService.formatDate(endDate.toISOString().split('T')[0])}</Text>
-                  <Calendar size={20} color="#9CA3AF" />
-                </TouchableOpacity>
+              {/* Date Selection - Simplified */}
+              <View style={tw`flex-row gap-3 mb-6`}>
+                <View style={tw`flex-1`}>
+                  <Text style={tw`text-xs font-semibold text-gray-500 mb-2 uppercase`}>Start Date</Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setShowStartPicker(true);
+                    }}
+                    style={tw`bg-gray-50 rounded-xl p-4 border border-gray-200`}
+                  >
+                    <Text style={tw`text-gray-800 font-semibold text-center text-sm`}>{startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={tw`flex-1`}>
+                  <Text style={tw`text-xs font-semibold text-gray-500 mb-2 uppercase`}>End Date</Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setShowEndPicker(true);
+                    }}
+                    style={tw`bg-gray-50 rounded-xl p-4 border border-gray-200`}
+                  >
+                    <Text style={tw`text-gray-800 font-semibold text-center text-sm`}>{endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
 
-              {/* Duration Display */}
-              <View style={tw`bg-indigo-50 rounded-xl p-3 mb-6`}>
-                <Text style={tw`text-indigo-700 text-sm font-semibold text-center`}>
-                  {HolidayModeService.calculateDuration(startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0])} days total
-                </Text>
+              {/* Freeze Scope - Vertical 3 buttons */}
+              <View style={tw`mb-6`}>
+                <Text style={tw`text-sm font-semibold text-gray-700 mb-3`}>Freeze Scope</Text>
+                <View style={tw`flex-row gap-2`}>
+                  <ScopeButton value="all" icon={Globe} label="All" />
+                  <ScopeButton value="habits" icon={CheckSquare} label="Habits" />
+                  <ScopeButton value="tasks" icon={ListChecks} label="Tasks" />
+                </View>
               </View>
 
-              {/* Phase 2: Scope Selector */}
-              <ScopeSelector selectedScope={scope} onScopeChange={handleScopeChange} />
-
-              {/* Phase 2: Habit Selector */}
+              {/* Habit Selector */}
               {scope === 'habits' && habits.length > 0 && (
-                <View style={tw`mt-6`}>
+                <View style={tw`mb-6`}>
                   <HabitSelector habits={habits} selectedHabits={selectedHabits} onToggle={handleHabitToggle} />
                 </View>
               )}
 
-              {/* Phase 2: Task Selector */}
+              {/* Task Selector */}
               {scope === 'tasks' && habits.length > 0 && (
-                <View style={tw`mt-6`}>
+                <View style={tw`mb-6`}>
                   <TaskSelector habits={habits} selectedTasks={selectedTasks} onToggleTask={handleToggleTask} onToggleAllTasks={handleToggleAllTasks} />
                 </View>
               )}
 
               {/* Info */}
-              <View style={tw`bg-amber-50 rounded-xl p-3 mb-6 flex-row items-start mt-6`}>
+              <View style={tw`bg-amber-50 rounded-xl p-3 mb-6 flex-row items-start`}>
                 <Info size={16} color="#D97706" style={tw`mt-0.5`} />
                 <Text style={tw`text-amber-700 text-xs ml-2 flex-1`}>
                   {scope === 'all'
@@ -619,7 +533,7 @@ const HolidayModeScreen: React.FC = () => {
               </TouchableOpacity>
             </Animated.View>
 
-            {/* Premium Upsell */}
+            {/* Premium Upsell - Calm blue gradient */}
             {!isPremium && (
               <Animated.View entering={FadeInDown.delay(300).duration(400)}>
                 <TouchableOpacity
@@ -629,14 +543,14 @@ const HolidayModeScreen: React.FC = () => {
                   }}
                   activeOpacity={0.9}
                 >
-                  <LinearGradient colors={['#78716C', '#57534E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-6 shadow-lg`}>
+                  <LinearGradient colors={['#60A5FA', '#3B82F6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-6 shadow-lg`}>
                     <View style={tw`flex-row items-center mb-3`}>
                       <View style={tw`bg-white/20 p-2 rounded-full`}>
-                        <Diamond size={16} color="#D4AF37" />
+                        <Diamond size={16} color="#FFFFFF" />
                       </View>
                       <Text style={tw`text-white text-lg font-bold ml-3`}>Go Premium</Text>
                     </View>
-                    <Text style={tw`text-stone-200 text-sm mb-3`}>Unlimited holidays • No duration limits • Advanced controls</Text>
+                    <Text style={tw`text-blue-100 text-sm`}>Unlimited holidays • No duration limits • Advanced controls</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </Animated.View>
@@ -645,8 +559,70 @@ const HolidayModeScreen: React.FC = () => {
         )}
       </ScrollView>
 
-      {/* Date Picker Modal */}
-      {renderDatePicker()}
+      {/* Simplified Date Pickers */}
+      {showStartPicker && (
+        <Modal visible={true} transparent animationType="fade" onRequestClose={() => setShowStartPicker(false)}>
+          <Animated.View entering={FadeInDown.duration(300)} style={tw`flex-1`}>
+            <Pressable style={tw`flex-1 justify-end bg-black/50`} onPress={() => setShowStartPicker(false)}>
+              <Pressable style={tw`bg-white rounded-t-3xl pb-8`} onPress={(e) => e.stopPropagation()}>
+                <View style={tw`flex-row justify-between items-center px-6 py-4 border-b border-gray-100`}>
+                  <TouchableOpacity onPress={() => setShowStartPicker(false)}>
+                    <Text style={tw`text-indigo-600 font-semibold`}>Cancel</Text>
+                  </TouchableOpacity>
+                  <Text style={tw`font-bold text-gray-800`}>Start Date</Text>
+                  <TouchableOpacity onPress={() => setShowStartPicker(false)}>
+                    <Text style={tw`text-indigo-600 font-semibold`}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={tw`w-full items-center`}>
+                  <DateTimePicker
+                    value={startDate}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={handleStartDateChange}
+                    minimumDate={new Date()}
+                    maximumDate={new Date(new Date().getFullYear() + 2, 11, 31)}
+                    textColor="#1F2937"
+                    style={{ width: '100%' }}
+                  />
+                </View>
+              </Pressable>
+            </Pressable>
+          </Animated.View>
+        </Modal>
+      )}
+
+      {showEndPicker && (
+        <Modal visible={true} transparent animationType="fade" onRequestClose={() => setShowEndPicker(false)}>
+          <Animated.View entering={FadeInDown.duration(300)} style={tw`flex-1`}>
+            <Pressable style={tw`flex-1 justify-end bg-black/50`} onPress={() => setShowEndPicker(false)}>
+              <Pressable style={tw`bg-white rounded-t-3xl pb-8`} onPress={(e) => e.stopPropagation()}>
+                <View style={tw`flex-row justify-between items-center px-6 py-4 border-b border-gray-100`}>
+                  <TouchableOpacity onPress={() => setShowEndPicker(false)}>
+                    <Text style={tw`text-indigo-600 font-semibold`}>Cancel</Text>
+                  </TouchableOpacity>
+                  <Text style={tw`font-bold text-gray-800`}>End Date</Text>
+                  <TouchableOpacity onPress={() => setShowEndPicker(false)}>
+                    <Text style={tw`text-indigo-600 font-semibold`}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={tw`w-full items-center`}>
+                  <DateTimePicker
+                    value={endDate}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={handleEndDateChange}
+                    minimumDate={startDate}
+                    maximumDate={new Date(new Date().getFullYear() + 2, 11, 31)}
+                    textColor="#1F2937"
+                    style={{ width: '100%' }}
+                  />
+                </View>
+              </Pressable>
+            </Pressable>
+          </Animated.View>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 };
