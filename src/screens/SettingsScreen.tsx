@@ -1,8 +1,9 @@
 // src/screens/SettingsScreen.tsx
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Switch, SafeAreaView, StatusBar, ActivityIndicator, Linking } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Switch, SafeAreaView, StatusBar, ActivityIndicator, Linking, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import * as Notifications from 'expo-notifications';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import tw from 'twrnc';
@@ -12,6 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/types';
 import { HolidayModeService, HolidayPeriod } from '@/services/holidayModeService';
+import { NotificationPreferencesService } from '@/services/notificationPreferenceService';
 
 // ============================================================================
 // Types
@@ -132,13 +134,11 @@ const ProfileHeader: React.FC = () => {
   const { user } = useAuth();
   const { isPremium } = useSubscription();
 
-  // Get user initials
   const getInitials = () => {
     const email = user?.email || 'User';
     return email.substring(0, 2).toUpperCase();
   };
 
-  // Get display name
   const getDisplayName = () => {
     return user?.email?.split('@')[0] || 'User';
   };
@@ -147,7 +147,6 @@ const ProfileHeader: React.FC = () => {
     <Animated.View entering={FadeInDown.delay(100).duration(600).springify()} style={tw`mx-6 mb-6`}>
       <View style={tw`bg-white rounded-3xl p-6 shadow-lg`}>
         <View style={tw`flex-row items-center`}>
-          {/* Avatar */}
           <LinearGradient
             colors={isPremium ? ['#78716C', '#57534E'] : ['#9CA3AF', '#6B7280']}
             start={{ x: 0, y: 0 }}
@@ -157,7 +156,6 @@ const ProfileHeader: React.FC = () => {
             <Text style={tw`text-white text-2xl font-extrabold`}>{getInitials()}</Text>
           </LinearGradient>
 
-          {/* User Info */}
           <View style={tw`flex-1 ml-4`}>
             <View style={tw`flex-row items-center mb-1`}>
               <Text style={tw`text-gray-800 font-bold text-lg`}>{getDisplayName()}</Text>
@@ -170,7 +168,6 @@ const ProfileHeader: React.FC = () => {
 
             <Text style={tw`text-gray-500 text-sm mb-1`}>{user?.email || 'user@example.com'}</Text>
 
-            {/* Status Badge */}
             <View style={tw`mt-1`}>
               {isPremium ? (
                 <View style={tw`px-2.5 py-1 bg-stone-100 rounded-lg self-start`}>
@@ -220,41 +217,30 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({ title, children, dela
 // ============================================================================
 
 const SettingsItem: React.FC<SettingsItemProps> = ({ icon, title, subtitle, trailing, onPress, isLast = false, color }) => {
-  const handlePress = () => {
-    if (onPress) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      onPress();
-    }
-  };
-
   const content = (
-    <>
-      <View style={tw`flex-row items-center flex-1`}>
-        <View style={tw`w-10 h-10 bg-gray-50 rounded-xl items-center justify-center`}>
-          <Icon name={icon} size={20} color={color} />
-        </View>
+    <View style={[tw`flex-row items-center py-4 px-4`, !isLast && tw`border-b border-gray-100`]}>
+      <View style={[tw`w-10 h-10 rounded-xl items-center justify-center mr-3.5`, { backgroundColor: `${color}15` }]}>
+        <Icon name={icon} size={22} color={color} />
+      </View>
 
-        <View style={tw`flex-1 ml-3`}>
-          <Text style={tw`text-gray-800 font-semibold text-base`}>{title}</Text>
-          {subtitle && <Text style={tw`text-gray-400 text-xs mt-0.5`}>{subtitle}</Text>}
-        </View>
+      <View style={tw`flex-1`}>
+        <Text style={tw`text-gray-800 font-semibold text-base`}>{title}</Text>
+        {subtitle && <Text style={tw`text-gray-500 text-sm mt-0.5`}>{subtitle}</Text>}
       </View>
 
       {trailing && <View style={tw`ml-3`}>{trailing}</View>}
-    </>
+    </View>
   );
-
-  const containerStyle = [tw`flex-row items-center px-4 py-4`, !isLast && tw`border-b border-gray-100`];
 
   if (onPress) {
     return (
-      <TouchableOpacity activeOpacity={0.7} onPress={handlePress} style={containerStyle}>
+      <TouchableOpacity activeOpacity={0.7} onPress={onPress}>
         {content}
       </TouchableOpacity>
     );
   }
 
-  return <View style={containerStyle}>{content}</View>;
+  return <View>{content}</View>;
 };
 
 // ============================================================================
@@ -262,12 +248,17 @@ const SettingsItem: React.FC<SettingsItemProps> = ({ icon, title, subtitle, trai
 // ============================================================================
 
 const SettingsScreen: React.FC = () => {
-  const [notifications, setNotifications] = useState(true);
+  const [notifications, setNotifications] = useState(false);
+  const [notificationLoading, setNotificationLoading] = useState(false);
   const [activeHoliday, setActiveHoliday] = useState<HolidayPeriod | null>(null);
 
   const { signOut, loading, user } = useAuth();
   const { isPremium } = useSubscription();
   const navigation = useNavigation<NavigationProp>();
+
+  useEffect(() => {
+    loadNotificationPreferences();
+  }, [user]);
 
   useEffect(() => {
     const loadHolidayStatus = async () => {
@@ -280,9 +271,65 @@ const SettingsScreen: React.FC = () => {
     loadHolidayStatus();
   }, [user]);
 
-  const handleToggle = (setter: React.Dispatch<React.SetStateAction<boolean>>, value: boolean) => {
+  const loadNotificationPreferences = async () => {
+    if (!user) return;
+
+    try {
+      const prefs = await NotificationPreferencesService.getPreferences(user.id);
+      setNotifications(prefs.globalEnabled);
+    } catch (error) {
+      console.error('Error loading notification preferences:', error);
+    }
+  };
+
+  const handleNotificationToggle = async (value: boolean) => {
+    if (!user) return;
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setter(value);
+    setNotificationLoading(true);
+
+    try {
+      if (value) {
+        const result = await NotificationPreferencesService.enableNotifications(user.id);
+
+        if (!result.permissionGranted) {
+          setNotifications(false);
+
+          if (result.needsSettings) {
+            Alert.alert('Permission Required', 'Notifications are disabled in your device settings. Please enable them to receive habit reminders.', [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Open Settings',
+                onPress: () => Notifications.openSettingsAsync(),
+              },
+            ]);
+          } else {
+            Alert.alert('Permission Denied', 'You need to grant notification permissions to receive habit reminders.');
+          }
+        } else {
+          setNotifications(true);
+          Alert.alert('Notifications Enabled', 'You will now receive reminders for your habits with notifications enabled.', [{ text: 'OK' }]);
+        }
+      } else {
+        Alert.alert('Disable Notifications?', 'This will cancel all scheduled habit reminders. You can re-enable them anytime.', [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Disable',
+            style: 'destructive',
+            onPress: async () => {
+              await NotificationPreferencesService.disableNotifications(user.id);
+              setNotifications(false);
+            },
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error('Error toggling notifications:', error);
+      Alert.alert('Error', 'Failed to update notification settings. Please try again.');
+      setNotifications(!value);
+    } finally {
+      setNotificationLoading(false);
+    }
   };
 
   const handleSignOut = async () => {
@@ -294,24 +341,16 @@ const SettingsScreen: React.FC = () => {
     }
   };
 
-  /**
-   * Open iOS subscription management settings
-   */
   const handleManageSubscription = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     if (isPremium) {
-      // Open App Store subscription management
       Linking.openURL('https://apps.apple.com/account/subscriptions');
     } else {
-      // Navigate to paywall for upgrade
       navigation.navigate('Paywall', { source: 'settings' });
     }
   };
 
-  /**
-   * Get holiday mode subtitle with days remaining
-   */
   const getHolidaySubtitle = () => {
     if (!activeHoliday) {
       return 'Pause habits without losing streaks';
@@ -333,7 +372,6 @@ const SettingsScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`pb-24`}>
-        {/* Header */}
         <Animated.View entering={FadeInDown.duration(600).springify()} style={tw`px-6 pt-15 pb-8`}>
           <View style={tw`items-center`}>
             <View style={tw`bg-stone-100 px-5 py-2 rounded-2xl mb-3`}>
@@ -343,12 +381,9 @@ const SettingsScreen: React.FC = () => {
           </View>
         </Animated.View>
 
-        {/* Profile Card */}
         <ProfileHeader />
 
-        {/* Settings Sections */}
         <View style={tw`px-6`}>
-          {/* Subscription Section */}
           <SettingsSection title="Subscription" delay={200} gradient={['#78716C', '#57534E']}>
             <SettingsItem
               icon={isPremium ? 'credit-card' : 'sparkles'}
@@ -369,7 +404,6 @@ const SettingsScreen: React.FC = () => {
             />
           </SettingsSection>
 
-          {/* Holiday Mode Section */}
           <SettingsSection title="Break Mode" delay={200} gradient={['#6366F1', '#4F46E5']}>
             <SettingsItem
               icon="beach-outline"
@@ -393,22 +427,42 @@ const SettingsScreen: React.FC = () => {
             />
           </SettingsSection>
 
-          {/* General Section */}
           <SettingsSection title="General" delay={300} gradient={['#9333EA', '#7C3AED']}>
             <SettingsItem
               icon="notifications-outline"
               title="Notifications"
+              subtitle={notifications ? 'Reminders enabled' : 'Enable habit reminders'}
               color="#9333EA"
               trailing={
-                <Switch
-                  value={notifications}
-                  onValueChange={(value) => handleToggle(setNotifications, value)}
-                  trackColor={{ false: '#E5E7EB', true: '#C084FC' }}
-                  thumbColor={notifications ? '#9333EA' : '#FFFFFF'}
-                  ios_backgroundColor="#E5E7EB"
-                />
+                notificationLoading ? (
+                  <ActivityIndicator size="small" color="#9333EA" />
+                ) : (
+                  <Switch
+                    value={notifications}
+                    onValueChange={handleNotificationToggle}
+                    trackColor={{ false: '#E5E7EB', true: '#C084FC' }}
+                    thumbColor={notifications ? '#9333EA' : '#FFFFFF'}
+                    ios_backgroundColor="#E5E7EB"
+                    disabled={notificationLoading}
+                  />
+                )
               }
             />
+
+            {notifications && (
+              <SettingsItem
+                icon="notifications-outline"
+                title="Manage Habit Notifications"
+                subtitle="Customize reminders for each habit"
+                color="#9333EA"
+                trailing={<Icon name="chevron-forward" size={20} color="#9333EA" />}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  navigation.navigate('NotificationManager');
+                }}
+              />
+            )}
+
             <SettingsItem
               icon="language-outline"
               title="Language"
@@ -420,7 +474,6 @@ const SettingsScreen: React.FC = () => {
             />
           </SettingsSection>
 
-          {/* Support Section */}
           <SettingsSection title="Support" delay={400} gradient={['#EC4899', '#DB2777']}>
             <SettingsItem icon="information-circle-outline" title="Version" subtitle="1.0.0" color="#EC4899" />
             <SettingsItem
@@ -433,7 +486,6 @@ const SettingsScreen: React.FC = () => {
             />
           </SettingsSection>
 
-          {/* Sign Out Button */}
           <Animated.View entering={FadeInDown.delay(500).duration(600).springify()} style={tw`mt-8 mb-6`}>
             <TouchableOpacity activeOpacity={0.8} disabled={loading} onPress={handleSignOut}>
               <LinearGradient colors={['#DC2626', '#B91C1C']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[tw`rounded-2xl p-4.5 shadow-lg`, { opacity: loading ? 0.6 : 1 }]}>

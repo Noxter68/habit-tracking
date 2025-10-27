@@ -120,23 +120,11 @@ export class NotificationService {
     }
   }
 
-  // Get motivational message based on habit type
+  // Get elegant, minimalist message without emojis
   static getMotivationalMessage(type?: string): string {
-    const buildMessages = [
-      'Time to build your better self! 💪',
-      'Your future self will thank you! ⭐',
-      'Small steps lead to big changes! 🚀',
-      "You've got this! Let's do it! 🎯",
-      'Consistency is key! Keep going! 🔑',
-    ];
+    const buildMessages = ['Time to build your better self', 'Your future self will thank you', 'Small steps lead to big changes', "You've got this", 'Consistency is key'];
 
-    const quitMessages = [
-      'Stay strong! You can resist! 💪',
-      'Every moment of resistance counts! ⭐',
-      "You're stronger than your cravings! 🛡️",
-      'Choose your long-term goals! 🎯',
-      "You're doing amazing! Keep it up! 🏆",
-    ];
+    const quitMessages = ['Stay strong', 'Every moment of resistance counts', "You're stronger than your cravings", 'Choose your long-term goals', "You're doing amazing"];
 
     const messages = type === 'quit' ? quitMessages : buildMessages;
     return messages[Math.floor(Math.random() * messages.length)];
@@ -162,7 +150,7 @@ export class NotificationService {
     await Notifications.scheduleNotificationAsync({
       content: {
         title: 'Test Notification',
-        body: 'Your notifications are working perfectly!',
+        body: 'Your notifications are working perfectly',
         sound: true,
         categoryIdentifier: 'test',
       },

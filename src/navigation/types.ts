@@ -19,6 +19,7 @@ export type RootStackParamList = {
   Settings: undefined;
   Profile: undefined;
   NotificationSettings: undefined;
+  NotificationManager: undefined;
 
   // Holidays
   HolidayMode: undefined;

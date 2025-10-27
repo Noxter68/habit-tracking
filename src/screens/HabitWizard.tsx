@@ -23,6 +23,8 @@ import ProgressIndicator from '../components/ProgressIndicator';
 import { getCategoryName } from '../utils/habitHelpers';
 import { NotificationService } from '../services/notificationService';
 import { getCustomIconComponent } from '../components/wizard/CustomHabitCreator';
+import { NotificationPreferencesService } from '@/services/notificationPreferenceService';
+import { useAuth } from '@/context/AuthContext';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'HabitWizard'>;
 
@@ -35,6 +37,7 @@ interface CustomTask {
 const HabitWizard: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { addHabit } = useHabits();
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
   const [previousCategory, setPreviousCategory] = useState<string | undefined>();
@@ -190,6 +193,21 @@ const HabitWizard: React.FC = () => {
           isCustom: true,
         }),
       };
+
+      if (user?.id) {
+        const { isFirstHabit, permissionRequested, permissionGranted } = await NotificationPreferencesService.handleFirstHabitCreation(user.id);
+
+        if (isFirstHabit && permissionRequested) {
+          if (permissionGranted) {
+            if (habitData.notifications) {
+              Alert.alert('Notifications Enabled! 🔔', "You'll receive reminders to help you stay on track with your new habit.", [{ text: 'Great!' }]);
+            }
+          } else {
+            newHabit.notifications = false;
+            Alert.alert('Notifications Disabled', 'You can enable notifications later in Settings if you change your mind.', [{ text: 'OK' }]);
+          }
+        }
+      }
 
       await addHabit(newHabit);
 

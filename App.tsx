@@ -48,6 +48,7 @@ import { SubscriptionProvider } from '@/context/SubscriptionContext';
 import PaywallScreen from '@/screens/PaywallScreen';
 import { RevenueCatService } from '@/services/RevenueCatService';
 import HolidayModeScreen from '@/screens/HolidayModeScreen';
+import NotificationManagerScreen from '@/screens/NotificationManagerScreen';
 
 // Type Definitions
 export type RootStackParamList = {
@@ -261,6 +262,15 @@ function AppNavigator() {
           options={{
             animation: 'slide_from_bottom',
             presentation: 'modal',
+          }}
+        />
+        <Stack.Screen
+          name="NotificationManager"
+          component={NotificationManagerScreen}
+          options={{
+            headerShown: false,
+            presentation: 'card',
+            animation: 'slide_from_right',
           }}
         />
         <Stack.Screen
