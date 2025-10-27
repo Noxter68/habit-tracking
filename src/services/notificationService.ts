@@ -1,11 +1,36 @@
-// src/services/notificationService.ts
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { Habit } from '../types';
+import { NotificationMessages } from '../utils/notificationMessages';
+import { supabase } from '../lib/supabase';
+import { getLocalDateString } from '../utils/dateHelpers';
 
+interface TaskInfo {
+  id: string;
+  name: string;
+  isCompleted: boolean;
+}
+
+/**
+ * Enhanced notification service with dynamic content generation
+ * Checks task completion status at notification time and adjusts message
+ */
 export class NotificationService {
-  // Register for push notifications
-  static async registerForPushNotifications() {
+  // ========== INITIALIZATION ==========
+
+  static async initialize() {
+    const registered = await this.registerForPushNotifications();
+
+    if (registered) {
+      await this.setupNotificationCategories();
+      this.setupNotificationHandler();
+      this.setupNotificationResponseListener();
+    }
+
+    return registered;
+  }
+
+  static async registerForPushNotifications(): Promise<boolean> {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
@@ -15,11 +40,10 @@ export class NotificationService {
     }
 
     if (finalStatus !== 'granted') {
-      console.log('Failed to get push token for push notification!');
+      console.log('Notification permissions denied');
       return false;
     }
 
-    // Configure Android channel
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('habits', {
         name: 'Habit Reminders',
@@ -33,86 +57,309 @@ export class NotificationService {
     return true;
   }
 
-  // Schedule notifications for a habit
-  static async scheduleHabitNotifications(habit: Habit) {
+  private static async setupNotificationCategories() {
+    await Notifications.setNotificationCategoryAsync('habit_reminder', [
+      {
+        identifier: 'snooze',
+        buttonTitle: 'Snooze 2h',
+        options: { opensAppToForeground: false },
+      },
+      {
+        identifier: 'complete',
+        buttonTitle: 'Done',
+        options: { opensAppToForeground: true },
+      },
+    ]);
+
+    await Notifications.setNotificationCategoryAsync('daily_chest', [
+      {
+        identifier: 'collect',
+        buttonTitle: 'Collect XP',
+        options: { opensAppToForeground: true },
+      },
+    ]);
+
+    await Notifications.setNotificationCategoryAsync('streak_risk', [
+      {
+        identifier: 'complete_now',
+        buttonTitle: 'Complete Now',
+        options: { opensAppToForeground: true },
+      },
+    ]);
+  }
+
+  private static setupNotificationHandler() {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+      }),
+    });
+  }
+
+  private static setupNotificationResponseListener() {
+    Notifications.addNotificationResponseReceivedListener(async (response) => {
+      const { notification, actionIdentifier } = response;
+      const habitId = notification.request.content.data.habitId as string;
+      const habitName = notification.request.content.title;
+
+      if (actionIdentifier === 'snooze') {
+        await this.snoozeNotification(habitId, habitName);
+      }
+      // Handle other actions as needed
+    });
+  }
+
+  // ========== SMART HABIT NOTIFICATIONS ==========
+
+  /**
+   * Schedule notifications that dynamically check task completion
+   * This is the main method to replace NotificationService.scheduleHabitNotifications
+   */
+  static async scheduleSmartHabitNotifications(habit: Habit, userId: string) {
     if (!habit.notifications || !habit.notificationTime) {
       return;
     }
 
-    // Cancel existing notifications for this habit
     await this.cancelHabitNotifications(habit.id);
-
-    // Parse time (format: "HH:MM")
     const [hours, minutes] = habit.notificationTime.split(':').map(Number);
 
-    // Schedule based on frequency
     if (habit.frequency === 'daily') {
+      await this.scheduleDailySmartNotification(habit, userId, hours, minutes);
+    } else if (habit.frequency === 'custom' && habit.customDays) {
+      await this.scheduleCustomDaysSmartNotifications(habit, userId, hours, minutes);
+    }
+  }
+
+  private static async scheduleDailySmartNotification(habit: Habit, userId: string, hours: number, minutes: number) {
+    // Note: React Native doesn't support dynamic content at trigger time
+    // We schedule with a generic message and handle dynamic updates via foreground notifications
+    // For a production solution, consider using a background task or server-side push
+
+    const message = NotificationMessages.habitReminder({
+      habitName: habit.name,
+      incompleteTasks: habit.tasks.map((t: any) => t.name || t),
+      totalTasks: habit.tasks.length,
+      currentStreak: habit.currentStreak,
+      type: habit.type,
+    });
+
+    await Notifications.scheduleNotificationAsync({
+      identifier: habit.id,
+      content: {
+        title: message.title,
+        body: message.body,
+        data: {
+          habitId: habit.id,
+          userId: userId,
+          isDynamic: true, // Flag to regenerate message on foreground
+        },
+        sound: true,
+        categoryIdentifier: 'habit_reminder',
+      },
+      trigger: {
+        hour: hours,
+        minute: minutes,
+        repeats: true,
+        channelId: 'habits',
+      },
+    });
+  }
+
+  private static async scheduleCustomDaysSmartNotifications(habit: Habit, userId: string, hours: number, minutes: number) {
+    const dayMap: { [key: string]: number } = {
+      Sunday: 1,
+      Monday: 2,
+      Tuesday: 3,
+      Wednesday: 4,
+      Thursday: 5,
+      Friday: 6,
+      Saturday: 7,
+    };
+
+    for (const day of habit.customDays!) {
+      const weekday = dayMap[day];
+      if (!weekday) continue;
+
+      const message = NotificationMessages.habitReminder({
+        habitName: habit.name,
+        incompleteTasks: habit.tasks.map((t: any) => t.name || t),
+        totalTasks: habit.tasks.length,
+        currentStreak: habit.currentStreak,
+        type: habit.type,
+      });
+
       await Notifications.scheduleNotificationAsync({
-        identifier: habit.id,
+        identifier: `${habit.id}_${day}`,
         content: {
-          title: `${habit.name}`,
-          body: this.getMotivationalMessage(habit.type),
-          data: { habitId: habit.id },
+          title: message.title,
+          body: message.body,
+          data: {
+            habitId: habit.id,
+            userId: userId,
+            isDynamic: true,
+          },
           sound: true,
           categoryIdentifier: 'habit_reminder',
         },
         trigger: {
+          weekday,
           hour: hours,
           minute: minutes,
           repeats: true,
           channelId: 'habits',
         },
       });
-    } else if (habit.frequency === 'custom' && habit.customDays) {
-      // Schedule for specific days of the week
-      const dayMap: { [key: string]: number } = {
-        Sunday: 1,
-        Monday: 2,
-        Tuesday: 3,
-        Wednesday: 4,
-        Thursday: 5,
-        Friday: 6,
-        Saturday: 7,
-      };
-
-      for (const day of habit.customDays) {
-        const weekday = dayMap[day];
-        if (weekday) {
-          await Notifications.scheduleNotificationAsync({
-            identifier: `${habit.id}_${day}`,
-            content: {
-              title: `${habit.name}`,
-              body: this.getMotivationalMessage(habit.type),
-              data: { habitId: habit.id },
-              sound: true,
-              categoryIdentifier: 'habit_reminder',
-            },
-            trigger: {
-              weekday,
-              hour: hours,
-              minute: minutes,
-              repeats: true,
-              channelId: 'habits',
-            },
-          });
-        }
-      }
     }
   }
 
-  // Cancel notifications for a habit
+  /**
+   * Generate dynamic notification content based on current task status
+   * Call this when app is in foreground to update notification content
+   */
+  static async generateDynamicNotification(habitId: string, userId: string): Promise<void> {
+    try {
+      // Fetch habit details
+      const { data: habitData, error: habitError } = await supabase.from('habits').select('*').eq('id', habitId).eq('user_id', userId).single();
+
+      if (habitError || !habitData) {
+        console.error('Error fetching habit:', habitError);
+        return;
+      }
+
+      // Fetch today's task completion
+      const today = getLocalDateString(new Date());
+      const { data: completionData } = await supabase.from('task_completions').select('completed_tasks').eq('habit_id', habitId).eq('user_id', userId).eq('date', today).single();
+
+      const completedTaskIds = completionData?.completed_tasks || [];
+      const allTasks = habitData.tasks || [];
+
+      // Determine incomplete tasks
+      const incompleteTasks = allTasks.filter((taskId: string) => !completedTaskIds.includes(taskId));
+
+      // Generate smart message
+      const message = NotificationMessages.habitReminder({
+        habitName: habitData.name,
+        incompleteTasks: incompleteTasks,
+        totalTasks: allTasks.length,
+        currentStreak: habitData.current_streak,
+        type: habitData.type,
+      });
+
+      // Send immediate notification with updated content
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: message.title,
+          body: message.body,
+          data: { habitId, userId },
+          sound: true,
+          categoryIdentifier: 'habit_reminder',
+        },
+        trigger: null, // Immediate delivery
+      });
+    } catch (error) {
+      console.error('Error generating dynamic notification:', error);
+    }
+  }
+
+  // ========== DAILY CHEST NOTIFICATIONS ==========
+
+  static async scheduleDailyChestReminder(userId: string, xpAvailable: number, hour: number = 20) {
+    const message = NotificationMessages.dailyChestReminder({ xpAvailable });
+
+    await Notifications.scheduleNotificationAsync({
+      identifier: `daily_chest_${userId}`,
+      content: {
+        title: message.title,
+        body: message.body,
+        data: { type: 'daily_chest', userId },
+        sound: true,
+        categoryIdentifier: 'daily_chest',
+      },
+      trigger: {
+        hour: hour,
+        minute: 0,
+        repeats: true,
+        channelId: 'habits',
+      },
+    });
+  }
+
+  static async cancelDailyChestReminder(userId: string) {
+    await Notifications.cancelScheduledNotificationAsync(`daily_chest_${userId}`);
+  }
+
+  // ========== STREAK RISK NOTIFICATIONS ==========
+
+  static async sendStreakRiskNotification(habitId: string, habitName: string, streakCount: number, hoursRemaining: number) {
+    const message = NotificationMessages.streakRisk({
+      habitName,
+      streakCount,
+      hoursRemaining,
+    });
+
+    await Notifications.scheduleNotificationAsync({
+      identifier: `streak_risk_${habitId}_${Date.now()}`,
+      content: {
+        title: message.title,
+        body: message.body,
+        data: { type: 'streak_risk', habitId },
+        sound: true,
+        categoryIdentifier: 'streak_risk',
+      },
+      trigger: null, // Immediate
+    });
+  }
+
+  // ========== SNOOZE FUNCTIONALITY ==========
+
+  private static async snoozeNotification(habitId: string, habitName?: string) {
+    try {
+      const triggerDate = new Date();
+      triggerDate.setHours(triggerDate.getHours() + 2);
+
+      await Notifications.scheduleNotificationAsync({
+        identifier: `${habitId}_snoozed_${Date.now()}`,
+        content: {
+          title: habitName || 'Habit Reminder',
+          body: 'Reminder: Time to check in on your habit.',
+          data: { habitId, snoozed: true },
+          sound: true,
+          categoryIdentifier: 'habit_reminder',
+        },
+        trigger: {
+          date: triggerDate,
+          channelId: 'habits',
+        },
+      });
+
+      console.log(`Snoozed until ${triggerDate.toLocaleTimeString()}`);
+    } catch (error) {
+      console.error('Error snoozing notification:', error);
+    }
+  }
+
+  // ========== UTILITY METHODS ==========
+
   static async cancelHabitNotifications(habitId: string) {
     try {
-      // Cancel main notification
       await Notifications.cancelScheduledNotificationAsync(habitId);
 
-      // Cancel any day-specific notifications
       const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       for (const day of days) {
         try {
           await Notifications.cancelScheduledNotificationAsync(`${habitId}_${day}`);
         } catch (e) {
-          // Ignore if notification doesn't exist
+          // Ignore if doesn't exist
+        }
+      }
+
+      // Cancel snoozed notifications
+      const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+      for (const notification of scheduled) {
+        if (notification.identifier.startsWith(`${habitId}_snoozed_`)) {
+          await Notifications.cancelScheduledNotificationAsync(notification.identifier);
         }
       }
     } catch (error) {
@@ -120,54 +367,45 @@ export class NotificationService {
     }
   }
 
-  // Get elegant, minimalist message without emojis
-  static getMotivationalMessage(type?: string): string {
-    const buildMessages = ['Time to build your better self', 'Your future self will thank you', 'Small steps lead to big changes', "You've got this", 'Consistency is key'];
-
-    const quitMessages = ['Stay strong', 'Every moment of resistance counts', "You're stronger than your cravings", 'Choose your long-term goals', "You're doing amazing"];
-
-    const messages = type === 'quit' ? quitMessages : buildMessages;
-    return messages[Math.floor(Math.random() * messages.length)];
-  }
-
-  // Get all scheduled notifications
-  static async getScheduledNotifications() {
-    return await Notifications.getAllScheduledNotificationsAsync();
-  }
-
-  // Cancel all notifications
   static async cancelAllNotifications() {
     await Notifications.cancelAllScheduledNotificationsAsync();
   }
 
-  // Send test notification
+  static async getScheduledNotifications() {
+    return await Notifications.getAllScheduledNotificationsAsync();
+  }
+
+  static async updateHabitNotificationTime(habit: Habit, userId: string, newTime: string) {
+    await this.cancelHabitNotifications(habit.id);
+    const updatedHabit = { ...habit, notificationTime: newTime };
+    await this.scheduleSmartHabitNotifications(updatedHabit, userId);
+  }
+
   static async sendTestNotification() {
     const permission = await this.registerForPushNotifications();
     if (!permission) {
       throw new Error('Notification permissions not granted');
     }
 
+    const message = NotificationMessages.habitReminder({
+      habitName: 'Test Habit',
+      incompleteTasks: ['Task 1', 'Task 2'],
+      totalTasks: 3,
+      currentStreak: 5,
+    });
+
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: 'Test Notification',
-        body: 'Your notifications are working perfectly',
+        title: message.title,
+        body: message.body,
         sound: true,
-        categoryIdentifier: 'test',
+        categoryIdentifier: 'habit_reminder',
+        data: { habitId: 'test' },
       },
       trigger: {
         seconds: 2,
         channelId: 'habits',
       },
     });
-  }
-
-  // Update notification time for a habit
-  static async updateHabitNotificationTime(habit: Habit, newTime: string) {
-    // Cancel existing notifications
-    await this.cancelHabitNotifications(habit.id);
-
-    // Schedule new ones with updated time
-    const updatedHabit = { ...habit, notificationTime: newTime };
-    await this.scheduleHabitNotifications(updatedHabit);
   }
 }

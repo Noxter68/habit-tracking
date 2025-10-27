@@ -173,7 +173,7 @@ export class NotificationPreferencesService {
 
       for (const habit of habits) {
         if (habit.notifications && habit.notificationTime) {
-          await NotificationService.scheduleHabitNotifications(habit);
+          await NotificationService.scheduleSmartHabitNotifications(habit, userId);
         }
       }
 

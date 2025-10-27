@@ -8,13 +8,24 @@ import { Bell, X, ChevronRight } from 'lucide-react-native';
 import tw from '../../lib/tailwind';
 import TimePicker from '../TimePicker';
 import { useHabits } from '../../context/HabitContext';
-import { NotificationService } from '../../services/notificationService';
+import { NotificationScheduleService } from '../../services/notificationScheduleService';
+import { PushTokenService } from '../../services/pushTokenService';
 import { useAuth } from '@/context/AuthContext';
 import { NotificationPreferencesService } from '@/services/notificationPreferenceService';
 import { getCategoryIcon } from '../../utils/categoryIcons';
+import { supabase } from '@/lib/supabase';
 
 interface NotificationManagerProps {
   onClose: () => void;
+}
+
+interface HabitWithSchedule {
+  id: string;
+  name: string;
+  category: string;
+  type: string;
+  notificationEnabled: boolean;
+  notificationTime: string;
 }
 
 const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) => {
@@ -23,14 +34,14 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
 
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
-  const [localHabits, setLocalHabits] = useState<any[]>([]);
+  const [localHabits, setLocalHabits] = useState<HabitWithSchedule[]>([]);
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [globalEnabled, setGlobalEnabled] = useState(true);
 
   useEffect(() => {
-    loadHabits();
-  }, [habits]);
+    loadHabitsWithSchedules();
+  }, [user]);
 
   useEffect(() => {
     checkGlobalNotificationState();
@@ -46,19 +57,86 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
     }
   };
 
-  const loadHabits = async () => {
-    setIsLoading(true);
+  /**
+   * Load habits and merge with notification schedules from database
+   */
+  const loadHabitsWithSchedules = async (showLoading: boolean = true) => {
+    if (!user) return;
+
+    if (showLoading) {
+      setIsLoading(true);
+    }
     try {
-      const allHabits = habits.map((habit) => ({
-        ...habit,
-        notificationEnabled: habit.notifications || false,
-        notificationTime: habit.notificationTime || '09:00',
-      }));
-      setLocalHabits(allHabits);
+      // Fetch notification schedules from database
+      const { data: schedules, error } = await supabase.from('notification_schedules').select('habit_id, notification_time, enabled').eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error fetching notification schedules:', error);
+      }
+
+      // Create a map of habit_id -> schedule for quick lookup
+      const scheduleMap = new Map<string, { time: string; enabled: boolean }>();
+
+      if (schedules) {
+        for (const schedule of schedules) {
+          // notification_time is stored as TIME in UTC (e.g., "14:30:00")
+          // We need to convert it to local time for display
+          const timeStr = schedule.notification_time; // Format: "HH:MM:SS"
+          const localTime = convertUTCTimeToLocal(timeStr);
+
+          scheduleMap.set(schedule.habit_id, {
+            time: localTime,
+            enabled: schedule.enabled,
+          });
+        }
+      }
+
+      // Merge habits with their schedules
+      const habitsWithSchedules: HabitWithSchedule[] = habits.map((habit) => {
+        const schedule = scheduleMap.get(habit.id);
+
+        return {
+          id: habit.id,
+          name: habit.name,
+          category: habit.category,
+          type: habit.type,
+          notificationEnabled: schedule?.enabled || habit.notifications || false,
+          notificationTime: schedule?.time || habit.notificationTime || '09:00',
+        };
+      });
+
+      setLocalHabits(habitsWithSchedules);
     } catch (error) {
-      console.error('Error loading habits:', error);
+      console.error('Error loading habits with schedules:', error);
     } finally {
-      setIsLoading(false);
+      if (showLoading) {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  /**
+   * Convert UTC time string to local time string
+   * Input: "14:30:00" (UTC)
+   * Output: "15:30" (Local, e.g. UTC+1)
+   */
+  const convertUTCTimeToLocal = (utcTimeString: string): string => {
+    try {
+      // Parse the UTC time
+      const [hours, minutes] = utcTimeString.split(':').map(Number);
+
+      // Create a date object for today in UTC
+      const utcDate = new Date();
+      utcDate.setUTCHours(hours, minutes, 0, 0);
+
+      // Get the local hours and minutes
+      const localHours = utcDate.getHours();
+      const localMinutes = utcDate.getMinutes();
+
+      return `${localHours.toString().padStart(2, '0')}:${localMinutes.toString().padStart(2, '0')}`;
+    } catch (error) {
+      console.error('Error converting UTC time to local:', error);
+      return '09:00';
     }
   };
 
@@ -85,39 +163,49 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
   };
 
   const handleTimeConfirm = async (hour: number, minute: number) => {
-    if (!selectedHabitId) return;
+    if (!selectedHabitId || !user) return;
+
+    setShowTimePicker(false);
 
     setIsUpdating(selectedHabitId);
     const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
 
     try {
+      // Update local state optimistically
       setLocalHabits((prev) => prev.map((habit) => (habit.id === selectedHabitId ? { ...habit, notificationTime: timeStr } : habit)));
 
       const habit = localHabits.find((h) => h.id === selectedHabitId);
       if (!habit) return;
 
+      // Update in database via HabitContext
       await updateHabitNotification(selectedHabitId, habit.notificationEnabled, timeStr);
 
+      // If notifications are enabled, schedule via backend
       if (habit.notificationEnabled) {
-        await NotificationService.scheduleHabitNotifications({
-          ...habit,
-          notifications: true,
-          notificationTime: timeStr,
-        });
+        const isRegistered = await PushTokenService.isDeviceRegistered(user.id);
+        if (!isRegistered) {
+          await PushTokenService.registerDevice(user.id);
+        }
+
+        await NotificationScheduleService.scheduleHabitNotification(selectedHabitId, user.id, `${timeStr}:00`, true);
       }
 
-      setShowTimePicker(false);
+      // ✅ Don't reload - the optimistic update is enough
       setSelectedHabitId(null);
     } catch (error) {
       console.error('Error updating notification time:', error);
-      // Revert on error
-      setLocalHabits((prev) => prev.map((habit) => (habit.id === selectedHabitId ? { ...habit, notificationTime: habit.notificationTime } : habit)));
+      // ❌ Only reload on error to revert
+      await loadHabitsWithSchedules(false);
+      Alert.alert('Error', 'Failed to update notification time. Please try again.');
     } finally {
       setIsUpdating(null);
     }
   };
 
   const handleToggleNotification = async (habitId: string, enabled: boolean) => {
+    if (!user) return;
+
+    // Check if global notifications are enabled first
     if (!globalEnabled && enabled) {
       Alert.alert('Enable Global Notifications First', 'Please enable notifications in Settings before managing individual habit notifications.', [
         { text: 'Cancel', style: 'cancel' },
@@ -132,13 +220,13 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
     setIsUpdating(habitId);
 
     try {
+      // Update local state optimistically
       setLocalHabits((prev) =>
         prev.map((habit) =>
           habit.id === habitId
             ? {
                 ...habit,
                 notificationEnabled: enabled,
-                notifications: enabled,
               }
             : habit
         )
@@ -147,39 +235,64 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
       const habit = localHabits.find((h) => h.id === habitId);
       if (!habit) return;
 
+      // Update in database via HabitContext
       await updateHabitNotification(habitId, enabled, habit.notificationTime);
 
       if (enabled) {
-        const hasPermission = await NotificationService.registerForPushNotifications();
-        if (!hasPermission) {
+        // Request permissions
+        const { status } = await Notifications.getPermissionsAsync();
+        let finalStatus = status;
+
+        if (status !== 'granted') {
+          const { status: newStatus } = await Notifications.requestPermissionsAsync();
+          finalStatus = newStatus;
+        }
+
+        if (finalStatus !== 'granted') {
           Alert.alert('Permission Required', 'Please enable notifications in your device settings to receive habit reminders.', [
             {
               text: 'Cancel',
               style: 'cancel',
               onPress: () => {
-                setLocalHabits((prev) => prev.map((h) => (h.id === habitId ? { ...h, notificationEnabled: false, notifications: false } : h)));
+                // Revert the state
+                setLocalHabits((prev) => prev.map((h) => (h.id === habitId ? { ...h, notificationEnabled: false } : h)));
               },
             },
             {
               text: 'Open Settings',
-              onPress: () => Notifications.openSettingsAsync(),
+              onPress: () => {
+                Notifications.openSettingsAsync();
+                // Revert the state
+                setLocalHabits((prev) => prev.map((h) => (h.id === habitId ? { ...h, notificationEnabled: false } : h)));
+              },
             },
           ]);
           return;
         }
 
-        await NotificationService.scheduleHabitNotifications({
-          ...habit,
-          notifications: true,
-          notificationTime: habit.notificationTime || '09:00',
-        });
+        // Ensure device is registered
+        const isRegistered = await PushTokenService.isDeviceRegistered(user.id);
+        if (!isRegistered) {
+          const registered = await PushTokenService.registerDevice(user.id);
+          if (!registered) {
+            throw new Error('Failed to register device for push notifications');
+          }
+        }
+
+        // Schedule via backend
+        await NotificationScheduleService.scheduleHabitNotification(habitId, user.id, `${habit.notificationTime}:00`, true);
+
+        console.log('✅ Notification scheduled successfully');
       } else {
-        await NotificationService.cancelHabitNotifications(habitId);
+        // Disable notification
+        await NotificationScheduleService.toggleNotification(habitId, user.id, false);
+        console.log('✅ Notification disabled successfully');
       }
     } catch (error) {
       console.error('Error toggling notification:', error);
-      // Revert on error
-      setLocalHabits((prev) => prev.map((h) => (h.id === habitId ? { ...h, notificationEnabled: !enabled, notifications: !enabled } : h)));
+      // Revert on error - don't show full-screen loading
+      await loadHabitsWithSchedules(false);
+      Alert.alert('Error', 'Failed to update notification. Please try again.');
     } finally {
       setIsUpdating(null);
     }
@@ -303,8 +416,8 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
         </View>
       </ScrollView>
 
-      {/* Time Picker Modal with Fade-In (60fps) */}
-      {showTimePicker && selectedHabitId && (
+      {/* Time Picker Modal - Only show when NOT updating */}
+      {showTimePicker && selectedHabitId && !isUpdating && (
         <Modal
           visible={showTimePicker}
           transparent

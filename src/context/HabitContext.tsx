@@ -8,6 +8,7 @@ import { HabitProgressionService } from '@/services/habitProgressionService';
 import { useStats } from './StatsContext';
 import { supabase } from '@/lib/supabase';
 import { getLocalDateString, getTodayString } from '@/utils/dateHelpers';
+import { NotificationService } from '@/services/notificationService';
 
 interface ToggleTaskResult {
   success: boolean;
@@ -125,6 +126,10 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           createdAt: habitData.createdAt || new Date(),
         };
 
+        if (newHabit.notifications && newHabit.notificationTime) {
+          await NotificationService.scheduleSmartHabitNotifications(newHabit, user.id);
+        }
+
         // Create in database using HabitService
         const createdHabit = await HabitService.createHabit(newHabit, user.id);
 
@@ -170,8 +175,6 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     } catch (error) {
       console.error('Error updating habit notification:', error);
       Alert.alert('Error', 'Failed to update notification settings');
-      // Reload to ensure consistency
-      await loadHabits();
     }
   };
 

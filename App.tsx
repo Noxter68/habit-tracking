@@ -49,6 +49,7 @@ import PaywallScreen from '@/screens/PaywallScreen';
 import { RevenueCatService } from '@/services/RevenueCatService';
 import HolidayModeScreen from '@/screens/HolidayModeScreen';
 import NotificationManagerScreen from '@/screens/NotificationManagerScreen';
+import { NotificationService } from '@/services/notificationService';
 
 // Type Definitions
 export type RootStackParamList = {
@@ -199,6 +200,10 @@ function AppNavigator() {
 
   useEffect(() => {
     checkFirstLaunch();
+  }, []);
+
+  useEffect(() => {
+    NotificationService.initialize();
   }, []);
 
   const checkFirstLaunch = async () => {

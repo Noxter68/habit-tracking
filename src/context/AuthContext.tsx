@@ -1,3 +1,4 @@
+// src/context/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
@@ -6,13 +7,14 @@ import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { RevenueCatService } from '@/services/RevenueCatService';
+import { PushTokenService } from '@/services/pushTokenService'; // ✅ Add this import
 
 WebBrowser.maybeCompleteAuthSession();
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  username: string | null; // Add this
+  username: string | null;
   loading: boolean;
   signUp: (email: string, password: string, username?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
@@ -29,6 +31,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [username, setUsername] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // ✅ Register device for push notifications when user logs in
+  useEffect(() => {
+    if (user?.id) {
+      // Register device for push notifications
+      PushTokenService.registerDevice(user.id)
+        .then((success) => {
+          if (success) {
+            console.log('✅ Device registered for push notifications');
+          } else {
+            console.log('⚠️ Push notification registration failed (permissions may be denied)');
+          }
+        })
+        .catch((error) => {
+          console.error('❌ Error registering device for push:', error);
+        });
+    }
+  }, [user?.id]); // Trigger when user ID changes (login/logout)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -58,7 +78,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const fetchUsername = async (userId: string) => {
     const { data } = await supabase.from('profiles').select('username').eq('id', userId).single();
-
     setUsername(data?.username || null);
   };
 
@@ -241,6 +260,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const signOut = async () => {
     try {
       setLoading(true);
+
+      // ✅ Unregister device before signing out
+      if (user?.id) {
+        await PushTokenService.unregisterDevice(user.id).catch((error) => {
+          console.error('Error unregistering device:', error);
+          // Don't block logout if unregister fails
+        });
+      }
+
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
     } catch (error: any) {
