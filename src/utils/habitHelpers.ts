@@ -27,7 +27,7 @@ import {
   Wheat,
   CircleSlash,
   Candy,
-  Ban as BanIcon,
+  Ban,
   BookOpen,
   GraduationCap,
   Target,
@@ -42,7 +42,7 @@ import {
   BarChart3,
   Star,
   Mail,
-  SmartphoneOff,
+  Smartphone,
   Play,
   CheckCheck,
   Heart,
@@ -51,18 +51,13 @@ import {
   Eye,
   Turtle,
   CloudSun,
-  Brain as Zen,
   BedDouble,
   AlarmClock,
   Home,
   Coffee,
   BedSingle,
-  Clock3 as AlarmClockOff,
+  Clock3,
   Droplets,
-  Wine as GlassWater,
-  Coffee as Cup,
-  Milk as Bottle,
-  Citrus,
   Wine,
   BeerOff,
   Zap,
@@ -71,20 +66,19 @@ import {
   Carrot,
   ClipboardList,
   ShoppingBasket,
-  CarOff,
+  Car,
   XCircle,
   Wallet,
   ListChecks,
   PiggyBank,
   MailX,
-  ShoppingBag as ShoppingBagX,
+  ShoppingBag,
   Book,
   Users,
-  Smartphone,
-  Tv as TvMinimal,
+  Tv,
   ListTree,
   Calendar,
-  AlertCircle as CircleAlert,
+  AlertCircle,
   ShieldCheck,
   NotebookPen,
   RefreshCw,
@@ -92,12 +86,10 @@ import {
   HeartHandshake,
   ShieldAlert,
   Martini,
-  Users as UsersRound,
-  StoreX as StoreOff,
-  HomeX as HomeOff,
+  Store,
   MoonStar,
-  Sun as SunMedium,
-  Bell as AlarmSmoke,
+  Bell,
+  PhoneOff,
 } from 'lucide-react-native';
 
 // ============================================================================
@@ -221,14 +213,14 @@ export const habitTypes: HabitTypeData[] = [
     title: 'Build a Good Habit',
     subtitle: 'Start something positive and transformative',
     description: 'Create new positive behaviors that align with your best self',
-    gradient: ['#10b981', '#059669'], // Jade
+    gradient: ['#10b981', '#059669'],
   },
   {
     id: 'bad',
     title: 'Quit a Bad Habit',
     subtitle: 'Break free from what holds you back',
     description: 'Replace unwanted patterns with healthier alternatives',
-    gradient: ['#ef4444', '#dc2626'], // Ruby
+    gradient: ['#ef4444', '#dc2626'],
   },
 ];
 
@@ -341,7 +333,7 @@ export const getTasksForCategory = (category: string, type: HabitType): Task[] =
       bad: [
         { id: 'no-fast-food', name: 'No Fast Food', description: 'Avoid fast food', icon: CircleSlash, duration: 'All day' },
         { id: 'no-sugar', name: 'Limit Sugar', description: 'Reduce sugar intake', icon: Candy, duration: 'All day' },
-        { id: 'no-late-snacks', name: 'No Late Snacking', description: 'No eating after 8pm', icon: BanIcon, duration: 'Evening' },
+        { id: 'no-late-snacks', name: 'No Late Snacking', description: 'No eating after 8pm', icon: Ban, duration: 'Evening' },
       ],
     },
     learning: {
@@ -369,7 +361,7 @@ export const getTasksForCategory = (category: string, type: HabitType): Task[] =
         { id: 'inbox-zero', name: 'Inbox Zero', description: 'Clear all emails', icon: Mail, duration: '20 min' },
       ],
       bad: [
-        { id: 'no-social-media', name: 'No Social Media', description: 'During work hours', icon: SmartphoneOff, duration: 'Work hours' },
+        { id: 'no-social-media', name: 'No Social Media', description: 'During work hours', icon: PhoneOff, duration: 'Work hours' },
         { id: 'no-procrastination', name: 'Start Tasks', description: "Don't delay tasks", icon: Play, duration: 'All day' },
         { id: 'no-perfectionism', name: 'Done > Perfect', description: 'Ship work regularly', icon: CheckCheck, duration: 'All day' },
       ],
@@ -386,7 +378,7 @@ export const getTasksForCategory = (category: string, type: HabitType): Task[] =
       bad: [
         { id: 'no-rushing', name: 'Slow Down', description: "Don't rush tasks", icon: Turtle, duration: 'All day' },
         { id: 'no-negativity', name: 'Positive Thinking', description: 'Avoid negative thoughts', icon: CloudSun, duration: 'All day' },
-        { id: 'no-overthinking', name: 'Stop Overthinking', description: 'Be present', icon: Zen, duration: 'All day' },
+        { id: 'no-overthinking', name: 'Stop Overthinking', description: 'Be present', icon: Brain, duration: 'All day' },
       ],
     },
     sleep: {
@@ -399,16 +391,16 @@ export const getTasksForCategory = (category: string, type: HabitType): Task[] =
       bad: [
         { id: 'no-caffeine-pm', name: 'No Late Caffeine', description: 'Avoid caffeine after 2pm', icon: Coffee, duration: 'Afternoon' },
         { id: 'no-naps', name: 'No Long Naps', description: 'Avoid daytime sleeping', icon: BedSingle, duration: 'Daytime' },
-        { id: 'no-snooze', name: 'No Snooze Button', description: 'Get up immediately', icon: AlarmClockOff, duration: 'Morning' },
+        { id: 'no-snooze', name: 'No Snooze Button', description: 'Get up immediately', icon: Clock3, duration: 'Morning' },
       ],
     },
     hydration: {
       good: [
         { id: 'water-morning', name: 'Morning Water', description: 'Glass of water upon waking', icon: Droplets, duration: '1 min' },
-        { id: 'water-8-glasses', name: '8 Glasses Water', description: 'Drink 8 glasses daily', icon: GlassWater, duration: 'All day' },
-        { id: 'herbal-tea', name: 'Herbal Tea', description: 'Drink herbal tea', icon: Cup, duration: '10 min' },
-        { id: 'water-bottle', name: 'Carry Water Bottle', description: 'Keep water accessible', icon: Bottle, duration: 'All day' },
-        { id: 'infused-water', name: 'Infused Water', description: 'Add fruits to water', icon: Citrus, duration: '5 min' },
+        { id: 'water-8-glasses', name: '8 Glasses Water', description: 'Drink 8 glasses daily', icon: Droplets, duration: 'All day' },
+        { id: 'herbal-tea', name: 'Herbal Tea', description: 'Drink herbal tea', icon: Coffee, duration: '10 min' },
+        { id: 'water-bottle', name: 'Carry Water Bottle', description: 'Keep water accessible', icon: Droplet, duration: 'All day' },
+        { id: 'infused-water', name: 'Infused Water', description: 'Add fruits to water', icon: Apple, duration: '5 min' },
       ],
       bad: [
         { id: 'no-soda', name: 'No Soda', description: 'Avoid sugary drinks', icon: Wine, duration: 'All day' },
@@ -435,8 +427,8 @@ export const getTasksForCategory = (category: string, type: HabitType): Task[] =
         { id: 'grocery-smart', name: 'Smart Shopping', description: 'Buy whole foods only', icon: ShoppingBasket, duration: 'Weekly' },
       ],
       bad: [
-        { id: 'no-junk-food', name: 'No Junk Food', description: 'Avoid processed foods', icon: BanIcon, duration: 'All day' },
-        { id: 'no-drive-thru', name: 'No Drive-Thrus', description: 'Skip fast food restaurants', icon: CarOff, duration: 'All day' },
+        { id: 'no-junk-food', name: 'No Junk Food', description: 'Avoid processed foods', icon: Ban, duration: 'All day' },
+        { id: 'no-drive-thru', name: 'No Drive-Thrus', description: 'Skip fast food restaurants', icon: Car, duration: 'All day' },
         { id: 'no-vending-machine', name: 'No Vending Machines', description: 'Avoid unhealthy snacks', icon: XCircle, duration: 'All day' },
       ],
     },
@@ -449,7 +441,7 @@ export const getTasksForCategory = (category: string, type: HabitType): Task[] =
       bad: [
         { id: 'no-impulse-buy', name: 'No Impulse Buying', description: 'Wait 24 hours before purchasing', icon: Clock, duration: 'Shopping' },
         { id: 'unsubscribe-emails', name: 'Unsubscribe Deals', description: 'Remove shopping temptations', icon: MailX, duration: 'One-time' },
-        { id: 'no-browsing', name: 'No Window Shopping', description: 'Avoid online stores', icon: ShoppingBagX, duration: 'All day' },
+        { id: 'no-browsing', name: 'No Window Shopping', description: 'Avoid online stores', icon: ShoppingBag, duration: 'All day' },
       ],
     },
     'screen-time': {
@@ -459,9 +451,9 @@ export const getTasksForCategory = (category: string, type: HabitType): Task[] =
         { id: 'face-to-face', name: 'In-Person Time', description: 'Meet people offline', icon: Users, duration: 'Daily' },
       ],
       bad: [
-        { id: 'no-phone-bed', name: 'No Phone in Bed', description: 'Keep devices out of bedroom', icon: SmartphoneOff, duration: 'Bedtime' },
+        { id: 'no-phone-bed', name: 'No Phone in Bed', description: 'Keep devices out of bedroom', icon: Smartphone, duration: 'Bedtime' },
         { id: 'limit-social-media', name: 'Limit Social Media', description: 'Set app time limits', icon: Smartphone, duration: '30 min max' },
-        { id: 'no-binge-watching', name: 'No Binge Watching', description: 'Limit streaming time', icon: TvMinimal, duration: 'All day' },
+        { id: 'no-binge-watching', name: 'No Binge Watching', description: 'Limit streaming time', icon: Tv, duration: 'All day' },
       ],
     },
     procrastination: {
@@ -471,7 +463,7 @@ export const getTasksForCategory = (category: string, type: HabitType): Task[] =
         { id: 'time-block', name: 'Time Blocking', description: 'Schedule specific work times', icon: Calendar, duration: 'Daily' },
       ],
       bad: [
-        { id: 'no-delay', name: 'No Delaying', description: 'Do it now, not later', icon: CircleAlert, duration: 'All day' },
+        { id: 'no-delay', name: 'No Delaying', description: 'Do it now, not later', icon: AlertCircle, duration: 'All day' },
         { id: 'no-excuses', name: 'No Excuses', description: 'Take action regardless', icon: ShieldCheck, duration: 'All day' },
         { id: 'no-distractions', name: 'Eliminate Distractions', description: 'Focus on one task', icon: Focus, duration: 'Work time' },
       ],
@@ -492,24 +484,24 @@ export const getTasksForCategory = (category: string, type: HabitType): Task[] =
       good: [
         { id: 'mocktails', name: 'Drink Mocktails', description: 'Enjoy non-alcoholic drinks', icon: Martini, duration: 'Social events' },
         { id: 'exercise-instead', name: 'Exercise', description: 'Physical activity as alternative', icon: Activity, duration: '30 min' },
-        { id: 'support-group', name: 'Support Group', description: 'Connect with others', icon: UsersRound, duration: 'Weekly' },
+        { id: 'support-group', name: 'Support Group', description: 'Connect with others', icon: Users, duration: 'Weekly' },
       ],
       bad: [
         { id: 'no-alcohol', name: 'No Alcohol', description: 'Track alcohol-free days', icon: BeerOff, duration: 'All day' },
-        { id: 'avoid-bars', name: 'Avoid Bars', description: 'Skip drinking venues', icon: StoreOff, duration: 'All day' },
-        { id: 'no-home-stocking', name: 'No Alcohol at Home', description: 'Remove from house', icon: HomeOff, duration: 'Ongoing' },
+        { id: 'avoid-bars', name: 'Avoid Bars', description: 'Skip drinking venues', icon: Store, duration: 'All day' },
+        { id: 'no-home-stocking', name: 'No Alcohol at Home', description: 'Remove from house', icon: Home, duration: 'Ongoing' },
       ],
     },
     oversleeping: {
       good: [
         { id: 'consistent-bedtime', name: 'Consistent Bedtime', description: 'Sleep at same time', icon: MoonStar, duration: 'Evening' },
         { id: 'morning-routine', name: 'Morning Routine', description: 'Exciting morning activities', icon: Sun, duration: '30 min' },
-        { id: 'sunlight-exposure', name: 'Get Sunlight', description: 'Expose to morning light', icon: SunMedium, duration: '15 min' },
+        { id: 'sunlight-exposure', name: 'Get Sunlight', description: 'Expose to morning light', icon: Sun, duration: '15 min' },
       ],
       bad: [
-        { id: 'no-snooze', name: 'No Snooze Button', description: 'Get up with first alarm', icon: AlarmClockOff, duration: 'Morning' },
+        { id: 'no-snooze', name: 'No Snooze Button', description: 'Get up with first alarm', icon: Clock3, duration: 'Morning' },
         { id: 'no-late-sleep', name: 'No Late Sleep', description: 'Sleep before midnight', icon: BedDouble, duration: 'Evening' },
-        { id: 'alarm-far-away', name: 'Alarm Across Room', description: 'Force yourself to get up', icon: AlarmSmoke, duration: 'Bedtime' },
+        { id: 'alarm-far-away', name: 'Alarm Across Room', description: 'Force yourself to get up', icon: Bell, duration: 'Bedtime' },
       ],
     },
   };
