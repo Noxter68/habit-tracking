@@ -96,9 +96,9 @@ const StatsScreen: React.FC = () => {
         </View>
 
         {/* Premium Analytics Section */}
-        <View style={{ paddingHorizontal: 24, marginBottom: 28 }}>
+        {/* <View style={{ paddingHorizontal: 24, marginBottom: 28 }}>
           <PremiumStatsSection habits={safeHabits} selectedRange={selectedRange} onRangeChange={setSelectedRange} />
-        </View>
+        </View> */}
 
         {/* Bottom Spacing */}
         <View style={{ height: 40 }} />
