@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 export class NotificationScheduleService {
   /**
    * Schedule a habit notification (stored in DB, sent by backend)
-   * Converts local time to UTC before saving
+   * Intelligently sets last_sent_at if time already passed today
    */
   static async scheduleHabitNotification(
     habitId: string,
@@ -18,12 +18,26 @@ export class NotificationScheduleService {
 
       console.log(`📅 Converting time: ${notificationTime} (local) → ${utcTime} (UTC)`);
 
+      // ✅ SMART LOGIC: Check if notification time has already passed today
+      const now = new Date();
+      const [hours, minutes, seconds] = notificationTime.split(':').map(Number);
+      const scheduledTimeToday = new Date();
+      scheduledTimeToday.setHours(hours, minutes, seconds || 0, 0);
+
+      const hasPassedToday = scheduledTimeToday <= now;
+
+      // If time has passed, set last_sent_at to today to prevent immediate sending
+      const last_sent_at = hasPassedToday ? now.toISOString() : null;
+
+      console.log(hasPassedToday ? `⏰ Time ${notificationTime} already passed today - marking as sent` : `⏰ Time ${notificationTime} hasn't passed yet - will send today`);
+
       const { error } = await supabase.from('notification_schedules').upsert(
         {
           user_id: userId,
           habit_id: habitId,
           notification_time: utcTime, // Store as UTC
           enabled: enabled,
+          last_sent_at: last_sent_at, // ✅ Set if time passed
           updated_at: new Date().toISOString(),
         },
         {
@@ -33,7 +47,7 @@ export class NotificationScheduleService {
 
       if (error) throw error;
 
-      console.log(`✅ Notification scheduled for ${utcTime} UTC (${notificationTime} local)`);
+      console.log(`✅ Notification scheduled for ${utcTime} UTC (${notificationTime} local)${hasPassedToday ? ' - will send tomorrow' : ' - will send today'}`);
     } catch (error) {
       console.error('❌ Error scheduling notification:', error);
       throw error;
@@ -45,32 +59,25 @@ export class NotificationScheduleService {
    * Example: "14:20:00" in France (UTC+1) → "13:20:00" UTC
    */
   private static convertLocalTimeToUTC(localTime: string): string {
-    // Create a date object with today's date and the specified time
     const [hours, minutes, seconds] = localTime.split(':').map(Number);
-
     const localDate = new Date();
     localDate.setHours(hours, minutes, seconds || 0, 0);
 
-    // Get UTC time
     const utcHours = localDate.getUTCHours();
     const utcMinutes = localDate.getUTCMinutes();
     const utcSeconds = localDate.getUTCSeconds();
 
-    // Format as HH:MM:SS
     return `${utcHours.toString().padStart(2, '0')}:${utcMinutes.toString().padStart(2, '0')}:${utcSeconds.toString().padStart(2, '0')}`;
   }
 
   /**
    * Convert UTC time to local time for display
-   * Example: "13:20:00" UTC → "14:20:00" in France (UTC+1)
    */
   static convertUTCToLocalTime(utcTime: string): string {
     const [hours, minutes, seconds] = utcTime.split(':').map(Number);
-
     const utcDate = new Date();
     utcDate.setUTCHours(hours, minutes, seconds || 0, 0);
 
-    // Get local time
     const localHours = utcDate.getHours();
     const localMinutes = utcDate.getMinutes();
     const localSeconds = utcDate.getSeconds();

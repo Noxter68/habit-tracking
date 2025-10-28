@@ -1,6 +1,6 @@
 // src/components/dashboard/DashboardHeader.tsx
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, ImageBackground } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -53,7 +53,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   totalXP = 0,
 }) => {
   const navigation = useNavigation();
-  const { user } = useAuth();
+  const { user, username } = useAuth();
   const { refreshStats } = useStats();
   const greeting = getGreeting();
 
@@ -75,18 +75,19 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
   const currentTier = getCurrentTier();
   const tierTheme = getAchievementTierTheme(currentTier);
+  const isObsidian = tierTheme.gemName === 'Obsidian';
 
-  // Determine text colors based on gem type (matching CurrentLevelHero logic)
+  // Determine text colors based on gem type
   const getTextColors = (gemName: string) => {
     // Lighter gems need darker text for contrast
     if (['Crystal', 'Topaz'].includes(gemName)) {
       return {
-        primary: '#FFFFFF', // White title for all
-        secondary: '#374151', // stone-700
-        greeting: '#FFFFFF', // White greeting for all
-        levelBadgeText: '#1F2937', // Dark text on light badge
-        xpText: '#374151', // Dark text
-        levelBadgeBg: 'rgba(255, 255, 255, 0.85)', // More opaque for better contrast
+        primary: '#FFFFFF',
+        secondary: '#374151',
+        greeting: '#FFFFFF',
+        levelBadgeText: '#1F2937',
+        xpText: '#374151',
+        levelBadgeBg: 'rgba(255, 255, 255, 0.85)',
         xpBadgeBg: 'rgba(255, 255, 255, 0.75)',
       };
     }
@@ -110,26 +111,21 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   };
 
   const handleXPCollect = async (amount: number) => {
-    // Optimistic update - update UI immediately
     setOptimisticXP((prev) => prev + amount);
     setOptimisticTotalXP((prev) => prev + amount);
 
-    // Call parent callback if provided
     if (onXPCollected) {
       onXPCollected(amount);
     }
 
-    // Background refresh without blocking UI (delayed to avoid race condition)
     setTimeout(async () => {
-      // await refreshStats(true);
       if (onStatsRefresh) {
         onStatsRefresh();
       }
-    }, 1000); // Increased delay to ensure DB is updated
+    }, 1000);
   };
 
   const handleLevelUp = async () => {
-    // For level up, we do need to refresh to get new level data
     await refreshStats(true);
     if (onStatsRefresh) {
       onStatsRefresh();
@@ -142,8 +138,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const displayXP = optimisticXP > xpForNextLevel ? optimisticXP % xpForNextLevel : optimisticXP;
   const displayProgress = xpForNextLevel > 0 ? (displayXP / xpForNextLevel) * 100 : 0;
 
-  return (
-    <Animated.View entering={FadeIn} style={{ position: 'relative', marginBottom: 16 }}>
+  const GradientContainer = ({ children }: { children: React.ReactNode }) => {
+    const textureSource = tierTheme.texture;
+
+    return (
       <LinearGradient
         colors={tierTheme.gradient}
         start={{ x: 0, y: 0 }}
@@ -151,44 +149,83 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         style={{
           borderRadius: 20,
           overflow: 'hidden',
-          borderWidth: 1.5,
-          borderColor: 'rgba(255, 255, 255, 0.2)',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.3,
-          shadowRadius: 20,
+          borderWidth: isObsidian ? 2 : 1.5,
+          borderColor: isObsidian ? 'rgba(139, 92, 246, 0.4)' : 'rgba(255, 255, 255, 0.2)',
+          shadowColor: isObsidian ? '#8b5cf6' : '#000',
+          shadowOffset: { width: 0, height: isObsidian ? 12 : 8 },
+          shadowOpacity: isObsidian ? 0.6 : 0.3,
+          shadowRadius: isObsidian ? 24 : 20,
         }}
       >
-        {/* Subtle texture overlay for depth */}
-        <View
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.05)',
-          }}
-        />
+        {textureSource ? (
+          <ImageBackground source={textureSource} resizeMode="cover" imageStyle={{ opacity: 0.2 }}>
+            {/* Epic purple glow overlay for Obsidian */}
+            {isObsidian && (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: 'rgba(139, 92, 246, 0.08)',
+                }}
+              />
+            )}
+            {/* Dark overlay for depth */}
+            <View
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: isObsidian ? 'rgba(0, 0, 0, 0.15)' : 'rgba(0, 0, 0, 0.05)',
+              }}
+            />
+            {children}
+          </ImageBackground>
+        ) : (
+          <View>
+            {/* Fallback: No texture, just dark overlay */}
+            <View
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.05)',
+              }}
+            />
+            {children}
+          </View>
+        )}
+      </LinearGradient>
+    );
+  };
 
+  return (
+    <Animated.View entering={FadeIn} style={{ position: 'relative', marginBottom: 16 }}>
+      <GradientContainer>
         <View style={{ padding: 20, paddingBottom: 0 }}>
           {/* Greeting and Level Section */}
           <View style={{ marginBottom: 16 }}>
-            {/* Greeting with username - Always white with strong shadow */}
+            {/* Greeting with username */}
             <Text
               style={{
                 fontSize: 11,
                 fontWeight: '700',
                 color: '#FFFFFF',
                 letterSpacing: 2,
-                textShadowColor: 'rgba(0, 0, 0, 0.5)',
+                textShadowColor: isObsidian ? 'rgba(139, 92, 246, 0.8)' : 'rgba(0, 0, 0, 0.5)',
                 textShadowOffset: { width: 0, height: 1 },
-                textShadowRadius: 4,
+                textShadowRadius: isObsidian ? 8 : 4,
                 marginBottom: 2,
               }}
             >
               {greeting.toUpperCase()}
-              {user?.username && `, ${user.username.toUpperCase()}`}
+              {username && `, ${username.toUpperCase()}`}
             </Text>
 
             <View
@@ -200,16 +237,16 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               }}
             >
               <View style={{ flex: 1, paddingRight: 75 }}>
-                {/* Title - Always white with strong shadow */}
+                {/* Title */}
                 <Text
                   style={{
                     fontSize: 26,
                     fontWeight: '900',
                     color: '#FFFFFF',
                     lineHeight: 30,
-                    textShadowColor: 'rgba(0, 0, 0, 0.6)',
+                    textShadowColor: isObsidian ? 'rgba(139, 92, 246, 0.9)' : 'rgba(0, 0, 0, 0.6)',
                     textShadowOffset: { width: 0, height: 2 },
-                    textShadowRadius: 8,
+                    textShadowRadius: isObsidian ? 12 : 8,
                   }}
                 >
                   {userTitle}
@@ -223,57 +260,51 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                     marginTop: 8,
                   }}
                 >
-                  {/* Level Badge - Dynamic background based on gem type */}
-                  <LinearGradient
-                    colors={[textColors.levelBadgeBg, textColors.levelBadgeBg]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
+                  {/* Level Badge - Consistent white style */}
+                  <View
                     style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.3)',
                       borderRadius: 16,
                       paddingHorizontal: 10,
                       paddingVertical: 5,
                       borderWidth: 1,
-                      borderColor: textColors.levelBadgeText === '#1F2937' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.4)',
-                      shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.2,
-                      shadowRadius: 6,
+                      borderColor: 'rgba(255, 255, 255, 0.4)',
                     }}
                   >
                     <Text
                       style={{
                         fontSize: 10,
                         fontWeight: '800',
-                        color: textColors.levelBadgeText,
+                        color: '#FFFFFF',
                         letterSpacing: 0.5,
-                        textShadowColor: textColors.levelBadgeText === '#FFFFFF' ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.5)',
+                        textShadowColor: 'rgba(0, 0, 0, 0.3)',
                         textShadowOffset: { width: 0, height: 1 },
-                        textShadowRadius: 2,
+                        textShadowRadius: 3,
                       }}
                     >
                       LEVEL {userLevel}
                     </Text>
-                  </LinearGradient>
+                  </View>
 
-                  {/* Total XP Display */}
+                  {/* Total XP Display - Consistent white style */}
                   <View
                     style={{
-                      backgroundColor: textColors.xpBadgeBg,
+                      backgroundColor: 'rgba(255, 255, 255, 0.3)',
                       borderRadius: 16,
                       paddingHorizontal: 10,
                       paddingVertical: 5,
                       borderWidth: 1,
-                      borderColor: textColors.xpText === '#374151' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.3)',
+                      borderColor: 'rgba(255, 255, 255, 0.4)',
                     }}
                   >
                     <Text
                       style={{
                         fontSize: 10,
                         fontWeight: '700',
-                        color: textColors.xpText,
-                        textShadowColor: textColors.xpText === '#FFFFFF' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.5)',
+                        color: '#FFFFFF',
+                        textShadowColor: 'rgba(0, 0, 0, 0.3)',
                         textShadowOffset: { width: 0, height: 1 },
-                        textShadowRadius: 2,
+                        textShadowRadius: 3,
                       }}
                     >
                       {optimisticTotalXP.toLocaleString()} XP
@@ -318,7 +349,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             </View>
           )}
 
-          {/* Stats Grid - NOW WITH DARKER THEME */}
+          {/* Stats Grid */}
           <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
             <StatsCard label="Streak" value={totalStreak} image="streak" subtitle="days" isStreak={true} streakValue={totalStreak} tierTheme={tierTheme} textColor={textColors.secondary} />
             <StatsCard label="Active" value={activeHabits} image="active" subtitle="Quests" tierTheme={tierTheme} textColor={textColors.secondary} />
@@ -342,7 +373,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             </View>
           )}
         </View>
-      </LinearGradient>
+      </GradientContainer>
     </Animated.View>
   );
 };

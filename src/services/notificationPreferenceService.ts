@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import * as Notifications from 'expo-notifications';
 import { NotificationService } from './notificationService';
 import { HabitService } from './habitService';
+import { NotificationScheduleService } from './notificationScheduleService';
 
 export interface NotificationPreferences {
   globalEnabled: boolean;
@@ -173,11 +174,17 @@ export class NotificationPreferencesService {
 
       for (const habit of habits) {
         if (habit.notifications && habit.notificationTime) {
-          await NotificationService.scheduleSmartHabitNotifications(habit, userId);
+          // ❌ REMOVE LOCAL SCHEDULING
+          // await NotificationService.scheduleSmartHabitNotifications(habit, userId);
+
+          // ✅ ONLY update database
+          const timeWithSeconds = habit.notificationTime.includes(':00:') ? habit.notificationTime : `${habit.notificationTime}:00`;
+
+          await NotificationScheduleService.scheduleHabitNotification(habit.id, userId, timeWithSeconds, true);
         }
       }
 
-      console.log(`Re-scheduled notifications for ${habits.filter((h) => h.notifications).length} habits`);
+      console.log(`Re-scheduled ${habits.filter((h) => h.notifications).length} habits in database`);
     } catch (error) {
       console.error('Error re-scheduling notifications:', error);
       throw error;

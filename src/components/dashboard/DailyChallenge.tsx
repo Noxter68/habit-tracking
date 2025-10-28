@@ -83,7 +83,12 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
 
   const theme = tierTheme || defaultTheme;
 
-  // Glow animation when complete only
+  // Extract accent color with opacity variations
+  const accentColor = theme.accent;
+  const glowColor = `${accentColor}80`; // 50% opacity
+  const progressColor = `${accentColor}E6`; // 90% opacity
+
+  // Glow animation when complete - using tier accent color
   React.useEffect(() => {
     if (isComplete && !isCollected) {
       glowOpacity.value = withTiming(0.6, {
@@ -139,7 +144,6 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
       const success = await XPService.collectDailyChallenge(userId);
 
       if (success) {
-        // Update local state immediately
         setIsCollected(true);
         setShowXPBadge(true);
 
@@ -159,11 +163,9 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
 
         badgeOpacity.value = withSequence(withTiming(1, { duration: 200 }), withTiming(1, { duration: 600 }), withTiming(0, { duration: 400 }));
 
-        // Call parent callback after animation starts
         setTimeout(() => {
-          onCollect(20); // Triggers optimistic update
+          onCollect(20);
 
-          // Check level up
           if (currentLevelXP + 20 >= xpForNextLevel && onLevelUp) {
             setTimeout(() => {
               onLevelUp();
@@ -204,7 +206,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
 
   return (
     <View style={{ position: 'relative' }}>
-      {/* Floating XP Badge */}
+      {/* Floating XP Badge - using tier accent color */}
       {showXPBadge && (
         <Animated.View
           style={[
@@ -217,13 +219,13 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
               zIndex: 10,
               flexDirection: 'row',
               alignItems: 'center',
-              backgroundColor: 'rgba(100, 200, 150, 0.95)',
+              backgroundColor: `${accentColor}F2`, // 95% opacity
               paddingHorizontal: 14,
               paddingVertical: 8,
               borderRadius: 20,
               borderWidth: 2,
-              borderColor: 'rgba(100, 200, 150, 1)',
-              shadowColor: 'rgba(100, 200, 150, 1)',
+              borderColor: accentColor,
+              shadowColor: accentColor,
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.6,
               shadowRadius: 12,
@@ -248,7 +250,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
         </Animated.View>
       )}
 
-      {/* Glow effect when complete */}
+      {/* Glow effect when complete - using tier accent color */}
       {isComplete && !isCollected && (
         <Animated.View
           style={[
@@ -259,7 +261,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
               right: -4,
               bottom: -4,
               borderRadius: 22,
-              backgroundColor: 'rgba(100, 200, 150, 0.3)',
+              backgroundColor: `${accentColor}4D`, // 30% opacity
             },
             animatedGlowStyle,
           ]}
@@ -268,25 +270,14 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
 
       <Pressable onPress={handleCollect} disabled={!isComplete || isCollected || isAnimating}>
         <Animated.View style={[animatedButtonStyle, cardAnimatedStyle]}>
-          <LinearGradient
-            colors={
-              isCollected
-                ? ['rgba(255, 255, 255, 0.1)', 'rgba(255, 255, 255, 0.05)']
-                : isComplete
-                ? ['rgba(100, 200, 150, 0.25)', 'rgba(100, 200, 150, 0.15)']
-                : ['rgba(255, 255, 255, 0.15)', 'rgba(255, 255, 255, 0.08)']
-            }
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
+          <View
             style={{
-              borderRadius: 18,
-              padding: 14,
+              backgroundColor: 'rgba(255, 255, 255, 0.15)',
+              borderRadius: 16,
+              padding: 12,
+              paddingBottom: 10,
               borderWidth: 1,
-              borderColor: isComplete && !isCollected ? 'rgba(100, 200, 150, 0.4)' : 'rgba(255, 255, 255, 0.2)',
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.15,
-              shadowRadius: 8,
+              borderColor: isComplete && !isCollected ? `${accentColor}66` : 'rgba(255, 255, 255, 0.2)', // 40% opacity for complete
             }}
           >
             {/* Header */}
@@ -295,26 +286,26 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                marginBottom: 10,
+                marginBottom: 8,
               }}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                {/* Flask Icon - BIGGER (no bounce animation) */}
-                <View style={{ width: 36, height: 36 }}>
+                {/* Flask Icon - themed with tier accent */}
+                <View style={{ width: 38, height: 38 }}>
                   <View
                     style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 18,
-                      backgroundColor: 'rgba(100, 200, 150, 0.15)',
+                      width: 38,
+                      height: 38,
+                      borderRadius: 19,
+                      backgroundColor: `${accentColor}26`, // 15% opacity
                       alignItems: 'center',
                       justifyContent: 'center',
                       borderWidth: 1,
-                      borderColor: 'rgba(100, 200, 150, 0.25)',
+                      borderColor: `${accentColor}40`, // 25% opacity
                     }}
                   >
                     {isCollected ? (
-                      <CheckCircle2 size={20} color="rgba(150, 220, 180, 0.85)" />
+                      <CheckCircle2 size={22} color={`${accentColor}D9`} />
                     ) : isComplete ? (
                       <Image source={require('../../../assets/interface/consumable-xp.png')} style={{ width: 28, height: 28 }} resizeMode="contain" />
                     ) : (
@@ -326,24 +317,27 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
                 <View>
                   <Text
                     style={{
-                      fontSize: 13,
+                      fontSize: 10,
                       fontWeight: '700',
                       color: '#FFFFFF',
-                      letterSpacing: 0.3,
-                      textShadowColor: 'rgba(0, 0, 0, 0.2)',
+                      letterSpacing: 0.8,
+                      textTransform: 'uppercase',
+                      marginBottom: 2,
+                      textShadowColor: 'rgba(0, 0, 0, 0.3)',
                       textShadowOffset: { width: 0, height: 1 },
-                      textShadowRadius: 2,
+                      textShadowRadius: 3,
                     }}
                   >
                     Daily Challenge
                   </Text>
                   <Text
                     style={{
-                      fontSize: 10,
-                      fontWeight: '600',
-                      color: textColor,
-                      opacity: 0.8,
-                      marginTop: 1,
+                      fontSize: 13,
+                      fontWeight: '700',
+                      color: '#FFFFFF',
+                      textShadowColor: 'rgba(0, 0, 0, 0.3)',
+                      textShadowOffset: { width: 0, height: 1 },
+                      textShadowRadius: 3,
                     }}
                   >
                     {isCollected ? 'Collected!' : isComplete ? 'Complete!' : `${totalTasksToday - completedToday} tasks to go`}
@@ -354,12 +348,12 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
               {/* XP Reward Badge */}
               <View
                 style={{
-                  backgroundColor: isComplete && !isCollected ? 'rgba(100, 200, 150, 0.3)' : 'rgba(255, 255, 255, 0.2)',
-                  paddingHorizontal: 10,
-                  paddingVertical: 5,
+                  backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                  paddingHorizontal: 11,
+                  paddingVertical: 6,
                   borderRadius: 12,
                   borderWidth: 1,
-                  borderColor: 'rgba(255, 255, 255, 0.3)',
+                  borderColor: 'rgba(255, 255, 255, 0.4)',
                 }}
               >
                 <Text
@@ -367,9 +361,9 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
                     fontSize: 11,
                     fontWeight: '800',
                     color: '#FFFFFF',
-                    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+                    textShadowColor: 'rgba(0, 0, 0, 0.3)',
                     textShadowOffset: { width: 0, height: 1 },
-                    textShadowRadius: 2,
+                    textShadowRadius: 3,
                   }}
                 >
                   {isCollected ? '✓' : '+20 XP'}
@@ -377,27 +371,31 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
               </View>
             </View>
 
-            {/* Progress Bar */}
+            {/* Progress Bar - themed with tier accent */}
             {!isCollected && (
               <View
                 style={{
-                  height: 6,
-                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                  height: 8,
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
                   borderRadius: 6,
                   overflow: 'hidden',
-                  marginBottom: 10,
                   borderWidth: 1,
-                  borderColor: 'rgba(255, 255, 255, 0.2)',
+                  borderColor: 'rgba(255, 255, 255, 0.25)',
+                  marginBottom: 6,
                 }}
               >
                 <LinearGradient
-                  colors={isComplete ? ['rgba(100, 200, 150, 0.9)', 'rgba(80, 180, 130, 0.7)'] : ['rgba(255, 255, 255, 0.9)', 'rgba(255, 255, 255, 0.7)']}
+                  colors={isComplete ? [progressColor, `${accentColor}B3`] : ['rgba(255, 255, 255, 0.95)', 'rgba(255, 255, 255, 0.75)']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={{
                     width: `${Math.min(completionPercentage, 100)}%`,
                     height: '100%',
                     borderRadius: 6,
+                    shadowColor: isComplete ? accentColor : '#FFFFFF',
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.5,
+                    shadowRadius: 4,
                   }}
                 />
               </View>
@@ -409,53 +407,62 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'space-between',
+                marginTop: 6,
               }}
             >
-              <Text
+              {/* Quest count badge - matching XP badge style */}
+              <View
                 style={{
-                  fontSize: 11,
-                  fontWeight: '600',
-                  color: textColor,
-                  opacity: 0.9,
+                  backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                  paddingHorizontal: 12,
+                  paddingVertical: 4,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: 'rgba(255, 255, 255, 0.4)',
                 }}
               >
-                {isCollected ? 'See you tomorrow!' : `${completedToday} / ${totalTasksToday} Quests`}
-              </Text>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontWeight: '800',
+                    color: '#FFFFFF',
+                    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+                    textShadowOffset: { width: 0, height: 1 },
+                    textShadowRadius: 3,
+                  }}
+                >
+                  {isCollected ? 'See you tomorrow!' : `${completedToday} / ${totalTasksToday} Quests`}
+                </Text>
+              </View>
 
               {isComplete && !isCollected && (
-                <LinearGradient
-                  colors={['rgba(100, 200, 150, 0.35)', 'rgba(80, 180, 130, 0.25)']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
+                <View
                   style={{
-                    paddingHorizontal: 14,
-                    paddingVertical: 6,
-                    borderRadius: 14,
-                    borderWidth: 1.5,
-                    borderColor: 'rgba(100, 200, 150, 0.5)',
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 4,
+                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                    paddingHorizontal: 12,
+                    paddingVertical: 4,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: 'rgba(255, 255, 255, 0.4)',
                   }}
                 >
                   <Text
                     style={{
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: '800',
                       color: '#FFFFFF',
-                      letterSpacing: 0.5,
+                      letterSpacing: 0.6,
                       textShadowColor: 'rgba(0, 0, 0, 0.3)',
                       textShadowOffset: { width: 0, height: 1 },
-                      textShadowRadius: 2,
+                      textShadowRadius: 3,
                     }}
                   >
                     CLAIM
                   </Text>
-                </LinearGradient>
+                </View>
               )}
             </View>
-          </LinearGradient>
+          </View>
         </Animated.View>
       </Pressable>
 

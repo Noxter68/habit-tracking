@@ -9,6 +9,7 @@ import { useStats } from './StatsContext';
 import { supabase } from '@/lib/supabase';
 import { getTodayString } from '@/utils/dateHelpers';
 import { NotificationService } from '@/services/notificationService';
+import { NotificationScheduleService } from '@/services/notificationScheduleService';
 
 interface ToggleTaskResult {
   success: boolean;
@@ -100,6 +101,8 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     await loadHabits();
   }, [user]);
 
+  // In src/context/HabitContext.tsx, update the addHabit function:
+
   const addHabit = useCallback(
     async (habitData: Habit | Partial<Habit>) => {
       if (!user) {
@@ -111,7 +114,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         setLoading(true);
 
         const newHabit: Habit = {
-          id: habitData.id || Date.now().toString(),
+          id: habitData.id || Date.now().toString(), // ⚠️ Temporary - will be replaced by database UUID
           name: habitData.name || 'New Habit',
           type: habitData.type || 'good',
           category: habitData.category || 'health',
@@ -130,12 +133,24 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           createdAt: habitData.createdAt || new Date(),
         };
 
-        if (newHabit.notifications && newHabit.notificationTime) {
-          await NotificationService.scheduleSmartHabitNotifications(newHabit, user.id);
-        }
-
-        // Create in database
+        // ✅ Create in database FIRST to get the real UUID
         const createdHabit = await HabitService.createHabit(newHabit, user.id);
+
+        // ✅ NOW schedule notifications with the real UUID from database
+        if (createdHabit.notifications && createdHabit.notificationTime) {
+          // Schedule local device notifications
+          // await NotificationService.scheduleSmartHabitNotifications(createdHabit, user.id);
+
+          // Save to database for backend notifications
+          const timeWithSeconds = createdHabit.notificationTime.includes(':00:') ? createdHabit.notificationTime : `${createdHabit.notificationTime}:00`;
+
+          await NotificationScheduleService.scheduleHabitNotification(
+            createdHabit.id, // ✅ Use the real UUID from database
+            user.id,
+            timeWithSeconds,
+            true
+          );
+        }
 
         // Add to local state
         setHabits([createdHabit, ...habits]);
@@ -149,8 +164,6 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         } else {
           Alert.alert('Error', error.message || 'Failed to create habit. Please try again.');
         }
-
-        throw error;
       } finally {
         setLoading(false);
       }

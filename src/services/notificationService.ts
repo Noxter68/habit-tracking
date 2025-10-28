@@ -169,18 +169,34 @@ export class NotificationService {
 
   private static async scheduleCustomDaysSmartNotifications(habit: Habit, userId: string, hours: number, minutes: number) {
     const dayMap: { [key: string]: number } = {
-      Sunday: 1,
-      Monday: 2,
-      Tuesday: 3,
-      Wednesday: 4,
-      Thursday: 5,
-      Friday: 6,
-      Saturday: 7,
+      Sunday: 0,
+      Monday: 1,
+      Tuesday: 2,
+      Wednesday: 3,
+      Thursday: 4,
+      Friday: 5,
+      Saturday: 6,
     };
 
+    const now = new Date();
+
     for (const day of habit.customDays!) {
-      const weekday = dayMap[day];
-      if (!weekday) continue;
+      const targetDayOfWeek = dayMap[day];
+      if (targetDayOfWeek === undefined) continue;
+
+      // Calculate next occurrence of this day of week
+      const scheduledTime = new Date();
+      scheduledTime.setHours(hours, minutes, 0, 0);
+
+      const currentDayOfWeek = now.getDay();
+      let daysUntilTarget = targetDayOfWeek - currentDayOfWeek;
+
+      // If target day is today but time has passed, or target day is in the past this week
+      if (daysUntilTarget < 0 || (daysUntilTarget === 0 && scheduledTime <= now)) {
+        daysUntilTarget += 7; // Schedule for next week
+      }
+
+      scheduledTime.setDate(now.getDate() + daysUntilTarget);
 
       const message = NotificationMessages.habitReminder({
         habitName: habit.name,
@@ -189,6 +205,8 @@ export class NotificationService {
         currentStreak: habit.currentStreak,
         type: habit.type,
       });
+
+      console.log(`📅 Scheduling ${day} notification for ${habit.name} at ${scheduledTime.toLocaleString()}`);
 
       await Notifications.scheduleNotificationAsync({
         identifier: `${habit.id}_${day}`,
@@ -204,7 +222,7 @@ export class NotificationService {
           categoryIdentifier: 'habit_reminder',
         },
         trigger: {
-          weekday,
+          weekday: targetDayOfWeek + 1, // Expo uses 1-7 (Sunday = 1)
           hour: hours,
           minute: minutes,
           repeats: true,
@@ -213,7 +231,6 @@ export class NotificationService {
       });
     }
   }
-
   /**
    * Generate dynamic notification content based on current task status
    * Call this when app is in foreground to update notification content

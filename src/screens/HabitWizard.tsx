@@ -200,10 +200,6 @@ const HabitWizard: React.FC = () => {
 
       await addHabit(newHabit);
 
-      if (newHabit.notifications && newHabit.notificationTime && user) {
-        await NotificationService.scheduleSmartHabitNotifications(newHabit, user?.id);
-      }
-
       navigation.replace('MainTabs');
     } catch (error) {
       setIsCreating(false);

@@ -88,13 +88,13 @@ export const achievementTierThemes: Record<
     backgroundGradient: ['#fffbeb', '#fef3c7', '#fde68a'], // Light amber/gold tones
   },
   'Mythic Glory': {
-    gradient: ['#6366f1', '#4f46e5', '#4338ca'],
-    accent: '#4f46e5',
+    gradient: ['#1a1625', '#2d1b3d', '#4338ca', '#6366f1'], // Deep dark purple to bright indigo
+    accent: '#8b5cf6',
     gemName: 'Obsidian',
     texture: require('../../assets/interface/progressBar/obsidian-texture.png'),
     streakImage: require('../../assets/interface/streak-obsidian.png'),
     questImage: require('../../assets/interface/quest-obsidian.png'),
-    backgroundGradient: ['#eef2ff', '#e0e7ff', '#c7d2fe'], // Light indigo tones
+    backgroundGradient: ['#0f0a1a', '#1a1625', '#2d1b3d'], // Very dark, mysterious tones
   },
 };
 

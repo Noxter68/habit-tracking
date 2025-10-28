@@ -55,7 +55,7 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
         {/* Subtle gradient background */}
         <LinearGradient colors={[tierTheme.gradient[0], tierTheme.gradient[1]]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-2xl`}>
           {/* Texture overlay - more subtle */}
-          <ImageBackground source={tierTheme.texture} style={tw`rounded-2xl`} resizeMode="cover" imageStyle={{ opacity: 0.08 }}>
+          <ImageBackground source={tierTheme.texture} style={tw`rounded-2xl`} resizeMode="cover" imageStyle={{ opacity: 0.1 }}>
             <View style={tw`p-5`}>
               {/* Top Section: Title & Badge - Simplified */}
               <View style={tw`flex-row items-start justify-between mb-5`}>
