@@ -42,7 +42,7 @@ const StatsScreen: React.FC = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#FAF9F7' }}>
-      <ScrollView style={{ flex: 1, marginTop: 32 }} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#059669" />}>
+      <ScrollView style={{ flex: 1, marginTop: 45 }} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#059669" />}>
         {/* Elegant Header Section - Jade Green */}
         <LinearGradient colors={['#d1fae5', '#a7f3d0', '#6ee7b7']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingHorizontal: 20, paddingTop: 40, paddingBottom: 20 }}>
           <View style={{ alignItems: 'center' }}>
@@ -90,18 +90,18 @@ const StatsScreen: React.FC = () => {
         {/* Analytics Section Header */}
         <View style={{ paddingHorizontal: 24, marginBottom: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <BarChart3 size={18} color="#9333EA" />
-            <Text style={{ fontSize: 13, fontWeight: '800', color: '#9333EA', letterSpacing: 1.5 }}>ANALYTICS</Text>
+            <BarChart3 size={18} color="#60a5fa" />
+            <Text style={{ fontSize: 13, fontWeight: '800', color: '#60a5fa', letterSpacing: 1.5 }}>ANALYTICS</Text>
           </View>
         </View>
 
         {/* Premium Analytics Section */}
-        {/* <View style={{ paddingHorizontal: 24, marginBottom: 28 }}>
+        <View style={{ paddingHorizontal: 24, marginBottom: 28 }}>
           <PremiumStatsSection habits={safeHabits} selectedRange={selectedRange} onRangeChange={setSelectedRange} />
-        </View> */}
+        </View>
 
         {/* Bottom Spacing */}
-        <View style={{ height: 40 }} />
+        <View style={{ height: 80 }} />
       </ScrollView>
     </View>
   );
