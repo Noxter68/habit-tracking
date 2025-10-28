@@ -22,17 +22,10 @@ import NotificationSetup from '../components/wizard/NotificationSetup';
 import ProgressIndicator from '../components/ProgressIndicator';
 import { getCategoryName } from '../utils/habitHelpers';
 import { NotificationService } from '../services/notificationService';
-import { getCustomIconComponent } from '../components/wizard/CustomHabitCreator';
 import { NotificationPreferencesService } from '@/services/notificationPreferenceService';
 import { useAuth } from '@/context/AuthContext';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'HabitWizard'>;
-
-interface CustomTask {
-  id: string;
-  name: string;
-  description: string;
-}
 
 const HabitWizard: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -42,11 +35,11 @@ const HabitWizard: React.FC = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [previousCategory, setPreviousCategory] = useState<string | undefined>();
 
-  // Custom habit state
+  // Custom habit state - ✅ SIMPLIFIED: Just string array
   const [isCustomHabit, setIsCustomHabit] = useState(false);
   const [customHabitName, setCustomHabitName] = useState('');
   const [customHabitIcon, setCustomHabitIcon] = useState('');
-  const [customTasks, setCustomTasks] = useState<CustomTask[]>([{ id: `custom-task-1`, name: '', description: '' }]);
+  const [customTasks, setCustomTasks] = useState<string[]>(['']); // ✅ Changed from CustomTask[] to string[]
 
   const [habitData, setHabitData] = useState<Partial<Habit>>({
     frequency: 'daily',
@@ -122,15 +115,15 @@ const HabitWizard: React.FC = () => {
       return;
     }
 
-    // Step 4: Custom Task Creation (3 tasks)
+    // Step 4: Custom Task Creation - ✅ SIMPLIFIED
     if (step === 4 && isCustomHabit) {
-      const validTasks = customTasks.filter((t) => t.name.trim() !== '');
+      const validTasks = customTasks.filter((t) => t.trim() !== '');
       if (validTasks.length === 0) {
         Alert.alert('Tasks required', 'Please create at least one task for your habit');
         return;
       }
-      const taskIds = validTasks.map((t) => t.id);
-      setHabitData((prev) => ({ ...prev, tasks: taskIds }));
+      // ✅ Store task names directly
+      setHabitData((prev) => ({ ...prev, tasks: validTasks }));
       setStep(5);
       return;
     }
@@ -159,23 +152,19 @@ const HabitWizard: React.FC = () => {
     try {
       const habitName = isCustomHabit ? customHabitName : getCategoryName(habitData.category!, habitData.type!);
 
-      const tasks = isCustomHabit
-        ? customTasks
-            .filter((t) => t.name.trim() !== '')
-            .map((t) => ({
-              id: t.id,
-              name: t.name,
-              description: t.description,
-              icon: getCustomIconComponent(customHabitIcon),
-            }))
-        : habitData.tasks || [];
+      // ✅ SIMPLIFIED: Both habit types now store tasks the same way
+      // For custom habits, tasks are already stored as string[] in habitData.tasks
+      // For pre-defined habits, tasks are also string[]
+      const tasks = habitData.tasks || [];
+
+      console.log('📝 Creating habit with tasks:', tasks);
 
       const newHabit: Habit = {
         id: Date.now().toString(),
         name: habitName,
         type: habitData.type || 'good',
         category: isCustomHabit ? 'custom' : habitData.category || 'health',
-        tasks: tasks,
+        tasks: tasks, // ✅ Simple string array for both types
         dailyTasks: {},
         frequency: habitData.frequency || 'daily',
         notifications: habitData.notifications || false,
@@ -219,6 +208,7 @@ const HabitWizard: React.FC = () => {
     } catch (error) {
       setIsCreating(false);
       Alert.alert('Error', 'Failed to create habit. Please try again.');
+      console.error('Error creating habit:', error);
     }
   };
 
@@ -228,7 +218,7 @@ const HabitWizard: React.FC = () => {
         setIsCustomHabit(false);
         setCustomHabitName('');
         setCustomHabitIcon('');
-        setCustomTasks([{ id: `custom-task-1`, name: '', description: '' }]);
+        setCustomTasks(['']); // ✅ Reset to empty string array
         setStep(2);
       } else if (step > 1) {
         setStep(step - 1);
@@ -379,7 +369,7 @@ const HabitWizard: React.FC = () => {
           <ProgressIndicator current={step} total={totalSteps} />
         </View>
 
-        {/* Content - NO KEY PROP TO PREVENT REMOUNTING */}
+        {/* Content */}
         <ScrollView ref={scrollViewRef} style={tw`flex-1`} showsVerticalScrollIndicator={false} contentContainerStyle={tw`pb-4 mt-4`}>
           <View style={tw`flex-1`}>{renderStep()}</View>
         </ScrollView>

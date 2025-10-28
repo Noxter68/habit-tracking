@@ -651,4 +651,82 @@ export class HolidayModeService {
   static getDaysRemaining(endDate: string): number {
     return calculateDaysRemaining(endDate);
   }
+
+  /**
+   * Check if a specific date is within a holiday period
+   * Returns the holiday period if date is frozen, null otherwise
+   */
+  static isDateInHoliday(date: Date, activeHoliday: HolidayPeriod | null, habitId?: string, taskIds?: string[]): boolean {
+    if (!activeHoliday) return false;
+
+    // Convert date to YYYY-MM-DD format for comparison
+    const dateStr = date.toISOString().split('T')[0];
+
+    // Check if date is within the holiday period
+    const isInPeriod = dateStr >= activeHoliday.startDate && dateStr <= activeHoliday.endDate;
+
+    if (!isInPeriod) return false;
+
+    // CASE 1: All habits frozen
+    if (activeHoliday.appliesToAll) {
+      return true;
+    }
+
+    // CASE 2: Specific habits frozen
+    if (habitId && activeHoliday.frozenHabits?.includes(habitId)) {
+      return true;
+    }
+
+    // CASE 3: Specific tasks frozen
+    if (habitId && taskIds && activeHoliday.frozenTasks) {
+      const habitFrozenTasks = activeHoliday.frozenTasks.find((ft: any) => ft.habitId === habitId);
+
+      if (habitFrozenTasks) {
+        // Check if ALL provided tasks are frozen
+        const allTasksFrozen = taskIds.every((taskId) => habitFrozenTasks.taskIds.includes(taskId));
+        return allTasksFrozen;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Get holiday info for a specific date
+   */
+  static getHolidayInfoForDate(
+    date: Date,
+    activeHoliday: HolidayPeriod | null,
+    habitId?: string
+  ): {
+    isHoliday: boolean;
+    holidayType: 'all' | 'habit' | 'tasks' | null;
+    message: string | null;
+  } {
+    if (!this.isDateInHoliday(date, activeHoliday, habitId)) {
+      return { isHoliday: false, holidayType: null, message: null };
+    }
+
+    if (activeHoliday?.appliesToAll) {
+      return {
+        isHoliday: true,
+        holidayType: 'all',
+        message: 'All habits paused - Streaks preserved',
+      };
+    }
+
+    if (habitId && activeHoliday?.frozenHabits?.includes(habitId)) {
+      return {
+        isHoliday: true,
+        holidayType: 'habit',
+        message: 'This habit is paused - Streak preserved',
+      };
+    }
+
+    return {
+      isHoliday: true,
+      holidayType: 'tasks',
+      message: 'Some tasks paused - Partial tracking active',
+    };
+  }
 }

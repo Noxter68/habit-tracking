@@ -3,14 +3,18 @@ import React, { useMemo } from 'react';
 import { View, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeInUp, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import { Umbrella } from 'lucide-react-native';
 import tw from '../../lib/tailwind';
 import { Habit } from '../../types';
+import { HolidayPeriod } from '@/types/holiday.types';
+import { HolidayModeService } from '@/services/holidayModeService';
 import { StatsIcons } from '../icons/StatsIcons';
 
 interface DynamicCalendarHeaderProps {
   selectedHabit: Habit | null;
   selectedDate: Date;
   getLocalDateString: (date: Date) => string;
+  activeHoliday?: HolidayPeriod | null;
 }
 
 interface DateStats {
@@ -19,6 +23,7 @@ interface DateStats {
   partial: boolean;
   tasksCompleted: number;
   totalTasks: number;
+  isHoliday: boolean;
 }
 
 // Separate component for stat item to prevent re-renders
@@ -82,7 +87,7 @@ const ProgressIndicator = React.memo(({ percentage }: { percentage: number }) =>
 
 ProgressIndicator.displayName = 'ProgressIndicator';
 
-const DynamicCalendarHeader: React.FC<DynamicCalendarHeaderProps> = ({ selectedHabit, selectedDate, getLocalDateString }) => {
+const DynamicCalendarHeader: React.FC<DynamicCalendarHeaderProps> = ({ selectedHabit, selectedDate, getLocalDateString, activeHoliday = null }) => {
   // Memoize date calculations
   const dateInfo = useMemo(() => {
     const today = new Date();
@@ -107,15 +112,19 @@ const DynamicCalendarHeader: React.FC<DynamicCalendarHeaderProps> = ({ selectedH
   // Calculate stats for selected date
   const dateStats = useMemo((): DateStats => {
     if (!selectedHabit) {
-      return { percentage: 0, completed: false, partial: false, tasksCompleted: 0, totalTasks: 0 };
+      return { percentage: 0, completed: false, partial: false, tasksCompleted: 0, totalTasks: 0, isHoliday: false };
     }
 
     const dateString = getLocalDateString(selectedDate);
     const dayTasks = selectedHabit.dailyTasks[dateString];
     const totalTasks = selectedHabit.tasks.length;
 
+    // ✅ Check if this date is in a holiday period
+    const taskIds = selectedHabit.tasks.map((t) => t.id);
+    const isHoliday = activeHoliday ? HolidayModeService.isDateInHoliday(selectedDate, activeHoliday, selectedHabit.id, taskIds) : false;
+
     if (!dayTasks) {
-      return { percentage: 0, completed: false, partial: false, tasksCompleted: 0, totalTasks };
+      return { percentage: 0, completed: false, partial: false, tasksCompleted: 0, totalTasks, isHoliday };
     }
 
     const tasksCompleted = dayTasks.completedTasks.length;
@@ -127,8 +136,9 @@ const DynamicCalendarHeader: React.FC<DynamicCalendarHeaderProps> = ({ selectedH
       partial: percentage > 0 && percentage < 100,
       tasksCompleted,
       totalTasks,
+      isHoliday,
     };
-  }, [selectedHabit, selectedDate, getLocalDateString]);
+  }, [selectedHabit, selectedDate, getLocalDateString, activeHoliday]);
 
   // Calculate monthly stats
   const monthlyAchievements = useMemo(() => {
@@ -176,20 +186,27 @@ const DynamicCalendarHeader: React.FC<DynamicCalendarHeaderProps> = ({ selectedH
           <Text style={tw`text-sm text-white/60`}>
             {dateDisplay}
             {dateInfo.isToday && ' • Today'}
+            {dateStats.isHoliday && ' • Holiday'}
           </Text>
         </View>
 
         {/* Progress Circle */}
         <Animated.View entering={FadeInUp.duration(200).springify()} style={tw`relative`}>
           <View style={tw`w-16 h-16 rounded-full bg-sand/10 items-center justify-center`}>
-            <Text style={tw`text-white font-bold text-lg`}>{dateStats.percentage}%</Text>
-            {dateStats.tasksCompleted > 0 && (
-              <Text style={tw`text-white/60 text-xs`}>
-                {dateStats.tasksCompleted}/{dateStats.totalTasks}
-              </Text>
+            {dateStats.isHoliday ? (
+              <Umbrella size={24} color="#ffffff" strokeWidth={2} />
+            ) : (
+              <>
+                <Text style={tw`text-white font-bold text-lg`}>{dateStats.percentage}%</Text>
+                {dateStats.tasksCompleted > 0 && (
+                  <Text style={tw`text-white/60 text-xs`}>
+                    {dateStats.tasksCompleted}/{dateStats.totalTasks}
+                  </Text>
+                )}
+              </>
             )}
           </View>
-          {dateStats.completed && (
+          {dateStats.completed && !dateStats.isHoliday && (
             <View style={tw`absolute -bottom-1 -right-1 bg-green-500 rounded-full p-0.5`}>
               <StatsIcons.CheckCircle size={10} color="#ffffff" />
             </View>
@@ -204,8 +221,21 @@ const DynamicCalendarHeader: React.FC<DynamicCalendarHeaderProps> = ({ selectedH
         <StatItem icon={<StatsIcons.Calendar size={14} color="#a78bfa" />} iconColor="#a78bfa" label="Month" value={monthlyAchievements} />
       </Animated.View>
 
-      {/* Progress Bar Section */}
-      {dateStats.percentage > 0 && (
+      {/* 🏖️ Holiday Message */}
+      {dateStats.isHoliday && (
+        <Animated.View entering={FadeInUp.delay(200).duration(400).springify()} style={tw`mt-2.5`}>
+          <View style={tw`bg-sky-500/20 rounded-lg py-2 px-3 border border-sky-400/30`}>
+            <View style={tw`flex-row items-center justify-center`}>
+              <Umbrella size={14} color="#ffffff" strokeWidth={2.5} />
+              <Text style={tw`text-white/95 text-sm ml-2 font-bold tracking-wide`}>On Holiday - Streak Protected</Text>
+            </View>
+            <Text style={tw`text-white/70 text-xs text-center mt-1`}>Enjoy your break! Your progress is safe.</Text>
+          </View>
+        </Animated.View>
+      )}
+
+      {/* Progress Bar Section - Only show if NOT holiday */}
+      {!dateStats.isHoliday && dateStats.percentage > 0 && (
         <Animated.View entering={FadeIn.duration(300)} style={tw`mt-2.5`}>
           <ProgressIndicator percentage={dateStats.percentage} />
 
@@ -233,8 +263,8 @@ const DynamicCalendarHeader: React.FC<DynamicCalendarHeaderProps> = ({ selectedH
         </Animated.View>
       )}
 
-      {/* Missed Day Message */}
-      {dateStats.percentage === 0 && !dateInfo.beforeCreation && dateInfo.isPastDay && (
+      {/* Missed Day Message - Only show if NOT holiday */}
+      {!dateStats.isHoliday && dateStats.percentage === 0 && !dateInfo.beforeCreation && dateInfo.isPastDay && (
         <Animated.View entering={FadeInUp.delay(200).duration(400).springify()} style={tw`mt-2.5`}>
           <View style={tw`bg-red-500/10 rounded-lg py-1.5 px-3`}>
             <View style={tw`flex-row items-center justify-center`}>

@@ -186,7 +186,7 @@ export class NotificationPreferencesService {
 
   /**
    * Check if this is the user's first habit and request permissions
-   * Should be called when creating a new habit
+   * Should be called AFTER creating a new habit
    */
   static async handleFirstHabitCreation(userId: string): Promise<{
     isFirstHabit: boolean;
@@ -196,7 +196,7 @@ export class NotificationPreferencesService {
     try {
       // Check if user has any existing habits
       const habits = await HabitService.fetchHabits(userId);
-      const isFirstHabit = habits.length === 0;
+      const isFirstHabit = habits.length === 1; // ✅ Changed from === 0 to === 1
 
       if (!isFirstHabit) {
         return {
@@ -221,12 +221,17 @@ export class NotificationPreferencesService {
       // Request permission for first habit
       const permissionGranted = await NotificationService.registerForPushNotifications();
 
-      // Update preferences
-      await this.updatePreferences(userId, {
-        globalEnabled: permissionGranted,
-        permissionStatus: permissionGranted ? 'granted' : 'denied',
-        lastPermissionRequest: new Date().toISOString(),
-      });
+      // Update preferences with proper error handling
+      try {
+        await this.updatePreferences(userId, {
+          globalEnabled: permissionGranted,
+          permissionStatus: permissionGranted ? 'granted' : 'denied',
+          lastPermissionRequest: new Date().toISOString(),
+        });
+      } catch (updateError) {
+        console.error('Error updating notification preferences:', updateError);
+        // Don't throw - the habit was created successfully
+      }
 
       return {
         isFirstHabit: true,
@@ -235,6 +240,7 @@ export class NotificationPreferencesService {
       };
     } catch (error) {
       console.error('Error handling first habit creation:', error);
+      // Return safe defaults instead of throwing
       return {
         isFirstHabit: false,
         permissionRequested: false,

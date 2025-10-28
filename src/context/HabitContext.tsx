@@ -297,7 +297,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
 
         // --- 5. Update local state with backend truth
-        const actualCompletedTasks = result.completedTasks || optimisticCompletedTasks;
+        const actualCompletedTasks = Array.isArray(result.completedTasks) ? result.completedTasks : [];
         const actualAllCompleted = result.allTasksComplete;
 
         const updatedCompletedDays = actualAllCompleted ? [...habit.completedDays, date].filter((v, i, a) => a.indexOf(v) === i).sort() : habit.completedDays.filter((d) => d !== date);

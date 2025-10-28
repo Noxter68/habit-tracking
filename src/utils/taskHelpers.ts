@@ -4,39 +4,16 @@ import { getTasksForCategory } from './habitHelpers';
 export interface Task {
   id: string;
   name: string;
+  description?: string;
   duration?: string;
   category?: string;
 }
 
 /**
- * Get task details from task ID
- * Habits store task IDs, we need to fetch the actual task details
+ * Check if a value is a valid task object
  */
-export const getTaskDetails = (taskIds: string[] | Task[], category: string, habitType: 'good' | 'bad'): Task[] => {
-  // If tasks are already objects with details, return them
-  if (taskIds.length > 0 && typeof taskIds[0] === 'object') {
-    return taskIds as Task[];
-  }
-
-  // Get available tasks for this category
-  const availableTasks = getTasksForCategory(category, habitType);
-
-  // Map task IDs to their details
-  return (taskIds as string[]).map((taskId) => {
-    const taskDetail = availableTasks.find((t) => t.id === taskId);
-
-    // If we found the task in available tasks, return it
-    if (taskDetail) {
-      return taskDetail;
-    }
-
-    // Otherwise create a basic task object
-    return {
-      id: taskId,
-      name: `Task ${taskId}`,
-      duration: undefined,
-    };
-  });
+const isValidTaskObject = (task: any): task is Task => {
+  return task && typeof task === 'object' && typeof task.id === 'string' && typeof task.name === 'string';
 };
 
 /**
@@ -52,20 +29,49 @@ export const isTaskIdArray = (tasks: any[]): tasks is string[] => {
 export const normalizeTasks = (tasks: string[] | Task[], category?: string, habitType?: 'good' | 'bad'): Task[] => {
   if (!tasks || tasks.length === 0) return [];
 
-  // If already normalized
-  if (!isTaskIdArray(tasks)) {
-    return tasks;
+  // Already valid task objects - return as is
+  if (tasks.length > 0 && isValidTaskObject(tasks[0])) {
+    return tasks as Task[];
   }
 
-  // If we have category info, try to get task details
-  if (category && habitType) {
-    return getTaskDetails(tasks, category, habitType);
+  // Array of task IDs - need to resolve them
+  if (isTaskIdArray(tasks)) {
+    // If we have category info, try to get task details from predefined tasks
+    if (category && habitType) {
+      return getTaskDetails(tasks, category, habitType);
+    }
+
+    // Otherwise return basic task objects
+    return tasks.map((taskId) => ({
+      id: taskId,
+      name: `Task ${taskId}`,
+      duration: undefined,
+    }));
   }
 
-  // Otherwise return basic task objects
-  return tasks.map((taskId) => ({
-    id: taskId,
-    name: `Task ${taskId}`,
-    duration: undefined,
-  }));
+  // Fallback: filter out any invalid entries and return valid task objects
+  return tasks.filter(isValidTaskObject);
+};
+
+/**
+ * Get task details from task ID
+ * Used when habits store task IDs and we need the full task details
+ */
+export const getTaskDetails = (taskIds: string[], category: string, habitType: 'good' | 'bad'): Task[] => {
+  const availableTasks = getTasksForCategory(category, habitType);
+
+  return taskIds.map((taskId) => {
+    const taskDetail = availableTasks.find((t) => t.id === taskId);
+
+    if (taskDetail) {
+      return taskDetail;
+    }
+
+    // Fallback for unknown task IDs
+    return {
+      id: taskId,
+      name: taskId.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+      duration: undefined,
+    };
+  });
 };

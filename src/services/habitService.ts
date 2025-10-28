@@ -82,13 +82,12 @@ export class HabitService {
       console.log('Toggle result:', result);
 
       return {
-        success: result.success,
-        xpEarned: result.xp_earned || 0,
-        allTasksComplete: result.all_completed || false,
-        alreadyEarnedXP: result.already_earned || false,
-        completedTasks: completedTasks,
-        milestoneReached,
-        streakUpdated: result.streak_updated, // ✅ Use the value from DB
+        success: result.success ?? false,
+        xpEarned: result.xp_earned ?? 0,
+        allTasksComplete: result.all_completed ?? false,
+        alreadyEarnedXP: result.already_earned ?? false,
+        completedTasks,
+        streakUpdated: result.streak_updated ?? 0,
       };
     } catch (error) {
       console.error('Error toggling task:', error);

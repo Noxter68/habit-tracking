@@ -1,9 +1,12 @@
+// src/components/calendar/CalendarGrid.tsx
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
-import { ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Sun } from 'lucide-react-native';
 import tw from '@/lib/tailwind';
 import { Habit } from '@/types';
+import { HolidayPeriod } from '@/types/holiday.types';
 import { HabitProgressionService } from '@/services/habitProgressionService';
+import { HolidayModeService } from '@/services/holidayModeService';
 import { tierThemes } from '@/utils/tierTheme';
 import { getLocalDateString, getDaysInMonth, isToday, isSameDay } from '@/utils/dateHelpers';
 
@@ -13,9 +16,10 @@ interface CalendarGridProps {
   selectedDate: Date;
   onSelectDate: (date: Date) => void;
   onNavigateMonth: (direction: 'prev' | 'next') => void;
+  activeHoliday?: HolidayPeriod | null;
 }
 
-const CalendarGrid: React.FC<CalendarGridProps> = ({ habit, currentMonth, selectedDate, onSelectDate, onNavigateMonth }) => {
+const CalendarGrid: React.FC<CalendarGridProps> = ({ habit, currentMonth, selectedDate, onSelectDate, onNavigateMonth, activeHoliday = null }) => {
   const { tier } = HabitProgressionService.calculateTierFromStreak(habit.currentStreak);
   const theme = tierThemes[tier.name];
   const days = getDaysInMonth(currentMonth);
@@ -48,15 +52,16 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ habit, currentMonth, select
       {/* Calendar Days */}
       <View style={tw`flex-row flex-wrap`}>
         {days.map((date, index) => (
-          <CalendarDay key={`day-${index}`} date={date} habit={habit} selectedDate={selectedDate} onSelect={onSelectDate} theme={theme} />
+          <CalendarDay key={`day-${index}`} date={date} habit={habit} selectedDate={selectedDate} onSelect={onSelectDate} theme={theme} activeHoliday={activeHoliday} />
         ))}
       </View>
 
       {/* Legend */}
-      <View style={tw`flex-row justify-center items-center gap-4 mt-4 pt-4 border-t border-stone-100`}>
+      <View style={tw`flex-row justify-center items-center gap-3 mt-4 pt-4 border-t border-stone-100 flex-wrap`}>
         <LegendItem color={theme.accent} label="Complete" />
         <LegendItem color={theme.accent + '40'} label="Partial" />
         <LegendItem color="#fee2e2" label="Missed" />
+        <LegendItem color="#e0f2fe" label="Holiday" icon={<Sun size={10} color="#0ea5e9" />} />
       </View>
     </View>
   );
@@ -68,7 +73,8 @@ const CalendarDay: React.FC<{
   selectedDate: Date;
   onSelect: (date: Date) => void;
   theme: any;
-}> = ({ date, habit, selectedDate, onSelect, theme }) => {
+  activeHoliday?: HolidayPeriod | null;
+}> = ({ date, habit, selectedDate, onSelect, theme, activeHoliday = null }) => {
   if (!date) {
     return <View style={tw`w-1/7 h-12`} />;
   }
@@ -86,29 +92,65 @@ const CalendarDay: React.FC<{
   const isPast = date < new Date() && !isCurrentDay;
   const isMissed = isPast && !isCompleted && !isPartial && !beforeCreation;
 
+  // ✅ NEW: Check if this date is in a holiday period
+  const taskIds = habit.tasks.map((t) => t.id);
+  const isHoliday = HolidayModeService.isDateInHoliday(date, activeHoliday, habit.id, taskIds);
+
+  // Priority order: Holiday > Complete > Partial > Missed > Before Creation
+  let backgroundColor = 'transparent';
+  let textColor = tw.color('sand-700');
+  let showIcon = false;
+
+  if (beforeCreation) {
+    textColor = tw.color('gray-300');
+  } else if (isHoliday) {
+    // 🏖️ HOLIDAY STATE (highest priority)
+    backgroundColor = '#e0f2fe'; // sky-100
+    textColor = '#0ea5e9'; // sky-500
+    showIcon = true;
+  } else if (isCompleted) {
+    backgroundColor = theme.accent;
+    textColor = '#ffffff';
+  } else if (isPartial) {
+    backgroundColor = theme.accent + '40';
+    textColor = '#ffffff';
+  } else if (isMissed) {
+    backgroundColor = '#fee2e2'; // red-50
+    textColor = '#ef4444'; // red-500
+  }
+
   return (
     <Pressable onPress={() => onSelect(date)} style={({ pressed }) => [tw`w-1/7 h-12 items-center justify-center`, pressed && tw`opacity-70`]}>
       <View
         style={[
-          tw`w-9 h-9 rounded-xl items-center justify-center`,
-          isCompleted && { backgroundColor: theme.accent },
-          isPartial && { backgroundColor: theme.accent + '40' },
-          isMissed && tw`bg-red-50`,
-          isSelected && !isCompleted && !isPartial && tw`border-2`,
+          tw`w-9 h-9 rounded-xl items-center justify-center relative`,
+          { backgroundColor },
+          isSelected && !beforeCreation && tw`border-2`,
           isSelected && { borderColor: theme.accent },
-          isCurrentDay && tw`border`,
+          isCurrentDay && !isSelected && tw`border`,
           isCurrentDay && { borderColor: theme.accent + '60' },
         ]}
       >
-        <Text style={[tw`text-sm font-medium`, isCompleted ? tw`text-white` : tw`text-sand-700`, isMissed && tw`text-red-500`, beforeCreation && tw`text-gray-300`]}>{date.getDate()}</Text>
+        {/* Holiday Icon */}
+        {showIcon && (
+          <View style={tw`absolute -top-1 -right-1 bg-white rounded-full p-0.5`}>
+            <Sun size={10} color="#0ea5e9" strokeWidth={2.5} />
+          </View>
+        )}
+
+        <Text style={[tw`text-sm font-medium`, { color: textColor }, beforeCreation && tw`text-gray-300`]}>{date.getDate()}</Text>
       </View>
     </Pressable>
   );
 };
 
-const LegendItem: React.FC<{ color: string; label: string }> = ({ color, label }) => (
+const LegendItem: React.FC<{
+  color: string;
+  label: string;
+  icon?: React.ReactNode;
+}> = ({ color, label, icon }) => (
   <View style={tw`flex-row items-center`}>
-    <View style={[tw`w-3 h-3 rounded`, { backgroundColor: color }]} />
+    {icon ? <View style={[tw`w-3 h-3 rounded items-center justify-center`, { backgroundColor: color }]}>{icon}</View> : <View style={[tw`w-3 h-3 rounded`, { backgroundColor: color }]} />}
     <Text style={tw`text-xs text-gray-600 ml-1.5`}>{label}</Text>
   </View>
 );

@@ -7,17 +7,11 @@ import { CheckCircle2, Lightbulb, Plus, X } from 'lucide-react-native';
 import tw from '../../lib/tailwind';
 import { HabitType } from '../../types';
 
-interface Task {
-  id: string;
-  name: string;
-  description: string;
-}
-
 interface CustomTaskCreatorProps {
   habitType: HabitType;
   habitName: string;
-  tasks: Task[];
-  onTasksChange: (tasks: Task[]) => void;
+  tasks: string[]; // ✅ Changed from CustomTask[] to string[]
+  onTasksChange: (tasks: string[]) => void; // ✅ Changed from CustomTask[] to string[]
 }
 
 const CustomTaskCreator: React.FC<CustomTaskCreatorProps> = ({ habitType, habitName, tasks, onTasksChange }) => {
@@ -27,29 +21,30 @@ const CustomTaskCreator: React.FC<CustomTaskCreatorProps> = ({ habitType, habitN
   const lightBg = habitType === 'good' ? '#fef3c7' : '#ede9fe';
   const darkColor = habitType === 'good' ? '#f59e0b' : '#7c3aed';
 
+  // ✅ Add task - simple string
   const addTask = () => {
     if (tasks.length < maxTasks) {
-      const newTask: Task = {
-        id: `custom-task-${Date.now()}`,
-        name: '',
-        description: '',
-      };
-      onTasksChange([...tasks, newTask]);
+      onTasksChange([...tasks, '']);
     }
   };
 
-  const updateTask = (index: number, field: 'name' | 'description', value: string) => {
-    const updatedTasks = [...tasks];
-    updatedTasks[index][field] = value;
-    onTasksChange(updatedTasks);
-  };
-
+  // ✅ Remove task
   const removeTask = (index: number) => {
-    const updatedTasks = tasks.filter((_, i) => i !== index);
-    onTasksChange(updatedTasks);
+    if (tasks.length > 1) {
+      const newTasks = tasks.filter((_, i) => i !== index);
+      onTasksChange(newTasks);
+    }
   };
 
-  const completedTasks = tasks.filter((t) => t.name.trim() !== '').length;
+  // ✅ Update task - direct string assignment
+  const updateTask = (index: number, value: string) => {
+    const newTasks = [...tasks];
+    newTasks[index] = value;
+    onTasksChange(newTasks);
+  };
+
+  // ✅ Count completed tasks
+  const completedTasks = tasks.filter((t) => t.trim() !== '').length;
 
   return (
     <KeyboardAvoidingView style={tw`flex-1`} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0}>
@@ -78,14 +73,22 @@ const CustomTaskCreator: React.FC<CustomTaskCreatorProps> = ({ habitType, habitN
               </Text>
             </View>
             <View style={[tw`h-1.5 rounded-full overflow-hidden`, { backgroundColor: '#f5f5f5' }]}>
-              <View style={[tw`h-full rounded-full`, { width: `${(completedTasks / maxTasks) * 100}%`, backgroundColor: primaryColor }]} />
+              <View
+                style={[
+                  tw`h-full rounded-full`,
+                  {
+                    width: `${(completedTasks / maxTasks) * 100}%`,
+                    backgroundColor: primaryColor,
+                  },
+                ]}
+              />
             </View>
           </Animated.View>
 
-          {/* Task Input Cards - NO STAGGERED ANIMATIONS */}
+          {/* Task Input Cards */}
           <View style={tw`gap-3.5 mb-5`}>
             {tasks.map((task, index) => (
-              <Animated.View key={task.id} entering={FadeInDown.duration(300)}>
+              <Animated.View key={index} entering={FadeInDown.duration(300)}>
                 <View style={[tw`bg-white rounded-2xl p-4.5`, { borderWidth: 1, borderColor: '#e5e7eb' }]}>
                   {/* Task Header */}
                   <View style={tw`flex-row items-center justify-between mb-3.5`}>
@@ -102,40 +105,30 @@ const CustomTaskCreator: React.FC<CustomTaskCreatorProps> = ({ habitType, habitN
                     )}
                   </View>
 
-                  {/* Task Name Input */}
+                  {/* Task Name Input - ✅ Simplified */}
                   <View style={tw`mb-3.5`}>
                     <Text style={tw`text-sm font-medium text-stone-700 mb-2`}>Action</Text>
                     <TextInput
-                      style={[tw`px-4 py-4 text-base text-stone-800 rounded-xl`, { backgroundColor: '#fafafa', borderWidth: 1, borderColor: '#f0f0f0' }]}
+                      style={[
+                        tw`px-4 py-4 text-base text-stone-800 rounded-xl`,
+                        {
+                          backgroundColor: '#fafafa',
+                          borderWidth: 1,
+                          borderColor: '#f0f0f0',
+                        },
+                      ]}
                       placeholder={habitType === 'good' ? `e.g., Write for 10 minutes` : `e.g., Go for a walk instead`}
                       placeholderTextColor="#9ca3af"
-                      value={task.name}
-                      onChangeText={(text) => updateTask(index, 'name', text)}
+                      value={task} // ✅ Direct string value
+                      onChangeText={(text) => updateTask(index, text)} // ✅ Direct update
                       maxLength={50}
                       returnKeyType="done"
                     />
-                    <Text style={tw`text-xs text-stone-400 mt-1.5 text-right`}>{task.name.length}/50</Text>
-                  </View>
-
-                  {/* Task Description Input */}
-                  <View>
-                    <Text style={tw`text-sm font-medium text-stone-700 mb-2`}>Description (Optional)</Text>
-                    <TextInput
-                      style={[tw`px-4 py-3.5 text-sm text-stone-700 rounded-xl`, { backgroundColor: '#fafafa', borderWidth: 1, borderColor: '#f0f0f0' }]}
-                      placeholder="Add details about this task..."
-                      placeholderTextColor="#9ca3af"
-                      value={task.description}
-                      onChangeText={(text) => updateTask(index, 'description', text)}
-                      maxLength={100}
-                      multiline
-                      numberOfLines={2}
-                      returnKeyType="done"
-                    />
-                    <Text style={tw`text-xs text-stone-400 mt-1.5 text-right`}>{task.description.length}/100</Text>
+                    <Text style={tw`text-xs text-stone-400 mt-1.5 text-right`}>{task.length}/50</Text>
                   </View>
 
                   {/* Completion Indicator */}
-                  {task.name.trim() !== '' && (
+                  {task.trim() !== '' && (
                     <View style={[tw`flex-row items-center mt-3.5 pt-3.5`, { borderTopWidth: 1, borderTopColor: '#f5f5f5' }]}>
                       <CheckCircle2 size={16} color="#10b981" strokeWidth={2} style={tw`mr-2`} />
                       <Text style={tw`text-xs text-emerald-600 font-medium`}>Task complete</Text>
@@ -172,13 +165,12 @@ const CustomTaskCreator: React.FC<CustomTaskCreatorProps> = ({ habitType, habitN
 
                 <View style={tw`gap-2.5`}>
                   {tasks
-                    .filter((t) => t.name.trim() !== '')
+                    .filter((t) => t.trim() !== '') // ✅ Direct string filtering
                     .map((task, index) => (
-                      <View key={task.id} style={[tw`rounded-xl p-3.5`, { backgroundColor: 'white', borderWidth: 1, borderColor: '#f0f0f0' }]}>
+                      <View key={index} style={[tw`rounded-xl p-3.5`, { backgroundColor: 'white', borderWidth: 1, borderColor: '#f0f0f0' }]}>
                         <Text style={tw`text-sm font-medium text-stone-800 mb-1`}>
-                          {index + 1}. {task.name}
+                          {index + 1}. {task} {/* ✅ Direct string display */}
                         </Text>
-                        {task.description && <Text style={tw`text-xs text-stone-500 leading-5`}>{task.description}</Text>}
                       </View>
                     ))}
                 </View>
