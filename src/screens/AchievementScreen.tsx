@@ -25,6 +25,7 @@ import { ZoomModal } from '../components/achievements/ZoomModal';
 import { achievementTitles } from '../utils/achievements';
 import { getXPForNextLevel } from '@/utils/xpCalculations';
 import { getAchievementTierTheme } from '../utils/tierTheme';
+import { HapticFeedback } from '../utils/haptics';
 
 const AchievementsScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -71,6 +72,7 @@ const AchievementsScreen: React.FC = () => {
   const textColors = getTextColors(currentTierTheme.gemName);
 
   const handleRefresh = async () => {
+    HapticFeedback.light();
     setRefreshing(true);
     try {
       await Promise.all([refreshStats(true), refreshAchievements()]);
@@ -79,6 +81,37 @@ const AchievementsScreen: React.FC = () => {
     } finally {
       setRefreshing(false);
     }
+  };
+
+  const handleGoBack = () => {
+    HapticFeedback.light();
+    navigation.goBack();
+  };
+
+  const handleZoomModalOpen = () => {
+    HapticFeedback.light();
+    setShowZoomModal(true);
+  };
+
+  const handleZoomModalClose = () => {
+    HapticFeedback.light();
+    setShowZoomModal(false);
+  };
+
+  const handleAchievementPress = (achievement: Achievement) => {
+    HapticFeedback.light();
+    setSelectedAchievement(achievement);
+    setShowModal(true);
+  };
+
+  const handleModalClose = () => {
+    HapticFeedback.light();
+    setShowModal(false);
+  };
+
+  const handleFilterChange = (newFilter: FilterType) => {
+    HapticFeedback.selection();
+    setFilter(newFilter);
   };
 
   useEffect(() => {
@@ -103,6 +136,7 @@ const AchievementsScreen: React.FC = () => {
   const completionPercent = Math.round((unlockedCount / totalCount) * 100);
 
   const handleTierToggle = (tierName: TierName) => {
+    HapticFeedback.light();
     const newExpandedState = expandedTier === tierName ? null : tierName;
     setExpandedTier(newExpandedState);
 
@@ -138,60 +172,42 @@ const AchievementsScreen: React.FC = () => {
     <SafeAreaView style={tw`flex-1 bg-sand-50`}>
       {/* Header with Deep Tier Gradient */}
       <LinearGradient colors={[currentTierTheme.gradient[0], currentTierTheme.gradient[1], currentTierTheme.gradient[2]]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`pb-4 shadow-xl`}>
-        <View style={tw`px-5 pt-4 pb-2`}>
+        <View style={tw`px-5 pt-4 pb-4`}>
           {/* Navigation */}
-          <View style={tw`flex-row items-center justify-between mb-3`}>
-            <Pressable
-              onPress={() => navigation.goBack()}
-              style={({ pressed }) => [tw`p-2 -ml-2 rounded-xl`, { backgroundColor: pressed ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.15)' }]}
-            >
-              <ChevronLeft size={24} color="#FFFFFF" />
+          <View style={tw`flex-row items-center mb-4`}>
+            <Pressable onPress={handleGoBack} style={({ pressed }) => [tw`p-2 -ml-2 rounded-lg`, { backgroundColor: pressed ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)' }]}>
+              <ChevronLeft size={22} color="#FFFFFF" strokeWidth={2.5} />
             </Pressable>
 
-            <View style={tw`items-center flex-1`}>
-              <Text style={[tw`text-lg font-black tracking-tight text-white`]}>Achievements</Text>
-              <View style={tw`flex-row items-center gap-1.5 mt-0.5`}>
-                <View style={[tw`h-1 w-1 rounded-full`, { backgroundColor: currentTierTheme.accent }]} />
-                <Text style={[tw`text-[9px] font-bold uppercase tracking-wider text-white/70`]}>{currentTierTheme.gemName} Tier</Text>
-              </View>
+            <View style={tw`flex-1 items-center`}>
+              <Text style={tw`text-base font-bold text-white`}>Achievements</Text>
+              <Text style={tw`text-xs font-medium text-white/60 mt-0.5`}>{currentTierTheme.gemName} Tier</Text>
             </View>
 
             <View style={tw`w-10`} />
           </View>
 
-          {/* Three Stats Cards */}
-          <View style={tw`flex-row gap-2`}>
-            {/* Unlocked Card */}
-            <View style={[tw`flex-1 rounded-xl p-2.5`, { backgroundColor: 'rgba(255, 255, 255, 0.15)' }]}>
-              <Text style={[tw`text-[9px] font-bold uppercase tracking-wide mb-0.5 text-white/70`]} numberOfLines={1}>
-                Unlocked
-              </Text>
-              <View style={tw`flex-row items-baseline gap-0.5`}>
-                <Text style={[tw`text-xl font-black text-white`]} numberOfLines={1}>
-                  {unlockedCount}
-                </Text>
-                <Text style={[tw`text-sm font-bold text-white/70`]} numberOfLines={1}>
-                  /{totalCount}
-                </Text>
+          {/* Stats Grid - More spacious and minimal */}
+          <View style={tw`flex-row gap-3`}>
+            {/* Unlocked Progress */}
+            <View style={[tw`flex-1 rounded-xl p-3`, { backgroundColor: 'rgba(255, 255, 255, 0.12)' }]}>
+              <Text style={tw`text-xs font-semibold text-white/60 mb-1`}>Unlocked</Text>
+              <View style={tw`flex-row items-baseline gap-1`}>
+                <Text style={tw`text-2xl font-bold text-white`}>{unlockedCount}</Text>
+                <Text style={tw`text-sm font-semibold text-white/50`}>/{totalCount}</Text>
               </View>
             </View>
 
-            {/* Completions Card */}
-            <View style={[tw`flex-1 rounded-xl p-2.5`, { backgroundColor: 'rgba(255, 255, 255, 0.15)' }]}>
-              <Text style={[tw`text-[9px] font-bold uppercase tracking-wide mb-0.5 text-white/70`]} numberOfLines={1}>
-                Total
-              </Text>
-              <Text style={[tw`text-xl font-black text-white`]} numberOfLines={1}>
-                {totalCompletions}
-              </Text>
+            {/* Current Streak */}
+            <View style={[tw`flex-1 rounded-xl p-3`, { backgroundColor: 'rgba(255, 255, 255, 0.12)' }]}>
+              <Text style={tw`text-xs font-semibold text-white/60 mb-1`}>Best Streak</Text>
+              <Text style={tw`text-2xl font-bold text-white`}>{streak}</Text>
             </View>
 
-            {/* Total XP Card */}
-            <View style={[tw`flex-1 rounded-xl p-2.5`, { backgroundColor: 'rgba(255, 255, 255, 0.15)' }]}>
-              <Text style={[tw`text-[9px] font-bold uppercase tracking-wide mb-0.5 text-white/70`]} numberOfLines={1}>
-                XP
-              </Text>
-              <Text style={[tw`text-xl font-black text-white`]} adjustsFontSizeToFit numberOfLines={1}>
+            {/* Total XP */}
+            <View style={[tw`flex-1 rounded-xl p-3`, { backgroundColor: 'rgba(255, 255, 255, 0.12)' }]}>
+              <Text style={tw`text-xs font-semibold text-white/60 mb-1`}>Total XP</Text>
+              <Text style={tw`text-2xl font-bold text-white`} adjustsFontSizeToFit numberOfLines={1}>
                 {totalXP > 999 ? `${(totalXP / 1000).toFixed(1)}k` : totalXP}
               </Text>
             </View>
@@ -215,11 +231,11 @@ const AchievementsScreen: React.FC = () => {
             currentStreak={streak}
             perfectDays={perfectDays}
             totalHabits={totalHabits}
-            onPress={() => setShowZoomModal(true)}
+            onPress={handleZoomModalOpen}
           />
         </View>
 
-        <FilterTabs filter={filter} setFilter={setFilter} unlockedCount={unlockedCount} totalCount={totalCount} />
+        <FilterTabs filter={filter} setFilter={handleFilterChange} unlockedCount={unlockedCount} totalCount={totalCount} />
 
         <View style={tw`px-2.5`}>
           {TIER_NAMES.map((tierName, tierIndex) => {
@@ -234,10 +250,7 @@ const AchievementsScreen: React.FC = () => {
                   achievements={tierAchievements}
                   userAchievements={achievements}
                   isAchievementUnlocked={isAchievementUnlocked}
-                  onAchievementPress={(ach) => {
-                    setSelectedAchievement(ach);
-                    setShowModal(true);
-                  }}
+                  onAchievementPress={handleAchievementPress}
                   isExpanded={expandedTier === tierName}
                   onToggle={handleTierToggle}
                 />
@@ -247,9 +260,9 @@ const AchievementsScreen: React.FC = () => {
         </View>
       </ScrollView>
 
-      <AchievementDetailModal visible={showModal} onClose={() => setShowModal(false)} achievement={selectedAchievement} currentLevel={currentLevel} totalCompletions={totalCompletions} />
+      <AchievementDetailModal visible={showModal} onClose={handleModalClose} achievement={selectedAchievement} currentLevel={currentLevel} totalCompletions={totalCompletions} />
 
-      <ZoomModal visible={showZoomModal} onClose={() => setShowZoomModal(false)} currentLevel={currentLevel} currentTitle={currentTitle} />
+      <ZoomModal visible={showZoomModal} onClose={handleZoomModalClose} currentLevel={currentLevel} currentTitle={currentTitle} />
     </SafeAreaView>
   );
 };

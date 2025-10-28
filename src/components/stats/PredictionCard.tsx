@@ -8,6 +8,7 @@ import tw from '@/lib/tailwind';
 import { Habit } from '@/types';
 import { calculatePrediction, getPredictionTheme } from '@/utils/predictionUtils';
 import { Svg, Circle } from 'react-native-svg';
+import { HapticFeedback } from '@/utils/haptics';
 
 interface PredictionCardProps {
   habits: Habit[];
@@ -63,7 +64,12 @@ const PredictionCard: React.FC<PredictionCardProps> = ({ habits }) => {
             {validHabits.length > 1 && (
               <View style={tw`flex-row items-center gap-1.5 ml-3`}>
                 <Pressable
-                  onPress={() => selectedHabitIndex > 0 && setSelectedHabitIndex(selectedHabitIndex - 1)}
+                  onPress={() => {
+                    if (selectedHabitIndex > 0) {
+                      HapticFeedback.light();
+                      setSelectedHabitIndex(selectedHabitIndex - 1);
+                    }
+                  }}
                   disabled={selectedHabitIndex === 0}
                   style={tw`w-7 h-7 rounded-lg ${selectedHabitIndex === 0 ? 'bg-stone-50' : 'bg-stone-100'} items-center justify-center`}
                 >
@@ -71,7 +77,12 @@ const PredictionCard: React.FC<PredictionCardProps> = ({ habits }) => {
                 </Pressable>
 
                 <Pressable
-                  onPress={() => selectedHabitIndex < validHabits.length - 1 && setSelectedHabitIndex(selectedHabitIndex + 1)}
+                  onPress={() => {
+                    if (selectedHabitIndex < validHabits.length - 1) {
+                      HapticFeedback.light();
+                      setSelectedHabitIndex(selectedHabitIndex + 1);
+                    }
+                  }}
                   disabled={selectedHabitIndex === validHabits.length - 1}
                   style={tw`w-7 h-7 rounded-lg ${selectedHabitIndex === validHabits.length - 1 ? 'bg-stone-50' : 'bg-stone-100'} items-center justify-center`}
                 >
@@ -149,7 +160,13 @@ const PredictionCard: React.FC<PredictionCardProps> = ({ habits }) => {
           </View>
 
           {/* Expand Button */}
-          <Pressable onPress={() => setExpanded(!expanded)} style={tw`mt-4 py-3 items-center justify-center rounded-lg bg-stone-50 flex-row gap-2`}>
+          <Pressable
+            onPress={() => {
+              HapticFeedback.light();
+              setExpanded(!expanded);
+            }}
+            style={tw`mt-4 py-3 items-center justify-center rounded-lg bg-stone-50 flex-row gap-2`}
+          >
             <Text style={tw`text-sm font-medium text-stone-600`}>{expanded ? 'Show Less' : 'View Details'}</Text>
             {expanded ? <ChevronUp size={16} color="#57534E" strokeWidth={2} /> : <ChevronDown size={16} color="#57534E" strokeWidth={2} />}
           </Pressable>
@@ -167,7 +184,13 @@ const PredictionCard: React.FC<PredictionCardProps> = ({ habits }) => {
                 </View>
 
                 <View style={tw`border-b border-stone-50`}>
-                  <Pressable onPress={() => setShowBufferInfo(!showBufferInfo)} style={tw`flex-row justify-between items-center py-3`}>
+                  <Pressable
+                    onPress={() => {
+                      HapticFeedback.light();
+                      setShowBufferInfo(!showBufferInfo);
+                    }}
+                    style={tw`flex-row justify-between items-center py-3`}
+                  >
                     <View style={tw`flex-row items-center gap-2`}>
                       <Text style={tw`text-sm text-stone-500`}>Safety Margin</Text>
                       <View style={tw`w-4 h-4 rounded-full bg-stone-100 items-center justify-center`}>

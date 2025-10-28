@@ -12,6 +12,7 @@ import { HolidayPeriod } from '../types/holiday.types';
 import { RootStackParamList } from '../navigation/types';
 import { HolidayModeService } from '../services/holidayModeService';
 import { getTaskDetails } from '../utils/taskHelpers';
+import { HapticFeedback } from '../utils/haptics';
 
 import CalendarHeader from '../components/calendar/CalendarHeader';
 import HabitSelector from '../components/calendar/HabitSelector';
@@ -97,14 +98,17 @@ const CalendarScreen: React.FC = () => {
   }, [loadHoliday]);
 
   const handleCreateHabit = () => {
+    HapticFeedback.light();
     navigation.navigate('HabitWizard');
   };
 
   const handleRefresh = async () => {
+    HapticFeedback.light();
     await Promise.all([refreshHabits(), loadHoliday()]);
   };
 
   const navigateMonth = (direction: 'prev' | 'next') => {
+    HapticFeedback.light();
     setCurrentMonth((prev) => {
       const newMonth = new Date(prev);
       newMonth.setMonth(prev.getMonth() + (direction === 'prev' ? -1 : 1));
@@ -115,10 +119,17 @@ const CalendarScreen: React.FC = () => {
   // Handle habit selection with task normalization
   const handleHabitSelect = useCallback(
     (habit: Habit) => {
+      HapticFeedback.selection();
       setSelectedHabit(normalizeHabitTasks(habit));
     },
     [normalizeHabitTasks]
   );
+
+  // Handle date selection with haptic
+  const handleDateSelect = useCallback((date: Date) => {
+    HapticFeedback.light();
+    setSelectedDate(date);
+  }, []);
 
   // Empty state
   if (habits.length === 0) {
@@ -156,7 +167,7 @@ const CalendarScreen: React.FC = () => {
 
         {/* Calendar with Holiday Support */}
         <View style={tw`mx-5 mt-4 mb-6`}>
-          <CalendarGrid habit={selectedHabit} currentMonth={currentMonth} selectedDate={selectedDate} onSelectDate={setSelectedDate} onNavigateMonth={navigateMonth} activeHoliday={activeHoliday} />
+          <CalendarGrid habit={selectedHabit} currentMonth={currentMonth} selectedDate={selectedDate} onSelectDate={handleDateSelect} onNavigateMonth={navigateMonth} activeHoliday={activeHoliday} />
 
           {/* Selected Date Details with Holiday Info */}
           <DateDetails habit={selectedHabit} selectedDate={selectedDate} activeHoliday={activeHoliday} />

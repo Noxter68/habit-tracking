@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { TrendingUp, Calendar, ChevronLeft, ChevronRight, X } from 'lucide-react-native';
+import { HapticFeedback } from '@/utils/haptics';
 
 type TimeRange = 'week' | 'month';
 type ViewMode = 'trend' | 'heatmap';
@@ -32,6 +33,7 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
   } | null>(null);
 
   const handleRangeChange = (range: TimeRange) => {
+    HapticFeedback.selection();
     setSelectedRange(range);
     setSelectedDataPoint(null);
     onRangeChange?.(range);
@@ -130,6 +132,7 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
   const maxValue = Math.max(...chartData.map((d) => d.value), 1);
 
   const handleBarPress = (index: number) => {
+    HapticFeedback.light();
     const data = chartData[index];
     setSelectedDataPoint({
       index,
@@ -142,6 +145,7 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
   };
 
   const handleHeatmapPress = (weekIndex: number, dayIndex: number) => {
+    HapticFeedback.light();
     const data = heatmapData[weekIndex][dayIndex];
     setSelectedDataPoint({
       index: weekIndex * 7 + dayIndex,
@@ -156,6 +160,7 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
   const navigateDataPoint = (direction: 'prev' | 'next') => {
     if (!selectedDataPoint) return;
 
+    HapticFeedback.light();
     const currentIndex = selectedDataPoint.index;
     const maxIndex = viewMode === 'heatmap' ? heatmapData.length * 7 - 1 : chartData.length - 1;
 
@@ -247,6 +252,7 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
               <TouchableOpacity
                 key={mode.value}
                 onPress={() => {
+                  HapticFeedback.selection();
                   setViewMode(mode.value);
                   setSelectedDataPoint(null);
                 }}
