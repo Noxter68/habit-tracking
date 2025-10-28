@@ -240,9 +240,17 @@ const Dashboard: React.FC = () => {
   useFocusEffect(
     useCallback(() => {
       loadHolidayModeData();
-      // Refresh subscription to update habit count when returning from wizard
-      refreshSubscription();
-    }, [loadHolidayModeData, refreshSubscription])
+    }, [loadHolidayModeData])
+  );
+
+  // Refresh subscription count when screen gains focus (but not on every render)
+  useFocusEffect(
+    useCallback(() => {
+      const refreshCount = async () => {
+        await refreshSubscription();
+      };
+      refreshCount();
+    }, [])
   );
 
   // ============================================================================
