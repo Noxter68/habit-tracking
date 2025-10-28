@@ -14,13 +14,11 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { HolidayModeService, HolidayPeriod, HolidayStats, HolidayScope, HabitWithTasks } from '../services/holidayModeService';
-import { ChevronLeft, Umbrella, Diamond, Info, Calendar, Sparkles, Globe, CheckSquare, ListChecks, InfinityIcon, Crown } from 'lucide-react-native';
-import { ScopeSelector } from '../components/holidays/ScopeSelector';
+import { ChevronLeft, Diamond, Info, Calendar, Sparkles, Globe, CheckSquare, ListChecks, InfinityIcon, Crown, Sun } from 'lucide-react-native';
 import { HabitSelector } from '../components/holidays/HabitSelector';
 import { TaskSelector } from '../components/holidays/TaskSelector';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-type DatePickerType = 'start' | 'end' | null;
 
 const HolidayModeScreen: React.FC = () => {
   const { user } = useAuth();
@@ -406,7 +404,7 @@ const HolidayModeScreen: React.FC = () => {
               <View style={tw`flex-row items-center justify-between mb-4`}>
                 <View style={tw`flex-row items-center`}>
                   <View style={tw`bg-white/20 p-2 rounded-full`}>
-                    <Umbrella size={20} color="#FFFFFF" />
+                    <Sun size={20} color="#FFFFFF" />
                   </View>
                   <Text style={tw`text-white text-lg font-bold ml-3`}>Holiday Active</Text>
                 </View>
