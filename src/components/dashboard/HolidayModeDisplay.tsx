@@ -10,6 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { HolidayModeService } from '../../services/holidayModeService';
+import { HapticFeedback } from '@/utils/haptics';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -90,11 +91,23 @@ export const HolidayModeDisplay: React.FC<HolidayModeDisplayProps> = ({ endDate,
 
         {/* Action Buttons */}
         <View style={tw`px-5 pb-5 flex-row gap-2`}>
-          <Pressable onPress={handleViewDetails} style={({ pressed }) => [tw`flex-1 bg-white/90 rounded-2xl py-3 items-center shadow-sm`, pressed && tw`scale-95`]}>
+          <Pressable
+            onPress={() => {
+              HapticFeedback.light();
+              handleViewDetails();
+            }}
+            style={({ pressed }) => [tw`flex-1 bg-white/90 rounded-2xl py-3 items-center shadow-sm`, pressed && tw`scale-95`]}
+          >
             <Text style={tw`text-sm font-semibold text-sky-900`}>View Details</Text>
           </Pressable>
 
-          <Pressable onPress={handleViewDetails} style={({ pressed }) => [tw`flex-1 bg-sky-900/90 rounded-2xl py-3 items-center shadow-sm`, pressed && tw`scale-95`]}>
+          <Pressable
+            onPress={() => {
+              HapticFeedback.light();
+              handleViewDetails();
+            }}
+            style={({ pressed }) => [tw`flex-1 bg-sky-900/90 rounded-2xl py-3 items-center shadow-sm`, pressed && tw`scale-95`]}
+          >
             <Text style={tw`text-sm font-semibold text-white`}>End Early</Text>
           </Pressable>
         </View>

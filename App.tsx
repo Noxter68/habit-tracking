@@ -10,7 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
-import { REVENUECAT_IOS_API_KEY, REVENUECAT_ANDROID_API_KEY } from '@env';
+import { REVENUECAT_IOS_API_KEY } from '@env';
 import { diagnoseRevenueCatSetup } from './src/utils/RevenueCatDiagnostic';
 import tw from './src/lib/tailwind';
 
@@ -50,6 +50,7 @@ import { RevenueCatService } from '@/services/RevenueCatService';
 import HolidayModeScreen from '@/screens/HolidayModeScreen';
 import NotificationManagerScreen from '@/screens/NotificationManagerScreen';
 import { NotificationService } from '@/services/notificationService';
+import { HapticFeedback } from '@/utils/haptics';
 
 // Type Definitions
 export type RootStackParamList = {
@@ -150,6 +151,11 @@ function MainTabs() {
           tabBarLabel: 'Home',
           tabBarIcon: ({ color, focused }) => <TabBarIcon name="home" color={color} focused={focused} />,
         }}
+        listeners={{
+          tabPress: () => {
+            HapticFeedback.selection();
+          },
+        }}
       />
       <Tab.Screen
         name="Calendar"
@@ -157,6 +163,11 @@ function MainTabs() {
         options={{
           tabBarLabel: 'Calendar',
           tabBarIcon: ({ color, focused }) => <TabBarIcon name="calendar" color={color} focused={focused} />,
+        }}
+        listeners={{
+          tabPress: () => {
+            HapticFeedback.selection();
+          },
         }}
       />
       <Tab.Screen
@@ -166,6 +177,11 @@ function MainTabs() {
           tabBarLabel: 'League',
           tabBarIcon: ({ color, focused }) => <TabBarIcon name="leaderboard" color={color} focused={focused} />,
         }}
+        listeners={{
+          tabPress: () => {
+            HapticFeedback.selection();
+          },
+        }}
       />
       <Tab.Screen
         name="Stats"
@@ -174,6 +190,11 @@ function MainTabs() {
           tabBarLabel: 'Stats',
           tabBarIcon: ({ color, focused }) => <TabBarIcon name="chart" color={color} focused={focused} />,
         }}
+        listeners={{
+          tabPress: () => {
+            HapticFeedback.selection();
+          },
+        }}
       />
       <Tab.Screen
         name="Settings"
@@ -181,6 +202,11 @@ function MainTabs() {
         options={{
           tabBarLabel: 'Settings',
           tabBarIcon: ({ color, focused }) => <TabBarIcon name="settings" color={color} focused={focused} />,
+        }}
+        listeners={{
+          tabPress: () => {
+            HapticFeedback.selection();
+          },
         }}
       />
     </Tab.Navigator>

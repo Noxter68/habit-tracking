@@ -1,63 +1,83 @@
 // src/components/ui/AnimatedNumber.tsx
-import React, { useEffect, useRef } from 'react';
-import { Text } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSequence, Easing } from 'react-native-reanimated';
+import React, { useEffect, useState } from 'react';
+import { Text, TextStyle } from 'react-native';
+import Animated, { useSharedValue, withTiming, Easing, useAnimatedStyle } from 'react-native-reanimated';
 
 interface AnimatedNumberProps {
   value: number;
-  style?: any;
+  style?: TextStyle;
   prefix?: string;
   suffix?: string;
+  duration?: number;
+  decimals?: number;
 }
 
-export const AnimatedNumber: React.FC<AnimatedNumberProps> = ({ value, style, prefix = '', suffix = '' }) => {
-  const previousValue = useRef(value);
+/**
+ * Simple animated number component
+ * No complex optimistic updates - just smooth number transitions
+ */
+export const AnimatedNumber: React.FC<AnimatedNumberProps> = ({ value, style, prefix = '', suffix = '', duration = 600, decimals = 0 }) => {
+  const [displayValue, setDisplayValue] = useState(value);
   const opacity = useSharedValue(1);
-  const translateY = useSharedValue(0);
 
   useEffect(() => {
-    // Only animate when value actually changes and it's not the initial render
-    if (previousValue.current !== value && previousValue.current !== 0) {
-      // Determine direction based on increase/decrease
-      const direction = value > previousValue.current ? -8 : 8;
+    const previousValue = displayValue;
 
-      // Quick fade out + slide
-      opacity.value = withSequence(
-        withTiming(0, {
-          duration: 100,
-          easing: Easing.out(Easing.ease),
-        }),
-        withTiming(1, {
-          duration: 150,
-          easing: Easing.in(Easing.ease),
-        })
-      );
+    if (value !== previousValue) {
+      const startValue = previousValue;
+      const endValue = value;
+      const startTime = Date.now();
+      const isIncreasing = value > previousValue;
 
-      translateY.value = withSequence(
-        withTiming(direction, {
-          duration: 100,
+      // Faster animation for increases
+      const animDuration = isIncreasing ? duration * 0.7 : duration;
+
+      const animateNumber = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / animDuration, 1);
+
+        // Ease out quad for smooth deceleration
+        const easedProgress = 1 - Math.pow(1 - progress, 2);
+
+        const currentValue = startValue + (endValue - startValue) * easedProgress;
+        setDisplayValue(currentValue);
+
+        if (progress < 1) {
+          requestAnimationFrame(animateNumber);
+        } else {
+          setDisplayValue(endValue);
+        }
+      };
+
+      // Quick flash on increase
+      if (isIncreasing) {
+        opacity.value = withTiming(0.6, {
+          duration: 80,
           easing: Easing.out(Easing.ease),
-        }),
-        withTiming(0, {
-          duration: 150,
-          easing: Easing.out(Easing.cubic),
-        })
-      );
+        });
+        setTimeout(() => {
+          opacity.value = withTiming(1, {
+            duration: 120,
+            easing: Easing.in(Easing.ease),
+          });
+        }, 80);
+      }
+
+      animateNumber();
     }
-
-    previousValue.current = value;
-  }, [value]);
+  }, [value, duration]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
-    transform: [{ translateY: translateY.value }],
   }));
+
+  const formattedValue = decimals > 0 ? displayValue.toFixed(decimals) : Math.round(displayValue).toString();
 
   return (
     <Animated.View style={animatedStyle}>
       <Text style={style} allowFontScaling={false}>
         {prefix}
-        {value}
+        {formattedValue}
         {suffix}
       </Text>
     </Animated.View>

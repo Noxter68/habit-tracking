@@ -18,6 +18,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useStats } from '@/context/StatsContext';
 import { getAchievementTierTheme } from '@/utils/tierTheme';
 import type { AchievementTierName } from '@/utils/tierTheme';
+import { HapticFeedback } from '@/utils/haptics';
 
 interface DashboardHeaderProps {
   userTitle: string;
@@ -290,7 +291,15 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                   zIndex: 20,
                 }}
               >
-                <AchievementBadge achievement={currentAchievement} onPress={handleAchievementPress} tierTheme={tierTheme} size={70} />
+                <AchievementBadge
+                  achievement={currentAchievement}
+                  onPress={() => {
+                    HapticFeedback.light();
+                    handleAchievementPress();
+                  }}
+                  tierTheme={tierTheme}
+                  size={70}
+                />
               </View>
             </View>
           </View>

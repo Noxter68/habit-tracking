@@ -7,6 +7,7 @@ import tw from '@/lib/tailwind';
 import { StreakSaverService } from '../../services/StreakSaverService';
 import { useAuth } from '@/context/AuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
+import { HapticFeedback } from '@/utils/haptics';
 
 interface StreakSaverBadgeProps {
   onPress?: () => void;
@@ -81,6 +82,7 @@ export const StreakSaverBadge: React.FC<StreakSaverBadgeProps> = ({ onPress, onS
   }
 
   const handlePress = () => {
+    HapticFeedback.light();
     if (shouldShowShop) {
       console.log('🛒 Opening shop modal');
       onShopPress?.();

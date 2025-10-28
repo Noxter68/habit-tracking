@@ -39,13 +39,19 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
   const [performanceMetrics, setPerformanceMetrics] = useState<UseHabitDetailsResult['performanceMetrics']>(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ FIX: Calculate tier immediately from currentStreak (synchronous)
-  // This ensures tierInfo is available immediately on mount
+  // ============================================================================
+  // CALCULATE TIER IMMEDIATELY (SYNCHRONOUS)
+  // ============================================================================
+
+  // This ensures tierInfo is available immediately on mount, no flash
   const immediateTierInfo = useMemo(() => {
     return HabitProgressionService.calculateTierFromStreak(currentStreak);
   }, [currentStreak]);
 
-  // ✅ FIX: Set initial values immediately before async operations
+  // ============================================================================
+  // SET INITIAL VALUES IMMEDIATELY
+  // ============================================================================
+
   useEffect(() => {
     // Set tier info synchronously to prevent flash
     setTierInfo(immediateTierInfo.tier);
@@ -65,12 +71,15 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
     });
   }, [currentStreak, immediateTierInfo]);
 
+  // ============================================================================
+  // FETCH DETAILED DATA FROM BACKEND
+  // ============================================================================
+
   const fetchData = useCallback(async () => {
     if (!habitId || !userId) return;
 
     try {
-      // ✅ Don't set loading to true on subsequent fetches if we already have data
-      // This prevents the "flash" of loading state
+      // Don't show loading on subsequent fetches (prevents flash)
       if (!performanceMetrics) {
         setLoading(true);
       }
@@ -84,7 +93,7 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
         setMilestoneStatus(status);
       }
 
-      // Update performance metrics with real data
+      // Update performance metrics with real data from backend
       if (metrics) {
         setPerformanceMetrics({
           ...metrics,
@@ -99,6 +108,10 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
       setLoading(false);
     }
   }, [habitId, userId, currentStreak, performanceMetrics]);
+
+  // ============================================================================
+  // FETCH ON MOUNT AND WHEN DEPENDENCIES CHANGE
+  // ============================================================================
 
   useEffect(() => {
     fetchData();

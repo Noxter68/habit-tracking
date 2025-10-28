@@ -1,14 +1,18 @@
 // src/components/habits/HabitHero.tsx
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { View, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Image } from 'expo-image';
 import tw from '@/lib/tailwind';
 import ProgressBar from '@/components/ui/ProgressBar';
 import { TierInfo } from '@/services/habitProgressionService';
 import { HabitHeroBackground } from '@/components/habits/HabitHeroBackground';
-import { Image } from 'expo-image';
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber';
+
+// ============================================================================
+// TYPES
+// ============================================================================
 
 interface HabitHeroProps {
   habitName: string;
@@ -24,14 +28,18 @@ interface HabitHeroProps {
   completionRate: number;
 }
 
+// ============================================================================
+// COMPONENT
+// ============================================================================
+
 export const HabitHero: React.FC<HabitHeroProps> = ({ habitName, habitType, category, currentStreak, bestStreak, tierInfo, nextTier, tierProgress, tierMultiplier, totalXPEarned, completionRate }) => {
-  if (!tierInfo) return null;
+  // ============================================================================
+  // HELPERS
+  // ============================================================================
 
-  // Create a sync key that changes when either streak updates
-  // This forces both animations to trigger together
-  const streakSyncKey = useMemo(() => `${currentStreak}-${bestStreak}`, [currentStreak, bestStreak]);
-
-  // Get the correct gem icon based on tier
+  /**
+   * Get gem icon based on current tier
+   */
   const getGemIcon = () => {
     switch (tierInfo.name) {
       case 'Ruby':
@@ -44,33 +52,52 @@ export const HabitHero: React.FC<HabitHeroProps> = ({ habitName, habitType, cate
     }
   };
 
+  // ============================================================================
+  // EARLY RETURN
+  // ============================================================================
+
+  if (!tierInfo) return null;
+
+  // ============================================================================
+  // RENDER
+  // ============================================================================
+
   return (
     <HabitHeroBackground tier={tierInfo?.name || 'Crystal'}>
+      {/* Gradient Overlay */}
       <View style={tw`absolute inset-0 opacity-10`}>
         <LinearGradient colors={['transparent', 'rgba(255,255,255,0.2)', 'transparent']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`w-full h-full`} />
       </View>
 
       {/* Gem Icon in Top Right */}
       <View style={tw`absolute top-2 right-3 z-10`}>
-        <View style={tw``}>
-          <Image source={getGemIcon()} style={tw`w-20 h-20`} contentFit="contain" />
-        </View>
+        <Image source={getGemIcon()} style={tw`w-20 h-20`} contentFit="contain" />
       </View>
 
-      {/* Content */}
+      {/* Main Content */}
       <View style={tw`flex-row items-center justify-between`}>
         <View style={tw`flex-1 pr-16`}>
+          {/* Habit Type Label */}
           <Text style={tw`text-white/80 text-xs font-bold uppercase tracking-wider`}>{habitType === 'good' ? 'Building' : 'Breaking'}</Text>
+
+          {/* Habit Name */}
           <Text style={tw`text-white text-xl font-black mt-1`} numberOfLines={1}>
             {habitName}
           </Text>
+
+          {/* Tags Row */}
           <View style={tw`flex-row items-center gap-2 mt-2.5`}>
+            {/* Tier Badge */}
             <View style={tw`bg-white/25 rounded-xl px-2.5 py-1`}>
               <Text style={tw`text-white text-xs font-bold`}>{tierInfo.name}</Text>
             </View>
+
+            {/* Category Badge */}
             <View style={tw`bg-white/25 rounded-xl px-2.5 py-1`}>
               <Text style={tw`text-white text-xs font-bold`}>{category}</Text>
             </View>
+
+            {/* XP Multiplier Badge (if > 1x) */}
             {tierMultiplier > 1 && (
               <View style={tw`bg-sand/25 rounded-xl px-2.5 py-1`}>
                 <Text style={tw`text-white text-xs font-bold`}>×{tierMultiplier.toFixed(1)} XP</Text>
@@ -80,7 +107,7 @@ export const HabitHero: React.FC<HabitHeroProps> = ({ habitName, habitType, cate
         </View>
       </View>
 
-      {/* Progress bar */}
+      {/* Progress Bar to Next Tier */}
       {nextTier && (
         <View style={tw`mt-4`}>
           <View style={tw`flex-row justify-between mb-1.5`}>
@@ -91,23 +118,35 @@ export const HabitHero: React.FC<HabitHeroProps> = ({ habitName, habitType, cate
         </View>
       )}
 
-      {/* Stats - All Animated */}
+      {/* Stats Row - All Animated, NO KEYS */}
       <View style={tw`flex-row justify-around mt-4 pt-4 border-t border-white/20`}>
-        <View style={tw`items-center`} key={`streak-${streakSyncKey}`}>
+        {/* Current Streak */}
+        <View style={tw`items-center`}>
           <Text style={tw`text-white/80 text-xs font-semibold`}>Streak</Text>
-          <AnimatedNumber value={currentStreak} style={tw`text-white font-black text-xl`} />
+          <AnimatedNumber value={currentStreak} style={tw`text-white font-black text-xl`} duration={300} />
         </View>
-        <View style={tw`items-center`} key={`best-${streakSyncKey}`}>
+
+        {/* Best Streak */}
+        <View style={tw`items-center`}>
           <Text style={tw`text-white/80 text-xs font-semibold`}>Best</Text>
-          <AnimatedNumber value={bestStreak} style={tw`text-white font-black text-xl`} />
+          <AnimatedNumber value={bestStreak} style={tw`text-white font-black text-xl`} duration={300} />
         </View>
+
+        {/* Total XP - This should now update with optimistic boost */}
         <View style={tw`items-center`}>
           <Text style={tw`text-white/80 text-xs font-semibold`}>Total XP</Text>
-          <AnimatedNumber value={totalXPEarned} style={tw`text-white font-black text-xl`} />
+          <AnimatedNumber value={totalXPEarned} style={tw`text-white font-black text-xl`} duration={300} />
         </View>
+
+        {/* Consistency */}
         <View style={tw`items-center`}>
           <Text style={tw`text-white/80 text-xs font-semibold`}>Consistency</Text>
-          <AnimatedNumber value={completionRate} style={tw`text-white font-black text-xl`} suffix="%" />
+          <AnimatedNumber
+            value={completionRate} // ✅ Fixed from totalXPEarned
+            style={tw`text-white font-black text-xl`}
+            suffix="%"
+            duration={300}
+          />
         </View>
       </View>
     </HabitHeroBackground>

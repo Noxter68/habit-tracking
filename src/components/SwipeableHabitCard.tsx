@@ -1,4 +1,6 @@
 // src/components/SwipeableHabitCard.tsx
+// ✅ WITH HAPTIC FEEDBACK
+
 import React, { useRef } from 'react';
 import { View, Text, Alert, Animated as RNAnimated, Dimensions } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
@@ -8,6 +10,7 @@ import tw from '../lib/tailwind';
 
 import { Habit } from '../types';
 import HabitCard from './habits/HabitCard';
+import { HapticFeedback } from '@/utils/haptics'; // ✅ Import
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SWIPE_THRESHOLD = -SCREEN_WIDTH * 0.25;
@@ -31,6 +34,9 @@ const SwipeableHabitCard: React.FC<SwipeableHabitCardProps> = ({ habit, onDelete
       const { translationX } = event.nativeEvent;
 
       if (translationX < SWIPE_THRESHOLD) {
+        // ✅ Medium haptic for delete action
+        HapticFeedback.medium();
+
         // Show delete confirmation with gamified messaging
         Alert.alert(
           '⚠️ Remove Habit',
@@ -39,6 +45,7 @@ const SwipeableHabitCard: React.FC<SwipeableHabitCardProps> = ({ habit, onDelete
             {
               text: 'Keep Habit',
               onPress: () => {
+                HapticFeedback.light(); // ✅ Light haptic for cancel
                 RNAnimated.spring(translateX, {
                   toValue: 0,
                   useNativeDriver: true,
@@ -51,6 +58,7 @@ const SwipeableHabitCard: React.FC<SwipeableHabitCardProps> = ({ habit, onDelete
             {
               text: 'Remove',
               onPress: () => {
+                HapticFeedback.medium(); // ✅ Medium haptic for confirmation
                 RNAnimated.timing(translateX, {
                   toValue: -SCREEN_WIDTH,
                   duration: 300,
@@ -65,7 +73,7 @@ const SwipeableHabitCard: React.FC<SwipeableHabitCardProps> = ({ habit, onDelete
           { cancelable: true }
         );
       } else {
-        // Snap back
+        // Snap back - no haptic needed (natural action)
         RNAnimated.spring(translateX, {
           toValue: 0,
           useNativeDriver: true,
@@ -82,6 +90,14 @@ const SwipeableHabitCard: React.FC<SwipeableHabitCardProps> = ({ habit, onDelete
     extrapolate: 'clamp',
   });
 
+  // ✅ Create wrapped onPress with haptic
+  const handlePress = onPress
+    ? () => {
+        HapticFeedback.light();
+        onPress();
+      }
+    : undefined;
+
   return (
     <View style={tw`relative`}>
       {/* Delete Background */}
@@ -95,7 +111,13 @@ const SwipeableHabitCard: React.FC<SwipeableHabitCardProps> = ({ habit, onDelete
       {/* Swipeable Habit Card */}
       <PanGestureHandler onGestureEvent={handleGestureEvent} onHandlerStateChange={handleStateChange} activeOffsetX={[-10, 10]} failOffsetY={[-5, 5]}>
         <RNAnimated.View style={[{ transform: [{ translateX }] }, tw`bg-sand rounded-2xl`]}>
-          <HabitCard habit={habit} onToggleDay={onToggleDay} onToggleTask={onToggleTask} onPress={onPress} index={index} />
+          <HabitCard
+            habit={habit}
+            onToggleDay={onToggleDay}
+            onToggleTask={onToggleTask}
+            onPress={handlePress} // ✅ With haptic
+            index={index}
+          />
         </RNAnimated.View>
       </PanGestureHandler>
     </View>

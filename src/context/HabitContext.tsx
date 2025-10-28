@@ -7,7 +7,7 @@ import { HabitService } from '../services/habitService';
 import { HabitProgressionService } from '@/services/habitProgressionService';
 import { useStats } from './StatsContext';
 import { supabase } from '@/lib/supabase';
-import { getLocalDateString, getTodayString } from '@/utils/dateHelpers';
+import { getTodayString } from '@/utils/dateHelpers';
 import { NotificationService } from '@/services/notificationService';
 
 interface ToggleTaskResult {
@@ -23,9 +23,6 @@ interface ToggleTaskResult {
 interface HabitContextType {
   habits: Habit[];
   loading: boolean;
-  processingTasks: Set<string>;
-  xpEarnedTasks: Set<string>;
-  checkTaskXPStatus: (habitId: string, date: string, taskId: string) => Promise<boolean>;
   addHabit: (habit: Partial<Habit>) => Promise<void>;
   updateHabit: (habitId: string, updates: Partial<Habit>) => Promise<void>;
   deleteHabit: (habitId: string) => Promise<void>;
@@ -40,11 +37,28 @@ const HabitContext = createContext<HabitContextType | undefined>(undefined);
 export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [loading, setLoading] = useState(false);
-  const [processingTasks, setProcessingTasks] = useState<Set<string>>(new Set());
-  const [xpEarnedTasks, setXpEarnedTasks] = useState<Set<string>>(new Set());
 
   const { user } = useAuth();
   const { refreshStats } = useStats();
+
+  // ============================================================================
+  // LOAD HABITS
+  // ============================================================================
+
+  const loadHabits = async () => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      const fetchedHabits = await HabitService.fetchHabits(user.id);
+      setHabits(fetchedHabits);
+    } catch (error: any) {
+      console.error('Error loading habits:', error);
+      Alert.alert('Error', 'Failed to load habits. Please check your connection.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Load habits when user logs in
   useEffect(() => {
@@ -55,6 +69,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   }, [user]);
 
+  // Subscribe to XP updates
   useEffect(() => {
     const subscription = supabase
       .channel('xp_updates')
@@ -77,20 +92,9 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
   }, [user?.id]);
 
-  const loadHabits = async () => {
-    if (!user) return;
-
-    try {
-      setLoading(true);
-      const fetchedHabits = await HabitService.fetchHabits(user.id);
-      setHabits(fetchedHabits);
-    } catch (error: any) {
-      console.error('Error loading habits:', error);
-      Alert.alert('Error', 'Failed to load habits. Please check your connection.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // ============================================================================
+  // HABIT CRUD OPERATIONS
+  // ============================================================================
 
   const refreshHabits = useCallback(async () => {
     await loadHabits();
@@ -130,10 +134,10 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           await NotificationService.scheduleSmartHabitNotifications(newHabit, user.id);
         }
 
-        // Create in database using HabitService
+        // Create in database
         const createdHabit = await HabitService.createHabit(newHabit, user.id);
 
-        // Add to local state for immediate UI update
+        // Add to local state
         setHabits([createdHabit, ...habits]);
       } catch (error: any) {
         console.error('Error adding habit:', error);
@@ -183,11 +187,11 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       if (!user) return;
 
       try {
-        // Optimistically update UI
-        setHabits(habits.map((habit) => (habit.id === habitId ? { ...habit, ...updates } : habit)));
-
-        // Update in database
+        // Update in database first
         await HabitService.updateHabit(habitId, user.id, updates);
+
+        // Then update local state
+        setHabits(habits.map((habit) => (habit.id === habitId ? { ...habit, ...updates } : habit)));
       } catch (error: any) {
         console.error('Error updating habit:', error);
         Alert.alert('Error', 'Failed to update habit');
@@ -204,11 +208,12 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       try {
         setLoading(true);
-        // Remove from local state immediately
-        setHabits(habits.filter((h) => h.id !== habitId));
 
-        // Delete from database
+        // Delete from database first
         await HabitService.deleteHabit(habitId, user.id);
+
+        // Then remove from local state
+        setHabits(habits.filter((h) => h.id !== habitId));
       } catch (error: any) {
         console.error('Error deleting habit:', error);
         Alert.alert('Error', 'Failed to delete habit');
@@ -218,70 +223,36 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         setLoading(false);
       }
     },
-    [user, loadHabits]
+    [user, habits]
   );
 
-  // context/HabitContext.tsx - Update the toggleTask method
+  // ============================================================================
+  // TASK OPERATIONS - CLEAN BACKEND SYNC
+  // ============================================================================
+
   const toggleTask = useCallback(
-    async (habitId: string, date: string, taskId: string) => {
+    async (habitId: string, date: string, taskId: string): Promise<ToggleTaskResult | undefined> => {
       if (!user) return;
 
       const habit = habits.find((h) => h.id === habitId);
       if (!habit) return;
 
-      const taskKey = `${habitId}-${date}-${taskId}`;
-
-      // prevent double processing
-      if (processingTasks.has(taskKey)) {
-        console.log('Task already being processed');
-        return;
-      }
-
-      const currentDayTasks = habit.dailyTasks[date] || {
-        completedTasks: [],
-        allCompleted: false,
-      };
-
-      setProcessingTasks((prev) => new Set(prev).add(taskKey));
-
       try {
-        // --- 1. Optimistic update
-        const isCurrentlyCompleted = currentDayTasks.completedTasks.includes(taskId);
-        const optimisticCompletedTasks = isCurrentlyCompleted ? currentDayTasks.completedTasks.filter((t) => t !== taskId) : [...currentDayTasks.completedTasks, taskId];
-
-        const optimisticAllCompleted = optimisticCompletedTasks.length === habit.tasks.length && habit.tasks.length > 0;
-
-        setHabits(
-          habits.map((h) =>
-            h.id === habitId
-              ? {
-                  ...h,
-                  dailyTasks: {
-                    ...h.dailyTasks,
-                    [date]: {
-                      completedTasks: optimisticCompletedTasks,
-                      allCompleted: optimisticAllCompleted,
-                    },
-                  },
-                }
-              : h
-          )
-        );
-
-        // --- 2. Persist to backend
+        // Call backend - this handles ALL logic including XP, streaks, etc.
         const result = await HabitService.toggleTask(habitId, user.id, date, taskId);
 
         if (!result.success) {
           throw new Error('Failed to update task');
         }
 
-        // --- 3. Update streaks & progression
+        // Update progression if streak changed
         if (result.streakUpdated !== undefined) {
           await HabitProgressionService.updateProgression(habitId, user.id, {
             overrideStreak: result.streakUpdated,
             allTasksCompleted: result.allTasksComplete,
           });
 
+          // Check for milestone unlocks
           const milestoneRes = await HabitProgressionService.checkMilestoneUnlock(habitId, user.id, {
             overrideStreak: result.streakUpdated,
           });
@@ -291,12 +262,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           }
         }
 
-        // --- 4. Update XP cache
-        if (result.xpEarned > 0) {
-          setXpEarnedTasks((prev) => new Set(prev).add(taskKey));
-        }
-
-        // --- 5. Update local state with backend truth
+        // Update local state with backend truth
         const actualCompletedTasks = Array.isArray(result.completedTasks) ? result.completedTasks : [];
         const actualAllCompleted = result.allTasksComplete;
 
@@ -322,39 +288,21 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           )
         );
 
-        // --- 6. Auto-refresh global stats
+        // Refresh global stats
         await refreshStats(true);
 
         return result;
       } catch (error) {
         console.error('Error toggling task:', error);
-
-        // rollback optimistic update
-        setHabits(
-          habits.map((h) =>
-            h.id === habitId
-              ? {
-                  ...h,
-                  dailyTasks: {
-                    ...h.dailyTasks,
-                    [date]: currentDayTasks,
-                  },
-                }
-              : h
-          )
-        );
-
         Alert.alert('Error', 'Failed to update task');
-      } finally {
-        setProcessingTasks((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(taskKey);
-          return newSet;
-        });
+
+        // Reload habits to get correct state from backend
+        await loadHabits();
       }
     },
-    [user, habits, processingTasks, refreshStats]
+    [user, habits, refreshStats]
   );
+
   const toggleHabitDay = useCallback(
     async (habitId: string, date: string) => {
       if (!user) return;
@@ -405,69 +353,17 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         await loadHabits();
       }
     },
-    [user, habits, loadHabits]
+    [user, habits]
   );
 
-  // Load XP status for today's tasks when habits load
-  const loadXPStatus = useCallback(async () => {
-    if (!user || habits.length === 0) return;
-
-    const today = getTodayString();
-    const xpStatusSet = new Set<string>();
-
-    // Check XP status for all tasks
-    for (const habit of habits) {
-      if (habit.tasks && habit.tasks.length > 0) {
-        for (const task of habit.tasks) {
-          const taskId = typeof task === 'string' ? task : task.id;
-          const hasXP = await HabitService.hasEarnedXPToday(user.id, habit.id, taskId, today);
-
-          if (hasXP) {
-            const key = `${habit.id}-${today}-${taskId}`;
-            xpStatusSet.add(key);
-          }
-        }
-      }
-    }
-
-    setXpEarnedTasks(xpStatusSet);
-  }, [user?.id, habits.length]);
-
-  // Load XP status when habits change
-  useEffect(() => {
-    loadXPStatus();
-  }, [loadXPStatus]); // Proper dependency
-
-  const checkTaskXPStatus = useCallback(
-    async (habitId: string, date: string, taskId: string): Promise<boolean> => {
-      if (!user) return false;
-
-      const key = `${habitId}-${date}-${taskId}`;
-
-      // Check cache first
-      if (xpEarnedTasks.has(key)) {
-        return true;
-      }
-
-      // Check database
-      const hasXP = await HabitService.hasEarnedXPToday(user.id, habitId, taskId, date);
-
-      // Update cache if XP was earned
-      if (hasXP) {
-        setXpEarnedTasks((prev) => new Set(prev).add(key));
-      }
-
-      return hasXP;
-    },
-    [user, xpEarnedTasks]
-  );
+  // ============================================================================
+  // CONTEXT VALUE
+  // ============================================================================
 
   const value = useMemo(
     () => ({
       habits,
       loading,
-      processingTasks,
-      xpEarnedTasks,
       addHabit,
       updateHabit,
       deleteHabit,
@@ -475,9 +371,8 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       toggleHabitDay,
       refreshHabits,
       updateHabitNotification,
-      checkTaskXPStatus,
     }),
-    [habits, loading, processingTasks, xpEarnedTasks, addHabit, updateHabit, deleteHabit, toggleTask, toggleHabitDay, refreshHabits, updateHabitNotification, checkTaskXPStatus]
+    [habits, loading, addHabit, updateHabit, deleteHabit, toggleTask, toggleHabitDay, refreshHabits, updateHabitNotification]
   );
 
   return <HabitContext.Provider value={value}>{children}</HabitContext.Provider>;
