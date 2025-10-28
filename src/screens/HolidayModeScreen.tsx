@@ -14,7 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { HolidayModeService, HolidayPeriod, HolidayStats, HolidayScope, HabitWithTasks } from '../services/holidayModeService';
-import { ChevronLeft, Umbrella, Diamond, Info, Calendar, Sparkles, Globe, CheckSquare, ListChecks } from 'lucide-react-native';
+import { ChevronLeft, Umbrella, Diamond, Info, Calendar, Sparkles, Globe, CheckSquare, ListChecks, InfinityIcon, Crown } from 'lucide-react-native';
 import { ScopeSelector } from '../components/holidays/ScopeSelector';
 import { HabitSelector } from '../components/holidays/HabitSelector';
 import { TaskSelector } from '../components/holidays/TaskSelector';
@@ -43,7 +43,7 @@ const HolidayModeScreen: React.FC = () => {
   const [selectedTasks, setSelectedTasks] = useState<Map<string, Set<string>>>(new Map());
 
   // Calculate duration
-  const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -206,6 +206,43 @@ const HolidayModeScreen: React.FC = () => {
       return;
     }
 
+    // ✅ IMPORTANT: Check with backend first to get proper validation messages
+    try {
+      const canCreateResult = await HolidayModeService.canCreateHoliday(
+        user.id,
+        startDateStr,
+        endDateStr,
+        scope,
+        scope === 'habits' ? Array.from(selectedHabits) : undefined,
+        scope === 'tasks'
+          ? Array.from(selectedTasks.entries()).map(([habitId, taskIds]) => ({
+              habitId,
+              taskIds: Array.from(taskIds),
+            }))
+          : undefined
+      );
+
+      if (!canCreateResult.canCreate) {
+        // Show the proper error message from backend
+        if (canCreateResult.requiresPremium) {
+          Alert.alert('Premium Required', canCreateResult.reason || 'This feature requires a Premium subscription.', [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Upgrade',
+              onPress: () => navigation.navigate('Paywall', { source: 'holiday_mode' }),
+            },
+          ]);
+        } else {
+          Alert.alert('Cannot Create Holiday', canCreateResult.reason || 'Unable to create holiday period.');
+        }
+        return;
+      }
+    } catch (error) {
+      console.error('Error validating holiday:', error);
+      Alert.alert('Error', 'Failed to validate holiday period. Please try again.');
+      return;
+    }
+
     let selectionMessage = '';
     if (scope === 'habits') {
       selectionMessage = `\n\nFreezing ${selectedHabits.size} habit${selectedHabits.size > 1 ? 's' : ''}`;
@@ -274,7 +311,7 @@ const HolidayModeScreen: React.FC = () => {
                   { text: 'Cancel', style: 'cancel' },
                   {
                     text: 'Upgrade',
-                    onPress: () => navigation.navigate('Paywall', { source: 'settings' }),
+                    onPress: () => navigation.navigate('Paywall', { source: 'holiday_mode' }),
                   },
                 ]);
               } else {
@@ -411,29 +448,50 @@ const HolidayModeScreen: React.FC = () => {
         {stats && !activeHoliday && (
           <Animated.View entering={FadeInDown.delay(100).duration(400)} style={tw`px-6 mb-6`}>
             {isPremium ? (
-              <LinearGradient colors={['#60A5FA', '#3B82F6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-6 shadow-sm`}>
+              <LinearGradient colors={['#78716C', '#57534E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-6 shadow-lg`}>
                 <View style={tw`flex-row items-center justify-between mb-3`}>
-                  <Text style={tw`text-xl font-black text-white`}>Premium</Text>
+                  <Text style={tw`text-xl font-black text-white`}>Premium Access</Text>
                   <View style={tw`bg-white/20 px-3 py-1.5 rounded-full flex-row items-center`}>
-                    <Diamond size={14} color="#FFFFFF" />
+                    <Crown size={14} color="#FFFFFF" />
                     <Text style={tw`text-xs font-bold text-white ml-1`}>UNLIMITED</Text>
                   </View>
                 </View>
-                <Text style={tw`text-blue-100 text-sm`}>Create unlimited holidays with no duration restrictions</Text>
+                <Text style={tw`text-stone-100 text-sm mb-4`}>Create unlimited holiday periods with no duration restrictions</Text>
+
+                <View style={tw`flex-row items-center gap-4`}>
+                  <View style={tw`flex-1 bg-white/10 rounded-xl p-3 items-center`}>
+                    <InfinityIcon size={28} color="#FFFFFF" strokeWidth={2} />
+                    <Text style={tw`text-xs text-white/80 mt-1`}>Periods</Text>
+                  </View>
+                  <View style={tw`flex-1 bg-white/10 rounded-xl p-3 items-center`}>
+                    <InfinityIcon size={28} color="#FFFFFF" strokeWidth={2} />
+                    <Text style={tw`text-xs text-white/80 mt-1`}>Days per period</Text>
+                  </View>
+                </View>
               </LinearGradient>
             ) : (
-              <View style={tw`bg-white rounded-3xl p-6 shadow-sm`}>
-                <Text style={tw`text-lg font-bold text-gray-800 mb-4`}>Your Allowance</Text>
+              <View style={tw`bg-white rounded-3xl p-6 shadow-sm border border-gray-200`}>
+                <View style={tw`flex-row items-center justify-between mb-4`}>
+                  <Text style={tw`text-lg font-bold text-gray-800`}>Your Allowance</Text>
+                  <View style={tw`bg-blue-50 px-3 py-1 rounded-full`}>
+                    <Text style={tw`text-xs font-bold text-blue-700`}>FREE PLAN</Text>
+                  </View>
+                </View>
+
                 <View style={tw`flex-row items-center gap-4`}>
-                  <View style={tw`flex-1`}>
-                    <Text style={tw`text-3xl font-black text-indigo-600`}>{stats.remainingAllowance}</Text>
-                    <Text style={tw`text-xs text-gray-500 mt-1`}>Holidays left</Text>
+                  <View style={tw`flex-1 bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-2xl p-4 items-center`}>
+                    <Text style={tw`text-4xl font-black text-cyan-600`}>{stats.remainingAllowance}</Text>
+                    <Text style={tw`text-xs text-cyan-700 font-semibold mt-1`}>Period left</Text>
                   </View>
-                  <View style={tw`w-px h-12 bg-gray-200`} />
-                  <View style={tw`flex-1`}>
-                    <Text style={tw`text-3xl font-black text-indigo-600`}>{stats.maxDuration}</Text>
-                    <Text style={tw`text-xs text-gray-500 mt-1`}>Days max</Text>
+                  <View style={tw`w-px h-16 bg-gray-200`} />
+                  <View style={tw`flex-1 bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-4 items-center`}>
+                    <Text style={tw`text-4xl font-black text-amber-600`}>{stats.maxDuration}</Text>
+                    <Text style={tw`text-xs text-amber-700 font-semibold mt-1`}>Days max</Text>
                   </View>
+                </View>
+
+                <View style={tw`mt-4 pt-4 border-t border-gray-100`}>
+                  <Text style={tw`text-xs text-gray-500 text-center`}>Upgrade to Premium for unlimited holiday periods</Text>
                 </View>
               </View>
             )}
@@ -525,7 +583,6 @@ const HolidayModeScreen: React.FC = () => {
                     <ActivityIndicator color="#FFFFFF" />
                   ) : (
                     <View style={tw`flex-row items-center justify-center`}>
-                      <Sparkles size={18} color="#FFFFFF" />
                       <Text style={tw`text-white font-bold text-center ml-2`}>Activate Holiday Mode</Text>
                     </View>
                   )}

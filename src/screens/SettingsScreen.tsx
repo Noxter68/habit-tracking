@@ -1,5 +1,5 @@
 // src/screens/SettingsScreen.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Switch, SafeAreaView, StatusBar, ActivityIndicator, Linking, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -9,7 +9,7 @@ import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import tw from 'twrnc';
 import { useAuth } from '@/context/AuthContext';
 import { useSubscription } from '@/context/SubscriptionContext';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/types';
 import { HolidayModeService, HolidayPeriod } from '@/services/holidayModeService';
@@ -251,6 +251,7 @@ const SettingsScreen: React.FC = () => {
   const [notifications, setNotifications] = useState(false);
   const [notificationLoading, setNotificationLoading] = useState(false);
   const [activeHoliday, setActiveHoliday] = useState<HolidayPeriod | null>(null);
+  const [holidayStats, setHolidayStats] = useState<any>(null);
 
   const { signOut, loading, user } = useAuth();
   const { isPremium } = useSubscription();
@@ -260,16 +261,23 @@ const SettingsScreen: React.FC = () => {
     loadNotificationPreferences();
   }, [user]);
 
-  useEffect(() => {
-    const loadHolidayStatus = async () => {
-      if (user) {
-        const holiday = await HolidayModeService.getActiveHoliday(user.id);
-        setActiveHoliday(holiday);
-      }
-    };
+  const loadHolidayStatus = useCallback(async () => {
+    if (!user) return;
 
-    loadHolidayStatus();
-  }, [user]);
+    try {
+      const [holiday, stats] = await Promise.all([HolidayModeService.getActiveHoliday(user.id), HolidayModeService.getHolidayStats(user.id)]);
+      setActiveHoliday(holiday);
+      setHolidayStats(stats);
+    } catch (error) {
+      console.error('Error loading holiday status:', error);
+    }
+  }, [user?.id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadHolidayStatus();
+    }, [loadHolidayStatus])
+  );
 
   const loadNotificationPreferences = async () => {
     if (!user) return;
@@ -353,7 +361,13 @@ const SettingsScreen: React.FC = () => {
 
   const getHolidaySubtitle = () => {
     if (!activeHoliday) {
-      return 'Pause habits without losing streaks';
+      if (isPremium) {
+        return 'Unlimited holiday periods available';
+      } else {
+        const periodsLeft = holidayStats?.remainingAllowance ?? 1;
+        const periodText = periodsLeft === 1 ? 'period' : 'periods';
+        return `Max 14 days per period • ${periodsLeft} ${periodText} left`;
+      }
     }
 
     const daysRemaining = activeHoliday.daysRemaining || 0;
@@ -366,7 +380,6 @@ const SettingsScreen: React.FC = () => {
       return `${daysRemaining} days remaining`;
     }
   };
-
   return (
     <SafeAreaView style={tw`flex-1 bg-[#FAF9F7]`}>
       <StatusBar barStyle="dark-content" />

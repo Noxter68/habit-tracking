@@ -540,22 +540,43 @@ export class HolidayModeService {
           return sum + (Array.isArray(habit.tasks) ? habit.tasks.length : 0);
         }, 0) || 0;
 
+      const isPremium = data?.is_premium || false;
+
+      // Handle proper defaults based on subscription tier
+      let remainingAllowance: number;
+      let maxDuration: number;
+
+      if (isPremium) {
+        // Premium users get unlimited
+        remainingAllowance = -1;
+        maxDuration = -1;
+      } else {
+        // Free users: 1 period left, max 14 days
+        remainingAllowance = data?.remainingAllowance ?? 1;
+        maxDuration = data?.maxDuration ?? 14;
+
+        // Ensure they're valid positive numbers for free users
+        if (remainingAllowance < 0) remainingAllowance = 1;
+        if (maxDuration < 0) maxDuration = 14;
+      }
+
       return {
-        isPremium: data.is_premium || false,
-        holidaysThisYear: data.holidays_this_year || 0,
-        totalDaysThisYear: data.total_days_this_year || 0,
-        remainingAllowance: data.remaining_allowance ?? -1,
-        maxDuration: data.max_duration ?? -1,
+        isPremium,
+        holidaysThisYear: data?.holidaysThisYear || 0,
+        totalDaysThisYear: data?.totalDaysThisYear || 0,
+        remainingAllowance,
+        maxDuration,
         totalHabits,
         totalTasks,
       };
     } catch (error) {
       console.error('Error fetching holiday stats:', error);
+      // Fallback to safe defaults for free users
       return {
         isPremium: false,
         holidaysThisYear: 0,
         totalDaysThisYear: 0,
-        remainingAllowance: 14,
+        remainingAllowance: 1,
         maxDuration: 14,
         totalHabits: 0,
         totalTasks: 0,

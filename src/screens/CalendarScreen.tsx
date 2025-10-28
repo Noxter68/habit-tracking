@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, ScrollView, RefreshControl, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import tw from '../lib/tailwind';
 import { useAuth } from '../context/AuthContext';
@@ -96,6 +96,13 @@ const CalendarScreen: React.FC = () => {
   useEffect(() => {
     loadHoliday();
   }, [loadHoliday]);
+
+  // Refresh holiday data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadHoliday();
+    }, [loadHoliday])
+  );
 
   const handleCreateHabit = () => {
     HapticFeedback.light();
