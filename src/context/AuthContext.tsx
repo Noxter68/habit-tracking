@@ -270,11 +270,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (error) {
+        // Only reset loading on error since component will unmount on success
+        setLoading(false);
+        throw error;
+      }
+      // Don't set loading to false here - component will unmount after successful signout
     } catch (error: any) {
+      setLoading(false); // Reset on error
       Alert.alert('Error', error.message);
-    } finally {
-      setLoading(false);
     }
   };
 

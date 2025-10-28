@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { Lock, Plus, TrendingUpIcon, Zap, PauseCircle } from 'lucide-react-native';
+import { Lock, Plus, Zap, PauseCircle } from 'lucide-react-native';
 import tw from '../lib/tailwind';
 
 // Components
@@ -38,7 +38,7 @@ const Dashboard: React.FC = () => {
   const { habits, loading: habitsLoading, toggleHabitDay, toggleTask, deleteHabit, refreshHabits } = useHabits();
   const { stats, loading: statsLoading, refreshStats } = useStats();
   const { triggerLevelUp } = useLevelUp();
-  const { checkHabitLimit, habitCount, maxHabits, isPremium } = useSubscription();
+  const { checkHabitLimit, habitCount, maxHabits, isPremium, refreshSubscription } = useSubscription();
 
   // State: Loading & UI
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -167,6 +167,7 @@ const Dashboard: React.FC = () => {
   const hasTasksPaused = frozenTasksMap.size > 0;
   const showFullHolidayMode = activeHabits.length === 0 && habits.length > 0;
   const showPartialPauseMode = hasPartialPause && !showFullHolidayMode;
+  const isHabitLimitReached = !isPremium && habitCount >= maxHabits;
 
   // ============================================================================
   // Event Handlers
@@ -179,10 +180,23 @@ const Dashboard: React.FC = () => {
 
   const handleCreateHabit = async () => {
     HapticFeedback.light();
+
+    // If habit limit reached, open paywall instead
+    if (isHabitLimitReached) {
+      navigation.navigate('Paywall', { source: 'habit_limit' });
+      return;
+    }
+
     const canCreate = await checkHabitLimit();
     if (canCreate) {
       navigation.navigate('HabitWizard');
     }
+  };
+
+  const handleDeleteHabit = async (habitId: string) => {
+    await deleteHabit(habitId);
+    // Refresh subscription context to update habit count
+    await refreshSubscription();
   };
 
   const handleHabitPress = (habitId: string) => {
@@ -226,7 +240,9 @@ const Dashboard: React.FC = () => {
   useFocusEffect(
     useCallback(() => {
       loadHolidayModeData();
-    }, [loadHolidayModeData])
+      // Refresh subscription to update habit count when returning from wizard
+      refreshSubscription();
+    }, [loadHolidayModeData, refreshSubscription])
   );
 
   // ============================================================================
@@ -326,26 +342,23 @@ const Dashboard: React.FC = () => {
           {!isPremium && habitCount > 0 && (
             <View
               style={[
-                tw`mx-6 mb-3 px-4 py-3.5 rounded-2xl flex-row items-center justify-center gap-2.5`,
+                tw`mx-1 mb-3 px-4 py-3 rounded-2xl flex-row items-center justify-center`,
                 {
-                  backgroundColor: habitCount >= maxHabits ? 'rgba(251, 146, 60, 0.08)' : 'rgba(59, 130, 246, 0.08)',
+                  backgroundColor: isHabitLimitReached ? 'rgba(251, 146, 60, 0.08)' : 'rgba(59, 130, 246, 0.08)',
                   borderWidth: 1,
-                  borderColor: habitCount >= maxHabits ? 'rgba(251, 146, 60, 0.2)' : 'rgba(59, 130, 246, 0.2)',
+                  borderColor: isHabitLimitReached ? 'rgba(251, 146, 60, 0.2)' : 'rgba(59, 130, 246, 0.2)',
                 },
               ]}
             >
-              {habitCount >= maxHabits ? (
+              {isHabitLimitReached ? (
                 <>
-                  <Lock size={14} color="#EA580C" strokeWidth={2.5} />
-                  <Text style={tw`text-xs font-bold text-orange-700 tracking-wide`}>Habit limit reached • Upgrade for unlimited</Text>
+                  <Lock size={14} color="#EA580C" strokeWidth={2.5} style={tw`mr-2`} />
+                  <Text style={tw`text-xs font-bold text-orange-700 tracking-wide flex-shrink`}>Habit limit reached • Upgrade for unlimited</Text>
                 </>
               ) : (
-                <>
-                  <TrendingUpIcon size={14} color="#2563EB" strokeWidth={2.5} />
-                  <Text style={tw`text-xs font-bold text-blue-700 tracking-wide`}>
-                    {habitCount} of {maxHabits} free habits
-                  </Text>
-                </>
+                <Text style={tw`text-xs font-bold text-blue-700 tracking-wide`}>
+                  {habitCount} of {maxHabits} free habits
+                </Text>
               )}
             </View>
           )}
@@ -365,13 +378,7 @@ const Dashboard: React.FC = () => {
 
             {/* Add Habit Button */}
             {habits.length > 0 && !showFullHolidayMode && (
-              <Pressable
-                onPress={() => {
-                  HapticFeedback.light();
-                  handleCreateHabit();
-                }}
-                style={({ pressed }) => [tw`w-10 h-10 rounded-xl items-center justify-center`, pressed && tw`scale-95`]}
-              >
+              <Pressable onPress={handleCreateHabit} style={({ pressed }) => [tw`w-10 h-10 rounded-xl items-center justify-center`, pressed && tw`scale-95`]}>
                 <Image source={require('../../assets/interface/add-habit-button.png')} style={{ width: 40, height: 40 }} resizeMode="contain" />
               </Pressable>
             )}
@@ -403,7 +410,7 @@ const Dashboard: React.FC = () => {
                   habit={habit}
                   onToggleDay={handleDayToggle}
                   onToggleTask={handleTaskToggle}
-                  onDelete={deleteHabit}
+                  onDelete={handleDeleteHabit}
                   onPress={() => handleHabitPress(habit.id)}
                   index={index}
                 />
@@ -412,13 +419,7 @@ const Dashboard: React.FC = () => {
           ) : (
             /* Empty State - Create First Habit */
             <View style={tw`px-5`}>
-              <Pressable
-                onPress={() => {
-                  HapticFeedback.light();
-                  handleCreateHabit();
-                }}
-                style={({ pressed }) => [pressed && tw`scale-[0.98]`]}
-              >
+              <Pressable onPress={handleCreateHabit} style={({ pressed }) => [pressed && tw`scale-[0.98]`]}>
                 <LinearGradient colors={['rgba(243, 244, 246, 0.5)', 'rgba(229, 231, 235, 0.3)']} style={tw`rounded-2xl p-8 items-center border border-quartz-200`}>
                   <View style={tw`w-16 h-16 mb-4`}>
                     <LinearGradient colors={['#9CA3AF', '#6B7280']} style={tw`w-full h-full rounded-2xl items-center justify-center shadow-lg`}>
