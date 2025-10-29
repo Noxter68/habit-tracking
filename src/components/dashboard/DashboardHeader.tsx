@@ -1,5 +1,5 @@
 // src/components/dashboard/DashboardHeader.tsx
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { View, Text, ImageBackground } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -55,32 +55,43 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const navigation = useNavigation();
   const { user, username } = useAuth();
   const { refreshStats } = useStats();
-  const greeting = getGreeting();
+
+  // ✅ Memoize greeting to prevent recalculation
+  const greeting = useMemo(() => getGreeting(), []);
 
   // Optimistic update state
   const [optimisticXP, setOptimisticXP] = React.useState(currentLevelXP);
   const [optimisticTotalXP, setOptimisticTotalXP] = React.useState(totalXP);
 
+  const isOptimisticUpdate = React.useRef(false);
+
   // Update optimistic state when props change
   React.useEffect(() => {
+    // Don't overwrite during optimistic updates
+    if (isOptimisticUpdate.current) {
+      return;
+    }
+
     setOptimisticXP(currentLevelXP);
     setOptimisticTotalXP(totalXP);
   }, [currentLevelXP, totalXP]);
 
-  // Get tier theme based on current level
-  const getCurrentTier = (): AchievementTierName => {
+  // ✅ Memoize tier calculation
+  const currentTier = useMemo((): AchievementTierName => {
     const title = achievementTitles.find((t) => userLevel >= t.level && userLevel < (achievementTitles.find((next) => next.level > t.level)?.level || Infinity));
     return (title?.tier as AchievementTierName) || 'Novice';
-  };
+  }, [userLevel]);
 
-  const currentTier = getCurrentTier();
-  const tierTheme = getAchievementTierTheme(currentTier);
-  const isObsidian = tierTheme.gemName === 'Obsidian';
+  // ✅ Memoize tier theme
+  const tierTheme = useMemo(() => getAchievementTierTheme(currentTier), [currentTier]);
 
-  // Determine text colors based on gem type
-  const getTextColors = (gemName: string) => {
+  // ✅ Memoize isObsidian check
+  const isObsidian = useMemo(() => tierTheme.gemName === 'Obsidian', [tierTheme.gemName]);
+
+  // ✅ Memoize text colors
+  const textColors = useMemo(() => {
     // Lighter gems need darker text for contrast
-    if (['Crystal', 'Topaz'].includes(gemName)) {
+    if (['Crystal', 'Topaz'].includes(tierTheme.gemName)) {
       return {
         primary: '#FFFFFF',
         secondary: '#374151',
@@ -102,15 +113,17 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       levelBadgeBg: 'rgba(255, 255, 255, 0.3)',
       xpBadgeBg: 'rgba(255, 255, 255, 0.25)',
     };
-  };
+  }, [tierTheme.gemName]);
 
-  const textColors = getTextColors(tierTheme.gemName);
-
-  const handleAchievementPress = () => {
+  // ✅ Stabilize callbacks with useCallback
+  const handleAchievementPress = useCallback(() => {
     navigation.navigate('Achievements' as never);
-  };
+  }, [navigation]);
 
   const handleXPCollect = async (amount: number) => {
+    // ✅ Mark that we're doing an optimistic update
+    isOptimisticUpdate.current = true;
+
     setOptimisticXP((prev) => prev + amount);
     setOptimisticTotalXP((prev) => prev + amount);
 
@@ -118,49 +131,77 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       onXPCollected(amount);
     }
 
+    // ✅ After backend updates, allow real data to come through
     setTimeout(async () => {
       if (onStatsRefresh) {
         onStatsRefresh();
       }
+
+      // Re-enable updates after refresh completes
+      setTimeout(() => {
+        isOptimisticUpdate.current = false;
+      }, 500);
     }, 1000);
   };
 
-  const handleLevelUp = async () => {
+  const handleLevelUp = useCallback(async () => {
     await refreshStats(true);
     if (onStatsRefresh) {
       onStatsRefresh();
     }
-  };
+  }, [refreshStats, onStatsRefresh]);
 
-  const nextTitle = achievementTitles.find((title) => title.level > userLevel);
-  const xpToNextLevel = xpForNextLevel - optimisticXP;
+  // ✅ Memoize next title
+  const nextTitle = useMemo(() => achievementTitles.find((title) => title.level > userLevel), [userLevel]);
 
-  const displayXP = optimisticXP > xpForNextLevel ? optimisticXP % xpForNextLevel : optimisticXP;
-  const displayProgress = xpForNextLevel > 0 ? (displayXP / xpForNextLevel) * 100 : 0;
+  // ✅ Memoize display calculations
+  const { displayXP, displayProgress } = useMemo(() => {
+    const xpToShow = optimisticXP > xpForNextLevel ? optimisticXP % xpForNextLevel : optimisticXP;
+    const progressPercent = xpForNextLevel > 0 ? (xpToShow / xpForNextLevel) * 100 : 0;
 
-  const GradientContainer = ({ children }: { children: React.ReactNode }) => {
-    const textureSource = tierTheme.texture;
+    return {
+      displayXP: xpToShow,
+      displayProgress: progressPercent,
+    };
+  }, [optimisticXP, xpForNextLevel]);
 
-    return (
-      <LinearGradient
-        colors={tierTheme.gradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{
-          borderRadius: 20,
-          overflow: 'hidden',
-          borderWidth: isObsidian ? 2 : 1.5,
-          borderColor: isObsidian ? 'rgba(139, 92, 246, 0.4)' : 'rgba(255, 255, 255, 0.2)',
-          shadowColor: isObsidian ? '#8b5cf6' : '#000',
-          shadowOffset: { width: 0, height: isObsidian ? 12 : 8 },
-          shadowOpacity: isObsidian ? 0.6 : 0.3,
-          shadowRadius: isObsidian ? 24 : 20,
-        }}
-      >
-        {textureSource ? (
-          <ImageBackground source={textureSource} resizeMode="cover" imageStyle={{ opacity: 0.2 }}>
-            {/* Epic purple glow overlay for Obsidian */}
-            {isObsidian && (
+  // ✅ Memoize GradientContainer component
+  const GradientContainer = useMemo(() => {
+    return ({ children }: { children: React.ReactNode }) => {
+      const textureSource = tierTheme.texture;
+
+      return (
+        <LinearGradient
+          colors={tierTheme.gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            borderRadius: 20,
+            overflow: 'hidden',
+            borderWidth: isObsidian ? 2 : 1.5,
+            borderColor: isObsidian ? 'rgba(139, 92, 246, 0.4)' : 'rgba(255, 255, 255, 0.2)',
+            shadowColor: isObsidian ? '#8b5cf6' : '#000',
+            shadowOffset: { width: 0, height: isObsidian ? 12 : 8 },
+            shadowOpacity: isObsidian ? 0.6 : 0.3,
+            shadowRadius: isObsidian ? 24 : 20,
+          }}
+        >
+          {textureSource ? (
+            <ImageBackground source={textureSource} resizeMode="cover" imageStyle={{ opacity: 0.2 }}>
+              {/* Epic purple glow overlay for Obsidian */}
+              {isObsidian && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(139, 92, 246, 0.08)',
+                  }}
+                />
+              )}
+              {/* Dark overlay for depth */}
               <View
                 style={{
                   position: 'absolute',
@@ -168,42 +209,31 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  backgroundColor: 'rgba(139, 92, 246, 0.08)',
+                  backgroundColor: isObsidian ? 'rgba(0, 0, 0, 0.15)' : 'rgba(0, 0, 0, 0.05)',
                 }}
               />
-            )}
-            {/* Dark overlay for depth */}
-            <View
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: isObsidian ? 'rgba(0, 0, 0, 0.15)' : 'rgba(0, 0, 0, 0.05)',
-              }}
-            />
-            {children}
-          </ImageBackground>
-        ) : (
-          <View>
-            {/* Fallback: No texture, just dark overlay */}
-            <View
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: 'rgba(0, 0, 0, 0.05)',
-              }}
-            />
-            {children}
-          </View>
-        )}
-      </LinearGradient>
-    );
-  };
+              {children}
+            </ImageBackground>
+          ) : (
+            <View>
+              {/* Fallback: No texture, just dark overlay */}
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                }}
+              />
+              {children}
+            </View>
+          )}
+        </LinearGradient>
+      );
+    };
+  }, [tierTheme.gradient, tierTheme.texture, isObsidian]);
 
   return (
     <Animated.View entering={FadeIn} style={{ position: 'relative', marginBottom: 16 }}>
@@ -378,4 +408,4 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   );
 };
 
-export default DashboardHeader;
+export default React.memo(DashboardHeader);

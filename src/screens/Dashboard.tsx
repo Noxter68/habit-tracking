@@ -55,6 +55,27 @@ const Dashboard: React.FC = () => {
 
   // Refs
   const isFetchingHolidayRef = useRef(false);
+  const lastLoadTime = useRef<number>(0);
+  const MIN_RELOAD_INTERVAL = 1000; // 1 second
+
+  // ============================================================================
+  // LOADING STATE MANAGEMENT
+  // ============================================================================
+
+  // Track if we have the minimum required data to render
+  const hasMinimumData = useMemo(() => {
+    return !habitsLoading && !statsLoading && !holidayLoading && stats !== null && habits !== undefined;
+  }, [habitsLoading, statsLoading, holidayLoading, stats, habits]);
+
+  // Once we have data, keep initial load false
+  useEffect(() => {
+    if (hasMinimumData && isInitialLoad) {
+      // Small delay to ensure everything is rendered
+      setTimeout(() => {
+        setIsInitialLoad(false);
+      }, 100);
+    }
+  }, [hasMinimumData, isInitialLoad]);
 
   // ============================================================================
   // Holiday Mode Management
@@ -227,30 +248,37 @@ const Dashboard: React.FC = () => {
     triggerLevelUp(newLevel, testLevel, achievement);
   };
 
+  const handleStatsRefresh = useCallback(async () => {
+    // Force refresh stats from backend
+    await refreshStats(true);
+  }, [refreshStats]);
+
   // ============================================================================
   // Effects
   // ============================================================================
 
-  // Initial load
-  useEffect(() => {
-    loadHolidayModeData();
-  }, [user?.id, habits.length]);
-
-  // Reload on focus
   useFocusEffect(
     useCallback(() => {
-      loadHolidayModeData();
-    }, [loadHolidayModeData])
-  );
+      let isMounted = true;
 
-  // Refresh subscription count when screen gains focus (but not on every render)
-  useFocusEffect(
-    useCallback(() => {
-      const refreshCount = async () => {
-        await refreshSubscription();
+      const loadData = async () => {
+        if (!user?.id || !isMounted) return;
+
+        const now = Date.now();
+        if (now - lastLoadTime.current < MIN_RELOAD_INTERVAL) {
+          return; // Skip if loaded recently
+        }
+
+        lastLoadTime.current = now;
+        await Promise.all([loadHolidayModeData(), refreshSubscription()]);
       };
-      refreshCount();
-    }, [])
+
+      loadData();
+
+      return () => {
+        isMounted = false;
+      };
+    }, [user?.id, loadHolidayModeData, refreshSubscription])
   );
 
   // ============================================================================
@@ -296,7 +324,7 @@ const Dashboard: React.FC = () => {
           currentLevelXP={stats?.currentLevelXP ?? 0}
           xpForNextLevel={stats?.xpForNextLevel ?? 100}
           levelProgress={stats?.levelProgress ?? 0}
-          onStatsRefresh={() => {}}
+          onStatsRefresh={handleStatsRefresh}
           totalXP={stats?.totalXP ?? 0}
         />
 

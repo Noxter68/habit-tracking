@@ -16,8 +16,8 @@ interface TierTheme {
 }
 
 interface DailyChallengeProps {
-  completedToday: number;
-  totalTasksToday: number;
+  completedToday: number; // ✅ Now represents completed HABITS
+  totalTasksToday: number; // ✅ Now represents total HABITS
   onCollect: (amount: number) => void;
   userId: string;
   currentLevelXP: number;
@@ -44,6 +44,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
   const [isAnimating, setIsAnimating] = useState(false);
   const [showXPBadge, setShowXPBadge] = useState(false);
 
+  // ✅ UPDATED: A habit is complete when ALL its tasks are done
   const isComplete = completedToday >= totalTasksToday && totalTasksToday > 0;
   const completionPercentage = totalTasksToday > 0 ? Math.min(100, Math.round((completedToday / totalTasksToday) * 100)) : 0;
 
@@ -141,9 +142,9 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
     cardTranslateY.value = withSequence(withTiming(-5, { duration: 75, easing: Easing.out(Easing.ease) }), withSpring(0, { damping: 10, stiffness: 350 }));
 
     try {
-      const success = await XPService.collectDailyChallenge(userId);
+      const result = await XPService.collectDailyChallenge(userId);
 
-      if (success) {
+      if (result.success) {
         setIsCollected(true);
         setShowXPBadge(true);
 
@@ -164,9 +165,9 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
         badgeOpacity.value = withSequence(withTiming(1, { duration: 200 }), withTiming(1, { duration: 600 }), withTiming(0, { duration: 400 }));
 
         setTimeout(() => {
-          onCollect(20);
+          onCollect(result.xpEarned);
 
-          if (currentLevelXP + 20 >= xpForNextLevel && onLevelUp) {
+          if (currentLevelXP + result.xpEarned >= xpForNextLevel && onLevelUp) {
             setTimeout(() => {
               onLevelUp();
             }, 100);
@@ -197,11 +198,32 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
 
       if (!error) {
         setIsCollected(false);
-        console.log('Debug: Daily challenge reset');
+        console.log('✅ Debug: Daily challenge reset');
       }
     } catch (error) {
-      console.error('Error resetting daily challenge:', error);
+      console.error('❌ Error resetting daily challenge:', error);
     }
+  };
+
+  // ✅ UPDATED: Dynamic text based on habits remaining
+  const getProgressText = () => {
+    if (isCollected) return 'Collected!';
+    if (isComplete) return 'Perfect Day!';
+
+    const remaining = totalTasksToday - completedToday;
+    if (remaining === 1) return '1 habit to go';
+    return `${remaining} habits to go`;
+  };
+
+  // ✅ UPDATED: Show habits count
+  const getCountText = () => {
+    if (isCollected) return 'See you tomorrow!';
+
+    // Use "habit" for singular, "habits" for plural
+    if (totalTasksToday === 1) {
+      return `${completedToday} / ${totalTasksToday} habit`;
+    }
+    return `${completedToday} / ${totalTasksToday} habits`;
   };
 
   return (
@@ -340,7 +362,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
                       textShadowRadius: 3,
                     }}
                   >
-                    {isCollected ? 'Collected!' : isComplete ? 'Complete!' : `${totalTasksToday - completedToday} tasks to go`}
+                    {getProgressText()}
                   </Text>
                 </View>
               </View>
@@ -410,7 +432,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
                 marginTop: 6,
               }}
             >
-              {/* Quest count badge - matching XP badge style */}
+              {/* Habit count badge - matching XP badge style */}
               <View
                 style={{
                   backgroundColor: 'rgba(255, 255, 255, 0.3)',
@@ -431,7 +453,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
                     textShadowRadius: 3,
                   }}
                 >
-                  {isCollected ? 'See you tomorrow!' : `${completedToday} / ${totalTasksToday} Quests`}
+                  {getCountText()}
                 </Text>
               </View>
 
@@ -485,7 +507,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
               fontWeight: '700',
             }}
           >
-            Reset (Debug)
+            🔄 Reset Challenge (Debug)
           </Text>
         </Pressable>
       )}

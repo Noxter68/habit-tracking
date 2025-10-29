@@ -1,4 +1,4 @@
-// App.tsx - With RevenueCat Initialization
+// App.tsx - With RevenueCat Initialization and Diagnostic Screen
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -25,6 +25,7 @@ import LeaderboardScreen from './src/screens/LeaderboardScreen';
 import StatsScreen from './src/screens/StatsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import AchievementsScreen from './src/screens/AchievementScreen';
+import DiagnosticScreen from './src/screens/DiagnosticScreen'; // ✅ NEW
 
 // Contexts
 import { AuthProvider, useAuth } from './src/context/AuthContext';
@@ -61,6 +62,10 @@ export type RootStackParamList = {
   HabitDetails: { habitId: string };
   Achievements: undefined;
   Paywall: { source?: 'habit_limit' | 'streak_saver' | 'settings' | 'stats' };
+  Diagnostic: undefined; // ✅ NEW
+  Debug: undefined;
+  NotificationManager: undefined;
+  HolidayMode: undefined;
 };
 
 export type TabParamList = {
@@ -321,16 +326,43 @@ function AppNavigator() {
             animation: 'slide_from_right',
           }}
         />
+
+        {/* ✅ DEBUG MODE SCREENS - Only show when debug is enabled */}
         {showDebugScreen && (
-          <Stack.Screen
-            name="Debug"
-            component={DebugScreen}
-            options={{
-              title: 'Debug Tools',
-              animation: 'slide_from_right',
-              headerShown: true,
-            }}
-          />
+          <>
+            <Stack.Screen
+              name="Debug"
+              component={DebugScreen}
+              options={{
+                title: 'Debug Tools',
+                animation: 'slide_from_right',
+                headerShown: true,
+                headerStyle: {
+                  backgroundColor: '#1e293b',
+                },
+                headerTintColor: '#fff',
+                headerTitleStyle: {
+                  fontWeight: 'bold',
+                },
+              }}
+            />
+            <Stack.Screen
+              name="Diagnostic"
+              component={DiagnosticScreen}
+              options={{
+                title: '🏥 System Diagnostics',
+                animation: 'slide_from_right',
+                headerShown: true,
+                headerStyle: {
+                  backgroundColor: '#3b82f6',
+                },
+                headerTintColor: '#fff',
+                headerTitleStyle: {
+                  fontWeight: 'bold',
+                },
+              }}
+            />
+          </>
         )}
       </Stack.Navigator>
 

@@ -14,6 +14,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/types';
 import { HolidayModeService, HolidayPeriod } from '@/services/holidayModeService';
 import { NotificationPreferencesService } from '@/services/notificationPreferenceService';
+import { AppConfig } from '@/config/appConfig'; // ✅ NEW
 
 // ============================================================================
 // Types
@@ -37,7 +38,9 @@ type IconName =
   | 'crown'
   | 'sparkles'
   | 'credit-card'
-  | 'beach-outline';
+  | 'beach-outline'
+  | 'bug' // ✅ NEW
+  | 'diagnostic'; // ✅ NEW
 
 interface SettingsSectionProps {
   title: string;
@@ -119,6 +122,19 @@ const Icon: React.FC<IconProps> = ({ name, size = 22, color = '#9333EA' }) => {
     'beach-outline': (
       <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
         <Path d="M12 3L4 9h16l-8-6zm-8 8v10h16V11H4zm8 8c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      </Svg>
+    ),
+    // ✅ NEW DEBUG ICONS
+    bug: (
+      <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <Path d="M12 2v3m0 14v3M4 7h3m10 0h3M4 17h3m10 0h3M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" stroke={color} strokeWidth={2} strokeLinecap="round" />
+        <Path d="M18 11a6 6 0 11-12 0" stroke={color} strokeWidth={2} />
+        <Path d="M12 11v6" stroke={color} strokeWidth={2} strokeLinecap="round" />
+      </Svg>
+    ),
+    diagnostic: (
+      <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <Path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
       </Svg>
     ),
   };
@@ -380,6 +396,7 @@ const SettingsScreen: React.FC = () => {
       return `${daysRemaining} days remaining`;
     }
   };
+
   return (
     <SafeAreaView style={tw`flex-1 bg-[#FAF9F7]`}>
       <StatusBar barStyle="dark-content" />
@@ -486,6 +503,35 @@ const SettingsScreen: React.FC = () => {
               isLast
             />
           </SettingsSection>
+
+          {/* ✅ NEW DEBUG SECTION - Only visible when debug mode is enabled */}
+          {AppConfig.debug.showDebugScreen && (
+            <SettingsSection title="Developer Tools" delay={450} gradient={['#F59E0B', '#D97706']}>
+              <SettingsItem
+                icon="diagnostic"
+                title="System Diagnostics"
+                subtitle="Check app health & XP system"
+                color="#F59E0B"
+                trailing={<Icon name="chevron-forward" size={20} color="#F59E0B" />}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  navigation.navigate('Diagnostic');
+                }}
+              />
+              <SettingsItem
+                icon="bug"
+                title="Debug Tools"
+                subtitle="Daily challenge utilities"
+                color="#F59E0B"
+                trailing={<Icon name="chevron-forward" size={20} color="#F59E0B" />}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  navigation.navigate('Debug');
+                }}
+                isLast
+              />
+            </SettingsSection>
+          )}
 
           <SettingsSection title="Support" delay={400} gradient={['#EC4899', '#DB2777']}>
             <SettingsItem icon="information-circle-outline" title="Version" subtitle="1.0.0" color="#EC4899" />
