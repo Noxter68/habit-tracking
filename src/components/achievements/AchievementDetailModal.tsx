@@ -77,21 +77,6 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
                           }}
                           resizeMode="contain"
                         />
-
-                        {/* Lock overlay for locked achievements */}
-                        {!isUnlocked && (
-                          <View style={tw`absolute inset-0 items-center justify-center`}>
-                            <Image
-                              source={require('../../../assets/achievements/locked.png')}
-                              style={{
-                                width: 60,
-                                height: 60,
-                                opacity: 0.85, // changed from 0.6
-                              }}
-                              resizeMode="contain"
-                            />
-                          </View>
-                        )}
                       </Animated.View>
                     </LinearGradient>
                   </ImageBackground>
