@@ -1,4 +1,4 @@
-const IS_DEBUG_MODE = true;
+const IS_DEBUG_MODE = false;
 
 export const AppConfig = {
   // Debug settings

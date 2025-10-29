@@ -88,7 +88,17 @@ const CalendarDay: React.FC<{
   const isPartial = completedTasks > 0 && !isCompleted;
   const isSelected = isSameDay(date, selectedDate);
   const isCurrentDay = isToday(date);
-  const beforeCreation = date < new Date(habit.createdAt);
+
+  // ✅ FIX: Normalize both dates to midnight for accurate comparison
+  const checkDate = new Date(date);
+  checkDate.setHours(0, 0, 0, 0);
+
+  const creationDate = new Date(habit.createdAt);
+  creationDate.setHours(0, 0, 0, 0);
+
+  // Date is "before creation" only if it's strictly before the creation date
+  // This means the creation date itself (Oct 29) will NOT be considered "before"
+  const beforeCreation = checkDate.getTime() < creationDate.getTime();
   const isPast = date < new Date() && !isCurrentDay;
   const isMissed = isPast && !isCompleted && !isPartial && !beforeCreation;
 

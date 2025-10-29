@@ -36,7 +36,17 @@ const DateDetails: React.FC<DateDetailsProps> = ({ habit, selectedDate, activeHo
   const isPartial = completedCount > 0 && !isCompleted;
   const percentage = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
 
-  const beforeCreation = selectedDate < new Date(habit.createdAt);
+  // ✅ FIX: Normalize both dates to midnight for accurate comparison
+  const checkDate = new Date(selectedDate);
+  checkDate.setHours(0, 0, 0, 0);
+
+  const creationDate = new Date(habit.createdAt);
+  creationDate.setHours(0, 0, 0, 0);
+
+  // Only dates strictly BEFORE creation date are considered "before creation"
+  // This allows the creation date itself (Oct 29) to show completion
+  const beforeCreation = checkDate.getTime() < creationDate.getTime();
+
   const isPast = selectedDate < new Date();
   const isToday = selectedDate.toDateString() === new Date().toDateString();
 

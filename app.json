@@ -4,14 +4,20 @@
     "slug": "Nuvoria",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon/nuvoria_icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash/splashScreen2732.png",
       "resizeMode": "contain",
       "backgroundColor": "#6366f1"
     },
     "ios": {
+      "icon": "./assets/icon/nuvoria_icon.png",
+      "splash": {
+        "image": "./assets/splash/splashScreen2732.png",
+        "resizeMode": "cover",
+        "backgroundColor": "#6366f1"
+      },
       "supportsTablet": true,
       "bundleIdentifier": "com.davidplanchon.nuvoria",
       "usesAppleSignIn": true,
@@ -25,10 +31,7 @@
       "package": "com.davidplanchon.nuvoria",
       "versionCode": 1
     },
-    "plugins": [
-      "expo-web-browser",
-      "expo-apple-authentication"
-    ],
+    "plugins": ["expo-web-browser", "expo-apple-authentication"],
     "extra": {
       "eas": {
         "projectId": "b814beca-39ec-424e-b3df-ede00d802c77"

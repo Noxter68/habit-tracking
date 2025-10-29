@@ -300,7 +300,7 @@ const Dashboard: React.FC = () => {
   // ============================================================================
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-sand`} edges={['top']}>
+    <SafeAreaView style={tw`flex-1 bg-sand mt-6`} edges={['top']}>
       <StatusBar barStyle="dark-content" />
 
       <ScrollView

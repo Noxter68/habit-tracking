@@ -314,26 +314,42 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 {/* Flask Icon - themed with tier accent */}
                 <View style={{ width: 38, height: 38 }}>
-                  <View
-                    style={{
-                      width: 38,
-                      height: 38,
-                      borderRadius: 19,
-                      backgroundColor: `${accentColor}26`, // 15% opacity
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderWidth: 1,
-                      borderColor: `${accentColor}40`, // 25% opacity
-                    }}
-                  >
-                    {isCollected ? (
-                      <CheckCircle2 size={22} color={`${accentColor}D9`} />
-                    ) : isComplete ? (
-                      <Image source={require('../../../assets/interface/consumable-xp.png')} style={{ width: 28, height: 28 }} resizeMode="contain" />
-                    ) : (
-                      <Image source={require('../../../assets/interface/challenge.png')} style={{ width: 28, height: 28 }} resizeMode="contain" />
-                    )}
-                  </View>
+                  {isCollected ? (
+                    // ✅ FIXED: White opaque background with white border when collected
+                    <View
+                      style={{
+                        width: 38,
+                        height: 38,
+                        borderRadius: 19,
+                        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderWidth: 1,
+                        borderColor: 'rgba(255, 255, 255, 0.4)',
+                      }}
+                    >
+                      <CheckCircle2 size={22} color="#FFFFFF" strokeWidth={2.5} />
+                    </View>
+                  ) : (
+                    <View
+                      style={{
+                        width: 38,
+                        height: 38,
+                        borderRadius: 19,
+                        backgroundColor: `${accentColor}26`, // 15% opacity
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderWidth: 1,
+                        borderColor: `${accentColor}40`, // 25% opacity
+                      }}
+                    >
+                      {isComplete ? (
+                        <Image source={require('../../../assets/interface/consumable-xp.png')} style={{ width: 28, height: 28 }} resizeMode="contain" />
+                      ) : (
+                        <Image source={require('../../../assets/interface/challenge.png')} style={{ width: 28, height: 28 }} resizeMode="contain" />
+                      )}
+                    </View>
+                  )}
                 </View>
 
                 <View>

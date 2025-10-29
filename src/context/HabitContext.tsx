@@ -294,8 +294,13 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                     },
                   },
                   completedDays: updatedCompletedDays,
-                  currentStreak: result.streakUpdated ?? h.currentStreak,
-                  bestStreak: Math.max(h.bestStreak, result.streakUpdated ?? h.currentStreak),
+                  // ✅ ONLY update streak if backend explicitly returns a new value
+                  ...(result.streakUpdated !== undefined && result.streakUpdated !== null
+                    ? {
+                        currentStreak: result.streakUpdated,
+                        bestStreak: Math.max(h.bestStreak, result.streakUpdated),
+                      }
+                    : {}),
                 }
               : h
           )
