@@ -270,6 +270,8 @@ const SettingsScreen: React.FC = () => {
   const [activeHoliday, setActiveHoliday] = useState<HolidayPeriod | null>(null);
   const [holidayStats, setHolidayStats] = useState<any>(null);
 
+  const [signingOut, setSigningOut] = useState(false);
+
   const { signOut, loading, user } = useAuth();
   const { isPremium } = useSubscription();
   const navigation = useNavigation<NavigationProp>();
@@ -359,10 +361,18 @@ const SettingsScreen: React.FC = () => {
 
   const handleSignOut = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    Logger.debug('🔘 Sign Out button pressed');
+    setSigningOut(true);
+
     try {
       await signOut();
+      Logger.debug('✅ SignOut completed in SettingsScreen');
     } catch (error) {
-      Logger.error('Sign out error:', error);
+      Logger.error('❌ SignOut error in SettingsScreen:', error);
+    } finally {
+      Logger.debug('🔓 SettingsScreen: Resetting signingOut to false');
+      setSigningOut(false);
     }
   };
 
@@ -547,14 +557,15 @@ const SettingsScreen: React.FC = () => {
           </SettingsSection>
 
           <Animated.View entering={FadeInDown.delay(500).duration(600).springify()} style={tw`mt-8 mb-6`}>
-            <TouchableOpacity activeOpacity={0.8} disabled={loading} onPress={handleSignOut}>
-              <LinearGradient colors={['#DC2626', '#B91C1C']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[tw`rounded-2xl p-4.5 shadow-lg`, { opacity: loading ? 0.6 : 1 }]}>
+            <TouchableOpacity activeOpacity={0.8} disabled={signingOut} onPress={handleSignOut}>
+              <LinearGradient colors={['#DC2626', '#B91C1C']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[tw`rounded-2xl p-4.5 shadow-lg`, { opacity: signingOut ? 0.6 : 1 }]}>
                 <View style={tw`flex-row items-center justify-center`}>
-                  {loading ? (
+                  {signingOut ? (
                     <ActivityIndicator color="#FFFFFF" size="small" />
                   ) : (
                     <>
                       <Icon name="log-out-outline" size={22} color="#FFFFFF" />
+
                       <Text style={tw`ml-2.5 text-white font-bold text-base tracking-wide`}>Sign Out</Text>
                     </>
                   )}

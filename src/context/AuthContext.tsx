@@ -36,7 +36,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // ✅ Register device for push notifications when user logs in
   useEffect(() => {
     if (user?.id) {
-      // Register device for push notifications
       PushTokenService.registerDevice(user.id)
         .then((success) => {
           if (success) {
@@ -49,7 +48,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           Logger.error('❌ Error registering device for push:', error);
         });
     }
-  }, [user?.id]); // Trigger when user ID changes (login/logout)
+  }, [user?.id]);
 
   useEffect(() => {
     // Initial session load
@@ -78,8 +77,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } else {
         setUsername(null);
       }
-
-      setLoading(false);
     });
 
     return () => {
@@ -208,38 +205,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       setLoading(true);
 
-      if (username) {
-        const { data: existingUser } = await supabase.from('profiles').select('username').eq('username', username).single();
-
-        if (existingUser) {
-          throw new Error('Username already taken');
-        }
-      }
-
+      // ✅ Pas besoin de vérifier si le username existe - le trigger le gérera
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            username: username,
+            username: username || email.split('@')[0], // Envoyé dans raw_user_meta_data
           },
         },
       });
 
       if (error) throw error;
 
-      if (data.user && username) {
-        const { error: profileError } = await supabase.from('profiles').insert({
-          id: data.user.id,
-          username,
-          created_at: new Date().toISOString(),
-        });
+      // ❌ NE PAS insérer manuellement dans profiles - le trigger le fait automatiquement
 
-        if (profileError) throw profileError;
-      }
+      Logger.debug('✅ User created, profile created by trigger');
 
-      Alert.alert('Success', 'Account created successfully! Please check your email to verify your account.');
+      Alert.alert('Success', 'Account created! Please check your email to verify your account.');
     } catch (error: any) {
+      Logger.error('❌ SignUp error:', error);
       Alert.alert('Error', error.message);
     } finally {
       setLoading(false);
@@ -266,29 +251,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const signOut = async () => {
     try {
       setLoading(true);
-      Logger.debug('🚪 Starting sign out...');
 
-      // Unregister push notifications
+      // Timeout pour push token (3s max)
       if (user?.id) {
-        await PushTokenService.unregisterDevice(user.id).catch((error) => {
-          Logger.error('Error unregistering device:', error);
+        await Promise.race([PushTokenService.unregisterDevice(user.id), new Promise((_, reject) => setTimeout(() => reject(new Error('Push token unregister timeout')), 3000))]).catch((error) => {
+          Logger.error('⚠️ Push token unregister failed (continuing anyway):', error.message);
         });
       }
 
-      // Sign out from Supabase
+      // Sign out Supabase
       const { error } = await supabase.auth.signOut();
-
-      if (error) {
-        throw error;
-      }
-
-      Logger.debug('✅ Sign out successful');
-    } catch (error: any) {
-      Logger.error('❌ SignOut error:', error);
-      Alert.alert('Error', error.message);
+      if (error) throw error;
     } finally {
-      // ✅ TOUJOURS reset loading
-      setLoading(false);
+      setLoading(false); // ✅ Toujours reset
     }
   };
 
