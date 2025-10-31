@@ -12,6 +12,7 @@
       "backgroundColor": "#6366f1"
     },
     "ios": {
+      "associatedDomains": ["applinks:xbmbocxrubdpzkgkmwyp.supabase.co"],
       "icon": "./assets/icon/nuvoria_icon.png",
       "splash": {
         "image": "./assets/splash/splashScreen2732.png",

@@ -18,7 +18,7 @@ export interface StreakSaverInventory {
 export class StreakSaverService {
   static async getInventory(userId: string): Promise<StreakSaverInventory> {
     try {
-      const { data, error } = await supabase.from('profiles').select('streak_savers, total_streak_savers_used').eq('id', userId).single();
+      const { data, error } = await supabase.from('profiles').select('streak_savers, total_streak_savers_used').eq('id', userId).maybeSingle();
 
       if (error) throw error;
 

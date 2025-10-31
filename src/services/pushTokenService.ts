@@ -9,20 +9,16 @@ export class PushTokenService {
   /**
    * Register device for push notifications and store token
    * Call this after user logs in
+   * DOES NOT REQUEST PERMISSIONS - only registers if already granted
    */
   static async registerDevice(userId: string): Promise<boolean> {
     try {
-      // 1. Request permissions
+      // 1. Check permissions (WITHOUT requesting)
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
 
+      // ✅ Ne demande PAS les permissions ici !
       if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-
-      if (finalStatus !== 'granted') {
-        Logger.debug('❌ Push notification permissions denied');
+        Logger.debug('⚠️ Push notification permissions not granted yet');
         return false;
       }
 

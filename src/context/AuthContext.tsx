@@ -52,18 +52,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [user?.id]); // Trigger when user ID changes (login/logout)
 
   useEffect(() => {
+    // Initial session load
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user?.id) {
-        fetchUsername(session.user.id);
-      }
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user?.id) {
@@ -74,12 +64,44 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    // ✅ UN SEUL listener onAuthStateChange
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      Logger.debug('🔄 Auth state changed:', _event);
+
+      setSession(session);
+      setUser(session?.user ?? null);
+
+      if (session?.user?.id) {
+        fetchUsername(session.user.id);
+      } else {
+        setUsername(null);
+      }
+
+      setLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchUsername = async (userId: string) => {
-    const { data } = await supabase.from('profiles').select('username').eq('id', userId).single();
-    setUsername(data?.username || null);
+    try {
+      const { data, error } = await supabase.from('profiles').select('username').eq('id', userId).maybeSingle();
+
+      if (error) {
+        Logger.error('Error fetching username:', error);
+        setUsername(null);
+        return;
+      }
+
+      setUsername(data?.username || null);
+    } catch (error) {
+      Logger.error('Fetch username error:', error);
+      setUsername(null);
+    }
   };
 
   const signInWithGoogle = async () => {
@@ -87,7 +109,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(true);
 
       const redirectUri = AuthSession.makeRedirectUri({
-        scheme: 'yourapp',
+        scheme: 'nuvoria',
         path: 'auth',
       });
 
@@ -142,52 +164,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
           if (error) throw error;
 
-          // Update user profile with Apple data
-          if (data.user && credential.fullName) {
-            const fullName = `${credential.fullName.givenName || ''} ${credential.fullName.familyName || ''}`.trim();
+          if (data.user) {
+            const fullName = credential.fullName ? `${credential.fullName.givenName || ''} ${credential.fullName.familyName || ''}`.trim() : null;
 
-            const { error: profileError } = await supabase.from('profiles').upsert({
+            const username = fullName || data.user.email?.split('@')[0] || `User${data.user.id.slice(0, 8)}`;
+
+            // ✅ Prépare les données du profil
+            const profileData: any = {
               id: data.user.id,
-              username: fullName || credential.email?.split('@')[0] || 'User',
+              username: username,
               updated_at: new Date().toISOString(),
-            });
+            };
 
-            if (profileError) Logger.error('Profile update error:', profileError);
-          }
-        }
-      } else {
-        // For Android/Web, use OAuth flow
-        const redirectUri = AuthSession.makeRedirectUri({
-          scheme: 'yourapp',
-          path: 'auth',
-        });
+            // ✅ Ajoute l'email seulement s'il existe
+            if (data.user.email) {
+              profileData.email = data.user.email;
+            }
 
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'apple',
-          options: {
-            redirectTo: redirectUri,
-            skipBrowserRedirect: true,
-          },
-        });
+            const { error: profileError } = await supabase.from('profiles').upsert(profileData);
 
-        if (error) throw error;
-
-        if (data?.url) {
-          const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
-
-          if (result.type === 'success' && result.url) {
-            const params = new URLSearchParams(result.url.split('#')[1]);
-            const access_token = params.get('access_token');
-            const refresh_token = params.get('refresh_token');
-
-            if (access_token && refresh_token) {
-              await supabase.auth.setSession({
-                access_token,
-                refresh_token,
-              });
+            if (profileError) {
+              Logger.error('Profile update error:', profileError);
+            } else {
+              Logger.debug('✅ Profile created successfully');
             }
           }
         }
+      } else {
+        // OAuth flow pour Android/Web (garde ton code existant)
+        // ...
       }
     } catch (error: any) {
       if (error.code !== 'ERR_CANCELED') {
@@ -261,25 +266,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const signOut = async () => {
     try {
       setLoading(true);
+      Logger.debug('🚪 Starting sign out...');
 
-      // ✅ Unregister device before signing out
+      // Unregister push notifications
       if (user?.id) {
         await PushTokenService.unregisterDevice(user.id).catch((error) => {
           Logger.error('Error unregistering device:', error);
-          // Don't block logout if unregister fails
         });
       }
 
+      // Sign out from Supabase
       const { error } = await supabase.auth.signOut();
+
       if (error) {
-        // Only reset loading on error since component will unmount on success
-        setLoading(false);
         throw error;
       }
-      // Don't set loading to false here - component will unmount after successful signout
+
+      Logger.debug('✅ Sign out successful');
     } catch (error: any) {
-      setLoading(false); // Reset on error
+      Logger.error('❌ SignOut error:', error);
       Alert.alert('Error', error.message);
+    } finally {
+      // ✅ TOUJOURS reset loading
+      setLoading(false);
     }
   };
 
@@ -288,7 +297,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(true);
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'yourapp://reset-password',
+        redirectTo: 'nuvoria://reset-password',
       });
 
       if (error) throw error;

@@ -24,12 +24,20 @@ export class NotificationPreferencesService {
    */
   static async getPreferences(userId: string): Promise<NotificationPreferences> {
     try {
-      const { data, error } = await supabase.from('profiles').select('notification_preferences').eq('id', userId).single();
+      const { data, error } = await supabase.from('profiles').select('notification_preferences').eq('id', userId).maybeSingle();
 
       if (error) throw error;
 
+      // ✅ Gère le cas où data est null
+      if (!data) {
+        return {
+          globalEnabled: false,
+          permissionStatus: 'undetermined',
+        };
+      }
+
       return (
-        data?.notification_preferences || {
+        data.notification_preferences || {
           globalEnabled: false,
           permissionStatus: 'undetermined',
         }

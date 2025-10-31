@@ -21,7 +21,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 // Database types
 export interface Profile {
   id: string;
-  email: string;
+  email?: string;
   username?: string;
   created_at: string;
   updated_at: string;

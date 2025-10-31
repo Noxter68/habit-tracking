@@ -123,7 +123,7 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
         .from('profiles')
         .select('subscription_tier, subscription_status, subscription_start_date, subscription_end_date, platform, transaction_id, streak_savers, total_streak_savers_used')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
