@@ -5,6 +5,7 @@ import { XPService } from '../services/xpService';
 import { HabitService } from '../services/habitService';
 import { getAchievementByLevel } from '../utils/achievements';
 import { getXPForNextLevel } from '../utils/xpCalculations';
+import Logger from '@/utils/logger';
 
 interface Stats {
   title: string;
@@ -39,7 +40,7 @@ export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const refreshStats = useCallback(
     async (forceRefresh: boolean = false) => {
       if (!user?.id) {
-        console.log('StatsContext: No user, clearing stats');
+        Logger.debug('StatsContext: No user, clearing stats');
         setStats(null);
         return;
       }
@@ -48,14 +49,14 @@ export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (!forceRefresh) {
         const now = Date.now();
         if (lastUpdatedRef.current && now - lastUpdatedRef.current < 1000) {
-          console.log('StatsContext: Skipping refresh (debounced)');
+          Logger.debug('StatsContext: Skipping refresh (debounced)');
           return;
         }
       }
 
       try {
         setLoading(true);
-        console.log('StatsContext: Fetching fresh data from backend...');
+        Logger.debug('StatsContext: Fetching fresh data from backend...');
 
         // Fetch all data from existing services
         const [xpStats, habitStats, activeHabitsCount, todayStats] = await Promise.all([
@@ -65,7 +66,7 @@ export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           HabitService.getTodayStats(user.id),
         ]);
 
-        console.log('StatsContext: Raw XP data from backend:', {
+        Logger.debug('StatsContext: Raw XP data from backend:', {
           total_xp: xpStats?.total_xp,
           current_level: xpStats?.current_level,
           current_level_xp: xpStats?.current_level_xp,
@@ -86,7 +87,7 @@ export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const adjustedCurrentXP = Math.max(0, currentLevelXP);
         const progress = nextLevelXP > 0 ? Math.min((adjustedCurrentXP / nextLevelXP) * 100, 100) : 0;
 
-        console.log('StatsContext: Calculated values:', {
+        Logger.debug('StatsContext: Calculated values:', {
           level,
           currentLevelXP: adjustedCurrentXP,
           xpForNextLevel: nextLevelXP,
@@ -110,11 +111,11 @@ export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           totalXP,
         };
 
-        console.log('StatsContext: Final stats object:', newStats);
+        Logger.debug('StatsContext: Final stats object:', newStats);
         setStats(newStats);
         lastUpdatedRef.current = Date.now();
       } catch (err) {
-        console.error('StatsContext: Error refreshing stats:', err);
+        Logger.error('StatsContext: Error refreshing stats:', err);
         // Don't clear stats on error, keep last known good state
       } finally {
         setLoading(false);
@@ -127,11 +128,11 @@ export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const updateStatsOptimistically = useCallback(
     (xpAmount: number) => {
       if (!stats) {
-        console.warn('StatsContext: Cannot update optimistically, no stats available');
+        Logger.warn('StatsContext: Cannot update optimistically, no stats available');
         return null;
       }
 
-      console.log('StatsContext: Optimistic update', {
+      Logger.debug('StatsContext: Optimistic update', {
         currentXP: stats.currentLevelXP,
         xpAmount,
         xpForNextLevel: stats.xpForNextLevel,
@@ -148,7 +149,7 @@ export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         adjustedCurrentXP = newCurrentLevelXP - stats.xpForNextLevel;
         newXPForNextLevel = getXPForNextLevel(newLevel);
 
-        console.log('StatsContext: LEVEL UP!', {
+        Logger.debug('StatsContext: LEVEL UP!', {
           previousLevel: stats.level,
           newLevel,
           overflow: adjustedCurrentXP,
@@ -173,7 +174,7 @@ export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       setStats(updatedStats);
 
-      console.log('StatsContext: Optimistic update complete', {
+      Logger.debug('StatsContext: Optimistic update complete', {
         newLevel,
         newCurrentLevelXP: adjustedCurrentXP,
         newProgress: `${newProgress.toFixed(1)}%`,
@@ -191,7 +192,7 @@ export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Initial load when user changes
   useEffect(() => {
     if (user?.id) {
-      console.log('StatsContext: User detected, loading initial stats');
+      Logger.debug('StatsContext: User detected, loading initial stats');
       refreshStats(true); // Force refresh on user change
     } else {
       setStats(null);

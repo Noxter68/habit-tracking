@@ -246,14 +246,14 @@ const DynamicCalendarHeader: React.FC<DynamicCalendarHeaderProps> = ({ selectedH
               <Text style={tw`text-white/90 text-sm ml-2 font-semibold tracking-wide`}>Quest Complete!</Text>
               <View style={tw`ml-2 flex-row`}>
                 {[0, 1, 2].map((i) => (
-                  <Animated.View key={`star-${i}`} entering={FadeIn.delay(400 + i * 100).duration(300)} style={tw`w-1 h-1 bg--quartz-400 rounded-full mx-0.5`} />
+                  <Animated.View key={`star-${i}`} entering={FadeIn.delay(400 + i * 100).duration(300)} style={tw`w-1 h-1 bg--stone-400 rounded-full mx-0.5`} />
                 ))}
               </View>
             </Animated.View>
           )}
 
           {dateStats.partial && (
-            <Animated.View entering={FadeInUp.delay(200).duration(400).springify()} style={tw`flex-row items-center justify-center mt-2 bg--quartz-500/15 rounded-lg py-1.5 px-3`}>
+            <Animated.View entering={FadeInUp.delay(200).duration(400).springify()} style={tw`flex-row items-center justify-center mt-2 bg--stone-500/15 rounded-lg py-1.5 px-3`}>
               <StatsIcons.Target size={14} color="#ffffff" />
               <Text style={tw`text-white/90 text-sm ml-2 font-semibold tracking-wide`}>
                 Keep Going! {dateStats.tasksCompleted} of {dateStats.totalTasks} done

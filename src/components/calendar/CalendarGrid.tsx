@@ -17,9 +17,10 @@ interface CalendarGridProps {
   onSelectDate: (date: Date) => void;
   onNavigateMonth: (direction: 'prev' | 'next') => void;
   activeHoliday?: HolidayPeriod | null;
+  allHolidays?: HolidayPeriod[];
 }
 
-const CalendarGrid: React.FC<CalendarGridProps> = ({ habit, currentMonth, selectedDate, onSelectDate, onNavigateMonth, activeHoliday = null }) => {
+const CalendarGrid: React.FC<CalendarGridProps> = ({ habit, currentMonth, selectedDate, onSelectDate, onNavigateMonth, activeHoliday = null, allHolidays = [] }) => {
   const { tier } = HabitProgressionService.calculateTierFromStreak(habit.currentStreak);
   const theme = tierThemes[tier.name];
   const days = getDaysInMonth(currentMonth);
@@ -52,7 +53,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ habit, currentMonth, select
       {/* Calendar Days */}
       <View style={tw`flex-row flex-wrap`}>
         {days.map((date, index) => (
-          <CalendarDay key={`day-${index}`} date={date} habit={habit} selectedDate={selectedDate} onSelect={onSelectDate} theme={theme} activeHoliday={activeHoliday} />
+          <CalendarDay key={`day-${index}`} date={date} habit={habit} selectedDate={selectedDate} onSelect={onSelectDate} theme={theme} activeHoliday={activeHoliday} allHolidays={allHolidays} />
         ))}
       </View>
 
@@ -61,7 +62,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ habit, currentMonth, select
         <LegendItem color={theme.accent} label="Complete" />
         <LegendItem color={theme.accent + '40'} label="Partial" />
         <LegendItem color="#fee2e2" label="Missed" />
-        <LegendItem color="#e0f2fe" label="Holiday" icon={<Sun size={10} color="#0ea5e9" />} />
+        <LegendItem color="#fef3c7" label="Holiday" icon={<Sun size={10} color="#f59e0b" />} />
       </View>
     </View>
   );
@@ -74,7 +75,8 @@ const CalendarDay: React.FC<{
   onSelect: (date: Date) => void;
   theme: any;
   activeHoliday?: HolidayPeriod | null;
-}> = ({ date, habit, selectedDate, onSelect, theme, activeHoliday = null }) => {
+  allHolidays?: HolidayPeriod[];
+}> = ({ date, habit, selectedDate, onSelect, theme, activeHoliday = null, allHolidays = [] }) => {
   if (!date) {
     return <View style={tw`w-1/7 h-12`} />;
   }
@@ -104,8 +106,7 @@ const CalendarDay: React.FC<{
 
   // ✅ NEW: Check if this date is in a holiday period
   const taskIds = habit.tasks.map((t) => t.id);
-  const isHoliday = HolidayModeService.isDateInHoliday(date, activeHoliday, habit.id, taskIds);
-
+  const isHoliday = HolidayModeService.isDateInAnyHoliday(date, allHolidays, habit.id, taskIds);
   // Priority order: Holiday > Complete > Partial > Missed > Before Creation
   let backgroundColor = 'transparent';
   let textColor = tw.color('sand-700');
@@ -114,9 +115,9 @@ const CalendarDay: React.FC<{
   if (beforeCreation) {
     textColor = tw.color('gray-300');
   } else if (isHoliday) {
-    // 🏖️ HOLIDAY STATE (highest priority)
-    backgroundColor = '#e0f2fe'; // sky-100
-    textColor = '#0ea5e9'; // sky-500
+    // 🏖️ HOLIDAY STATE - TOPAZ THEME
+    backgroundColor = '#fef3c7'; // amber-100
+    textColor = '#f59e0b'; // amber-500
     showIcon = true;
   } else if (isCompleted) {
     backgroundColor = theme.accent;
@@ -141,10 +142,10 @@ const CalendarDay: React.FC<{
           isCurrentDay && { borderColor: theme.accent + '60' },
         ]}
       >
-        {/* Holiday Icon */}
+        {/* Holiday Icon - TOPAZ COLOR */}
         {showIcon && (
           <View style={tw`absolute -top-1 -right-1 bg-white rounded-full p-0.5`}>
-            <Sun size={10} color="#0ea5e9" strokeWidth={2.5} />
+            <Sun size={10} color="#f59e0b" strokeWidth={2.5} />
           </View>
         )}
 

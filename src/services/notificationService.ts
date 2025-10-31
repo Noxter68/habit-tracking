@@ -4,6 +4,7 @@ import { Habit } from '../types';
 import { NotificationMessages } from '../utils/notificationMessages';
 import { supabase } from '../lib/supabase';
 import { getLocalDateString } from '../utils/dateHelpers';
+import Logger from '@/utils/logger';
 
 interface TaskInfo {
   id: string;
@@ -40,7 +41,7 @@ export class NotificationService {
     }
 
     if (finalStatus !== 'granted') {
-      console.log('Notification permissions denied');
+      Logger.debug('Notification permissions denied');
       return false;
     }
 
@@ -206,7 +207,7 @@ export class NotificationService {
         type: habit.type,
       });
 
-      console.log(`📅 Scheduling ${day} notification for ${habit.name} at ${scheduledTime.toLocaleString()}`);
+      Logger.debug(`📅 Scheduling ${day} notification for ${habit.name} at ${scheduledTime.toLocaleString()}`);
 
       await Notifications.scheduleNotificationAsync({
         identifier: `${habit.id}_${day}`,
@@ -241,7 +242,7 @@ export class NotificationService {
       const { data: habitData, error: habitError } = await supabase.from('habits').select('*').eq('id', habitId).eq('user_id', userId).single();
 
       if (habitError || !habitData) {
-        console.error('Error fetching habit:', habitError);
+        Logger.error('Error fetching habit:', habitError);
         return;
       }
 
@@ -276,7 +277,7 @@ export class NotificationService {
         trigger: null, // Immediate delivery
       });
     } catch (error) {
-      console.error('Error generating dynamic notification:', error);
+      Logger.error('Error generating dynamic notification:', error);
     }
   }
 
@@ -351,9 +352,9 @@ export class NotificationService {
         },
       });
 
-      console.log(`Snoozed until ${triggerDate.toLocaleTimeString()}`);
+      Logger.debug(`Snoozed until ${triggerDate.toLocaleTimeString()}`);
     } catch (error) {
-      console.error('Error snoozing notification:', error);
+      Logger.error('Error snoozing notification:', error);
     }
   }
 
@@ -380,7 +381,7 @@ export class NotificationService {
         }
       }
     } catch (error) {
-      console.error('Error canceling notifications:', error);
+      Logger.error('Error canceling notifications:', error);
     }
   }
 

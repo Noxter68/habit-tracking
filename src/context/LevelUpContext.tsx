@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { useStats } from './StatsContext';
 import { getAchievementByLevel } from '../utils/achievements';
+import Logger from '@/utils/logger';
 
 interface LevelUpData {
   newLevel: number;
@@ -33,13 +34,13 @@ export const LevelUpProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // Initialize previous level on first load
     if (previousLevelRef.current === null) {
       previousLevelRef.current = stats.level;
-      console.log('LevelUpContext: Initial level set:', stats.level);
+      Logger.debug('LevelUpContext: Initial level set:', stats.level);
       return;
     }
 
     // Check if level increased and we haven't shown modal for this level yet
     if (stats.level > previousLevelRef.current && !hasShownForLevel.current.has(stats.level)) {
-      console.log(`LevelUpContext: LEVEL UP DETECTED! ${previousLevelRef.current} → ${stats.level}`);
+      Logger.debug(`LevelUpContext: LEVEL UP DETECTED! ${previousLevelRef.current} → ${stats.level}`);
 
       const newAchievement = getAchievementByLevel(stats.level);
 

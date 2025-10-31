@@ -83,8 +83,8 @@ const HabitCategorySelector: React.FC<HabitCategorySelectorProps> = ({ habitType
                       </View>
 
                       <View style={tw`flex-1`}>
-                        <Text style={[tw`text-base font-semibold mb-0.5`, isSelected ? tw`text-white` : tw`text-quartz-800`]}>{category.label}</Text>
-                        <Text style={[tw`text-sm leading-5`, isSelected ? tw`text-white/90` : tw`text-quartz-600`]}>{category.description}</Text>
+                        <Text style={[tw`text-base font-semibold mb-0.5`, isSelected ? tw`text-white` : tw`text-stone-800`]}>{category.label}</Text>
+                        <Text style={[tw`text-sm leading-5`, isSelected ? tw`text-white/90` : tw`text-stone-600`]}>{category.description}</Text>
                       </View>
 
                       {isSelected && (
@@ -102,9 +102,9 @@ const HabitCategorySelector: React.FC<HabitCategorySelectorProps> = ({ habitType
 
         {/* Divider */}
         <View style={tw`flex-row items-center mb-4`}>
-          <View style={tw`flex-1 h-px bg-quartz-200`} />
-          <Text style={tw`px-4 text-xs text-quartz-500 font-medium`}>OR</Text>
-          <View style={tw`flex-1 h-px bg-quartz-200`} />
+          <View style={tw`flex-1 h-px bg-stone-200`} />
+          <Text style={tw`px-4 text-xs text-stone-500 font-medium`}>OR</Text>
+          <View style={tw`flex-1 h-px bg-stone-200`} />
         </View>
 
         {/* Create Custom Habit */}
@@ -117,8 +117,8 @@ const HabitCategorySelector: React.FC<HabitCategorySelectorProps> = ({ habitType
                 </View>
 
                 <View style={tw`flex-1`}>
-                  <Text style={tw`text-base font-semibold text-quartz-800 mb-0.5`}>Create Custom Habit</Text>
-                  <Text style={tw`text-sm text-quartz-600 leading-5`}>{habitType === 'good' ? 'Build something unique to your goals' : 'Define your own habit to overcome'}</Text>
+                  <Text style={tw`text-base font-semibold text-stone-800 mb-0.5`}>Create Custom Habit</Text>
+                  <Text style={tw`text-sm text-stone-600 leading-5`}>{habitType === 'good' ? 'Build something unique to your goals' : 'Define your own habit to overcome'}</Text>
                 </View>
 
                 <View style={[tw`w-8 h-8 rounded-xl items-center justify-center`, { backgroundColor: '#fbbf2410' }]}>

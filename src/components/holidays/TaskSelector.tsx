@@ -1,12 +1,11 @@
-// src/components/holiday/TaskSelector.tsx
+// src/components/holidays/TaskSelector.tsx
 import React, { useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { Check, ChevronDown, ChevronRight, Minus } from 'lucide-react-native';
-import Animated, { FadeInDown, useAnimatedStyle, withTiming, useSharedValue } from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import tw from '@/lib/tailwind';
 import { HabitWithTasks } from '@/types/holiday.types';
 import { isHabitFullySelected, isHabitPartiallySelected } from '@/services/holidayModeService';
-// import { HabitWithTasks, isHabitPartiallySelected, isHabitFullySelected } from '@/types/holiday.types';
 
 interface TaskSelectorProps {
   habits: HabitWithTasks[];
@@ -48,7 +47,7 @@ export const TaskSelector: React.FC<TaskSelectorProps> = ({ habits, selectedTask
 
   return (
     <View style={tw`gap-3`}>
-      <Text style={tw`text-sm font-semibold text-sky-900 mb-1`}>Select tasks to freeze ({getTotalSelectedTasks()} tasks selected)</Text>
+      <Text style={tw`text-sm font-semibold text-gray-700 mb-1`}>Select tasks to freeze ({getTotalSelectedTasks()} tasks selected)</Text>
 
       <View style={tw`gap-2`}>
         {habits.map((habit, index) => {
@@ -65,15 +64,15 @@ export const TaskSelector: React.FC<TaskSelectorProps> = ({ habits, selectedTask
                 style={({ pressed }) => [
                   tw`flex-row items-center p-4 rounded-2xl border-2`,
                   {
-                    backgroundColor: habitHasSelection ? 'rgba(99, 102, 241, 0.08)' : 'white',
-                    borderColor: habitHasSelection ? '#6366f1' : '#e5e7eb',
+                    backgroundColor: habitHasSelection ? 'rgba(251, 191, 36, 0.08)' : 'white',
+                    borderColor: habitHasSelection ? '#f59e0b' : '#e5e7eb',
                   },
                   pressed && tw`scale-[0.98]`,
                 ]}
               >
                 {/* Expand Icon */}
                 <View style={tw`mr-3`}>
-                  {isExpanded ? <ChevronDown size={20} color={habitHasSelection ? '#4f46e5' : '#6b7280'} /> : <ChevronRight size={20} color={habitHasSelection ? '#4f46e5' : '#6b7280'} />}
+                  {isExpanded ? <ChevronDown size={20} color={habitHasSelection ? '#d97706' : '#6b7280'} /> : <ChevronRight size={20} color={habitHasSelection ? '#d97706' : '#6b7280'} />}
                 </View>
 
                 {/* Select All Checkbox */}
@@ -88,9 +87,9 @@ export const TaskSelector: React.FC<TaskSelectorProps> = ({ habits, selectedTask
                     style={[
                       tw`w-6 h-6 rounded-lg items-center justify-center`,
                       {
-                        backgroundColor: isFullySelected ? '#6366f1' : isPartial ? '#6366f1' : 'transparent',
+                        backgroundColor: isFullySelected ? '#f59e0b' : isPartial ? '#f59e0b' : 'transparent',
                         borderWidth: 2,
-                        borderColor: habitHasSelection ? '#6366f1' : '#cbd5e1',
+                        borderColor: habitHasSelection ? '#f59e0b' : '#cbd5e1',
                       },
                     ]}
                   >
@@ -101,7 +100,7 @@ export const TaskSelector: React.FC<TaskSelectorProps> = ({ habits, selectedTask
 
                 {/* Habit Info */}
                 <View style={tw`flex-1`}>
-                  <Text style={[tw`text-sm font-semibold mb-0.5`, { color: habitHasSelection ? '#4f46e5' : '#1f2937' }]}>{habit.name}</Text>
+                  <Text style={[tw`text-sm font-semibold mb-0.5`, { color: habitHasSelection ? '#d97706' : '#1f2937' }]}>{habit.name}</Text>
                   <Text style={tw`text-xs text-gray-500`}>
                     {selectedTasks.get(habit.id)?.size || 0} of {habit.tasks.length} tasks
                   </Text>
@@ -121,8 +120,8 @@ export const TaskSelector: React.FC<TaskSelectorProps> = ({ habits, selectedTask
                         style={({ pressed }) => [
                           tw`flex-row items-center p-3 rounded-xl border`,
                           {
-                            backgroundColor: isTaskSelected ? 'rgba(99, 102, 241, 0.05)' : 'white',
-                            borderColor: isTaskSelected ? '#6366f1' : '#e5e7eb',
+                            backgroundColor: isTaskSelected ? 'rgba(251, 191, 36, 0.05)' : 'white',
+                            borderColor: isTaskSelected ? '#f59e0b' : '#e5e7eb',
                           },
                           pressed && tw`scale-[0.98]`,
                         ]}
@@ -132,9 +131,9 @@ export const TaskSelector: React.FC<TaskSelectorProps> = ({ habits, selectedTask
                           style={[
                             tw`w-5 h-5 rounded-md items-center justify-center mr-3`,
                             {
-                              backgroundColor: isTaskSelected ? '#6366f1' : 'transparent',
+                              backgroundColor: isTaskSelected ? '#f59e0b' : 'transparent',
                               borderWidth: 2,
-                              borderColor: isTaskSelected ? '#6366f1' : '#cbd5e1',
+                              borderColor: isTaskSelected ? '#f59e0b' : '#cbd5e1',
                             },
                           ]}
                         >
@@ -143,7 +142,7 @@ export const TaskSelector: React.FC<TaskSelectorProps> = ({ habits, selectedTask
 
                         {/* Task Info */}
                         <View style={tw`flex-1`}>
-                          <Text style={[tw`text-sm`, { color: isTaskSelected ? '#4f46e5' : '#374151' }]}>{task.name}</Text>
+                          <Text style={[tw`text-sm`, { color: isTaskSelected ? '#d97706' : '#374151' }]}>{task.name}</Text>
                           {task.description && <Text style={tw`text-xs text-gray-400 mt-0.5`}>{task.description}</Text>}
                         </View>
                       </Pressable>
@@ -158,8 +157,8 @@ export const TaskSelector: React.FC<TaskSelectorProps> = ({ habits, selectedTask
 
       {/* Selection Summary */}
       {getTotalSelectedTasks() > 0 && (
-        <View style={tw`bg-indigo-50 border border-indigo-200 rounded-2xl p-3 mt-2`}>
-          <Text style={tw`text-xs text-indigo-700 text-center`}>
+        <View style={tw`bg-amber-50 border border-amber-200 rounded-2xl p-3 mt-2`}>
+          <Text style={tw`text-xs text-amber-700 text-center`}>
             ✓ {getTotalSelectedTasks()} {getTotalSelectedTasks() === 1 ? 'task' : 'tasks'} selected across {selectedTasks.size} {selectedTasks.size === 1 ? 'habit' : 'habits'}
           </Text>
         </View>

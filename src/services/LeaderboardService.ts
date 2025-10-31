@@ -1,5 +1,6 @@
 // src/services/LeaderboardService.ts
 import { supabase } from '@/lib/supabase';
+import Logger from '@/utils/logger';
 
 export interface LeaderboardEntry {
   id: string;
@@ -43,7 +44,7 @@ export class LeaderboardService {
         p_user_id: userId,
       });
 
-      if (rankError) console.error('Error getting user rank:', rankError);
+      if (rankError) Logger.error('Error getting user rank:', rankError);
       const currentUserRank = rankData || 0;
 
       const { data: streakData } = await supabase
@@ -143,7 +144,7 @@ export class LeaderboardService {
 
       return { leaderboard, currentUserRank, stats };
     } catch (error) {
-      console.error('Error fetching leaderboard:', error);
+      Logger.error('Error fetching leaderboard:', error);
       return {
         leaderboard: [],
         currentUserRank: 0,
@@ -226,7 +227,7 @@ export class LeaderboardService {
 
       return { leaderboard, currentUserRank };
     } catch (error) {
-      console.error('Error fetching weekly leaderboard:', error);
+      Logger.error('Error fetching weekly leaderboard:', error);
       return { leaderboard: [], currentUserRank: 0 };
     }
   }

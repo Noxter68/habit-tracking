@@ -9,6 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { RevenueCatService, SubscriptionPackage } from '@/services/RevenueCatService';
 import { StreakSaverService } from '@/services/StreakSaverService';
 import { useAuth } from '@/context/AuthContext';
+import Logger from '@/utils/logger';
 
 interface StreakSaverShopModalProps {
   visible: boolean;
@@ -67,7 +68,7 @@ export const StreakSaverShopModal: React.FC<StreakSaverShopModalProps> = ({ visi
       const streakSaverPackages = consumables.filter((pkg) => pkg.product.identifier.includes('streak_saver')).sort((a, b) => a.product.price - b.product.price);
       setPackages(streakSaverPackages);
     } catch (error) {
-      console.error('Error loading packages:', error);
+      Logger.error('Error loading packages:', error);
     } finally {
       setLoading(false);
     }

@@ -4,6 +4,7 @@ import * as Notifications from 'expo-notifications';
 import { NotificationService } from './notificationService';
 import { HabitService } from './habitService';
 import { NotificationScheduleService } from './notificationScheduleService';
+import Logger from '@/utils/logger';
 
 export interface NotificationPreferences {
   globalEnabled: boolean;
@@ -34,7 +35,7 @@ export class NotificationPreferencesService {
         }
       );
     } catch (error) {
-      console.error('Error fetching notification preferences:', error);
+      Logger.error('Error fetching notification preferences:', error);
       return {
         globalEnabled: false,
         permissionStatus: 'undetermined',
@@ -60,7 +61,7 @@ export class NotificationPreferencesService {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error updating notification preferences:', error);
+      Logger.error('Error updating notification preferences:', error);
       throw error;
     }
   }
@@ -134,7 +135,7 @@ export class NotificationPreferencesService {
         permissionGranted: true,
       };
     } catch (error) {
-      console.error('Error enabling notifications:', error);
+      Logger.error('Error enabling notifications:', error);
       return {
         success: false,
         permissionGranted: false,
@@ -158,9 +159,9 @@ export class NotificationPreferencesService {
         globalEnabled: false,
       });
 
-      console.log('Global notifications disabled successfully');
+      Logger.debug('Global notifications disabled successfully');
     } catch (error) {
-      console.error('Error disabling notifications:', error);
+      Logger.error('Error disabling notifications:', error);
       throw error;
     }
   }
@@ -184,9 +185,9 @@ export class NotificationPreferencesService {
         }
       }
 
-      console.log(`Re-scheduled ${habits.filter((h) => h.notifications).length} habits in database`);
+      Logger.debug(`Re-scheduled ${habits.filter((h) => h.notifications).length} habits in database`);
     } catch (error) {
-      console.error('Error re-scheduling notifications:', error);
+      Logger.error('Error re-scheduling notifications:', error);
       throw error;
     }
   }
@@ -236,7 +237,7 @@ export class NotificationPreferencesService {
           lastPermissionRequest: new Date().toISOString(),
         });
       } catch (updateError) {
-        console.error('Error updating notification preferences:', updateError);
+        Logger.error('Error updating notification preferences:', updateError);
         // Don't throw - the habit was created successfully
       }
 
@@ -246,7 +247,7 @@ export class NotificationPreferencesService {
         permissionGranted,
       };
     } catch (error) {
-      console.error('Error handling first habit creation:', error);
+      Logger.error('Error handling first habit creation:', error);
       // Return safe defaults instead of throwing
       return {
         isFirstHabit: false,
@@ -267,7 +268,7 @@ export class NotificationPreferencesService {
       // Both global preference and system permission must be enabled
       return prefs.globalEnabled && systemStatus === 'granted';
     } catch (error) {
-      console.error('Error checking notification status:', error);
+      Logger.error('Error checking notification status:', error);
       return false;
     }
   }
@@ -291,7 +292,7 @@ export class NotificationPreferencesService {
         scheduledCount: scheduled.length,
       };
     } catch (error) {
-      console.error('Error getting notification status:', error);
+      Logger.error('Error getting notification status:', error);
       return {
         globalEnabled: false,
         systemPermission: 'undetermined',

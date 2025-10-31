@@ -14,6 +14,7 @@ import { useAuth } from '@/context/AuthContext';
 import { NotificationPreferencesService } from '@/services/notificationPreferenceService';
 import { getCategoryIcon } from '../../utils/categoryIcons';
 import { supabase } from '@/lib/supabase';
+import Logger from '@/utils/logger';
 
 interface NotificationManagerProps {
   onClose: () => void;
@@ -53,7 +54,7 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
       const prefs = await NotificationPreferencesService.getPreferences(user.id);
       setGlobalEnabled(prefs.globalEnabled);
     } catch (error) {
-      console.error('Error checking global notification state:', error);
+      Logger.error('Error checking global notification state:', error);
     }
   };
 
@@ -71,7 +72,7 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
       const { data: schedules, error } = await supabase.from('notification_schedules').select('habit_id, notification_time, enabled').eq('user_id', user.id);
 
       if (error) {
-        console.error('Error fetching notification schedules:', error);
+        Logger.error('Error fetching notification schedules:', error);
       }
 
       // Create a map of habit_id -> schedule for quick lookup
@@ -107,7 +108,7 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
 
       setLocalHabits(habitsWithSchedules);
     } catch (error) {
-      console.error('Error loading habits with schedules:', error);
+      Logger.error('Error loading habits with schedules:', error);
     } finally {
       if (showLoading) {
         setIsLoading(false);
@@ -135,7 +136,7 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
 
       return `${localHours.toString().padStart(2, '0')}:${localMinutes.toString().padStart(2, '0')}`;
     } catch (error) {
-      console.error('Error converting UTC time to local:', error);
+      Logger.error('Error converting UTC time to local:', error);
       return '09:00';
     }
   };
@@ -193,7 +194,7 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
       // ✅ Don't reload - the optimistic update is enough
       setSelectedHabitId(null);
     } catch (error) {
-      console.error('Error updating notification time:', error);
+      Logger.error('Error updating notification time:', error);
       // ❌ Only reload on error to revert
       await loadHabitsWithSchedules(false);
       Alert.alert('Error', 'Failed to update notification time. Please try again.');
@@ -282,14 +283,14 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
         // Schedule via backend
         await NotificationScheduleService.scheduleHabitNotification(habitId, user.id, `${habit.notificationTime}:00`, true);
 
-        console.log('✅ Notification scheduled successfully');
+        Logger.debug('✅ Notification scheduled successfully');
       } else {
         // Disable notification
         await NotificationScheduleService.toggleNotification(habitId, user.id, false);
-        console.log('✅ Notification disabled successfully');
+        Logger.debug('✅ Notification disabled successfully');
       }
     } catch (error) {
-      console.error('Error toggling notification:', error);
+      Logger.error('Error toggling notification:', error);
       // Revert on error - don't show full-screen loading
       await loadHabitsWithSchedules(false);
       Alert.alert('Error', 'Failed to update notification. Please try again.');

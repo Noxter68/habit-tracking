@@ -1,4 +1,4 @@
-const IS_DEBUG_MODE = false;
+const IS_DEBUG_MODE = true;
 
 export const AppConfig = {
   // Debug settings
@@ -25,6 +25,3 @@ export const AppConfig = {
     isProd: false,
   },
 } as const;
-
-// Log the setting so you can verify it's working
-console.log('🔧 Debug Mode:', IS_DEBUG_MODE ? 'ENABLED' : 'DISABLED');

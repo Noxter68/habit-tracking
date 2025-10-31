@@ -1,6 +1,7 @@
 // src/utils/healthCheck.ts
 import { supabase } from '@/lib/supabase';
 import { getTodayString } from './dateHelpers';
+import Logger from './logger';
 
 interface HealthCheckResult {
   category: string;
@@ -13,8 +14,8 @@ export class HealthCheckService {
   static async runFullDiagnostic(userId: string): Promise<HealthCheckResult[]> {
     const results: HealthCheckResult[] = [];
 
-    console.log('🏥 Starting Health Check for user:', userId);
-    console.log('='.repeat(50));
+    Logger.debug('🏥 Starting Health Check for user:', userId);
+    Logger.debug('='.repeat(50));
 
     // 1. Check Database Connection
     results.push(await this.checkDatabaseConnection());
@@ -38,16 +39,16 @@ export class HealthCheckService {
     results.push(await this.checkRLSPolicies(userId));
 
     // Log summary
-    console.log('\n📊 Health Check Summary:');
-    console.log('='.repeat(50));
+    Logger.debug('\n📊 Health Check Summary:');
+    Logger.debug('='.repeat(50));
     results.forEach((r) => {
       const icon = r.status === 'ok' ? '✅' : r.status === 'error' ? '❌' : '⚠️';
-      console.log(`${icon} ${r.category}: ${r.message}`);
+      Logger.debug(`${icon} ${r.category}: ${r.message}`);
       if (r.details) {
-        console.log('   Details:', JSON.stringify(r.details, null, 2));
+        Logger.debug('   Details:', JSON.stringify(r.details, null, 2));
       }
     });
-    console.log('='.repeat(50));
+    Logger.debug('='.repeat(50));
 
     return results;
   }
@@ -341,8 +342,8 @@ export class HealthCheckService {
     message: string;
     details: any;
   }> {
-    console.log('🧪 Testing Daily Challenge Collection');
-    console.log('='.repeat(50));
+    Logger.debug('🧪 Testing Daily Challenge Collection');
+    Logger.debug('='.repeat(50));
 
     const today = getTodayString();
 
@@ -350,7 +351,7 @@ export class HealthCheckService {
       // 1. Get current challenge
       const { data: challenge, error: fetchError } = await supabase.from('daily_challenges').select('*').eq('user_id', userId).eq('date', today).single();
 
-      console.log('1️⃣ Current Challenge:', challenge);
+      Logger.debug('1️⃣ Current Challenge:', challenge);
 
       if (fetchError || !challenge) {
         return {
@@ -364,7 +365,7 @@ export class HealthCheckService {
       const isComplete = challenge.completed_tasks === challenge.total_tasks && challenge.total_tasks > 0;
       const isCollected = challenge.xp_collected;
 
-      console.log('2️⃣ Eligibility:', { isComplete, isCollected });
+      Logger.debug('2️⃣ Eligibility:', { isComplete, isCollected });
 
       if (!isComplete) {
         return {
@@ -388,7 +389,7 @@ export class HealthCheckService {
       // 3. Get XP before
       const { data: profileBefore } = await supabase.from('profiles').select('total_xp, current_level, level_progress').eq('id', userId).single();
 
-      console.log('3️⃣ Profile Before:', profileBefore);
+      Logger.debug('3️⃣ Profile Before:', profileBefore);
 
       // 4. Award XP
       const { error: awardError } = await supabase.rpc('award_xp', {
@@ -400,7 +401,7 @@ export class HealthCheckService {
         p_habit_id: null,
       });
 
-      console.log('4️⃣ Award XP Result:', awardError ? `Error: ${awardError.message}` : 'Success');
+      Logger.debug('4️⃣ Award XP Result:', awardError ? `Error: ${awardError.message}` : 'Success');
 
       if (awardError) {
         return {
@@ -423,7 +424,7 @@ export class HealthCheckService {
         })
         .eq('id', challenge.id);
 
-      console.log('5️⃣ Update Challenge Result:', updateError ? `Error: ${updateError.message}` : 'Success');
+      Logger.debug('5️⃣ Update Challenge Result:', updateError ? `Error: ${updateError.message}` : 'Success');
 
       if (updateError) {
         return {
@@ -436,7 +437,7 @@ export class HealthCheckService {
       // 6. Get XP after
       const { data: profileAfter } = await supabase.from('profiles').select('total_xp, current_level, level_progress').eq('id', userId).single();
 
-      console.log('6️⃣ Profile After:', profileAfter);
+      Logger.debug('6️⃣ Profile After:', profileAfter);
 
       // 7. Verify XP transaction was created
       const { data: transaction } = await supabase
@@ -449,11 +450,11 @@ export class HealthCheckService {
         .limit(1)
         .single();
 
-      console.log('7️⃣ XP Transaction:', transaction);
+      Logger.debug('7️⃣ XP Transaction:', transaction);
 
       const xpGained = (profileAfter?.total_xp || 0) - (profileBefore?.total_xp || 0);
 
-      console.log('='.repeat(50));
+      Logger.debug('='.repeat(50));
 
       return {
         success: true,
@@ -467,7 +468,7 @@ export class HealthCheckService {
         },
       };
     } catch (error: any) {
-      console.error('❌ Test Exception:', error);
+      Logger.error('❌ Test Exception:', error);
       return {
         success: false,
         message: 'Exception during test',
@@ -492,5 +493,5 @@ export class HealthCheckService {
 //   if (!userId) return;
 //
 //   const result = await HealthCheckService.testDailyChallengeCollection(userId);
-//   console.log('Test Result:', result);
+//   Logger.debug('Test Result:', result);
 // };

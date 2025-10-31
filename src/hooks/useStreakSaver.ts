@@ -1,6 +1,7 @@
 // src/hooks/useStreakSaver.ts
 import { useState, useEffect, useCallback } from 'react';
 import { StreakSaverService } from '../services/StreakSaverService';
+import Logger from '@/utils/logger';
 
 interface UseStreakSaverProps {
   habitId: string;
@@ -27,7 +28,7 @@ export const useStreakSaver = ({ habitId, userId, enabled = true, onStreakRestor
 
   useEffect(() => {
     if (enabled && habitId && userId) {
-      console.log('🔍 Checking streak saver eligibility for habit:', habitId);
+      Logger.debug('🔍 Checking streak saver eligibility for habit:', habitId);
       checkEligibility();
       loadInventory();
     }
@@ -40,18 +41,18 @@ export const useStreakSaver = ({ habitId, userId, enabled = true, onStreakRestor
       setLoading(true);
       const [result, inv] = await Promise.all([StreakSaverService.checkEligibility(habitId, userId), StreakSaverService.getInventory(userId)]);
 
-      console.log('✅ Eligibility check result:', result);
-      console.log('💰 Inventory:', inv);
+      Logger.debug('✅ Eligibility check result:', result);
+      Logger.debug('💰 Inventory:', inv);
 
       setEligibility(result);
       setInventory(inv);
 
       if (result.canSave && inv.available > 0) {
-        console.log('🎯 Auto-showing streak saver modal');
+        Logger.debug('🎯 Auto-showing streak saver modal');
         setShowModal(true);
       }
     } catch (error) {
-      console.error('❌ Error checking eligibility:', error);
+      Logger.error('❌ Error checking eligibility:', error);
     } finally {
       setLoading(false);
     }
@@ -62,26 +63,26 @@ export const useStreakSaver = ({ habitId, userId, enabled = true, onStreakRestor
 
     try {
       const inv = await StreakSaverService.getInventory(userId);
-      console.log('📊 Loaded inventory:', inv);
+      Logger.debug('📊 Loaded inventory:', inv);
       setInventory(inv);
     } catch (error) {
-      console.error('Error loading inventory:', error);
+      Logger.error('Error loading inventory:', error);
     }
   }, [userId]);
 
   const useStreakSaver = useCallback(async () => {
     if (!eligibility.canSave) {
-      console.log('❌ Cannot use streak saver - not eligible');
+      Logger.debug('❌ Cannot use streak saver - not eligible');
       return;
     }
 
     try {
       setUsing(true);
-      console.log('🔄 Using streak saver for habit:', habitId);
+      Logger.debug('🔄 Using streak saver for habit:', habitId);
       const result = await StreakSaverService.useStreakSaver(habitId, userId);
 
       if (result.success && result.newStreak) {
-        console.log('✅ Streak restored to:', result.newStreak);
+        Logger.debug('✅ Streak restored to:', result.newStreak);
 
         // Update inventory
         setInventory((prev) => ({
@@ -103,17 +104,17 @@ export const useStreakSaver = ({ habitId, userId, enabled = true, onStreakRestor
         // Reset eligibility
         setEligibility({ canSave: false });
       } else {
-        console.error('❌ Failed to use streak saver:', result.message);
+        Logger.error('❌ Failed to use streak saver:', result.message);
       }
     } catch (error: any) {
-      console.error('❌ Error using streak saver:', error);
+      Logger.error('❌ Error using streak saver:', error);
     } finally {
       setUsing(false);
     }
   }, [eligibility, habitId, userId, onStreakRestored]);
 
   const closeModal = useCallback(() => {
-    console.log('👋 Closing streak saver modal');
+    Logger.debug('👋 Closing streak saver modal');
     setShowModal(false);
     setSuccess(false);
     setNewStreak(0);
@@ -121,7 +122,7 @@ export const useStreakSaver = ({ habitId, userId, enabled = true, onStreakRestor
 
   const openModal = useCallback(() => {
     if (eligibility.canSave && inventory.available > 0) {
-      console.log('🎯 Manually opening streak saver modal');
+      Logger.debug('🎯 Manually opening streak saver modal');
       setShowModal(true);
     }
   }, [eligibility, inventory]);

@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { supabase } from '@/lib/supabase';
 import { useAuth } from './AuthContext';
 import { RevenueCatService } from '@/services/RevenueCatService';
+import Logger from '@/utils/logger';
 
 // ============================================================================
 // Types
@@ -111,9 +112,9 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
           .eq('id', user.id);
 
         if (updateError) {
-          console.error('❌ [Subscription] Failed to sync to database:', updateError.message);
+          Logger.error('❌ [Subscription] Failed to sync to database:', updateError.message);
         } else {
-          console.log('✅ [Subscription] Premium status synced to database');
+          Logger.debug('✅ [Subscription] Premium status synced to database');
         }
       }
 
@@ -144,7 +145,7 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
 
       setHabitCount(count || 0);
     } catch (error) {
-      console.error('❌ [Subscription] Error loading subscription:', error);
+      Logger.error('❌ [Subscription] Error loading subscription:', error);
 
       // Reset to free tier on error
       setSubscription({
@@ -192,7 +193,7 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
       if (error) throw error;
       return data as boolean;
     } catch (error) {
-      console.error('❌ [Subscription] Error checking habit limit');
+      Logger.error('❌ [Subscription] Error checking habit limit');
       // Fallback to local check
       return isPremium || habitCount < 2;
     }
@@ -236,7 +237,7 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
         remaining: result.remaining_savers,
       };
     } catch (error: any) {
-      console.error('❌ [Subscription] Error using streak saver');
+      Logger.error('❌ [Subscription] Error using streak saver');
       return { success: false, error: error.message };
     }
   };
@@ -261,7 +262,7 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
       if (error) throw error;
       return data as boolean;
     } catch (error) {
-      console.error('❌ [Subscription] Error checking streak saver eligibility');
+      Logger.error('❌ [Subscription] Error checking streak saver eligibility');
       return false;
     }
   };
@@ -277,7 +278,7 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
   useEffect(() => {
     if (user) {
       RevenueCatService.setAppUserId(user.id).catch((error) => {
-        console.error('❌ [Subscription] Failed to set RevenueCat user ID');
+        Logger.error('❌ [Subscription] Failed to set RevenueCat user ID');
       });
     }
 

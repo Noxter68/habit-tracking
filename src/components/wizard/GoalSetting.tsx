@@ -58,14 +58,14 @@ const GoalSetting: React.FC<GoalSettingProps> = ({ hasEndGoal, endGoalDays, onCh
           <LinearGradient colors={!hasEndGoal ? ['#10b981', '#059669dd'] : ['#ffffff', '#f9fafb']} style={[tw`p-4`, { borderWidth: 1, borderColor: !hasEndGoal ? 'transparent' : '#e5e7eb' }]}>
             <View style={tw`flex-row items-start`}>
               {/* Icon Container */}
-              <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-3.5`, !hasEndGoal ? tw`bg-white/25` : tw`bg-quartz-100`]}>
+              <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-3.5`, !hasEndGoal ? tw`bg-white/25` : tw`bg-stone-100`]}>
                 <Target size={24} color={!hasEndGoal ? '#ffffff' : '#6B7280'} strokeWidth={2} />
               </View>
 
               {/* Text Content */}
               <View style={tw`flex-1 mr-3 pt-0.5`}>
-                <Text style={[tw`text-base font-semibold mb-0.5`, !hasEndGoal ? tw`text-white` : tw`text-quartz-800`]}>61-Day Challenge</Text>
-                <Text style={[tw`text-sm leading-5`, !hasEndGoal ? tw`text-white/90` : tw`text-quartz-600`]}>Science-backed duration for lasting habit formation</Text>
+                <Text style={[tw`text-base font-semibold mb-0.5`, !hasEndGoal ? tw`text-white` : tw`text-stone-800`]}>61-Day Challenge</Text>
+                <Text style={[tw`text-sm leading-5`, !hasEndGoal ? tw`text-white/90` : tw`text-stone-600`]}>Science-backed duration for lasting habit formation</Text>
                 {!hasEndGoal && (
                   <View style={tw`flex-row items-center mt-1.5`}>
                     <Sparkles size={12} color="#ffffff" strokeWidth={2} style={tw`mr-1`} />
@@ -89,14 +89,14 @@ const GoalSetting: React.FC<GoalSettingProps> = ({ hasEndGoal, endGoalDays, onCh
           <LinearGradient colors={hasEndGoal ? ['#8b5cf6', '#7c3aeddd'] : ['#ffffff', '#f9fafb']} style={[tw`p-4`, { borderWidth: 1, borderColor: hasEndGoal ? 'transparent' : '#e5e7eb' }]}>
             <View style={tw`flex-row items-center mb-${hasEndGoal ? '3' : '0'}`}>
               {/* Icon Container */}
-              <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-3.5`, hasEndGoal ? tw`bg-white/25` : tw`bg-quartz-100`]}>
+              <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-3.5`, hasEndGoal ? tw`bg-white/25` : tw`bg-stone-100`]}>
                 <Calendar size={24} color={hasEndGoal ? '#ffffff' : '#6B7280'} strokeWidth={2} />
               </View>
 
               {/* Text Content */}
               <View style={tw`flex-1 mr-3`}>
-                <Text style={[tw`text-base font-semibold mb-0.5`, hasEndGoal ? tw`text-white` : tw`text-quartz-800`]}>Custom Duration</Text>
-                <Text style={[tw`text-sm leading-5`, hasEndGoal ? tw`text-white/90` : tw`text-quartz-600`]}>Set your own timeline that works for you</Text>
+                <Text style={[tw`text-base font-semibold mb-0.5`, hasEndGoal ? tw`text-white` : tw`text-stone-800`]}>Custom Duration</Text>
+                <Text style={[tw`text-sm leading-5`, hasEndGoal ? tw`text-white/90` : tw`text-stone-600`]}>Set your own timeline that works for you</Text>
               </View>
 
               {/* Selection Indicator */}

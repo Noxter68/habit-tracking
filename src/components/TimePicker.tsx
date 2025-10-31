@@ -178,16 +178,16 @@ const TimePicker: React.FC<TimePickerProps> = ({ initialHour = 9, initialMinute 
           <View {...panResponder.panHandlers}>
             {/* Handle */}
             <View style={tw`items-center pt-3 pb-2`}>
-              <View style={tw`h-1 w-12 bg-quartz-200 rounded-full`} />
+              <View style={tw`h-1 w-12 bg-stone-200 rounded-full`} />
             </View>
 
             {/* Header */}
             <View style={tw`flex-row items-center justify-between px-6 py-4`}>
               <Pressable onPress={handleCancel} style={({ pressed }) => [tw`px-4 py-2 -ml-4`, pressed && tw`opacity-50`]}>
-                <Text style={tw`text-base text-quartz-500`}>Cancel</Text>
+                <Text style={tw`text-base text-stone-500`}>Cancel</Text>
               </Pressable>
 
-              <Text style={tw`text-lg font-semibold text-quartz-800`}>Select Time</Text>
+              <Text style={tw`text-lg font-semibold text-stone-800`}>Select Time</Text>
 
               <Pressable onPress={handleConfirm} style={({ pressed }) => [pressed && tw`opacity-80`]}>
                 <LinearGradient colors={['#10b981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`px-5 py-2 rounded-full`}>
@@ -206,7 +206,7 @@ const TimePicker: React.FC<TimePickerProps> = ({ initialHour = 9, initialMinute 
 
           {/* iOS Picker */}
           <View style={tw`px-6 pb-6`}>
-            <View style={tw`bg-quartz-50 rounded-2xl p-2`}>
+            <View style={tw`bg-stone-50 rounded-2xl p-2`}>
               <DateTimePicker value={selectedTime} mode="time" display="spinner" onChange={onChange} style={{ height: 200 }} textColor="#57534e" locale="en" />
             </View>
           </View>

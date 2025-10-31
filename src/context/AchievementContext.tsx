@@ -5,6 +5,7 @@ import { HabitService } from '../services/habitService';
 import { AchievementService } from '../services/AchievementService';
 import { achievementTitles, getAchievementByLevel } from '../utils/achievements';
 import { Achievement } from '../types/achievement.types';
+import Logger from '@/utils/logger';
 
 interface AchievementContextType {
   achievements: Achievement[];
@@ -79,7 +80,7 @@ export const AchievementProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setAchievements(updatedAchievements || []);
       }
     } catch (err) {
-      console.error('Error refreshing achievements:', err);
+      Logger.error('Error refreshing achievements:', err);
     } finally {
       setLoading(false);
     }

@@ -21,7 +21,7 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({ data, period = 'week'
   if (!data || !data.data || !data.labels || data.data.length === 0 || data.labels.length === 0) {
     return (
       <View style={tw`bg-sand rounded-3xl p-8 shadow-sm items-center justify-center`}>
-        <Text style={tw`text-quartz-400 text-center`}>No data available</Text>
+        <Text style={tw`text-stone-400 text-center`}>No data available</Text>
       </View>
     );
   }
@@ -74,16 +74,16 @@ const StackedBarChart: React.FC<StackedBarChartProps> = ({ data, period = 'week'
     <View style={tw`bg-sand rounded-3xl p-4 shadow-sm`}>
       <View style={tw`flex-row justify-center mb-3 gap-4`}>
         <View style={tw`flex-row items-center`}>
-          <View style={tw`w-3 h-3 bg-quartz-300 rounded-full mr-2`} />
-          <Text style={tw`text-quartz-500 text-xs`}>Completed</Text>
+          <View style={tw`w-3 h-3 bg-stone-300 rounded-full mr-2`} />
+          <Text style={tw`text-stone-500 text-xs`}>Completed</Text>
         </View>
         <View style={tw`flex-row items-center`}>
-          <View style={tw`w-3 h-3 bg-quartz-200 rounded-full mr-2`} />
-          <Text style={tw`text-quartz-500 text-xs`}>Partial</Text>
+          <View style={tw`w-3 h-3 bg-stone-200 rounded-full mr-2`} />
+          <Text style={tw`text-stone-500 text-xs`}>Partial</Text>
         </View>
         <View style={tw`flex-row items-center`}>
-          <View style={tw`w-3 h-3 bg-quartz-100 rounded-full mr-2`} />
-          <Text style={tw`text-quartz-500 text-xs`}>Missed</Text>
+          <View style={tw`w-3 h-3 bg-stone-100 rounded-full mr-2`} />
+          <Text style={tw`text-stone-500 text-xs`}>Missed</Text>
         </View>
       </View>
       {period === 'month' || period === '4weeks' ? (

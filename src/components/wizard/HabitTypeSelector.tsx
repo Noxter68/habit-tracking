@@ -60,19 +60,19 @@ const HabitTypeCards: React.FC<HabitTypeCardsProps> = ({ selected, onSelect }) =
                   <View style={tw`flex-row items-center justify-between`}>
                     <View style={tw`flex-row items-center flex-1`}>
                       {/* Icon Container */}
-                      <View style={[tw`w-14 h-14 rounded-2xl items-center justify-center mr-4`, isSelected ? tw`bg-white/20` : tw`bg-quartz-100`]}>
+                      <View style={[tw`w-14 h-14 rounded-2xl items-center justify-center mr-4`, isSelected ? tw`bg-white/20` : tw`bg-stone-100`]}>
                         <Icon size={28} color={isSelected ? '#ffffff' : '#6B7280'} strokeWidth={1.5} />
                       </View>
 
                       {/* Text Content */}
                       <View style={tw`flex-1`}>
-                        <Text style={[tw`text-lg font-semibold mb-1`, isSelected ? tw`text-white` : tw`text-quartz-800`]}>{type.title}</Text>
-                        <Text style={[tw`text-sm leading-5`, isSelected ? tw`text-white/90` : tw`text-quartz-600`]}>{type.subtitle}</Text>
+                        <Text style={[tw`text-lg font-semibold mb-1`, isSelected ? tw`text-white` : tw`text-stone-800`]}>{type.title}</Text>
+                        <Text style={[tw`text-sm leading-5`, isSelected ? tw`text-white/90` : tw`text-stone-600`]}>{type.subtitle}</Text>
                       </View>
                     </View>
 
                     {/* Selection Indicator */}
-                    <View style={[tw`w-6 h-6 rounded-full border-2`, isSelected ? tw`border-white bg-white/30` : tw`border-quartz-300 bg-transparent`]}>
+                    <View style={[tw`w-6 h-6 rounded-full border-2`, isSelected ? tw`border-white bg-white/30` : tw`border-stone-300 bg-transparent`]}>
                       {isSelected && <View style={tw`w-2.5 h-2.5 bg-white rounded-full m-auto`} />}
                     </View>
                   </View>

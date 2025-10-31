@@ -1,6 +1,7 @@
 // src/hooks/useHabitDetails.ts
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { HabitProgressionService, TierInfo, HabitMilestone } from '@/services/habitProgressionService';
+import Logger from '@/utils/logger';
 
 interface UseHabitDetailsResult {
   tierInfo: TierInfo | null;
@@ -102,7 +103,7 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
         });
       }
     } catch (err) {
-      console.error('useHabitDetails error', err);
+      Logger.error('useHabitDetails error', err);
       // Keep the initial values set in useEffect above
     } finally {
       setLoading(false);

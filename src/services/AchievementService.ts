@@ -1,4 +1,5 @@
 // src/services/achievementService.ts
+import Logger from '@/utils/logger';
 import { supabase } from '../lib/supabase';
 
 export interface Achievement {
@@ -217,11 +218,11 @@ export class AchievementService {
 
         if (error && error.code !== '23505') {
           // Ignore duplicate key errors
-          console.error('Error inserting achievement:', error);
+          Logger.error('Error inserting achievement:', error);
         }
       }
     } catch (error) {
-      console.error('Error initializing achievements:', error);
+      Logger.error('Error initializing achievements:', error);
     }
   }
 
@@ -248,7 +249,7 @@ export class AchievementService {
         })) || []
       );
     } catch (error) {
-      console.error('Error fetching achievements:', error);
+      Logger.error('Error fetching achievements:', error);
       return this.achievements; // Fallback to local achievements
     }
   }
@@ -287,7 +288,7 @@ export class AchievementService {
         })) || []
       );
     } catch (error) {
-      console.error('Error fetching user achievements:', error);
+      Logger.error('Error fetching user achievements:', error);
       return [];
     }
   }
@@ -338,7 +339,7 @@ export class AchievementService {
 
       return unlockedAchievements;
     } catch (error) {
-      console.error('Error checking achievements:', error);
+      Logger.error('Error checking achievements:', error);
       return [];
     }
   }
@@ -361,7 +362,7 @@ export class AchievementService {
 
       return sortedByLevel[0]?.title || 'Newcomer';
     } catch (error) {
-      console.error('Error getting user title:', error);
+      Logger.error('Error getting user title:', error);
       return 'Newcomer';
     }
   }

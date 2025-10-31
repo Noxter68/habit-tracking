@@ -6,6 +6,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
 import { LeaderboardService, LeaderboardEntry } from '@/services/LeaderboardService';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import Logger from '@/utils/logger';
 
 const CROWN_IMAGE = require('../../assets/leaderboard/leaderboard-crown.png');
 
@@ -54,7 +55,7 @@ const LeaderboardScreen = () => {
         setCurrentUserRank(rank);
       }
     } catch (error) {
-      console.error('Error loading leaderboard:', error);
+      Logger.error('Error loading leaderboard:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);

@@ -1,6 +1,7 @@
 // src/services/RevenueCatService.ts
 import Purchases, { LOG_LEVEL, CustomerInfo, PurchasesPackage } from 'react-native-purchases';
 import { Platform } from 'react-native';
+import Logger from '@/utils/logger';
 
 const REVENUECAT_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || '';
 
@@ -101,7 +102,7 @@ export class RevenueCatService {
 
       const expectedPrefix = Platform.OS === 'ios' ? 'appl_' : 'goog_';
       if (!REVENUECAT_API_KEY.startsWith(expectedPrefix)) {
-        console.warn(`⚠️ [RevenueCat] API key doesn't match expected prefix for ${Platform.OS}`);
+        Logger.warn(`⚠️ [RevenueCat] API key doesn't match expected prefix for ${Platform.OS}`);
       }
 
       // Enable debug logging in development
@@ -118,15 +119,15 @@ export class RevenueCatService {
       // Verify initialization by fetching customer info
       try {
         const customerInfo = await Purchases.getCustomerInfo();
-        console.log('✅ [RevenueCat] Initialized successfully');
+        Logger.debug('✅ [RevenueCat] Initialized successfully');
       } catch (verifyError) {
-        console.warn('⚠️ [RevenueCat] Initialized but verification failed');
+        Logger.warn('⚠️ [RevenueCat] Initialized but verification failed');
       }
 
       // Listen for subscription changes
       Purchases.addCustomerInfoUpdateListener(this.handleCustomerInfoUpdate);
     } catch (error) {
-      console.error('❌ [RevenueCat] Initialization failed:', error);
+      Logger.error('❌ [RevenueCat] Initialization failed:', error);
       this.initialized = false;
       this.initializationPromise = null;
       throw error;
@@ -140,7 +141,7 @@ export class RevenueCatService {
   private static handleCustomerInfoUpdate = (customerInfo: CustomerInfo) => {
     const activeEntitlements = Object.keys(customerInfo.entitlements.active);
     if (activeEntitlements.length > 0) {
-      console.log('🔔 [RevenueCat] Subscription status updated:', activeEntitlements);
+      Logger.debug('🔔 [RevenueCat] Subscription status updated:', activeEntitlements);
     }
   };
 
@@ -202,7 +203,7 @@ export class RevenueCatService {
 
       return { subscriptions, consumables };
     } catch (error) {
-      console.error('❌ [RevenueCat] Error:', error);
+      Logger.error('❌ [RevenueCat] Error:', error);
       return { subscriptions: [], consumables: [] };
     }
   }
@@ -223,7 +224,7 @@ export class RevenueCatService {
 
       const hasPremium = !!customerInfo.entitlements.active['premium'];
 
-      console.log('✅ [RevenueCat] Purchase successful');
+      Logger.debug('✅ [RevenueCat] Purchase successful');
 
       return {
         success: true,
@@ -238,7 +239,7 @@ export class RevenueCatService {
         };
       }
 
-      console.error('❌ [RevenueCat] Purchase failed:', error.message);
+      Logger.error('❌ [RevenueCat] Purchase failed:', error.message);
       return {
         success: false,
         error: error.message || 'Purchase failed',
@@ -258,7 +259,7 @@ export class RevenueCatService {
       const hasPremium = !!customerInfo.entitlements.active['premium'];
 
       if (hasPremium) {
-        console.log('✅ [RevenueCat] Purchases restored successfully');
+        Logger.debug('✅ [RevenueCat] Purchases restored successfully');
       }
 
       return {
@@ -267,7 +268,7 @@ export class RevenueCatService {
         error: hasPremium ? undefined : 'No purchases found',
       };
     } catch (error: any) {
-      console.error('❌ [RevenueCat] Restore failed:', error.message);
+      Logger.error('❌ [RevenueCat] Restore failed:', error.message);
       return {
         success: false,
         error: error.message || 'Restore failed',
@@ -296,7 +297,7 @@ export class RevenueCatService {
         expirationDate: premiumEntitlement?.expirationDate || null,
       };
     } catch (error) {
-      console.error('❌ [RevenueCat] Error fetching subscription status');
+      Logger.error('❌ [RevenueCat] Error fetching subscription status');
       return {
         isSubscribed: false,
         entitlementId: null,
@@ -334,9 +335,9 @@ export class RevenueCatService {
   static async setAppUserId(userId: string): Promise<void> {
     try {
       await Purchases.logIn(userId);
-      console.log('✅ [RevenueCat] User authenticated');
+      Logger.debug('✅ [RevenueCat] User authenticated');
     } catch (error) {
-      console.error('❌ [RevenueCat] Error setting user ID');
+      Logger.error('❌ [RevenueCat] Error setting user ID');
       throw error;
     }
   }
@@ -348,9 +349,9 @@ export class RevenueCatService {
   static async clearAppUserId(): Promise<void> {
     try {
       await Purchases.logOut();
-      console.log('✅ [RevenueCat] User logged out');
+      Logger.debug('✅ [RevenueCat] User logged out');
     } catch (error) {
-      console.error('❌ [RevenueCat] Error logging out');
+      Logger.error('❌ [RevenueCat] Error logging out');
     }
   }
 }

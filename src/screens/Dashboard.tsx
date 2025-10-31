@@ -27,6 +27,7 @@ import { useSubscription } from '@/context/SubscriptionContext';
 import { HolidayModeService, HolidayPeriod } from '@/services/holidayModeService';
 import { getAchievementByLevel } from '@/utils/achievements';
 import { HapticFeedback } from '@/utils/haptics';
+import Logger from '@/utils/logger';
 
 // ============================================================================
 // Main Component
@@ -132,7 +133,7 @@ const Dashboard: React.FC = () => {
         setFrozenTasksMap(new Map());
       }
     } catch (error) {
-      console.error('Error loading holiday mode:', error);
+      Logger.error('Error loading holiday mode:', error);
       setActiveHoliday(null);
       setFrozenHabits(new Set());
       setFrozenTasksMap(new Map());
@@ -163,7 +164,7 @@ const Dashboard: React.FC = () => {
         Alert.alert('Error', result.error || 'Failed to end holiday mode');
       }
     } catch (error) {
-      console.error('Error ending holiday:', error);
+      Logger.error('Error ending holiday:', error);
       await loadHolidayModeData();
       Alert.alert('Error', 'Failed to end holiday mode');
     }
@@ -402,8 +403,8 @@ const Dashboard: React.FC = () => {
           {/* Section Header */}
           <View style={tw`flex-row items-center justify-between mb-4`}>
             <View>
-              <Text style={tw`text-xl font-bold text-quartz-700`}>{showFullHolidayMode ? 'On Holiday' : activeHabits.length > 0 ? "Today's Habits" : 'Get Started'}</Text>
-              <Text style={tw`text-sm text-quartz-500 mt-0.5`}>
+              <Text style={tw`text-xl font-bold text-stone-700`}>{showFullHolidayMode ? 'On Holiday' : activeHabits.length > 0 ? "Today's Habits" : 'Get Started'}</Text>
+              <Text style={tw`text-sm text-stone-500 mt-0.5`}>
                 {showFullHolidayMode
                   ? 'All habits are paused'
                   : activeHabits.length > 0
@@ -456,18 +457,18 @@ const Dashboard: React.FC = () => {
             /* Empty State - Create First Habit */
             <View style={tw`px-5`}>
               <Pressable onPress={handleCreateHabit} style={({ pressed }) => [pressed && tw`scale-[0.98]`]}>
-                <LinearGradient colors={['rgba(243, 244, 246, 0.5)', 'rgba(229, 231, 235, 0.3)']} style={tw`rounded-2xl p-8 items-center border border-quartz-200`}>
+                <LinearGradient colors={['rgba(243, 244, 246, 0.5)', 'rgba(229, 231, 235, 0.3)']} style={tw`rounded-2xl p-8 items-center border border-stone-200`}>
                   <View style={tw`w-16 h-16 mb-4`}>
                     <LinearGradient colors={['#9CA3AF', '#6B7280']} style={tw`w-full h-full rounded-2xl items-center justify-center shadow-lg`}>
                       <Plus size={28} color="#ffffff" strokeWidth={2.5} />
                     </LinearGradient>
                   </View>
 
-                  <Text style={tw`text-lg font-bold text-quartz-700 mb-2`}>Create Your First Habit</Text>
-                  <Text style={tw`text-sm text-quartz-500 text-center px-4`}>Start your journey to build better habits and earn achievements!</Text>
+                  <Text style={tw`text-lg font-bold text-stone-700 mb-2`}>Create Your First Habit</Text>
+                  <Text style={tw`text-sm text-stone-500 text-center px-4`}>Start your journey to build better habits and earn achievements!</Text>
 
-                  <View style={tw`mt-4 px-6 py-2 bg-sand rounded-full border border-quartz-300 shadow-sm`}>
-                    <Text style={tw`text-sm font-semibold text-quartz-600`}>Tap to Begin →</Text>
+                  <View style={tw`mt-4 px-6 py-2 bg-sand rounded-full border border-stone-300 shadow-sm`}>
+                    <Text style={tw`text-sm font-semibold text-stone-600`}>Tap to Begin →</Text>
                   </View>
                 </LinearGradient>
               </Pressable>

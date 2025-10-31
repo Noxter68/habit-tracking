@@ -126,8 +126,8 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, on
                 {enabled ? <Bell size={24} color="#f59e0b" strokeWidth={2} /> : <BellOff size={24} color="#9ca3af" strokeWidth={2} />}
               </View>
               <View style={tw`flex-1`}>
-                <Text style={tw`text-lg font-semibold text-quartz-800 mb-1`}>{enabled ? 'Reminders Enabled' : 'Enable Reminders'}</Text>
-                <Text style={tw`text-sm text-quartz-600`}>{enabled ? 'You will receive daily notifications' : 'Get notified to stay consistent'}</Text>
+                <Text style={tw`text-lg font-semibold text-stone-800 mb-1`}>{enabled ? 'Reminders Enabled' : 'Enable Reminders'}</Text>
+                <Text style={tw`text-sm text-stone-600`}>{enabled ? 'You will receive daily notifications' : 'Get notified to stay consistent'}</Text>
               </View>
             </View>
             <Animated.View style={toggleAnimation}>
@@ -140,7 +140,7 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, on
       {/* Quick Time Selection */}
       {enabled && (
         <Animated.View entering={FadeInDown.delay(300).duration(500)} style={tw`mb-4`}>
-          <Text style={tw`text-sm font-medium text-quartz-700 mb-3`}>Choose your reminder time:</Text>
+          <Text style={tw`text-sm font-medium text-stone-700 mb-3`}>Choose your reminder time:</Text>
           <View style={tw`gap-2`}>
             {quickTimes.map((qt, index) => {
               const Icon = qt.icon;
@@ -153,12 +153,12 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, on
                   style={({ pressed }) => [tw`rounded-xl overflow-hidden`, { borderWidth: 1, borderColor: isSelected ? '#fde68a' : '#e5e7eb' }, pressed && tw`opacity-90`]}
                 >
                   <View style={[tw`p-4 flex-row items-center`, isSelected ? tw`bg-amber-50` : tw`bg-white`]}>
-                    <View style={[tw`w-10 h-10 rounded-lg items-center justify-center mr-3`, isSelected ? tw`bg-amber-100` : tw`bg-quartz-50`]}>
+                    <View style={[tw`w-10 h-10 rounded-lg items-center justify-center mr-3`, isSelected ? tw`bg-amber-100` : tw`bg-stone-50`]}>
                       <Icon size={20} color={isSelected ? '#f59e0b' : '#9ca3af'} strokeWidth={2} />
                     </View>
                     <View style={tw`flex-1`}>
-                      <Text style={[tw`text-base font-semibold`, isSelected ? tw`text-amber-900` : tw`text-quartz-800`]}>{qt.label}</Text>
-                      <Text style={[tw`text-sm`, isSelected ? tw`text-amber-700` : tw`text-quartz-600`]}>
+                      <Text style={[tw`text-base font-semibold`, isSelected ? tw`text-amber-900` : tw`text-stone-800`]}>{qt.label}</Text>
+                      <Text style={[tw`text-sm`, isSelected ? tw`text-amber-700` : tw`text-stone-600`]}>
                         {qt.time} • {qt.description}
                       </Text>
                     </View>
@@ -178,11 +178,11 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, on
               style={({ pressed }) => [tw`rounded-xl overflow-hidden`, { borderWidth: 1, borderColor: !isQuickTime ? '#fde68a' : '#e5e7eb' }, pressed && tw`opacity-90`]}
             >
               <View style={[tw`p-4 flex-row items-center`, !isQuickTime ? tw`bg-amber-50` : tw`bg-white`]}>
-                <View style={[tw`w-10 h-10 rounded-lg items-center justify-center mr-3`, !isQuickTime ? tw`bg-amber-100` : tw`bg-quartz-50`]}>
+                <View style={[tw`w-10 h-10 rounded-lg items-center justify-center mr-3`, !isQuickTime ? tw`bg-amber-100` : tw`bg-stone-50`]}>
                   <Clock size={20} color={!isQuickTime ? '#f59e0b' : '#9ca3af'} strokeWidth={2} />
                 </View>
                 <View style={tw`flex-1`}>
-                  <Text style={[tw`text-base font-semibold`, !isQuickTime ? tw`text-amber-900` : tw`text-quartz-800`]}>Custom Time</Text>
+                  <Text style={[tw`text-base font-semibold`, !isQuickTime ? tw`text-amber-900` : tw`text-stone-800`]}>Custom Time</Text>
                   {!isQuickTime && <Text style={tw`text-sm text-amber-700 mt-0.5`}>{formatTime(selectedTime)}</Text>}
                 </View>
                 {!isQuickTime && (

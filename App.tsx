@@ -52,6 +52,7 @@ import HolidayModeScreen from '@/screens/HolidayModeScreen';
 import NotificationManagerScreen from '@/screens/NotificationManagerScreen';
 import { NotificationService } from '@/services/notificationService';
 import { HapticFeedback } from '@/utils/haptics';
+import Logger from '@/utils/logger';
 
 // Type Definitions
 export type RootStackParamList = {
@@ -242,7 +243,7 @@ function AppNavigator() {
       const hasLaunched = await AsyncStorage.getItem('hasLaunched');
       setIsFirstLaunch(hasLaunched === null && user !== null);
     } catch (error) {
-      console.error('Error checking first launch:', error);
+      Logger.error('Error checking first launch:', error);
       setIsFirstLaunch(false);
     } finally {
       setIsCheckingFirstLaunch(false);
@@ -254,7 +255,7 @@ function AppNavigator() {
       await AsyncStorage.setItem('hasLaunched', 'true');
       setIsFirstLaunch(false);
     } catch (error) {
-      console.error('Error setting first launch:', error);
+      Logger.error('Error setting first launch:', error);
     }
   };
 
@@ -387,7 +388,7 @@ function useNotificationSetup() {
       }
 
       if (finalStatus !== 'granted') {
-        console.log('Notification permissions not granted');
+        Logger.debug('Notification permissions not granted');
         return;
       }
 
@@ -404,15 +405,15 @@ function useNotificationSetup() {
     setupNotifications();
 
     const responseSubscription = Notifications.addNotificationResponseReceivedListener((response) => {
-      console.log('Notification tapped:', response);
+      Logger.debug('Notification tapped:', response);
       const habitId = response.notification.request.content.data?.habitId;
       if (habitId) {
-        console.log('Navigate to habit:', habitId);
+        Logger.debug('Navigate to habit:', habitId);
       }
     });
 
     const receivedSubscription = Notifications.addNotificationReceivedListener((notification) => {
-      console.log('Notification received:', notification);
+      Logger.debug('Notification received:', notification);
     });
 
     return () => {
@@ -435,9 +436,9 @@ function useRevenueCatSetup() {
         const isExpoGo = typeof expo !== 'undefined' && expo?.modules?.ExpoGo;
 
         if (isExpoGo) {
-          console.warn('⚠️  [App] Running in Expo Go - RevenueCat will NOT work!');
-          console.warn('⚠️  [App] You need to build a development build to test purchases');
-          console.warn('⚠️  [App] Run: npx expo run:ios or eas build --profile development');
+          Logger.warn('⚠️  [App] Running in Expo Go - RevenueCat will NOT work!');
+          Logger.warn('⚠️  [App] You need to build a development build to test purchases');
+          Logger.warn('⚠️  [App] Run: npx expo run:ios or eas build --profile development');
           return;
         }
 
@@ -446,26 +447,26 @@ function useRevenueCatSetup() {
           diagnoseRevenueCatSetup();
         }
 
-        console.log('🔵 [App] Initializing RevenueCat...');
+        Logger.debug('🔵 [App] Initializing RevenueCat...');
 
         // Get the correct API key for the platform
         const apiKey = Platform.OS === 'ios' ? REVENUECAT_IOS_API_KEY : REVENUECAT_ANDROID_API_KEY;
 
         if (!apiKey) {
-          console.error('❌ [App] RevenueCat API key not found for platform:', Platform.OS);
-          console.error('❌ [App] Check your .env file has REVENUECAT_IOS_API_KEY or REVENUECAT_ANDROID_API_KEY');
+          Logger.error('❌ [App] RevenueCat API key not found for platform:', Platform.OS);
+          Logger.error('❌ [App] Check your .env file has REVENUECAT_IOS_API_KEY or REVENUECAT_ANDROID_API_KEY');
           return;
         }
 
         // Validate API key format
         const expectedPrefix = Platform.OS === 'ios' ? 'appl_' : 'goog_';
         if (!apiKey.startsWith(expectedPrefix)) {
-          console.error(`❌ [App] Invalid API key format for ${Platform.OS}. Should start with "${expectedPrefix}"`);
-          console.error(`❌ [App] Got: ${apiKey.substring(0, 10)}...`);
+          Logger.error(`❌ [App] Invalid API key format for ${Platform.OS}. Should start with "${expectedPrefix}"`);
+          Logger.error(`❌ [App] Got: ${apiKey.substring(0, 10)}...`);
           return;
         }
 
-        console.log('🔵 [App] API Key validated:', {
+        Logger.debug('🔵 [App] API Key validated:', {
           platform: Platform.OS,
           keyPrefix: apiKey.substring(0, 10) + '...',
           keyLength: apiKey.length,
@@ -473,17 +474,17 @@ function useRevenueCatSetup() {
 
         // Set log level BEFORE configuring
         Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.DEBUG : LOG_LEVEL.INFO);
-        console.log('🔵 [App] Log level set to:', __DEV__ ? 'DEBUG' : 'INFO');
+        Logger.debug('🔵 [App] Log level set to:', __DEV__ ? 'DEBUG' : 'INFO');
 
         // Configure RevenueCat - SYNCHRONOUS, don't await
-        console.log('🔵 [App] Calling Purchases.configure...');
+        Logger.debug('🔵 [App] Calling Purchases.configure...');
         Purchases.configure({ apiKey });
 
         setIsInitialized(true);
-        console.log('✅ [App] RevenueCat initialized successfully');
+        Logger.debug('✅ [App] RevenueCat initialized successfully');
       } catch (error) {
-        console.error('❌ [App] Failed to initialize RevenueCat:', error);
-        console.error('❌ [App] Error details:', JSON.stringify(error, null, 2));
+        Logger.error('❌ [App] Failed to initialize RevenueCat:', error);
+        Logger.error('❌ [App] Error details:', JSON.stringify(error, null, 2));
       }
     };
 
@@ -499,12 +500,12 @@ function usePerformanceMonitoring() {
     if (!AppConfig.debug.enabled) return;
 
     if (AppConfig.debug.enabled) {
-      console.log('🚀 App started in', AppConfig.env.name, 'mode');
-      console.log('📝 Debug features:', AppConfig.debug);
+      Logger.debug('🚀 App started in', AppConfig.env.name, 'mode');
+      Logger.debug('📝 Debug features:', AppConfig.debug);
     }
 
     const reportInterval = setInterval(() => {
-      console.log('📊 Performance Report:');
+      Logger.debug('📊 Performance Report:');
       PerformanceMonitor.getReport();
     }, 30000);
 
@@ -513,7 +514,7 @@ function usePerformanceMonitoring() {
       const slowOps = Object.entries(report.avgTimes).filter(([_, time]) => time > 500);
 
       if (slowOps.length > 0) {
-        console.warn('🐌 Slow operations detected:', slowOps);
+        Logger.warn('🐌 Slow operations detected:', slowOps);
       }
     }, 10000);
 
@@ -536,11 +537,11 @@ export default function App() {
     // Initialize RevenueCat with proper async handling
     const initRevenueCat = async () => {
       try {
-        console.log('🚀 [App] Starting RevenueCat initialization...');
+        Logger.debug('🚀 [App] Starting RevenueCat initialization...');
         await RevenueCatService.initialize();
-        console.log('✅ [App] RevenueCat initialized successfully');
+        Logger.debug('✅ [App] RevenueCat initialized successfully');
       } catch (error) {
-        console.error('❌ [App] Failed to initialize RevenueCat:', error);
+        Logger.error('❌ [App] Failed to initialize RevenueCat:', error);
       }
     };
 
@@ -549,9 +550,9 @@ export default function App() {
     // Listen to app state changes to sync purchases
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'active' && RevenueCatService.isInitialized()) {
-        console.log('🔄 [App] App became active, syncing purchases...');
+        Logger.debug('🔄 [App] App became active, syncing purchases...');
         RevenueCatService.getSubscriptionStatus().catch((error) => {
-          console.error('❌ [App] Error syncing purchases:', error);
+          Logger.error('❌ [App] Error syncing purchases:', error);
         });
       }
     });

@@ -1,5 +1,5 @@
 // src/screens/HolidayModeScreen.tsx
-// Redesigned with improved UX/UI
+// Redesigned with improved UX/UI and Full Topaz gradient theme
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, ActivityIndicator, Alert, Platform, Modal, Pressable } from 'react-native';
@@ -17,6 +17,7 @@ import { HolidayModeService, HolidayPeriod, HolidayStats, HolidayScope, HabitWit
 import { ChevronLeft, Diamond, Info, Calendar, Sparkles, Globe, CheckSquare, ListChecks, InfinityIcon, Crown, Sun } from 'lucide-react-native';
 import { HabitSelector } from '../components/holidays/HabitSelector';
 import { TaskSelector } from '../components/holidays/TaskSelector';
+import Logger from '@/utils/logger';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -62,7 +63,7 @@ const HolidayModeScreen: React.FC = () => {
       tomorrow.setDate(tomorrow.getDate() + 1);
       setEndDate(tomorrow);
     } catch (error) {
-      console.error('Error loading holiday data:', error);
+      Logger.error('Error loading holiday data:', error);
     } finally {
       setLoading(false);
     }
@@ -204,7 +205,6 @@ const HolidayModeScreen: React.FC = () => {
       return;
     }
 
-    // ✅ IMPORTANT: Check with backend first to get proper validation messages
     try {
       const canCreateResult = await HolidayModeService.canCreateHoliday(
         user.id,
@@ -221,7 +221,6 @@ const HolidayModeScreen: React.FC = () => {
       );
 
       if (!canCreateResult.canCreate) {
-        // Show the proper error message from backend
         if (canCreateResult.requiresPremium) {
           Alert.alert('Premium Required', canCreateResult.reason || 'This feature requires a Premium subscription.', [
             { text: 'Cancel', style: 'cancel' },
@@ -236,7 +235,7 @@ const HolidayModeScreen: React.FC = () => {
         return;
       }
     } catch (error) {
-      console.error('Error validating holiday:', error);
+      Logger.error('Error validating holiday:', error);
       Alert.alert('Error', 'Failed to validate holiday period. Please try again.');
       return;
     }
@@ -361,7 +360,7 @@ const HolidayModeScreen: React.FC = () => {
   if (loading) {
     return (
       <SafeAreaView style={tw`flex-1 bg-[#FAF9F7] items-center justify-center`}>
-        <ActivityIndicator size="large" color="#6366F1" />
+        <ActivityIndicator size="large" color="#f59e0b" />
       </SafeAreaView>
     );
   }
@@ -369,7 +368,7 @@ const HolidayModeScreen: React.FC = () => {
   const ScopeButton = ({ value, icon: Icon, label }: { value: HolidayScope; icon: any; label: string }) => {
     const isSelected = scope === value;
     return (
-      <TouchableOpacity onPress={() => handleScopeChange(value)} activeOpacity={0.7} style={tw`flex-1 ${isSelected ? 'bg-indigo-500' : 'bg-gray-100'} rounded-2xl py-4 px-3 items-center`}>
+      <TouchableOpacity onPress={() => handleScopeChange(value)} activeOpacity={0.7} style={tw`flex-1 ${isSelected ? 'bg-amber-500' : 'bg-gray-100'} rounded-2xl py-4 px-3 items-center`}>
         <Icon size={24} color={isSelected ? '#FFFFFF' : '#9CA3AF'} strokeWidth={2.5} />
         <Text style={tw`${isSelected ? 'text-white' : 'text-gray-600'} text-sm font-bold mt-2`}>{label}</Text>
       </TouchableOpacity>
@@ -397,10 +396,10 @@ const HolidayModeScreen: React.FC = () => {
           <Text style={tw`text-base text-gray-500`}>Pause habits without losing progress</Text>
         </Animated.View>
 
-        {/* Active Holiday Card */}
+        {/* Active Holiday Card - TOPAZ GRADIENT */}
         {activeHoliday && (
           <Animated.View entering={FadeInDown.delay(100).duration(400)} style={tw`px-6 mb-6`}>
-            <LinearGradient colors={['#6366F1', '#4F46E5']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-6 shadow-lg`}>
+            <LinearGradient colors={['#fbbf24', '#f59e0b', '#d97706']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-6 shadow-lg`}>
               <View style={tw`flex-row items-center justify-between mb-4`}>
                 <View style={tw`flex-row items-center`}>
                   <View style={tw`bg-white/20 p-2 rounded-full`}>
@@ -414,7 +413,7 @@ const HolidayModeScreen: React.FC = () => {
               </View>
 
               <View style={tw`mb-4`}>
-                <Text style={tw`text-indigo-200 text-sm mb-1`}>Period</Text>
+                <Text style={tw`text-white/70 text-sm mb-1`}>Period</Text>
                 <Text style={tw`text-white text-base font-semibold`}>
                   {activeHoliday.startDate && activeHoliday.endDate
                     ? `${HolidayModeService.formatDate(activeHoliday.startDate)} - ${HolidayModeService.formatDate(activeHoliday.endDate)}`
@@ -424,7 +423,7 @@ const HolidayModeScreen: React.FC = () => {
 
               {!activeHoliday.appliesToAll && (
                 <View style={tw`mb-4`}>
-                  <Text style={tw`text-indigo-200 text-sm mb-1`}>Frozen Items</Text>
+                  <Text style={tw`text-white/70 text-sm mb-1`}>Frozen Items</Text>
                   <Text style={tw`text-white text-sm`}>
                     {activeHoliday.frozenHabits?.length
                       ? `${activeHoliday.frozenHabits.length} habits`
@@ -436,17 +435,17 @@ const HolidayModeScreen: React.FC = () => {
               )}
 
               <TouchableOpacity onPress={handleCancelHoliday} disabled={submitting} style={tw`bg-white rounded-xl py-3 ${submitting ? 'opacity-50' : ''}`}>
-                {submitting ? <ActivityIndicator color="#6366F1" /> : <Text style={tw`text-indigo-600 font-bold text-center`}>End Early</Text>}
+                {submitting ? <ActivityIndicator color="#f59e0b" /> : <Text style={tw`text-amber-600 font-bold text-center`}>End Early</Text>}
               </TouchableOpacity>
             </LinearGradient>
           </Animated.View>
         )}
 
-        {/* Stats Card - Redesigned with calm blue gradient */}
+        {/* Stats Card - WITH TOPAZ GRADIENT */}
         {stats && !activeHoliday && (
           <Animated.View entering={FadeInDown.delay(100).duration(400)} style={tw`px-6 mb-6`}>
             {isPremium ? (
-              <LinearGradient colors={['#78716C', '#57534E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-6 shadow-lg`}>
+              <LinearGradient colors={['#fbbf24', '#f59e0b', '#d97706']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-6 shadow-lg`}>
                 <View style={tw`flex-row items-center justify-between mb-3`}>
                   <Text style={tw`text-xl font-black text-white`}>Premium Access</Text>
                   <View style={tw`bg-white/20 px-3 py-1.5 rounded-full flex-row items-center`}>
@@ -454,16 +453,16 @@ const HolidayModeScreen: React.FC = () => {
                     <Text style={tw`text-xs font-bold text-white ml-1`}>UNLIMITED</Text>
                   </View>
                 </View>
-                <Text style={tw`text-stone-100 text-sm mb-4`}>Create unlimited holiday periods with no duration restrictions</Text>
+                <Text style={tw`text-white/80 text-sm mb-4`}>Create unlimited holiday periods with no duration restrictions</Text>
 
                 <View style={tw`flex-row items-center gap-4`}>
-                  <View style={tw`flex-1 bg-white/10 rounded-xl p-3 items-center`}>
+                  <View style={tw`flex-1 bg-white/15 rounded-xl p-3 items-center`}>
                     <InfinityIcon size={28} color="#FFFFFF" strokeWidth={2} />
-                    <Text style={tw`text-xs text-white/80 mt-1`}>Periods</Text>
+                    <Text style={tw`text-xs text-white/70 mt-1`}>Periods</Text>
                   </View>
-                  <View style={tw`flex-1 bg-white/10 rounded-xl p-3 items-center`}>
+                  <View style={tw`flex-1 bg-white/15 rounded-xl p-3 items-center`}>
                     <InfinityIcon size={28} color="#FFFFFF" strokeWidth={2} />
-                    <Text style={tw`text-xs text-white/80 mt-1`}>Days per period</Text>
+                    <Text style={tw`text-xs text-white/70 mt-1`}>Days per period</Text>
                   </View>
                 </View>
               </LinearGradient>
@@ -471,15 +470,15 @@ const HolidayModeScreen: React.FC = () => {
               <View style={tw`bg-white rounded-3xl p-6 shadow-sm border border-gray-200`}>
                 <View style={tw`flex-row items-center justify-between mb-4`}>
                   <Text style={tw`text-lg font-bold text-gray-800`}>Your Allowance</Text>
-                  <View style={tw`bg-blue-50 px-3 py-1 rounded-full`}>
-                    <Text style={tw`text-xs font-bold text-blue-700`}>FREE PLAN</Text>
+                  <View style={tw`bg-amber-50 px-3 py-1 rounded-full`}>
+                    <Text style={tw`text-xs font-bold text-amber-700`}>FREE PLAN</Text>
                   </View>
                 </View>
 
                 <View style={tw`flex-row items-center gap-4`}>
-                  <View style={tw`flex-1 bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-2xl p-4 items-center`}>
-                    <Text style={tw`text-4xl font-black text-cyan-600`}>{stats.remainingAllowance}</Text>
-                    <Text style={tw`text-xs text-cyan-700 font-semibold mt-1`}>Period left</Text>
+                  <View style={tw`flex-1 bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-4 items-center`}>
+                    <Text style={tw`text-4xl font-black text-amber-600`}>{stats.remainingAllowance}</Text>
+                    <Text style={tw`text-xs text-amber-700 font-semibold mt-1`}>Period left</Text>
                   </View>
                   <View style={tw`w-px h-16 bg-gray-200`} />
                   <View style={tw`flex-1 bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-4 items-center`}>
@@ -502,14 +501,14 @@ const HolidayModeScreen: React.FC = () => {
             <Animated.View entering={FadeInDown.delay(200).duration(400)} style={tw`bg-white rounded-3xl p-6 shadow-sm mb-6`}>
               <Text style={tw`text-lg font-bold text-gray-800 mb-6`}>Schedule Break</Text>
 
-              {/* Duration Display - Above dates */}
-              <View style={tw`bg-indigo-50 rounded-2xl p-4 mb-6 items-center`}>
-                <Text style={tw`text-indigo-400 text-xs font-semibold uppercase mb-1`}>Total Duration</Text>
-                <Text style={tw`text-indigo-600 text-4xl font-black`}>{duration}</Text>
-                <Text style={tw`text-indigo-500 text-sm font-semibold`}>{duration === 1 ? 'day' : 'days'}</Text>
+              {/* Duration Display - TOPAZ COLORS */}
+              <View style={tw`bg-amber-50 rounded-2xl p-4 mb-6 items-center`}>
+                <Text style={tw`text-amber-500 text-xs font-semibold uppercase mb-1`}>Total Duration</Text>
+                <Text style={tw`text-amber-600 text-4xl font-black`}>{duration}</Text>
+                <Text style={tw`text-amber-600 text-sm font-semibold`}>{duration === 1 ? 'day' : 'days'}</Text>
               </View>
 
-              {/* Date Selection - Simplified */}
+              {/* Date Selection */}
               <View style={tw`flex-row gap-3 mb-6`}>
                 <View style={tw`flex-1`}>
                   <Text style={tw`text-xs font-semibold text-gray-500 mb-2 uppercase`}>Start Date</Text>
@@ -538,7 +537,7 @@ const HolidayModeScreen: React.FC = () => {
                 </View>
               </View>
 
-              {/* Freeze Scope - Vertical 3 buttons */}
+              {/* Freeze Scope - TOPAZ SELECTED COLOR */}
               <View style={tw`mb-6`}>
                 <Text style={tw`text-sm font-semibold text-gray-700 mb-3`}>Freeze Scope</Text>
                 <View style={tw`flex-row gap-2`}>
@@ -574,9 +573,9 @@ const HolidayModeScreen: React.FC = () => {
                 </Text>
               </View>
 
-              {/* Activate Button */}
+              {/* Activate Button - TOPAZ GRADIENT */}
               <TouchableOpacity onPress={handleCreateHoliday} disabled={submitting} activeOpacity={0.8}>
-                <LinearGradient colors={['#6366F1', '#4F46E5']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-xl py-4 shadow-md ${submitting ? 'opacity-50' : ''}`}>
+                <LinearGradient colors={['#fbbf24', '#f59e0b']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-xl py-4 shadow-md ${submitting ? 'opacity-50' : ''}`}>
                   {submitting ? (
                     <ActivityIndicator color="#FFFFFF" />
                   ) : (
@@ -588,7 +587,7 @@ const HolidayModeScreen: React.FC = () => {
               </TouchableOpacity>
             </Animated.View>
 
-            {/* Premium Upsell - Calm blue gradient */}
+            {/* Premium Upsell - TOPAZ GRADIENT */}
             {!isPremium && (
               <Animated.View entering={FadeInDown.delay(300).duration(400)}>
                 <TouchableOpacity
@@ -598,14 +597,14 @@ const HolidayModeScreen: React.FC = () => {
                   }}
                   activeOpacity={0.9}
                 >
-                  <LinearGradient colors={['#60A5FA', '#3B82F6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-6 shadow-lg`}>
+                  <LinearGradient colors={['#fbbf24', '#f59e0b', '#d97706']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-6 shadow-lg`}>
                     <View style={tw`flex-row items-center mb-3`}>
                       <View style={tw`bg-white/20 p-2 rounded-full`}>
                         <Diamond size={16} color="#FFFFFF" />
                       </View>
                       <Text style={tw`text-white text-lg font-bold ml-3`}>Go Premium</Text>
                     </View>
-                    <Text style={tw`text-blue-100 text-sm`}>Unlimited holidays • No duration limits • Advanced controls</Text>
+                    <Text style={tw`text-white/90 text-sm`}>Unlimited holidays • No duration limits • Advanced controls</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </Animated.View>
@@ -614,7 +613,7 @@ const HolidayModeScreen: React.FC = () => {
         )}
       </ScrollView>
 
-      {/* Simplified Date Pickers */}
+      {/* Date Pickers - TOPAZ ACCENT */}
       {showStartPicker && (
         <Modal visible={true} transparent animationType="fade" onRequestClose={() => setShowStartPicker(false)}>
           <Animated.View entering={FadeInDown.duration(300)} style={tw`flex-1`}>
@@ -622,11 +621,11 @@ const HolidayModeScreen: React.FC = () => {
               <Pressable style={tw`bg-white rounded-t-3xl pb-8`} onPress={(e) => e.stopPropagation()}>
                 <View style={tw`flex-row justify-between items-center px-6 py-4 border-b border-gray-100`}>
                   <TouchableOpacity onPress={() => setShowStartPicker(false)}>
-                    <Text style={tw`text-indigo-600 font-semibold`}>Cancel</Text>
+                    <Text style={tw`text-amber-600 font-semibold`}>Cancel</Text>
                   </TouchableOpacity>
                   <Text style={tw`font-bold text-gray-800`}>Start Date</Text>
                   <TouchableOpacity onPress={() => setShowStartPicker(false)}>
-                    <Text style={tw`text-indigo-600 font-semibold`}>Done</Text>
+                    <Text style={tw`text-amber-600 font-semibold`}>Done</Text>
                   </TouchableOpacity>
                 </View>
                 <View style={tw`w-full items-center`}>
@@ -654,11 +653,11 @@ const HolidayModeScreen: React.FC = () => {
               <Pressable style={tw`bg-white rounded-t-3xl pb-8`} onPress={(e) => e.stopPropagation()}>
                 <View style={tw`flex-row justify-between items-center px-6 py-4 border-b border-gray-100`}>
                   <TouchableOpacity onPress={() => setShowEndPicker(false)}>
-                    <Text style={tw`text-indigo-600 font-semibold`}>Cancel</Text>
+                    <Text style={tw`text-amber-600 font-semibold`}>Cancel</Text>
                   </TouchableOpacity>
                   <Text style={tw`font-bold text-gray-800`}>End Date</Text>
                   <TouchableOpacity onPress={() => setShowEndPicker(false)}>
-                    <Text style={tw`text-indigo-600 font-semibold`}>Done</Text>
+                    <Text style={tw`text-amber-600 font-semibold`}>Done</Text>
                   </TouchableOpacity>
                 </View>
                 <View style={tw`w-full items-center`}>

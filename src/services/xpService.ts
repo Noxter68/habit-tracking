@@ -2,6 +2,7 @@
 
 import { getTodayString } from '@/utils/dateHelpers';
 import { supabase } from '../lib/supabase';
+import Logger from '@/utils/logger';
 
 export interface XPTransaction {
   amount: number;
@@ -16,8 +17,7 @@ export class XPService {
     try {
       // ✅ CRITICAL VALIDATION: Ensure amount exists and is a number
       if (transaction.amount === undefined || transaction.amount === null || typeof transaction.amount !== 'number') {
-        console.error('❌ XP amount is invalid:', transaction.amount);
-        console.error('Full transaction:', JSON.stringify(transaction, null, 2));
+        Logger.error('XP amount is invalid', { amount: transaction.amount, transaction });
         throw new Error(`Invalid XP amount: ${transaction.amount}`);
       }
 
@@ -25,7 +25,7 @@ export class XPService {
         if (!value) return null;
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         if (uuidRegex.test(value)) return value;
-        console.warn(`Invalid UUID format for value: ${value}`);
+        Logger.warn(`Invalid UUID format for value: ${value}`);
         return null;
       };
 
@@ -38,19 +38,19 @@ export class XPService {
         p_habit_id: toUuidOrNull(transaction.habit_id),
       };
 
-      console.log('✅ Calling award_xp with params:', JSON.stringify(params, null, 2));
+      Logger.debug('Calling award_xp', { params });
 
       const { error } = await supabase.rpc('award_xp', params);
 
       if (error) {
-        console.error('❌ Error awarding XP:', JSON.stringify(error, null, 2));
+        Logger.error('Failed to award XP', { error });
         return false;
       }
 
-      console.log('✅ XP awarded successfully');
+      Logger.success('XP awarded successfully');
       return true;
     } catch (error) {
-      console.error('❌ Error in awardXP:', error);
+      Logger.error('Error in awardXP', error);
       return false;
     }
   }
@@ -64,17 +64,18 @@ export class XPService {
       const { data: challenge, error } = await supabase.from('daily_challenges').select('*').eq('user_id', userId).eq('date', today).single();
 
       if (error || !challenge) {
-        console.log('No daily challenge found for today');
+        Logger.debug('No daily challenge found for today');
+        Logger.debug('No daily challenge found for today');
         return { success: false, xpEarned: 0 };
       }
 
       if (challenge.xp_collected) {
-        console.log('Daily challenge already collected');
+        Logger.debug('Daily challenge already collected');
         return { success: false, xpEarned: 0 };
       }
 
       if (!challenge.total_tasks || challenge.completed_tasks < challenge.total_tasks) {
-        console.log('Daily challenge not complete');
+        Logger.debug('Daily challenge not complete');
         return { success: false, xpEarned: 0 };
       }
 
@@ -100,7 +101,7 @@ export class XPService {
 
       return { success: false, xpEarned: 0 };
     } catch (error) {
-      console.error('Error in collectDailyChallenge:', error);
+      Logger.error('Error in collectDailyChallenge:', error);
       return { success: false, xpEarned: 0 };
     }
   }
@@ -130,7 +131,7 @@ export class XPService {
       const { data, error } = await supabase.from('user_xp_stats').select('*').eq('user_id', userId).single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching XP stats:', error);
+        Logger.error('Error fetching XP stats:', error);
         const { data: profile } = await supabase.from('profiles').select('id, total_xp, current_level, level_progress').eq('id', userId).single();
 
         if (profile) {
@@ -150,7 +151,7 @@ export class XPService {
 
       return data;
     } catch (error) {
-      console.error('Error in getUserXPStats:', error);
+      Logger.error('Error in getUserXPStats:', error);
       return null;
     }
   }
@@ -161,12 +162,12 @@ export class XPService {
       const { data, error } = await supabase.from('daily_challenges').select('*').eq('user_id', userId).eq('date', today).single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching daily challenge:', error);
+        Logger.error('Error fetching daily challenge:', error);
       }
 
       return data || null;
     } catch (error) {
-      console.error('Error in getDailyChallengeStatus:', error);
+      Logger.error('Error in getDailyChallengeStatus:', error);
       return null;
     }
   }

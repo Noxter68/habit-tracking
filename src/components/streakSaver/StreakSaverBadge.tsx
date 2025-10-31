@@ -8,6 +8,7 @@ import { StreakSaverService } from '../../services/StreakSaverService';
 import { useAuth } from '@/context/AuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { HapticFeedback } from '@/utils/haptics';
+import Logger from '@/utils/logger';
 
 interface StreakSaverBadgeProps {
   onPress?: () => void;
@@ -58,7 +59,7 @@ export const StreakSaverBadge: React.FC<StreakSaverBadgeProps> = ({ onPress, onS
       setLoading(true);
       const [saveableHabits, userInventory] = await Promise.all([StreakSaverService.getSaveableHabits(user.id), StreakSaverService.getInventory(user.id)]);
 
-      console.log('📊 Badge Data:', {
+      Logger.debug('📊 Badge Data:', {
         saveableCount: saveableHabits.length,
         inventory: userInventory,
         saveableHabits,
@@ -67,7 +68,7 @@ export const StreakSaverBadge: React.FC<StreakSaverBadgeProps> = ({ onPress, onS
       setSaveableCount(saveableHabits.length);
       setInventory(userInventory);
     } catch (error) {
-      console.error('Error loading streak saver data:', error);
+      Logger.error('Error loading streak saver data:', error);
     } finally {
       setLoading(false);
     }
@@ -84,10 +85,10 @@ export const StreakSaverBadge: React.FC<StreakSaverBadgeProps> = ({ onPress, onS
   const handlePress = () => {
     HapticFeedback.light();
     if (shouldShowShop) {
-      console.log('🛒 Opening shop modal');
+      Logger.debug('🛒 Opening shop modal');
       onShopPress?.();
     } else {
-      console.log('🎯 Opening streak saver');
+      Logger.debug('🎯 Opening streak saver');
       onPress?.();
     }
   };

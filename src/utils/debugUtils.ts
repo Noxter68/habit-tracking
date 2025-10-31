@@ -1,6 +1,7 @@
 // src/utils/debugUtils.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getTodayString } from './dateHelpers';
+import Logger from './logger';
 
 /**
  * Debug utilities for development and testing
@@ -15,9 +16,9 @@ export const DebugUtils = {
       const today = getTodayString();
       const collectedKey = `daily_challenge_${userId}_${today}`;
       await AsyncStorage.removeItem(collectedKey);
-      console.log(`✅ Cleared daily challenge for user ${userId} on ${today}`);
+      Logger.debug(`✅ Cleared daily challenge for user ${userId} on ${today}`);
     } catch (error) {
-      console.error('❌ Error clearing daily challenge:', error);
+      Logger.error('❌ Error clearing daily challenge:', error);
     }
   },
 
@@ -31,12 +32,12 @@ export const DebugUtils = {
 
       if (dailyChallengeKeys.length > 0) {
         await AsyncStorage.multiRemove(dailyChallengeKeys);
-        console.log(`✅ Cleared ${dailyChallengeKeys.length} daily challenge entries`);
+        Logger.debug(`✅ Cleared ${dailyChallengeKeys.length} daily challenge entries`);
       } else {
-        console.log('ℹ️ No daily challenge data to clear');
+        Logger.debug('ℹ️ No daily challenge data to clear');
       }
     } catch (error) {
-      console.error('❌ Error clearing all daily challenges:', error);
+      Logger.error('❌ Error clearing all daily challenges:', error);
     }
   },
 
@@ -49,12 +50,12 @@ export const DebugUtils = {
       const collectedKey = `daily_challenge_${userId}_${today}`;
       const value = await AsyncStorage.getItem(collectedKey);
 
-      console.log('📊 Daily Challenge Status:');
-      console.log(`   User ID: ${userId}`);
-      console.log(`   Date: ${today}`);
-      console.log(`   Collected: ${value === 'true' ? '✅ Yes' : '❌ No'}`);
+      Logger.debug('📊 Daily Challenge Status:');
+      Logger.debug(`   User ID: ${userId}`);
+      Logger.debug(`   Date: ${today}`);
+      Logger.debug(`   Collected: ${value === 'true' ? '✅ Yes' : '❌ No'}`);
     } catch (error) {
-      console.error('❌ Error viewing daily challenge status:', error);
+      Logger.error('❌ Error viewing daily challenge status:', error);
     }
   },
 
@@ -84,12 +85,12 @@ export const DebugUtils = {
 
       if (keysToRemove.length > 0) {
         await AsyncStorage.multiRemove(keysToRemove);
-        console.log(`✅ Cleared ${keysToRemove.length} old daily challenge entries`);
+        Logger.debug(`✅ Cleared ${keysToRemove.length} old daily challenge entries`);
       } else {
-        console.log('ℹ️ No old daily challenge data to clear');
+        Logger.debug('ℹ️ No old daily challenge data to clear');
       }
     } catch (error) {
-      console.error('❌ Error clearing old daily challenges:', error);
+      Logger.error('❌ Error clearing old daily challenges:', error);
     }
   },
 };

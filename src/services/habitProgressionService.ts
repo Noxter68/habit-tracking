@@ -1,6 +1,7 @@
 // src/services/habitProgressionService.ts - UPDATED FOR 6 TIERS
 import { supabase } from '@/lib/supabase';
 import { getLocalDateString } from '@/utils/dateHelpers';
+import Logger from '@/utils/logger';
 
 // ✅ Keep both tier systems!
 // Visual tiers for UI (3 tiers - gems)
@@ -118,7 +119,7 @@ export class HabitProgressionService {
     const { data, error } = await supabase.from('habit_milestones').select('id, days, title, description, xp_reward, badge, tier, icon').order('days', { ascending: true });
 
     if (error) {
-      console.error('Error fetching milestones:', error);
+      Logger.error('Error fetching milestones:', error);
       return [];
     }
 
@@ -161,7 +162,7 @@ export class HabitProgressionService {
         .order('date', { ascending: true });
 
       if (error) {
-        console.error('calculateConsistencyScore query error', error);
+        Logger.error('calculateConsistencyScore query error', error);
         return 0;
       }
 
@@ -170,7 +171,7 @@ export class HabitProgressionService {
 
       return consistency;
     } catch (e) {
-      console.error('calculateConsistencyScore fatal', e);
+      Logger.error('calculateConsistencyScore fatal', e);
       return 0;
     }
   }
@@ -193,7 +194,7 @@ export class HabitProgressionService {
       const { data: completions, error } = await supabase.from('task_completions').select('completed_tasks, all_completed, xp_earned').eq('habit_id', habitId).eq('user_id', userId);
 
       if (error) {
-        console.error('getPerformanceMetrics error', error);
+        Logger.error('getPerformanceMetrics error', error);
         return null;
       }
 
@@ -205,7 +206,7 @@ export class HabitProgressionService {
       const { data: habit, error: streakError } = await supabase.from('habits').select('current_streak, best_streak').eq('id', habitId).single();
 
       if (streakError) {
-        console.error('getPerformanceMetrics streak error', streakError);
+        Logger.error('getPerformanceMetrics streak error', streakError);
         return null;
       }
 
@@ -226,7 +227,7 @@ export class HabitProgressionService {
         bestStreak: bestStreak,
       };
     } catch (e) {
-      console.error('getPerformanceMetrics fatal', e);
+      Logger.error('getPerformanceMetrics fatal', e);
       return null;
     }
   }
@@ -241,7 +242,7 @@ export class HabitProgressionService {
     try {
       const progression = await this.getOrCreateProgression(habitId, userId);
       if (!progression) {
-        console.log('❌ No progression found');
+        Logger.debug('❌ No progression found');
         return { unlocked: null, xpAwarded: 0 };
       }
 
@@ -251,17 +252,17 @@ export class HabitProgressionService {
         streak = data?.current_streak ?? 0;
       }
 
-      console.log('🔍 Checking milestones for streak:', streak);
+      Logger.debug('🔍 Checking milestones for streak:', streak);
 
       const { data: milestones, error } = await supabase.from('habit_milestones').select('id, days, title, description, xp_reward, badge, tier, icon').order('days', { ascending: true });
 
       if (error) {
-        console.error('❌ Error fetching milestones:', error);
+        Logger.error('❌ Error fetching milestones:', error);
         throw error;
       }
 
       const unlockedList = progression.milestones_unlocked ?? [];
-      console.log('🔓 Already unlocked (from DB):', unlockedList);
+      Logger.debug('🔓 Already unlocked (from DB):', unlockedList);
 
       // ✅ FIX: Check if the milestone days <= current streak AND not already unlocked
       // The unlocked list can contain either IDs or titles (depends on your DB)
@@ -273,16 +274,16 @@ export class HabitProgressionService {
       );
 
       if (!milestoneData) {
-        console.log('ℹ️ No new milestone for streak', streak);
+        Logger.debug('ℹ️ No new milestone for streak', streak);
         return { unlocked: null, xpAwarded: 0 };
       }
 
-      console.log('🎯 FOUND NEW MILESTONE:', milestoneData.title);
+      Logger.debug('🎯 FOUND NEW MILESTONE:', milestoneData.title);
 
       const xpReward = milestoneData.xp_reward;
 
       if (xpReward === undefined || xpReward === null || xpReward <= 0) {
-        console.error('❌ XP REWARD IS INVALID!');
+        Logger.error('❌ XP REWARD IS INVALID!');
         return { unlocked: null, xpAwarded: 0 };
       }
 
@@ -296,7 +297,7 @@ export class HabitProgressionService {
         tier: milestoneData.tier as MilestoneTier,
       };
 
-      console.log('💫 Awarding milestone XP:', {
+      Logger.debug('💫 Awarding milestone XP:', {
         title: milestone.title,
         xpReward: milestone.xpReward,
       });
@@ -312,7 +313,7 @@ export class HabitProgressionService {
       });
 
       if (!success) {
-        console.error('❌ Failed to award XP');
+        Logger.error('❌ Failed to award XP');
         return { unlocked: null, xpAwarded: 0 };
       }
 
@@ -326,14 +327,14 @@ export class HabitProgressionService {
         .eq('id', progression.id);
 
       if (updateError) {
-        console.error('❌ Error updating progression:', updateError);
+        Logger.error('❌ Error updating progression:', updateError);
         throw updateError;
       }
 
-      console.log('🎉 Milestone unlocked successfully!');
+      Logger.debug('🎉 Milestone unlocked successfully!');
       return { unlocked: milestone, xpAwarded: milestone.xpReward };
     } catch (err) {
-      console.error('❌ checkMilestoneUnlock error:', err);
+      Logger.error('❌ checkMilestoneUnlock error:', err);
       return { unlocked: null, xpAwarded: 0 };
     }
   }
@@ -381,7 +382,7 @@ export class HabitProgressionService {
 
       return data as HabitProgression;
     } catch (err) {
-      console.error('updateProgression error', err);
+      Logger.error('updateProgression error', err);
       return null;
     }
   }
@@ -419,12 +420,12 @@ export class HabitProgressionService {
         .single();
 
       if (createError) {
-        console.error('getOrCreateProgression insert error', createError);
+        Logger.error('getOrCreateProgression insert error', createError);
         return null;
       }
       return created as HabitProgression;
     } catch (e) {
-      console.error('getOrCreateProgression fatal', e);
+      Logger.error('getOrCreateProgression fatal', e);
       return null;
     }
   }

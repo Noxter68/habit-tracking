@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { HealthCheckService } from '@/utils/healthCheck';
 import { useAuth } from '@/context/AuthContext';
+import Logger from '@/utils/logger';
 
 export default function DiagnosticScreen() {
   const { user } = useAuth();
@@ -21,7 +22,7 @@ export default function DiagnosticScreen() {
       const diagnosticResults = await HealthCheckService.runFullDiagnostic(user.id);
       setResults(diagnosticResults);
     } catch (error) {
-      console.error('Health check failed:', error);
+      Logger.error('Health check failed:', error);
     } finally {
       setLoading(false);
     }
@@ -37,7 +38,7 @@ export default function DiagnosticScreen() {
       const result = await HealthCheckService.testDailyChallengeCollection(user.id);
       setTestResult(result);
     } catch (error) {
-      console.error('Test failed:', error);
+      Logger.error('Test failed:', error);
     } finally {
       setLoading(false);
     }

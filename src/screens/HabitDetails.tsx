@@ -35,6 +35,7 @@ import { DebugButton } from '@/components/debug/DebugButton';
 
 // Services
 import { HabitProgressionService } from '@/services/habitProgressionService';
+import Logger from '@/utils/logger';
 
 // ============================================================================
 // TYPES
@@ -122,7 +123,7 @@ const HabitDetails: React.FC = () => {
     userId: user?.id || '',
     enabled: !!habit && !!user,
     onStreakRestored: (newStreak) => {
-      console.log('🎉 Streak restored to:', newStreak);
+      Logger.debug('🎉 Streak restored to:', newStreak);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       refreshHabits();
       setTimeout(() => navigation.goBack(), 2000);
@@ -136,7 +137,7 @@ const HabitDetails: React.FC = () => {
   // Detect tier upgrades
   useEffect(() => {
     if (prevTier && prevTier !== currentTierData.tier.name) {
-      console.log(`🎉 TIER UP! ${prevTier} → ${currentTierData.tier.name}`);
+      Logger.debug(`🎉 TIER UP! ${prevTier} → ${currentTierData.tier.name}`);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setCelebrationTier(currentTierData.tier);
       setShowCelebration(true);
@@ -165,7 +166,7 @@ const HabitDetails: React.FC = () => {
         // Refresh progression data after toggle
         await refreshProgression();
       } catch (error) {
-        console.error('❌ Task toggle failed:', error);
+        Logger.error('❌ Task toggle failed:', error);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       } finally {
         setIsTogglingTask(false);

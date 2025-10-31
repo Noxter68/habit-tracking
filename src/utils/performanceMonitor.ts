@@ -1,4 +1,5 @@
 import { useRef, useEffect, useCallback } from 'react';
+import Logger from './logger';
 
 /**
  * Performance monitoring utility that detects and reports optimization issues
@@ -20,7 +21,7 @@ export class PerformanceMonitor {
     if (count > 10 && count % 10 === 0) {
       const warning = `⚠️ ${componentName} has rendered ${count} times - possible performance issue`;
       if (!this.warnings.has(warning)) {
-        console.warn(warning);
+        Logger.warn(warning);
         this.warnings.add(warning);
       }
     }
@@ -35,7 +36,7 @@ export class PerformanceMonitor {
 
     // Warn if effect runs too often
     if (count > 5 && count % 5 === 0) {
-      console.warn(`⚠️ Effect "${effectName}" has run ${count} times - check dependencies`);
+      Logger.warn(`⚠️ Effect "${effectName}" has run ${count} times - check dependencies`);
     }
   }
 
@@ -57,13 +58,13 @@ export class PerformanceMonitor {
 
       // Warn if slow
       if (duration > warningThreshold) {
-        console.warn(`🐌 Slow operation: ${operationName} took ${duration.toFixed(0)}ms`);
+        Logger.warn(`🐌 Slow operation: ${operationName} took ${duration.toFixed(0)}ms`);
       }
 
       return result;
     } catch (error) {
       const duration = performance.now() - start;
-      console.error(`❌ ${operationName} failed after ${duration.toFixed(0)}ms:`, error);
+      Logger.error(`❌ ${operationName} failed after ${duration.toFixed(0)}ms:`, error);
       throw error;
     }
   }
@@ -104,7 +105,7 @@ export const usePerformanceTracking = (componentName: string) => {
     PerformanceMonitor.trackRender(componentName);
 
     if (renderCount.current > 50) {
-      console.error(`🔥 ${componentName} rendered ${renderCount.current} times - CRITICAL PERFORMANCE ISSUE`);
+      Logger.error(`🔥 ${componentName} rendered ${renderCount.current} times - CRITICAL PERFORMANCE ISSUE`);
     }
   });
 
@@ -133,15 +134,15 @@ export const useLoopDetector = (effectName: string, dependencies: any[]) => {
 
     // Detect rapid re-runs
     if (runCount.current > 10) {
-      console.error(`🚨 INFINITE LOOP DETECTED in ${effectName}!`);
-      console.error('Dependencies:', dependencies);
-      console.error('Previous deps:', lastDeps.current);
+      Logger.error(`🚨 INFINITE LOOP DETECTED in ${effectName}!`);
+      Logger.error('Dependencies:', dependencies);
+      Logger.error('Previous deps:', lastDeps.current);
 
       // Find which dependency changed
       if (lastDeps.current) {
         dependencies.forEach((dep, i) => {
           if (dep !== lastDeps.current![i]) {
-            console.error(`  Changed: [${i}]`, lastDeps.current![i], '→', dep);
+            Logger.error(`  Changed: [${i}]`, lastDeps.current![i], '→', dep);
           }
         });
       }

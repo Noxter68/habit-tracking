@@ -9,6 +9,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/types';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { AppConfig } from '@/config/appConfig';
+import Logger from '@/utils/logger';
 
 // ============================================================================
 // Types
@@ -80,7 +81,7 @@ const DebugScreen: React.FC = () => {
       Alert.alert('Success', successMessage);
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to perform action');
-      console.error('Debug action error:', error);
+      Logger.error('Debug action error:', error);
     } finally {
       setLoading(false);
     }

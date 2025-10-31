@@ -1,5 +1,5 @@
 // src/screens/SettingsScreen.tsx
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { JSX, useCallback, useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Switch, SafeAreaView, StatusBar, ActivityIndicator, Linking, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -15,6 +15,7 @@ import { RootStackParamList } from '@/navigation/types';
 import { HolidayModeService, HolidayPeriod } from '@/services/holidayModeService';
 import { NotificationPreferencesService } from '@/services/notificationPreferenceService';
 import { AppConfig } from '@/config/appConfig'; // ✅ NEW
+import Logger from '@/utils/logger';
 
 // ============================================================================
 // Types
@@ -285,7 +286,7 @@ const SettingsScreen: React.FC = () => {
       setActiveHoliday(holiday);
       setHolidayStats(stats);
     } catch (error) {
-      console.error('Error loading holiday status:', error);
+      Logger.error('Error loading holiday status:', error);
     }
   }, [user?.id]);
 
@@ -302,7 +303,7 @@ const SettingsScreen: React.FC = () => {
       const prefs = await NotificationPreferencesService.getPreferences(user.id);
       setNotifications(prefs.globalEnabled);
     } catch (error) {
-      console.error('Error loading notification preferences:', error);
+      Logger.error('Error loading notification preferences:', error);
     }
   };
 
@@ -348,7 +349,7 @@ const SettingsScreen: React.FC = () => {
         ]);
       }
     } catch (error) {
-      console.error('Error toggling notifications:', error);
+      Logger.error('Error toggling notifications:', error);
       Alert.alert('Error', 'Failed to update notification settings. Please try again.');
       setNotifications(!value);
     } finally {
@@ -361,7 +362,7 @@ const SettingsScreen: React.FC = () => {
     try {
       await signOut();
     } catch (error) {
-      console.error('Sign out error:', error);
+      Logger.error('Sign out error:', error);
     }
   };
 
@@ -499,7 +500,7 @@ const SettingsScreen: React.FC = () => {
               subtitle="English"
               color="#9333EA"
               trailing={<Icon name="chevron-forward" size={20} color="#9333EA" />}
-              onPress={() => console.log('Language pressed')}
+              onPress={() => Logger.debug('Language pressed')}
               isLast
             />
           </SettingsSection>
@@ -540,7 +541,7 @@ const SettingsScreen: React.FC = () => {
               title="Help & Support"
               color="#EC4899"
               trailing={<Icon name="chevron-forward" size={20} color="#EC4899" />}
-              onPress={() => console.log('Help pressed')}
+              onPress={() => Logger.debug('Help pressed')}
               isLast
             />
           </SettingsSection>

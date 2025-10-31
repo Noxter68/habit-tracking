@@ -51,20 +51,20 @@ const TaskSelector: React.FC<TaskSelectorProps> = ({ category, habitType, select
         {/* Progress Indicator */}
         <Animated.View entering={FadeInUp.duration(500)} style={tw`mb-6`}>
           <View style={tw`flex-row items-center justify-between mb-2`}>
-            <Text style={tw`text-sm font-medium text-quartz-600`}>Tasks Selected</Text>
-            <View style={tw`bg-quartz-200 rounded-full px-3 py-1`}>
-              <Text style={tw`text-xs font-semibold text-quartz-700`}>
+            <Text style={tw`text-sm font-medium text-stone-600`}>Tasks Selected</Text>
+            <View style={tw`bg-stone-200 rounded-full px-3 py-1`}>
+              <Text style={tw`text-xs font-semibold text-stone-700`}>
                 {selectedTasks.length} of {maxTasks}
               </Text>
             </View>
           </View>
-          <View style={tw`h-2 bg-quartz-100 rounded-full overflow-hidden`}>
+          <View style={tw`h-2 bg-stone-100 rounded-full overflow-hidden`}>
             <LinearGradient colors={gradientColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[tw`h-full rounded-full`, { width: `${(selectedTasks.length / maxTasks) * 100}%` }]} />
           </View>
           {selectedTasks.length === maxTasks && (
             <View style={tw`flex-row items-center mt-2`}>
               <Sparkles size={14} color={gradientColors[0]} style={tw`mr-1`} />
-              <Text style={tw`text-xs text-quartz-600 font-light`}>Maximum tasks selected - Great balance!</Text>
+              <Text style={tw`text-xs text-stone-600 font-light`}>Maximum tasks selected - Great balance!</Text>
             </View>
           )}
         </Animated.View>
@@ -91,18 +91,18 @@ const TaskSelector: React.FC<TaskSelectorProps> = ({ category, habitType, select
                   <LinearGradient colors={isSelected ? [gradientColors[0], `${gradientColors[1]}dd`] : ['#ffffff', '#f9fafb']} style={tw`p-4`}>
                     <View style={tw`flex-row items-center`}>
                       {/* Professional Icon Container */}
-                      <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-3.5`, isSelected ? tw`bg-white/25` : tw`bg-quartz-100`]}>
+                      <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-3.5`, isSelected ? tw`bg-white/25` : tw`bg-stone-100`]}>
                         <IconComponent size={24} color={isSelected ? '#ffffff' : '#6B7280'} strokeWidth={2} />
                       </View>
 
                       {/* Text Content */}
                       <View style={tw`flex-1`}>
-                        <Text style={[tw`text-base font-semibold mb-0.5`, isSelected ? tw`text-white` : tw`text-quartz-800`]}>{task.name}</Text>
-                        <Text style={[tw`text-sm leading-5`, isSelected ? tw`text-white/90` : tw`text-quartz-600`]}>{task.description}</Text>
+                        <Text style={[tw`text-base font-semibold mb-0.5`, isSelected ? tw`text-white` : tw`text-stone-800`]}>{task.name}</Text>
+                        <Text style={[tw`text-sm leading-5`, isSelected ? tw`text-white/90` : tw`text-stone-600`]}>{task.description}</Text>
                         {task.duration && (
                           <View style={tw`flex-row items-center mt-1`}>
                             <Clock size={12} color={isSelected ? '#ffffff' : '#6B7280'} strokeWidth={2} style={tw`mr-1`} />
-                            <Text style={[tw`text-xs`, isSelected ? tw`text-white/80` : tw`text-quartz-500`]}>{task.duration}</Text>
+                            <Text style={[tw`text-xs`, isSelected ? tw`text-white/80` : tw`text-stone-500`]}>{task.duration}</Text>
                           </View>
                         )}
                       </View>

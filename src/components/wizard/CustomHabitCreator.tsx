@@ -86,10 +86,10 @@ const CustomHabitCreator: React.FC<CustomHabitCreatorProps> = ({ habitType, habi
         <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false} contentContainerStyle={tw`px-6 pb-4`} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
           {/* Habit Name Input */}
           <Animated.View entering={FadeInDown.duration(400)} style={tw`mb-6 mt-2`}>
-            <Text style={tw`text-base font-semibold text-quartz-800 mb-3`}>Habit Name</Text>
-            <View style={tw`bg-white rounded-2xl border border-quartz-200 overflow-hidden`}>
+            <Text style={tw`text-base font-semibold text-stone-800 mb-3`}>Habit Name</Text>
+            <View style={tw`bg-white rounded-2xl border border-stone-200 overflow-hidden`}>
               <TextInput
-                style={tw`px-4 py-4 text-base text-quartz-800`}
+                style={tw`px-4 py-4 text-base text-stone-800`}
                 placeholder={habitType === 'good' ? 'e.g., Daily Journaling' : 'e.g., Quit Social Media Scrolling'}
                 placeholderTextColor="#9ca3af"
                 value={habitName}
@@ -99,14 +99,14 @@ const CustomHabitCreator: React.FC<CustomHabitCreatorProps> = ({ habitType, habi
               />
             </View>
             <View style={tw`flex-row justify-between items-center mt-2`}>
-              <Text style={tw`text-xs text-quartz-500`}>Be specific and inspiring</Text>
-              <Text style={tw`text-xs text-quartz-400`}>{habitName.length}/40</Text>
+              <Text style={tw`text-xs text-stone-500`}>Be specific and inspiring</Text>
+              <Text style={tw`text-xs text-stone-400`}>{habitName.length}/40</Text>
             </View>
           </Animated.View>
 
           {/* Icon Selection - NO STAGGERED ANIMATIONS */}
           <Animated.View entering={FadeInDown.duration(400)} style={tw`mb-5`}>
-            <Text style={tw`text-base font-semibold text-quartz-800 mb-3`}>Choose an Icon</Text>
+            <Text style={tw`text-base font-semibold text-stone-800 mb-3`}>Choose an Icon</Text>
             <View style={tw`flex-row flex-wrap -mx-1.5`}>
               {customIcons.map((icon) => {
                 const Icon = icon.component;
@@ -128,10 +128,10 @@ const CustomHabitCreator: React.FC<CustomHabitCreatorProps> = ({ habitType, habi
                       ]}
                     >
                       <View style={tw`flex-1 items-center justify-center`}>
-                        <View style={[tw`w-11 h-11 rounded-xl items-center justify-center`, isSelected ? tw`bg-white/25` : tw`bg-quartz-100`]}>
+                        <View style={[tw`w-11 h-11 rounded-xl items-center justify-center`, isSelected ? tw`bg-white/25` : tw`bg-stone-100`]}>
                           <Icon size={22} color={isSelected ? '#ffffff' : '#6B7280'} strokeWidth={2} />
                         </View>
-                        <Text style={[tw`text-xs text-center mt-2 px-1`, isSelected ? tw`text-white font-semibold` : tw`text-quartz-600`]} numberOfLines={1}>
+                        <Text style={[tw`text-xs text-center mt-2 px-1`, isSelected ? tw`text-white font-semibold` : tw`text-stone-600`]} numberOfLines={1}>
                           {icon.label}
                         </Text>
                       </View>
@@ -145,7 +145,7 @@ const CustomHabitCreator: React.FC<CustomHabitCreatorProps> = ({ habitType, habi
           {/* Preview Card */}
           {habitName.length > 0 && selectedIcon && (
             <Animated.View entering={FadeInDown.duration(400)} style={tw`mb-5`}>
-              <Text style={tw`text-base font-semibold text-quartz-800 mb-3`}>Preview</Text>
+              <Text style={tw`text-base font-semibold text-stone-800 mb-3`}>Preview</Text>
               <View style={[tw`rounded-2xl p-4`, { backgroundColor: primaryColor }]}>
                 <View style={tw`flex-row items-center`}>
                   <View style={tw`w-14 h-14 bg-white/25 rounded-xl items-center justify-center mr-4`}>

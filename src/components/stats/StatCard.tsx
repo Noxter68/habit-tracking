@@ -41,16 +41,16 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
 
   const getTextColors = () => {
     if (isStreak && streakValue >= 7) return 'text-white';
-    return 'text-quartz-700';
+    return 'text-stone-700';
   };
 
   const getSubtextColors = () => {
     if (isStreak && streakValue >= 7) return 'text-white opacity-90';
-    return 'text-quartz-500';
+    return 'text-stone-500';
   };
 
   const isOnFire = isStreak && streakValue >= 7;
-  const containerBg = isOnFire ? 'bg-sand bg-opacity-20' : 'bg-quartz-200 bg-opacity-50';
+  const containerBg = isOnFire ? 'bg-sand bg-opacity-20' : 'bg-stone-200 bg-opacity-50';
 
   const renderVisual = () => {
     // Check if we have an icon prop
@@ -98,7 +98,7 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
   };
 
   return (
-    <LinearGradient colors={getGradientColors()} style={tw`flex-1 rounded-2xl p-4 border border-quartz-200`}>
+    <LinearGradient colors={getGradientColors()} style={tw`flex-1 rounded-2xl p-4 border border-stone-200`}>
       <View style={tw`flex-row items-center justify-between`}>
         {renderVisual()}
         <View style={tw`flex-1 ml-3`}>

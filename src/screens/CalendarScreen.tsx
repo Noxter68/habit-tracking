@@ -20,6 +20,7 @@ import StatsBar from '../components/calendar/StatsBar';
 import CalendarGrid from '../components/calendar/CalendarGrid';
 import DateDetails from '../components/calendar/DateDetails';
 import EmptyState from '../components/calendar/EmptyState';
+import Logger from '@/utils/logger';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -33,6 +34,7 @@ const CalendarScreen: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [activeHoliday, setActiveHoliday] = useState<HolidayPeriod | null>(null);
   const [holidayLoading, setHolidayLoading] = useState(false);
+  const [allHolidays, setAllHolidays] = useState<HolidayPeriod[]>([]);
 
   // Helper function to normalize habit tasks
   const normalizeHabitTasks = useCallback((habit: Habit): Habit => {
@@ -55,17 +57,34 @@ const CalendarScreen: React.FC = () => {
     return habit;
   }, []);
 
-  // Load active holiday
+  // ✅ FIX: Force reload holidays from database (no cache)
   const loadHoliday = useCallback(async () => {
     if (!user?.id) return;
 
     try {
       setHolidayLoading(true);
-      const holiday = await HolidayModeService.getActiveHoliday(user.id);
-      setActiveHoliday(holiday);
+
+      // Fetch both active and all holidays in parallel - FRESH from DB
+      const [activeHoliday, allHolidays] = await Promise.all([HolidayModeService.getActiveHoliday(user.id), HolidayModeService.getAllHolidays(user.id)]);
+
+      Logger.debug('📅 Loaded holidays from database:', {
+        active: activeHoliday?.id,
+        total: allHolidays.length,
+        allHolidays: allHolidays.map((h) => ({
+          id: h.id,
+          startDate: h.startDate,
+          endDate: h.endDate,
+          isActive: h.isActive,
+          deactivatedAt: h.deactivatedAt,
+        })),
+      });
+
+      setActiveHoliday(activeHoliday);
+      setAllHolidays(allHolidays);
     } catch (error) {
-      console.error('Error loading holiday:', error);
+      Logger.error('Error loading holidays:', error);
       setActiveHoliday(null);
+      setAllHolidays([]);
     } finally {
       setHolidayLoading(false);
     }
@@ -97,9 +116,10 @@ const CalendarScreen: React.FC = () => {
     loadHoliday();
   }, [loadHoliday]);
 
-  // Refresh holiday data when screen comes into focus
+  // ✅ FIX: Refresh holiday data when screen comes into focus (clears cache)
   useFocusEffect(
     useCallback(() => {
+      Logger.debug('🔄 Screen focused - reloading holidays');
       loadHoliday();
     }, [loadHoliday])
   );
@@ -111,14 +131,28 @@ const CalendarScreen: React.FC = () => {
 
   const handleRefresh = async () => {
     HapticFeedback.light();
+    Logger.debug('🔄 Manual refresh triggered');
     await Promise.all([refreshHabits(), loadHoliday()]);
   };
 
+  // ✅ FIX: Proper month navigation using Date object methods
   const navigateMonth = (direction: 'prev' | 'next') => {
     HapticFeedback.light();
     setCurrentMonth((prev) => {
-      const newMonth = new Date(prev);
-      newMonth.setMonth(prev.getMonth() + (direction === 'prev' ? -1 : 1));
+      const newMonth = new Date(prev.getFullYear(), prev.getMonth(), 1);
+
+      if (direction === 'prev') {
+        newMonth.setMonth(newMonth.getMonth() - 1);
+      } else {
+        newMonth.setMonth(newMonth.getMonth() + 1);
+      }
+
+      Logger.debug('📆 Month navigation:', {
+        from: prev.toISOString().split('T')[0],
+        to: newMonth.toISOString().split('T')[0],
+        direction,
+      });
+
       return newMonth;
     });
   };
@@ -174,10 +208,18 @@ const CalendarScreen: React.FC = () => {
 
         {/* Calendar with Holiday Support */}
         <View style={tw`mx-5 mt-4 mb-6`}>
-          <CalendarGrid habit={selectedHabit} currentMonth={currentMonth} selectedDate={selectedDate} onSelectDate={handleDateSelect} onNavigateMonth={navigateMonth} activeHoliday={activeHoliday} />
+          <CalendarGrid
+            habit={selectedHabit}
+            currentMonth={currentMonth}
+            selectedDate={selectedDate}
+            onSelectDate={handleDateSelect}
+            onNavigateMonth={navigateMonth}
+            activeHoliday={activeHoliday}
+            allHolidays={allHolidays}
+          />
 
           {/* Selected Date Details with Holiday Info */}
-          <DateDetails habit={selectedHabit} selectedDate={selectedDate} activeHoliday={activeHoliday} />
+          <DateDetails habit={selectedHabit} selectedDate={selectedDate} activeHoliday={activeHoliday} allHolidays={allHolidays} />
         </View>
       </ScrollView>
     </SafeAreaView>

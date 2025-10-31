@@ -1,3 +1,4 @@
+import Logger from '@/utils/logger';
 import { DEBUG_MODE, API_URL, ENVIRONMENT } from '@env';
 
 // Default values as fallback

@@ -76,15 +76,15 @@ const FrequencySelector: React.FC<FrequencySelectorProps> = ({ selected, customD
                   <LinearGradient colors={isSelected ? [frequency.gradient[0], `${frequency.gradient[1]}dd`] : ['#ffffff', '#f9fafb']} style={tw`p-4`}>
                     <View style={tw`flex-row items-start`}>
                       {/* Icon Container */}
-                      <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-3.5`, isSelected ? tw`bg-white/25` : tw`bg-quartz-100`]}>
+                      <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-3.5`, isSelected ? tw`bg-white/25` : tw`bg-stone-100`]}>
                         <Icon size={24} color={isSelected ? '#ffffff' : '#6B7280'} strokeWidth={2} />
                       </View>
 
                       {/* Text Content */}
                       <View style={tw`flex-1 mr-3 pt-0.5`}>
-                        <Text style={[tw`text-base font-semibold mb-0.5`, isSelected ? tw`text-white` : tw`text-quartz-800`]}>{frequency.title}</Text>
-                        <Text style={[tw`text-sm leading-5 mb-1.5`, isSelected ? tw`text-white/90` : tw`text-quartz-600`]}>{frequency.subtitle}</Text>
-                        <Text style={[tw`text-sm leading-5`, isSelected ? tw`text-white/85` : tw`text-quartz-600`]}>{frequency.description}</Text>
+                        <Text style={[tw`text-base font-semibold mb-0.5`, isSelected ? tw`text-white` : tw`text-stone-800`]}>{frequency.title}</Text>
+                        <Text style={[tw`text-sm leading-5 mb-1.5`, isSelected ? tw`text-white/90` : tw`text-stone-600`]}>{frequency.subtitle}</Text>
+                        <Text style={[tw`text-sm leading-5`, isSelected ? tw`text-white/85` : tw`text-stone-600`]}>{frequency.description}</Text>
 
                         {isSelected && (
                           <View style={tw`flex-row items-center mt-2`}>
@@ -111,7 +111,7 @@ const FrequencySelector: React.FC<FrequencySelectorProps> = ({ selected, customD
         {/* Custom Days Selector (if custom selected) */}
         {selected === 'custom' && (
           <Animated.View entering={FadeInDown.duration(400)} style={tw`mb-6`}>
-            <Text style={tw`text-sm font-medium text-quartz-700 mb-3`}>Select days of the week:</Text>
+            <Text style={tw`text-sm font-medium text-stone-700 mb-3`}>Select days of the week:</Text>
             <View style={tw`flex-row flex-wrap gap-2`}>
               {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => {
                 const isDaySelected = customDays?.includes(index);
@@ -122,9 +122,9 @@ const FrequencySelector: React.FC<FrequencySelectorProps> = ({ selected, customD
                       const newDays = isDaySelected ? customDays?.filter((d) => d !== index) : [...(customDays || []), index];
                       onSelect('custom', newDays);
                     }}
-                    style={({ pressed }) => [tw`px-4 py-3 rounded-xl`, isDaySelected ? tw`bg-purple-500` : tw`bg-quartz-100`, pressed && tw`opacity-80`]}
+                    style={({ pressed }) => [tw`px-4 py-3 rounded-xl`, isDaySelected ? tw`bg-purple-500` : tw`bg-stone-100`, pressed && tw`opacity-80`]}
                   >
-                    <Text style={[tw`text-sm font-semibold`, isDaySelected ? tw`text-white` : tw`text-quartz-600`]}>{day}</Text>
+                    <Text style={[tw`text-sm font-semibold`, isDaySelected ? tw`text-white` : tw`text-stone-600`]}>{day}</Text>
                   </Pressable>
                 );
               })}

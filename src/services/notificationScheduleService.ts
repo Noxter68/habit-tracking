@@ -1,4 +1,5 @@
 // src/services/notificationScheduleService.ts
+import Logger from '@/utils/logger';
 import { supabase } from '../lib/supabase';
 
 export class NotificationScheduleService {
@@ -16,7 +17,7 @@ export class NotificationScheduleService {
       // Convert local time to UTC
       const utcTime = this.convertLocalTimeToUTC(notificationTime);
 
-      console.log(`📅 Converting time: ${notificationTime} (local) → ${utcTime} (UTC)`);
+      Logger.debug(`📅 Converting time: ${notificationTime} (local) → ${utcTime} (UTC)`);
 
       // ✅ SMART LOGIC: Check if notification time has already passed today
       const now = new Date();
@@ -29,7 +30,7 @@ export class NotificationScheduleService {
       // If time has passed, set last_sent_at to today to prevent immediate sending
       const last_sent_at = hasPassedToday ? now.toISOString() : null;
 
-      console.log(hasPassedToday ? `⏰ Time ${notificationTime} already passed today - marking as sent` : `⏰ Time ${notificationTime} hasn't passed yet - will send today`);
+      Logger.debug(hasPassedToday ? `⏰ Time ${notificationTime} already passed today - marking as sent` : `⏰ Time ${notificationTime} hasn't passed yet - will send today`);
 
       const { error } = await supabase.from('notification_schedules').upsert(
         {
@@ -47,9 +48,9 @@ export class NotificationScheduleService {
 
       if (error) throw error;
 
-      console.log(`✅ Notification scheduled for ${utcTime} UTC (${notificationTime} local)${hasPassedToday ? ' - will send tomorrow' : ' - will send today'}`);
+      Logger.debug(`✅ Notification scheduled for ${utcTime} UTC (${notificationTime} local)${hasPassedToday ? ' - will send tomorrow' : ' - will send today'}`);
     } catch (error) {
-      console.error('❌ Error scheduling notification:', error);
+      Logger.error('❌ Error scheduling notification:', error);
       throw error;
     }
   }
@@ -100,9 +101,9 @@ export class NotificationScheduleService {
 
       if (error) throw error;
 
-      console.log(`✅ Notification ${enabled ? 'enabled' : 'disabled'}`);
+      Logger.debug(`✅ Notification ${enabled ? 'enabled' : 'disabled'}`);
     } catch (error) {
-      console.error('❌ Error toggling notification:', error);
+      Logger.error('❌ Error toggling notification:', error);
       throw error;
     }
   }
@@ -123,9 +124,9 @@ export class NotificationScheduleService {
 
       if (error) throw error;
 
-      console.log(`✅ Notification time updated to ${utcTime} UTC`);
+      Logger.debug(`✅ Notification time updated to ${utcTime} UTC`);
     } catch (error) {
-      console.error('❌ Error updating notification time:', error);
+      Logger.error('❌ Error updating notification time:', error);
       throw error;
     }
   }
@@ -136,9 +137,9 @@ export class NotificationScheduleService {
 
       if (error) throw error;
 
-      console.log('✅ Notification canceled');
+      Logger.debug('✅ Notification canceled');
     } catch (error) {
-      console.error('❌ Error canceling notification:', error);
+      Logger.error('❌ Error canceling notification:', error);
       throw error;
     }
   }
@@ -171,7 +172,7 @@ export class NotificationScheduleService {
 
       return schedulesWithLocalTime;
     } catch (error) {
-      console.error('❌ Error fetching schedules:', error);
+      Logger.error('❌ Error fetching schedules:', error);
       return [];
     }
   }

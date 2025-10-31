@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase';
 import { getTodayString } from '@/utils/dateHelpers';
 import { NotificationService } from '@/services/notificationService';
 import { NotificationScheduleService } from '@/services/notificationScheduleService';
+import Logger from '@/utils/logger';
 
 interface ToggleTaskResult {
   success: boolean;
@@ -54,7 +55,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       const fetchedHabits = await HabitService.fetchHabits(user.id);
       setHabits(fetchedHabits);
     } catch (error: any) {
-      console.error('Error loading habits:', error);
+      Logger.error('Error loading habits:', error);
       Alert.alert('Error', 'Failed to load habits. Please check your connection.');
     } finally {
       setLoading(false);
@@ -155,7 +156,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         // Add to local state
         setHabits([createdHabit, ...habits]);
       } catch (error: any) {
-        console.error('Error adding habit:', error);
+        Logger.error('Error adding habit:', error);
 
         if (error.code === '42501') {
           Alert.alert('Permission Error', 'Unable to create habit. Please ensure you are logged in.');
@@ -190,7 +191,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         )
       );
     } catch (error) {
-      console.error('Error updating habit notification:', error);
+      Logger.error('Error updating habit notification:', error);
       Alert.alert('Error', 'Failed to update notification settings');
     }
   };
@@ -206,7 +207,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         // Then update local state
         setHabits(habits.map((habit) => (habit.id === habitId ? { ...habit, ...updates } : habit)));
       } catch (error: any) {
-        console.error('Error updating habit:', error);
+        Logger.error('Error updating habit:', error);
         Alert.alert('Error', 'Failed to update habit');
         // Reload habits to get correct state
         await loadHabits();
@@ -228,7 +229,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         // Then remove from local state
         setHabits(habits.filter((h) => h.id !== habitId));
       } catch (error: any) {
-        console.error('Error deleting habit:', error);
+        Logger.error('Error deleting habit:', error);
         Alert.alert('Error', 'Failed to delete habit');
         // Reload habits to restore state
         await loadHabits();
@@ -311,7 +312,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
         return result;
       } catch (error) {
-        console.error('Error toggling task:', error);
+        Logger.error('Error toggling task:', error);
         Alert.alert('Error', 'Failed to update task');
 
         // Reload habits to get correct state from backend
@@ -366,7 +367,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         // Sync with database
         await HabitService.updateTaskCompletion(habitId, user.id, date, completedTasks, habit.tasks.length);
       } catch (error: any) {
-        console.error('Error toggling habit day:', error);
+        Logger.error('Error toggling habit day:', error);
         Alert.alert('Error', 'Failed to update habit');
         await loadHabits();
       }

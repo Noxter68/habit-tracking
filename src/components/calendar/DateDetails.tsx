@@ -16,9 +16,10 @@ interface DateDetailsProps {
   habit: Habit;
   selectedDate: Date;
   activeHoliday?: HolidayPeriod | null;
+  allHolidays?: HolidayPeriod[];
 }
 
-const DateDetails: React.FC<DateDetailsProps> = ({ habit, selectedDate, activeHoliday = null }) => {
+const DateDetails: React.FC<DateDetailsProps> = ({ habit, selectedDate, activeHoliday = null, allHolidays = [] }) => {
   const dateString = getLocalDateString(selectedDate);
   const dayTasks = habit.dailyTasks[dateString];
   const totalTasks = habit.tasks?.length || 0;
@@ -29,7 +30,13 @@ const DateDetails: React.FC<DateDetailsProps> = ({ habit, selectedDate, activeHo
   const theme = tierThemes[tier.name];
 
   const taskIds = habit.tasks.map((t) => t.id);
-  const isHoliday = HolidayModeService.isDateInHoliday(selectedDate, activeHoliday, habit.id, taskIds);
+
+  // ✅ FIX: Check against ALL holidays for historical data
+  const isHoliday = HolidayModeService.isDateInAnyHoliday(selectedDate, allHolidays, habit.id, taskIds);
+
+  // Check if it's the ACTIVE holiday for detailed info
+  const isActiveHoliday = HolidayModeService.isDateInHoliday(selectedDate, activeHoliday, habit.id, taskIds);
+
   const holidayInfo = HolidayModeService.getHolidayInfoForDate(selectedDate, activeHoliday, habit.id);
 
   const isCompleted = dayTasks?.allCompleted || false;
@@ -44,7 +51,6 @@ const DateDetails: React.FC<DateDetailsProps> = ({ habit, selectedDate, activeHo
   creationDate.setHours(0, 0, 0, 0);
 
   // Only dates strictly BEFORE creation date are considered "before creation"
-  // This allows the creation date itself (Oct 29) to show completion
   const beforeCreation = checkDate.getTime() < creationDate.getTime();
 
   const isPast = selectedDate < new Date();
@@ -58,46 +64,99 @@ const DateDetails: React.FC<DateDetailsProps> = ({ habit, selectedDate, activeHo
   });
 
   // ============================================================================
-  // HOLIDAY STATE - Compact Version
+  // HOLIDAY STATE - TOPAZ THEME
+  // ✅ UPDATED: Shows full UI for ACTIVE holidays, simple badge for PAST holidays
   // ============================================================================
-  if (isHoliday && holidayInfo.isHoliday) {
+  if (isHoliday) {
+    // If it's the ACTIVE holiday, show full UI
+    if (isActiveHoliday && holidayInfo.isHoliday) {
+      return (
+        <Animated.View entering={FadeInDown.duration(400)} style={tw`mt-4`}>
+          <LinearGradient colors={['#fbbf24', '#f59e0b', '#d97706']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-2xl p-4 shadow-lg`}>
+            {/* Compact Header */}
+            <View style={tw`flex-row items-center mb-3`}>
+              <View style={tw`w-12 h-12 bg-white/30 rounded-full items-center justify-center mr-3`}>
+                <Sun size={24} color="#FFFFFF" strokeWidth={2} />
+              </View>
+              <View style={tw`flex-1`}>
+                <Text style={tw`text-lg font-black text-white`}>Holiday Mode</Text>
+                <Text style={tw`text-white/90 text-xs`}>{holidayInfo.message}</Text>
+              </View>
+            </View>
+
+            {/* Info Box */}
+            <View style={tw`bg-white/20 rounded-xl p-3`}>
+              <Text style={tw`text-white font-semibold text-sm text-center mb-1`}>Your streak is safe!</Text>
+              <Text style={tw`text-white/90 text-xs text-center`}>Tracking paused. Enjoy your break!</Text>
+
+              {completedCount > 0 && (
+                <View style={tw`mt-3 pt-3 border-t border-white/30`}>
+                  <Text style={tw`text-white text-xs font-semibold mb-2`}>
+                    Completed during holiday ({completedCount}/{totalTasks})
+                  </Text>
+                  {habit.tasks.map((task: any, index: number) => {
+                    const isTaskCompleted = completedTaskIds.includes(task.id);
+                    return (
+                      <View key={`holiday-task-${task.id}-${index}`} style={tw`flex-row items-center py-1.5`}>
+                        {isTaskCompleted ? <CheckCircle2 size={14} color="#FFFFFF" strokeWidth={2.5} /> : <Circle size={14} color="rgba(255, 255, 255, 0.4)" strokeWidth={2} />}
+                        <Text style={[tw`ml-2 flex-1 text-xs`, isTaskCompleted ? tw`text-white font-medium` : tw`text-white/60`]}>{task.name}</Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
+          </LinearGradient>
+        </Animated.View>
+      );
+    }
+
+    // ✅ NEW: Otherwise, it's a PAST holiday - show simple historical badge
     return (
       <Animated.View entering={FadeInDown.duration(400)} style={tw`mt-4`}>
-        <LinearGradient colors={['#e0f2fe', '#bae6fd']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-2xl p-4 shadow-lg`}>
-          {/* Compact Header */}
-          <View style={tw`flex-row items-center mb-3`}>
-            <View style={tw`w-12 h-12 bg-white/60 rounded-full items-center justify-center mr-3`}>
-              <Sun size={24} color="#0ea5e9" strokeWidth={2} />
+        <View style={tw`bg-amber-50 rounded-2xl p-4 border border-amber-200`}>
+          {/* Header */}
+          <View style={tw`flex-row items-center justify-center mb-2`}>
+            <View style={tw`bg-white rounded-full p-2 mr-2 shadow-sm`}>
+              <Sun size={18} color="#f59e0b" strokeWidth={2} />
             </View>
             <View style={tw`flex-1`}>
-              <Text style={tw`text-lg font-black text-sky-700`}>Holiday Mode</Text>
-              <Text style={tw`text-sky-600 text-xs`}>{holidayInfo.message}</Text>
+              <Text style={tw`text-amber-900 font-bold text-sm`}>Holiday Period</Text>
+              <Text style={tw`text-amber-700 text-xs`}>
+                {selectedDate.toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
+              </Text>
             </View>
           </View>
 
-          {/* Info Box */}
-          <View style={tw`bg-white/70 rounded-xl p-3`}>
-            <Text style={tw`text-sky-700 font-semibold text-sm text-center mb-1`}>Your streak is safe!</Text>
-            <Text style={tw`text-sky-600 text-xs text-center`}>Tracking paused. Enjoy your break!</Text>
-
-            {completedCount > 0 && (
-              <View style={tw`mt-3 pt-3 border-t border-sky-200`}>
-                <Text style={tw`text-sky-700 text-xs font-semibold mb-2`}>
-                  Completed during holiday ({completedCount}/{totalTasks})
-                </Text>
-                {habit.tasks.map((task: any, index: number) => {
-                  const isTaskCompleted = completedTaskIds.includes(task.id);
-                  return (
-                    <View key={`holiday-task-${task.id}-${index}`} style={tw`flex-row items-center py-1.5`}>
-                      {isTaskCompleted ? <CheckCircle2 size={14} color="#0ea5e9" strokeWidth={2.5} /> : <Circle size={14} color="#bae6fd" strokeWidth={2} />}
-                      <Text style={[tw`ml-2 flex-1 text-xs`, isTaskCompleted ? tw`text-sky-700 font-medium` : tw`text-sky-400`]}>{task.name}</Text>
-                    </View>
-                  );
-                })}
-              </View>
-            )}
+          {/* Info Message */}
+          <View style={tw`bg-white/60 rounded-lg p-2.5 mt-2`}>
+            <Text style={tw`text-amber-800 text-xs text-center font-medium`}>Streak was preserved during this period</Text>
           </View>
-        </LinearGradient>
+
+          {/* Show completed tasks if any */}
+          {completedCount > 0 && (
+            <View style={tw`mt-3 pt-3 border-t border-amber-200`}>
+              <Text style={tw`text-amber-800 text-xs font-semibold mb-2`}>
+                Tasks completed: {completedCount}/{totalTasks}
+              </Text>
+              {habit.tasks.map((task: any, index: number) => {
+                const isTaskCompleted = completedTaskIds.includes(task.id);
+                if (!isTaskCompleted) return null;
+
+                return (
+                  <View key={`past-holiday-task-${task.id}-${index}`} style={tw`flex-row items-center py-1`}>
+                    <CheckCircle2 size={12} color="#f59e0b" strokeWidth={2.5} />
+                    <Text style={tw`ml-2 flex-1 text-xs text-amber-800`}>{task.name}</Text>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+        </View>
       </Animated.View>
     );
   }

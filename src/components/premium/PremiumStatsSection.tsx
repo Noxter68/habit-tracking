@@ -437,7 +437,7 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
           </View>
         )}
         {/* Detail Card */}
-        // Replace the Detail Card section in your PremiumStatsSection.tsx // Starting from line ~380 (the "Detail Card" comment)
+
         {/* Detail Card - Minimalist & Professional Design */}
         {selectedDataPoint && (
           <View

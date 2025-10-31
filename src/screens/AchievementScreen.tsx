@@ -26,6 +26,7 @@ import { achievementTitles } from '../utils/achievements';
 import { getXPForNextLevel } from '@/utils/xpCalculations';
 import { getAchievementTierTheme } from '../utils/tierTheme';
 import { HapticFeedback } from '../utils/haptics';
+import Logger from '@/utils/logger';
 
 const AchievementsScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -77,7 +78,7 @@ const AchievementsScreen: React.FC = () => {
     try {
       await Promise.all([refreshStats(true), refreshAchievements()]);
     } catch (error) {
-      console.error('Error refreshing achievement data:', error);
+      Logger.error('Error refreshing achievement data:', error);
     } finally {
       setRefreshing(false);
     }
@@ -151,7 +152,7 @@ const AchievementsScreen: React.FC = () => {
               animated: true,
             });
           },
-          () => console.log('measure failed')
+          () => Logger.debug('measure failed')
         );
       }, 100);
     }

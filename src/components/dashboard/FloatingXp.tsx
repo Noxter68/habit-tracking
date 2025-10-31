@@ -1,4 +1,5 @@
 // src/components/dashboard/FloatingXP.tsx
+import Logger from '@/utils/logger';
 import React, { useEffect } from 'react';
 import { Text, View } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSpring, runOnJS } from 'react-native-reanimated';
@@ -21,7 +22,7 @@ const FloatingXP: React.FC<FloatingXPProps> = ({ amount = 20, show, onComplete, 
 
   useEffect(() => {
     if (show) {
-      console.log('FloatingXP: Starting animation for type:', type);
+      Logger.debug('FloatingXP: Starting animation for type:', type);
 
       // Reset values
       translateY.value = 0;
@@ -35,7 +36,7 @@ const FloatingXP: React.FC<FloatingXPProps> = ({ amount = 20, show, onComplete, 
       // Move up
       translateY.value = withTiming(-80, { duration: 1500 }, (finished) => {
         if (finished) {
-          console.log('FloatingXP: Animation finished');
+          Logger.debug('FloatingXP: Animation finished');
           // Fade out
           opacity.value = withTiming(0, { duration: 300 }, (finished) => {
             if (finished && onComplete) {
@@ -61,7 +62,7 @@ const FloatingXP: React.FC<FloatingXPProps> = ({ amount = 20, show, onComplete, 
     return null;
   }
 
-  console.log('FloatingXP: Rendering with text:', displayText);
+  Logger.debug('FloatingXP: Rendering with text:', displayText);
 
   return (
     <View

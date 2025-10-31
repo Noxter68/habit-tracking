@@ -24,6 +24,7 @@ import { getCategoryName } from '../utils/habitHelpers';
 import { NotificationService } from '../services/notificationService';
 import { NotificationPreferencesService } from '@/services/notificationPreferenceService';
 import { useAuth } from '@/context/AuthContext';
+import Logger from '@/utils/logger';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'HabitWizard'>;
 
@@ -157,7 +158,7 @@ const HabitWizard: React.FC = () => {
       // For pre-defined habits, tasks are also string[]
       const tasks = habitData.tasks || [];
 
-      console.log('📝 Creating habit with tasks:', tasks);
+      Logger.debug('📝 Creating habit with tasks:', tasks);
 
       const newHabit: Habit = {
         id: Date.now().toString(),
@@ -204,7 +205,7 @@ const HabitWizard: React.FC = () => {
     } catch (error) {
       setIsCreating(false);
       Alert.alert('Error', 'Failed to create habit. Please try again.');
-      console.error('Error creating habit:', error);
+      Logger.error('Error creating habit:', error);
     }
   };
 
@@ -371,7 +372,7 @@ const HabitWizard: React.FC = () => {
         </ScrollView>
 
         {/* Navigation Footer */}
-        <View style={tw`bg-white border-t border-quartz-200 pb-0`}>
+        <View style={tw`bg-white border-t border-stone-200 pb-0`}>
           <View style={tw`px-5 pt-4 pb-2`}>
             <View style={tw`flex-row gap-3`}>
               {/* Back/Cancel Button */}
@@ -384,12 +385,12 @@ const HabitWizard: React.FC = () => {
                   {isFirstStep ? (
                     <>
                       <X size={18} color="#6B7280" style={tw`mr-2`} />
-                      <Text style={tw`text-quartz-600 font-medium text-base`}>Cancel</Text>
+                      <Text style={tw`text-stone-600 font-medium text-base`}>Cancel</Text>
                     </>
                   ) : (
                     <>
                       <ChevronLeft size={18} color="#6B7280" style={tw`mr-1.5`} />
-                      <Text style={tw`text-quartz-600 font-medium text-base`}>Back</Text>
+                      <Text style={tw`text-stone-600 font-medium text-base`}>Back</Text>
                     </>
                   )}
                 </View>
@@ -418,7 +419,7 @@ const HabitWizard: React.FC = () => {
 
             {/* Step Indicator Text */}
             <View style={tw`mt-3 items-center`}>
-              <Text style={tw`text-xs text-quartz-500 font-light`}>
+              <Text style={tw`text-xs text-stone-500 font-light`}>
                 Step {step} of {totalSteps}
               </Text>
             </View>

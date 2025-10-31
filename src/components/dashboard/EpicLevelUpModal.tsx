@@ -9,6 +9,7 @@ import { AchievementBadge } from '../achievements/AchievementBadge';
 import { useLevelUp } from '../../context/LevelUpContext';
 import { getAchievementTierTheme } from '@/utils/tierTheme';
 import type { AchievementTierName } from '@/utils/tierTheme';
+import Logger from '@/utils/logger';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -110,7 +111,7 @@ export const EpicLevelUpModal: React.FC = () => {
         }
       });
     } catch (error) {
-      console.log('Error playing sound:', error);
+      Logger.debug('Error playing sound:', error);
     }
   };
 

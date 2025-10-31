@@ -8,6 +8,7 @@ import { XPService } from '../../services/xpService';
 import { supabase } from '../../lib/supabase';
 import { useDebugMode } from '@/hooks/useDebugMode';
 import { getTodayString } from '@/utils/dateHelpers';
+import Logger from '@/utils/logger';
 
 interface TierTheme {
   gradient: string[];
@@ -118,7 +119,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
         setIsCollected(false);
       }
     } catch (error) {
-      console.error('Error checking collection status:', error);
+      Logger.error('Error checking collection status:', error);
       setIsCollected(false);
     }
   };
@@ -175,7 +176,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
         }, 300);
       }
     } catch (error) {
-      console.error('Error collecting daily challenge:', error);
+      Logger.error('Error collecting daily challenge:', error);
     } finally {
       setTimeout(() => {
         setIsAnimating(false);
@@ -198,10 +199,10 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
 
       if (!error) {
         setIsCollected(false);
-        console.log('✅ Debug: Daily challenge reset');
+        Logger.debug('✅ Debug: Daily challenge reset');
       }
     } catch (error) {
-      console.error('❌ Error resetting daily challenge:', error);
+      Logger.error('❌ Error resetting daily challenge:', error);
     }
   };
 

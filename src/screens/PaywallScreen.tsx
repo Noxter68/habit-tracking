@@ -12,6 +12,7 @@ import { RootStackParamList } from '@/navigation/types';
 import { RevenueCatService, SubscriptionPackage } from '@/services/RevenueCatService';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { Image } from 'react-native';
+import Logger from '@/utils/logger';
 
 // ============================================================================
 // Types
@@ -107,7 +108,7 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
       const yearlyPlan = subscriptions.find((pkg) => pkg.packageType === 'ANNUAL');
       setSelectedPackage(yearlyPlan || subscriptions[0]);
     } catch (error) {
-      console.error('❌ [Paywall] Failed to load offerings');
+      Logger.error('❌ [Paywall] Failed to load offerings');
       Alert.alert('Error', 'Failed to load subscription options. Please try again.');
     } finally {
       setLoadingOfferings(false);
@@ -141,7 +142,7 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
         Alert.alert('Purchase Failed', result.error || 'Unable to complete purchase. Please try again.');
       }
     } catch (error) {
-      console.error('❌ [Paywall] Purchase error');
+      Logger.error('❌ [Paywall] Purchase error');
       Alert.alert('Error', 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
@@ -167,7 +168,7 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
         Alert.alert('No Purchases Found', "We couldn't find any previous purchases to restore.");
       }
     } catch (error) {
-      console.error('❌ [Paywall] Restore error');
+      Logger.error('❌ [Paywall] Restore error');
       Alert.alert('Error', 'Failed to restore purchases. Please try again.');
     } finally {
       setLoading(false);
@@ -184,9 +185,9 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
 
   if (loadingOfferings) {
     return (
-      <View style={tw`flex-1 bg-quartz-50 items-center justify-center`}>
+      <View style={tw`flex-1 bg-stone-50 items-center justify-center`}>
         <ActivityIndicator size="large" color="#78716C" />
-        <Text style={tw`mt-4 text-quartz-600 font-medium`}>Loading plans...</Text>
+        <Text style={tw`mt-4 text-stone-600 font-medium`}>Loading plans...</Text>
       </View>
     );
   }
@@ -209,7 +210,7 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
   // ==========================================================================
 
   return (
-    <View style={tw`flex-1 bg-quartz-50`}>
+    <View style={tw`flex-1 bg-stone-50`}>
       <SafeAreaView style={tw`flex-1`}>
         {/* Close Button */}
         <View style={tw`px-6 py-3 flex-row justify-end`}>
@@ -225,8 +226,8 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
               <Crown size={36} color="#FFFFFF" strokeWidth={1.5} />
             </LinearGradient>
 
-            <Text style={tw`text-3xl font-bold text-quartz-900 text-center mb-2 tracking-tight`}>Upgrade to Premium</Text>
-            <Text style={tw`text-base text-quartz-600 text-center leading-6 px-4`}>Become the best version of yourself. Build unlimited habits and achieve more every day</Text>
+            <Text style={tw`text-3xl font-bold text-stone-900 text-center mb-2 tracking-tight`}>Upgrade to Premium</Text>
+            <Text style={tw`text-base text-stone-600 text-center leading-6 px-4`}>Become the best version of yourself. Build unlimited habits and achieve more every day</Text>
           </Animated.View>
 
           {/* Plan Selection */}
@@ -246,7 +247,7 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
                     <View style={tw`p-5 bg-white`}>
                       <View style={tw`flex-row items-center justify-between mb-3`}>
                         <View style={tw`flex-row items-center flex-1`}>
-                          <Text style={tw`text-lg font-bold text-quartz-900`}>{isYearly ? 'Yearly' : 'Monthly'}</Text>
+                          <Text style={tw`text-lg font-bold text-stone-900`}>{isYearly ? 'Yearly' : 'Monthly'}</Text>
                           {isYearly && savingsPercentage > 0 && (
                             <View style={tw`ml-3 px-2.5 py-1 rounded-full bg-jade-100`}>
                               <Text style={tw`text-xs font-bold text-jade-700`}>Save {savingsPercentage}%</Text>
@@ -254,23 +255,23 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
                           )}
                         </View>
 
-                        <View style={[tw`w-5.5 h-5.5 rounded-full items-center justify-center`, isSelected ? tw`bg-stone-600` : tw`bg-quartz-200`]}>
+                        <View style={[tw`w-5.5 h-5.5 rounded-full items-center justify-center`, isSelected ? tw`bg-stone-600` : tw`bg-stone-200`]}>
                           {isSelected && <Check size={14} color="#FFFFFF" strokeWidth={3} />}
                         </View>
                       </View>
 
                       <View style={tw`flex-row items-baseline mb-1`}>
-                        <Text style={tw`text-2xl font-bold text-quartz-900`}>{pkg.product.priceString}</Text>
-                        <Text style={tw`text-sm text-quartz-600 ml-1.5`}>/ {isYearly ? 'year' : 'month'}</Text>
+                        <Text style={tw`text-2xl font-bold text-stone-900`}>{pkg.product.priceString}</Text>
+                        <Text style={tw`text-sm text-stone-600 ml-1.5`}>/ {isYearly ? 'year' : 'month'}</Text>
                       </View>
 
-                      {isYearly && <Text style={tw`text-sm text-quartz-500`}>${monthlyPrice.toFixed(2)} per month</Text>}
+                      {isYearly && <Text style={tw`text-sm text-stone-500`}>${monthlyPrice.toFixed(2)} per month</Text>}
 
                       {isYearly && (
-                        <View style={tw`mt-3 pt-3 border-t border-quartz-100`}>
+                        <View style={tw`mt-3 pt-3 border-t border-stone-100`}>
                           <View style={tw`flex-row items-center`}>
                             <Crown size={14} color="#78716C" strokeWidth={2} style={tw`mr-1.5`} />
-                            <Text style={tw`text-xs font-medium text-quartz-700`}>Includes 50 Streak Savers bonus</Text>
+                            <Text style={tw`text-xs font-medium text-stone-700`}>Includes 50 Streak Savers bonus</Text>
                           </View>
                         </View>
                       )}
@@ -283,7 +284,7 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
 
           {/* Features List */}
           <Animated.View entering={FadeInDown.delay(300)} style={tw`mb-8`}>
-            <Text style={tw`text-sm font-bold text-quartz-900 mb-4 tracking-wide`}>INCLUDED IN {isYearlySelected ? 'YEARLY' : 'MONTHLY'}</Text>
+            <Text style={tw`text-sm font-bold text-stone-900 mb-4 tracking-wide`}>INCLUDED IN {isYearlySelected ? 'YEARLY' : 'MONTHLY'}</Text>
 
             <View style={tw`bg-white rounded-2xl overflow-hidden border border-gray-200`}>
               {displayFeatures.map((feature, index) => (
@@ -293,8 +294,8 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
                   </LinearGradient>
 
                   <View style={tw`flex-1`}>
-                    <Text style={tw`text-base font-semibold text-quartz-900 mb-0.5`}>{feature.title}</Text>
-                    <Text style={tw`text-sm text-quartz-600 leading-5`}>{feature.description}</Text>
+                    <Text style={tw`text-base font-semibold text-stone-900 mb-0.5`}>{feature.title}</Text>
+                    <Text style={tw`text-sm text-stone-600 leading-5`}>{feature.description}</Text>
                   </View>
 
                   <View style={tw`ml-2 mt-1`}>
@@ -322,13 +323,13 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
 
           {/* Trust Indicators */}
           <Animated.View entering={FadeInUp.delay(500)} style={tw`items-center mb-4`}>
-            <Text style={tw`text-xs text-quartz-500 text-center leading-5`}>Cancel anytime • Secure payment</Text>
+            <Text style={tw`text-xs text-stone-500 text-center leading-5`}>Cancel anytime • Secure payment</Text>
           </Animated.View>
 
           {/* Restore Link */}
           <Animated.View entering={FadeInUp.delay(600)} style={tw`items-center mb-4`}>
             <Pressable onPress={handleRestore} disabled={loading}>
-              <Text style={tw`text-sm text-quartz-600 font-medium underline`}>Restore Purchases</Text>
+              <Text style={tw`text-sm text-stone-600 font-medium underline`}>Restore Purchases</Text>
             </Pressable>
           </Animated.View>
         </ScrollView>

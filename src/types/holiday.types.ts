@@ -50,6 +50,8 @@ export interface HolidayPeriod {
   createdAt: string;
   isActive: boolean;
   daysRemaining?: number;
+
+  deactivatedAt?: string | null;
 }
 
 /**

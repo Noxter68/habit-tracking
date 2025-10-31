@@ -1,5 +1,6 @@
 // src/services/streakSaverService.ts
 import { supabase } from '@/lib/supabase';
+import Logger from '@/utils/logger';
 
 export interface StreakSaveEligibility {
   canSave: boolean;
@@ -26,7 +27,7 @@ export class StreakSaverService {
         totalUsed: data?.total_streak_savers_used || 0,
       };
     } catch (error) {
-      console.error('Error fetching streak saver inventory:', error);
+      Logger.error('Error fetching streak saver inventory:', error);
       return { available: 0, totalUsed: 0 };
     }
   }
@@ -56,7 +57,7 @@ export class StreakSaverService {
         missedDate: result.missed_date,
       };
     } catch (error) {
-      console.error('Error checking eligibility:', error);
+      Logger.error('Error checking eligibility:', error);
       return { canSave: false, reason: 'Failed to check eligibility' };
     }
   }
@@ -83,7 +84,7 @@ export class StreakSaverService {
         newStreak: result.new_streak,
       };
     } catch (error: any) {
-      console.error('Error using streak saver:', error);
+      Logger.error('Error using streak saver:', error);
       return {
         success: false,
         message: error.message || 'An error occurred',
@@ -123,7 +124,7 @@ export class StreakSaverService {
         missedDate: item.missed_date,
       }));
     } catch (error) {
-      console.error('Error fetching saveable habits:', error);
+      Logger.error('Error fetching saveable habits:', error);
       return [];
     }
   }

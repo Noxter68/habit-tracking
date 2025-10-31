@@ -1,5 +1,6 @@
 // src/utils/tierTheme.ts
 import { HabitTier } from '@/services/habitProgressionService';
+import Logger from './logger';
 
 // Habit Tier Themes (3 tiers for habits)
 export const tierThemes: Record<
@@ -104,7 +105,7 @@ export const getAchievementTierTheme = (tierName: AchievementTierName | string) 
     return achievementTierThemes[tierName as AchievementTierName];
   }
 
-  console.warn(`Unknown tier name: ${tierName}, defaulting to Novice`);
+  Logger.warn(`Unknown tier name: ${tierName}, defaulting to Novice`);
   return achievementTierThemes['Novice'];
 };
 

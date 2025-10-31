@@ -3,6 +3,7 @@ import { getLocalDateString, getTodayString } from '@/utils/dateHelpers';
 import { supabase } from '../lib/supabase';
 import { Habit, HabitProgression } from '../types';
 import { HabitProgressionService } from './habitProgressionService';
+import Logger from '@/utils/logger';
 
 export interface StreakHistoryEntry {
   date: string;
@@ -32,7 +33,7 @@ export class HabitService {
     completedTasks?: string[]; // Add this to return the updated tasks
   }> {
     try {
-      console.log('Debug toggleTask:', {
+      Logger.debug('Debug toggleTask:', {
         habitId,
         date,
         taskId,
@@ -49,7 +50,7 @@ export class HabitService {
       });
 
       if (error) {
-        console.error('Error in toggle_task_with_xp_protection:', error);
+        Logger.error('Error in toggle_task_with_xp_protection:', error);
         throw error;
       }
 
@@ -62,7 +63,7 @@ export class HabitService {
       // The key fix: ensure completed_tasks is an array
       const completedTasks = Array.isArray(result.completed_tasks) ? result.completed_tasks : result.completed_tasks ? [result.completed_tasks] : [];
 
-      console.log('Toggle result:', {
+      Logger.debug('Toggle result:', {
         success: result.success,
         xpEarned: result.xp_earned,
         completedTasks,
@@ -78,8 +79,8 @@ export class HabitService {
         // ... existing streak handling code ...
       }
 
-      console.log('Debug toggleTask:', { habitId, date, taskId });
-      console.log('Toggle result:', result);
+      Logger.debug('Debug toggleTask:', { habitId, date, taskId });
+      Logger.debug('Toggle result:', result);
 
       return {
         success: result.success ?? false,
@@ -90,7 +91,7 @@ export class HabitService {
         streakUpdated: result.streak_updated ?? 0,
       };
     } catch (error) {
-      console.error('Error toggling task:', error);
+      Logger.error('Error toggling task:', error);
       return {
         success: false,
         xpEarned: 0,
@@ -128,7 +129,7 @@ export class HabitService {
         })) || []
       );
     } catch (error) {
-      console.error('Error fetching daily XP history:', error);
+      Logger.error('Error fetching daily XP history:', error);
       return [];
     }
   }
@@ -145,7 +146,7 @@ export class HabitService {
 
       return (count || 0) > 0;
     } catch (error) {
-      console.error('Error checking XP status:', error);
+      Logger.error('Error checking XP status:', error);
       return false;
     }
   }
@@ -188,7 +189,7 @@ export class HabitService {
 
       return currentStreak;
     } catch (error) {
-      console.error('Error handling day completion:', error);
+      Logger.error('Error handling day completion:', error);
       return currentStreakFromHabit;
     }
   }
@@ -241,7 +242,7 @@ export class HabitService {
       const { data, error } = await supabase.from('habit_progression').select('*').eq('habit_id', habitId).eq('user_id', userId).single();
 
       if (error) {
-        console.error('Error fetching habit progression:', error);
+        Logger.error('Error fetching habit progression:', error);
         return null;
       }
 
@@ -258,7 +259,7 @@ export class HabitService {
         updatedAt: new Date(data.updated_at),
       };
     } catch (error) {
-      console.error('Error in getHabitProgression:', error);
+      Logger.error('Error in getHabitProgression:', error);
       return null;
     }
   }
@@ -299,7 +300,7 @@ export class HabitService {
         };
       });
     } catch (error) {
-      console.error('Error fetching habits:', error);
+      Logger.error('Error fetching habits:', error);
       throw error;
     }
   }
@@ -369,7 +370,7 @@ export class HabitService {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error updating notification:', error);
+      Logger.error('Error updating notification:', error);
       throw error;
     }
   }
@@ -413,7 +414,7 @@ export class HabitService {
       // Update streak in habits table
       await this.updateStreak(habitId, userId);
     } catch (error) {
-      console.error('Error updating task completion:', error);
+      Logger.error('Error updating task completion:', error);
       throw error;
     }
   }
@@ -495,7 +496,7 @@ export class HabitService {
         bestStreak: Math.max(bestStreak, currentStreak),
       };
     } catch (error) {
-      console.error('Error calculating streaks:', error);
+      Logger.error('Error calculating streaks:', error);
       return { currentStreak: 0, bestStreak: 0 };
     }
   }
@@ -517,7 +518,7 @@ export class HabitService {
         .eq('id', habitId)
         .eq('user_id', userId);
     } catch (error) {
-      console.error('Error updating streak:', error);
+      Logger.error('Error updating streak:', error);
     }
   }
 
@@ -546,7 +547,7 @@ export class HabitService {
 
       return data || [];
     } catch (error) {
-      console.error('Error fetching streak history:', error);
+      Logger.error('Error fetching streak history:', error);
       return [];
     }
   }
@@ -604,7 +605,7 @@ export class HabitService {
         habitsWithProgress: progressions?.length || 0, // Add only if not already present
       };
     } catch (error) {
-      console.error('Error getting aggregated stats:', error);
+      Logger.error('Error getting aggregated stats:', error);
       return {
         totalDaysTracked: 0,
         totalCompletions: 0,
@@ -623,7 +624,7 @@ export class HabitService {
 
       return count || 0;
     } catch (error) {
-      console.error('Error getting active habits count:', error);
+      Logger.error('Error getting active habits count:', error);
       // If is_active field doesn't exist, get all habits
       try {
         const { count, error } = await supabase.from('habits').select('*', { count: 'exact', head: true }).eq('user_id', userId);
@@ -631,7 +632,7 @@ export class HabitService {
         if (error) throw error;
         return count || 0;
       } catch (fallbackError) {
-        console.error('Error getting habits count:', fallbackError);
+        Logger.error('Error getting habits count:', fallbackError);
         return 0;
       }
     }
@@ -702,7 +703,7 @@ export class HabitService {
         totalTasks, // Alias for compatibility with new code
       };
     } catch (error) {
-      console.error('Error getting today stats:', error);
+      Logger.error('Error getting today stats:', error);
       return {
         completed: 0,
         total: 0,
@@ -731,7 +732,7 @@ export class HabitService {
         totalXPAvailable: allComplete ? 100 : 0,
       };
     } catch (error) {
-      console.error('Error checking daily challenge:', error);
+      Logger.error('Error checking daily challenge:', error);
       return { allComplete: false, totalXPAvailable: 0 };
     }
   }
@@ -795,7 +796,7 @@ export class HabitService {
         streakDays,
       };
     } catch (error) {
-      console.error('Error getting weekly stats:', error);
+      Logger.error('Error getting weekly stats:', error);
       return {
         daysActive: 0,
         totalCompletions: 0,
@@ -814,7 +815,7 @@ export class HabitService {
 
       return (count || 0) > 0;
     } catch (error) {
-      console.error('Error checking if user has habits:', error);
+      Logger.error('Error checking if user has habits:', error);
       return false;
     }
   }

@@ -3,6 +3,7 @@ import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { supabase } from '../lib/supabase';
 import Constants from 'expo-constants';
+import Logger from '@/utils/logger';
 
 export class PushTokenService {
   /**
@@ -21,7 +22,7 @@ export class PushTokenService {
       }
 
       if (finalStatus !== 'granted') {
-        console.log('❌ Push notification permissions denied');
+        Logger.debug('❌ Push notification permissions denied');
         return false;
       }
 
@@ -29,7 +30,7 @@ export class PushTokenService {
       const projectId = Constants.expoConfig?.extra?.eas?.projectId;
 
       if (!projectId) {
-        console.error('❌ Project ID not found in app.json');
+        Logger.error('❌ Project ID not found in app.json');
         return false;
       }
 
@@ -40,7 +41,7 @@ export class PushTokenService {
       const token = tokenData.data;
       const platform = Platform.OS;
 
-      console.log('📱 Device token:', token);
+      Logger.debug('📱 Device token:', token);
 
       // 3. Store token in database
       const { error } = await supabase.from('push_tokens').upsert(
@@ -56,14 +57,14 @@ export class PushTokenService {
       );
 
       if (error) {
-        console.error('❌ Error storing push token:', error);
+        Logger.error('❌ Error storing push token:', error);
         return false;
       }
 
-      console.log('✅ Device registered for push notifications');
+      Logger.debug('✅ Device registered for push notifications');
       return true;
     } catch (error) {
-      console.error('❌ Error registering device:', error);
+      Logger.error('❌ Error registering device:', error);
       return false;
     }
   }
@@ -83,9 +84,9 @@ export class PushTokenService {
 
       await supabase.from('push_tokens').delete().eq('user_id', userId).eq('token', tokenData.data);
 
-      console.log('✅ Device unregistered');
+      Logger.debug('✅ Device unregistered');
     } catch (error) {
-      console.error('❌ Error unregistering device:', error);
+      Logger.error('❌ Error unregistering device:', error);
     }
   }
 

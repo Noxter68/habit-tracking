@@ -8,6 +8,7 @@ import * as WebBrowser from 'expo-web-browser';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { RevenueCatService } from '@/services/RevenueCatService';
 import { PushTokenService } from '@/services/pushTokenService'; // ✅ Add this import
+import Logger from '@/utils/logger';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -39,13 +40,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       PushTokenService.registerDevice(user.id)
         .then((success) => {
           if (success) {
-            console.log('✅ Device registered for push notifications');
+            Logger.debug('✅ Device registered for push notifications');
           } else {
-            console.log('⚠️ Push notification registration failed (permissions may be denied)');
+            Logger.debug('⚠️ Push notification registration failed (permissions may be denied)');
           }
         })
         .catch((error) => {
-          console.error('❌ Error registering device for push:', error);
+          Logger.error('❌ Error registering device for push:', error);
         });
     }
   }, [user?.id]); // Trigger when user ID changes (login/logout)
@@ -117,7 +118,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       }
     } catch (error: any) {
-      console.error('Google Sign-In Error:', error);
+      Logger.error('Google Sign-In Error:', error);
       Alert.alert('Sign-In Failed', error.message || 'Unable to sign in with Google');
     } finally {
       setLoading(false);
@@ -151,7 +152,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               updated_at: new Date().toISOString(),
             });
 
-            if (profileError) console.error('Profile update error:', profileError);
+            if (profileError) Logger.error('Profile update error:', profileError);
           }
         }
       } else {
@@ -190,7 +191,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     } catch (error: any) {
       if (error.code !== 'ERR_CANCELED') {
-        console.error('Apple Sign-In Error:', error);
+        Logger.error('Apple Sign-In Error:', error);
         Alert.alert('Sign-In Failed', 'Unable to sign in with Apple');
       }
     } finally {
@@ -264,7 +265,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // ✅ Unregister device before signing out
       if (user?.id) {
         await PushTokenService.unregisterDevice(user.id).catch((error) => {
-          console.error('Error unregistering device:', error);
+          Logger.error('Error unregistering device:', error);
           // Don't block logout if unregister fails
         });
       }
