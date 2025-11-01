@@ -148,7 +148,8 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
   // Loading state
   if (loadingOfferings) {
     return (
-      <ImageBackground source={require('../../assets/interface/purple-background-stars.png')} style={styles.background} resizeMode="cover">
+      <ImageBackground source={require('../../assets/interface/background-v3.png')} style={styles.background} resizeMode="cover">
+        <View style={[StyleSheet.absoluteFill, tw`bg-black/40`]} />
         <View style={tw`flex-1 items-center justify-center`}>
           <ActivityIndicator size="large" color="#ffffff" />
           <Text style={tw`mt-4 text-white font-medium`}>Loading plans...</Text>
@@ -166,7 +167,8 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
   const displayFeatures = [...sharedFeatures, isYearlySelected ? yearlyExtraFeature : monthlyExtraFeature];
 
   return (
-    <ImageBackground source={require('../../assets/interface/purple-background-stars.png')} style={styles.background} resizeMode="cover">
+    <ImageBackground source={require('../../assets/interface/background-v3.png')} style={styles.background} resizeMode="cover">
+      <View style={[StyleSheet.absoluteFill, tw`bg-black/40`]} />
       <SafeAreaView style={tw`flex-1`} edges={['top']}>
         {/* Close Button */}
         <View style={tw`px-6 pt-2 pb-4 flex-row justify-end`}>
@@ -182,7 +184,7 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
               <Crown size={40} color="#fbbf24" strokeWidth={1.5} />
             </View>
 
-            <Text style={tw`text-4xl font-light text-white text-center mb-3`}>Upgrade to Premium</Text>
+            <Text style={tw`text-4xl font-bold text-white text-center mb-3`}>Upgrade to Premium</Text>
             <Text style={tw`text-base text-white/80 text-center leading-6 px-2`}>Unlock unlimited potential and{'\n'}achieve more every day</Text>
           </Animated.View>
 

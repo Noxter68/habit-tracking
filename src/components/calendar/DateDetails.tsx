@@ -291,12 +291,7 @@ const DateDetails: React.FC<DateDetailsProps> = ({ habit, selectedDate, activeHo
           {/* Compact Summary */}
           {totalTasks > 0 && (
             <View style={tw`mt-2 pt-2 border-t border-gray-100`}>
-              {isCompleted ? (
-                <View style={tw`bg-green-50 rounded-lg p-2.5 flex-row items-center`}>
-                  <CheckCircle2 size={16} color="#059669" strokeWidth={2.5} />
-                  <Text style={tw`text-green-700 font-semibold text-xs ml-2 flex-1`}>All tasks completed!</Text>
-                </View>
-              ) : isPartial ? (
+              {isPartial ? (
                 <View style={tw`bg-amber-50 rounded-lg p-2.5`}>
                   <Text style={tw`text-amber-700 font-semibold text-xs`}>
                     {totalTasks - completedCount} task{totalTasks - completedCount > 1 ? 's' : ''} remaining
@@ -306,13 +301,13 @@ const DateDetails: React.FC<DateDetailsProps> = ({ habit, selectedDate, activeHo
                 <View style={tw`bg-red-50 rounded-lg p-2.5`}>
                   <Text style={tw`text-red-700 font-semibold text-xs`}>Missed • Tomorrow is a new opportunity</Text>
                 </View>
-              ) : (
+              ) : !isCompleted ? (
                 <View style={tw`bg-blue-50 rounded-lg p-2.5`}>
                   <Text style={tw`text-blue-700 font-semibold text-xs`}>
                     {totalTasks} task{totalTasks > 1 ? 's' : ''} ready to start
                   </Text>
                 </View>
-              )}
+              ) : null}
             </View>
           )}
         </View>

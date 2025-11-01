@@ -1,3 +1,4 @@
+// src/components/achievements/FilterTabs.tsx
 import React from 'react';
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import tw from '../../lib/tailwind';
@@ -25,12 +26,12 @@ export const FilterTabs: React.FC<FilterTabsProps> = ({ filter, setFilter, unloc
               key={filterType}
               onPress={() => setFilter(filterType)}
               style={({ pressed }) => [
-                tw`px-4 py-2 rounded-full mr-2 border`,
-                isActive ? tw`bg-stone-600 border-stone-600` : tw`bg-stone-50 border-stone-200`,
-                pressed && tw`bg-stone-200 border-stone-300`,
+                tw`px-4 py-2.5 rounded-full mr-2 border-2`,
+                isActive ? tw`bg-stone-700 border-stone-700` : tw`bg-white border-stone-300`,
+                pressed && !isActive && tw`bg-stone-100 border-stone-400`,
               ]}
             >
-              <Text style={[tw`text-xs font-semibold capitalize`, isActive ? tw`text-sand-700` : tw`text-stone-300`]}>
+              <Text style={[tw`text-sm font-bold capitalize`, isActive ? tw`text-white` : tw`text-stone-600`]}>
                 {filterType}
                 {count !== null && ` (${count})`}
               </Text>

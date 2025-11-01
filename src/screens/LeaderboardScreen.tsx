@@ -90,20 +90,7 @@ const LeaderboardScreen = () => {
         <LinearGradient colors={['#1F2937', '#111827', '#030712']} style={{ paddingHorizontal: 24, paddingTop: 60, paddingBottom: 32 }}>
           {/* Crown */}
           <View style={{ alignItems: 'center', marginBottom: 24 }}>
-            <LinearGradient
-              colors={['rgba(251, 191, 36, 0.25)', 'rgba(251, 191, 36, 0.15)', 'rgba(251, 191, 36, 0.05)']}
-              style={{
-                width: 140,
-                height: 140,
-                borderRadius: 70,
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderWidth: 2,
-                borderColor: 'rgba(251, 191, 36, 0.4)',
-              }}
-            >
-              <Image source={CROWN_IMAGE} style={{ width: 120, height: 120 }} resizeMode="contain" />
-            </LinearGradient>
+            <Image source={require('../../assets/interface/Leaderboard/leader-crown.png')} style={{ width: 120, height: 120 }} resizeMode="contain" />
           </View>
 
           <View style={{ alignItems: 'center', marginBottom: 20 }}>
@@ -170,8 +157,7 @@ const LeaderboardScreen = () => {
                     shadowRadius: 16,
                   }}
                 >
-                  <Image source={TIER_COLORS[1].gem} style={{ width: 80, height: 80, marginRight: 16 }} resizeMode="contain" />
-
+                  <Image source={require('../../assets/interface/Leaderboard/top1.png')} style={{ width: 80, height: 80, marginRight: 16 }} resizeMode="contain" />
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: 19, fontWeight: '900', color: '#FFFFFF', marginBottom: 10 }} numberOfLines={1}>
                       {topThree[0].username}
