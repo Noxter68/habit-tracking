@@ -1,8 +1,7 @@
 // src/components/wizard/CustomHabitCreator.tsx
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
 import { View, Text, ScrollView, Pressable, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import {
   BicepsFlexed,
   Trophy,
@@ -24,6 +23,7 @@ import {
   Scissors,
   Wrench,
   Briefcase,
+  Target,
 } from 'lucide-react-native';
 import tw from '../../lib/tailwind';
 import { HabitType } from '../../types';
@@ -37,151 +37,104 @@ interface CustomHabitCreatorProps {
 }
 
 const customIcons = [
-  { id: 'target', component: BicepsFlexed, label: 'Biceps' },
-  { id: 'trophy', component: Trophy, label: 'Trophy' },
-  { id: 'zap', component: Zap, label: 'Energy' },
-  { id: 'heart', component: Heart, label: 'Heart' },
-  { id: 'star', component: Star, label: 'Star' },
-  { id: 'flame', component: Flame, label: 'Flame' },
-  { id: 'check-circle', component: CheckCircle, label: 'Complete' },
-  { id: 'award', component: Award, label: 'Award' },
-  { id: 'trending-up', component: TrendingUp, label: 'Growth' },
-  { id: 'activity', component: Activity, label: 'Activity' },
-  { id: 'sparkles', component: Sparkles, label: 'Magic' },
-  { id: 'coffee', component: Coffee, label: 'Coffee' },
-  { id: 'book', component: Book, label: 'Book' },
-  { id: 'music', component: Music, label: 'Music' },
-  { id: 'camera', component: Camera, label: 'Camera' },
-  { id: 'palette', component: Palette, label: 'Art' },
-  { id: 'code', component: Code, label: 'Code' },
-  { id: 'scissors', component: Scissors, label: 'Craft' },
-  { id: 'wrench', component: Wrench, label: 'Build' },
-  { id: 'briefcase', component: Briefcase, label: 'Work' },
+  { id: 'target', component: BicepsFlexed },
+  { id: 'trophy', component: Trophy },
+  { id: 'zap', component: Zap },
+  { id: 'heart', component: Heart },
+  { id: 'star', component: Star },
+  { id: 'flame', component: Flame },
+  { id: 'check-circle', component: CheckCircle },
+  { id: 'award', component: Award },
+  { id: 'trending-up', component: TrendingUp },
+  { id: 'activity', component: Activity },
+  { id: 'sparkles', component: Sparkles },
+  { id: 'coffee', component: Coffee },
+  { id: 'book', component: Book },
+  { id: 'music', component: Music },
+  { id: 'camera', component: Camera },
+  { id: 'palette', component: Palette },
+  { id: 'code', component: Code },
+  { id: 'scissors', component: Scissors },
+  { id: 'wrench', component: Wrench },
+  { id: 'briefcase', component: Briefcase },
 ];
 
 const CustomHabitCreator: React.FC<CustomHabitCreatorProps> = ({ habitType, habitName, selectedIcon, onNameChange, onIconSelect }) => {
-  const scrollViewRef = useRef<ScrollView>(null);
-  const gradientColors = habitType === 'good' ? ['#06b6d4', '#0891b2'] : ['#f97316', '#ea580c'];
-  const primaryColor = habitType === 'good' ? '#06b6d4' : '#f97316';
-
-  useEffect(() => {
-    scrollViewRef.current?.scrollTo({ y: 0, animated: false });
-  }, []);
-
   return (
-    <KeyboardAvoidingView style={tw`flex-1`} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0}>
-      <View style={tw`flex-1`}>
-        {/* Header - Fixed at top */}
-        <View style={tw`px-6 pt-4 pb-3`}>
-          <Animated.View entering={FadeInUp.duration(400)}>
-            <LinearGradient colors={gradientColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-5 shadow-lg`}>
-              <Text style={tw`text-2xl font-light text-white mb-1.5 tracking-tight`}>Create Your Habit</Text>
-              <Text style={tw`text-sm text-white/90 leading-5`}>
-                {habitType === 'good' ? 'Give your habit a meaningful name and choose an icon that represents it' : 'Define what you want to overcome with a clear name and visual'}
-              </Text>
-            </LinearGradient>
-          </Animated.View>
+    <KeyboardAvoidingView style={tw`flex-1`} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`px-8 py-8`}>
+        {/* Header */}
+        <View style={tw`mb-8`}>
+          <Text style={tw`text-3xl font-bold text-white text-center mb-3`}>Name Your Habit</Text>
+          <Text style={tw`text-base text-white/80 text-center leading-6 px-2`}>Make it personal and meaningful</Text>
         </View>
 
-        <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false} contentContainerStyle={tw`px-6 pb-4`} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
-          {/* Habit Name Input */}
-          <Animated.View entering={FadeInDown.duration(400)} style={tw`mb-6 mt-2`}>
-            <Text style={tw`text-base font-semibold text-stone-800 mb-3`}>Habit Name</Text>
-            <View style={tw`bg-white rounded-2xl border border-stone-200 overflow-hidden`}>
-              <TextInput
-                style={tw`px-4 py-4 text-base text-stone-800`}
-                placeholder={habitType === 'good' ? 'e.g., Daily Journaling' : 'e.g., Quit Social Media Scrolling'}
-                placeholderTextColor="#9ca3af"
-                value={habitName}
-                onChangeText={onNameChange}
-                maxLength={40}
-                returnKeyType="done"
-              />
-            </View>
-            <View style={tw`flex-row justify-between items-center mt-2`}>
-              <Text style={tw`text-xs text-stone-500`}>Be specific and inspiring</Text>
-              <Text style={tw`text-xs text-stone-400`}>{habitName.length}/40</Text>
-            </View>
-          </Animated.View>
+        {/* Name Input */}
+        <View style={tw`mb-8`}>
+          <Text style={tw`text-sm font-medium text-white/90 mb-3`}>Habit Name</Text>
+          <TextInput
+            value={habitName}
+            onChangeText={onNameChange}
+            placeholder="e.g., Morning Workout"
+            placeholderTextColor="rgba(255, 255, 255, 0.3)"
+            style={tw`bg-white/15 border-2 border-white/20 rounded-2xl px-5 py-4 text-white text-base`}
+            maxLength={50}
+          />
+          <Text style={tw`text-xs text-white/50 mt-2`}>{habitName.length}/50 characters</Text>
+        </View>
 
-          {/* Icon Selection - NO STAGGERED ANIMATIONS */}
-          <Animated.View entering={FadeInDown.duration(400)} style={tw`mb-5`}>
-            <Text style={tw`text-base font-semibold text-stone-800 mb-3`}>Choose an Icon</Text>
-            <View style={tw`flex-row flex-wrap -mx-1.5`}>
-              {customIcons.map((icon) => {
-                const Icon = icon.component;
-                const isSelected = selectedIcon === icon.id;
+        {/* Icon Selector */}
+        <View style={tw`mb-8`}>
+          <Text style={tw`text-sm font-medium text-white/90 mb-3`}>Choose an Icon</Text>
+          <View style={tw`flex-row flex-wrap gap-3`}>
+            {customIcons.map((icon, index) => {
+              const Icon = icon.component;
+              const isSelected = selectedIcon === icon.id;
 
-                return (
-                  <View key={icon.id} style={tw`w-1/4 px-1.5 mb-3`}>
-                    <Pressable
-                      onPress={() => onIconSelect(icon.id)}
-                      style={({ pressed }) => [
-                        tw`rounded-2xl overflow-hidden`,
-                        {
-                          aspectRatio: 1,
-                          borderWidth: 1,
-                          borderColor: isSelected ? primaryColor : '#e5e7eb',
-                          backgroundColor: isSelected ? primaryColor : '#ffffff',
-                        },
-                        pressed && tw`opacity-80`,
-                      ]}
-                    >
-                      <View style={tw`flex-1 items-center justify-center`}>
-                        <View style={[tw`w-11 h-11 rounded-xl items-center justify-center`, isSelected ? tw`bg-white/25` : tw`bg-stone-100`]}>
-                          <Icon size={22} color={isSelected ? '#ffffff' : '#6B7280'} strokeWidth={2} />
-                        </View>
-                        <Text style={[tw`text-xs text-center mt-2 px-1`, isSelected ? tw`text-white font-semibold` : tw`text-stone-600`]} numberOfLines={1}>
-                          {icon.label}
-                        </Text>
-                      </View>
-                    </Pressable>
-                  </View>
-                );
-              })}
-            </View>
-          </Animated.View>
-
-          {/* Preview Card */}
-          {habitName.length > 0 && selectedIcon && (
-            <Animated.View entering={FadeInDown.duration(400)} style={tw`mb-5`}>
-              <Text style={tw`text-base font-semibold text-stone-800 mb-3`}>Preview</Text>
-              <View style={[tw`rounded-2xl p-4`, { backgroundColor: primaryColor }]}>
-                <View style={tw`flex-row items-center`}>
-                  <View style={tw`w-14 h-14 bg-white/25 rounded-xl items-center justify-center mr-4`}>
-                    {(() => {
-                      const iconData = customIcons.find((i) => i.id === selectedIcon);
-                      if (!iconData) return null;
-                      const Icon = iconData.component;
-                      return <Icon size={28} color="#ffffff" strokeWidth={2} />;
-                    })()}
-                  </View>
-                  <View style={tw`flex-1`}>
-                    <Text style={tw`text-lg font-semibold text-white mb-0.5`}>{habitName}</Text>
-                    <Text style={tw`text-sm text-white/80`}>Custom Habit</Text>
-                  </View>
-                  <View style={tw`w-6 h-6 bg-white/30 rounded-full items-center justify-center`}>
-                    <View style={tw`w-2.5 h-2.5 bg-white rounded-full`} />
-                  </View>
-                </View>
-              </View>
-            </Animated.View>
-          )}
-
-          {/* Helpful Tip */}
-          <View style={[tw`rounded-2xl p-4 border border-amber-200`, { backgroundColor: '#fef3c7' }]}>
-            <View style={tw`flex-row items-center mb-2`}>
-              <Sparkles size={18} color="#78350f" strokeWidth={2} style={tw`mr-2`} />
-              <Text style={tw`text-sm font-semibold text-amber-900`}>Pro Tip</Text>
-            </View>
-            <Text style={tw`text-sm text-amber-800 leading-5`}>
-              {habitType === 'good'
-                ? "Choose a name that motivates you and an icon that you'll recognize at a glance. This will be your daily companion!"
-                : 'Frame your habit positively. Instead of "Stop doing X", try "Reduce X" or "Replace X with Y"'}
-            </Text>
+              return (
+                <Animated.View key={icon.id} entering={FadeInDown.delay(index * 20).duration(300)}>
+                  <Pressable
+                    onPress={() => onIconSelect(icon.id)}
+                    style={({ pressed }) => [
+                      tw`w-16 h-16 rounded-2xl items-center justify-center border-2 ${isSelected ? 'border-white/40' : 'border-white/10'}`,
+                      { backgroundColor: isSelected ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)' },
+                      pressed && tw`opacity-70`,
+                    ]}
+                  >
+                    <Icon size={28} color="#ffffff" strokeWidth={2} />
+                  </Pressable>
+                </Animated.View>
+              );
+            })}
           </View>
-        </ScrollView>
-      </View>
+        </View>
+
+        {/* Preview */}
+        {habitName.length > 0 && selectedIcon && (
+          <Animated.View entering={FadeInDown.duration(300)}>
+            <Text style={tw`text-sm font-medium text-white/90 mb-3`}>Preview</Text>
+            <View style={tw`bg-white/15 border-2 border-white/20 rounded-2xl p-5 flex-row items-center`}>
+              <View style={tw`w-14 h-14 rounded-xl bg-white/20 items-center justify-center mr-4`}>
+                {(() => {
+                  const iconData = customIcons.find((i) => i.id === selectedIcon);
+                  if (!iconData) return null;
+                  const Icon = iconData.component;
+                  return <Icon size={28} color="#ffffff" strokeWidth={2} />;
+                })()}
+              </View>
+              <View style={tw`flex-1`}>
+                <Text style={tw`text-lg font-semibold text-white mb-1`}>{habitName}</Text>
+                <Text style={tw`text-sm text-white/70`}>Custom Habit</Text>
+              </View>
+            </View>
+          </Animated.View>
+        )}
+
+        {/* Tip */}
+        <View style={tw`mt-10`}>
+          <Text style={tw`text-xs text-white/50 text-center font-light italic leading-5`}>{habitType === 'good' ? 'Choose a name that motivates you daily' : 'Frame your habit positively'}</Text>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };

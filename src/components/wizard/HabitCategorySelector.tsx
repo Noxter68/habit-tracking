@@ -2,11 +2,10 @@
 import React from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Dumbbell, Heart, Apple, BookOpen, Zap, Brain, Moon, Droplets, CigaretteOff, Scale, ShoppingCart, Smartphone, Clock, Smile, Wine, Bed, Target, Plus } from 'lucide-react-native';
+import { Dumbbell, Heart, Apple, BookOpen, Zap, Brain, Moon, Droplets, CigaretteOff, Scale, ShoppingCart, Smartphone, Clock, Smile, Wine, Bed, Plus } from 'lucide-react-native';
 import tw from '../../lib/tailwind';
 import { HabitType } from '../../types';
-import { getCategories, quotes, tips } from '../../utils/habitHelpers';
+import { getCategories } from '../../utils/habitHelpers';
 
 interface HabitCategorySelectorProps {
   habitType: HabitType;
@@ -36,64 +35,46 @@ const categoryIcons: Record<string, any> = {
 
 const HabitCategorySelector: React.FC<HabitCategorySelectorProps> = ({ habitType, selected, onSelect, onCreateCustom }) => {
   const categories = getCategories(habitType);
-  const gradientColors = habitType === 'good' ? ['#10b981', '#059669'] : ['#ef4444', '#dc2626'];
 
   return (
-    <View style={tw`flex-1`}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`px-6 pb-4`}>
+    <View style={tw`flex-1 justify-center`}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`px-8 py-8`}>
         {/* Header */}
-        <View style={tw`mb-5`}>
-          <LinearGradient colors={gradientColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-5 shadow-lg`}>
-            <Text style={tw`text-2xl font-light text-white mb-1.5 tracking-tight`}>Choose Your Focus</Text>
-            <Text style={tw`text-sm text-white/90 leading-5 mb-3`}>
-              {habitType === 'good' ? 'Select the area where you want to grow and excel' : 'Identify what you want to overcome and transform'}
-            </Text>
-
-            <View style={tw`border-t border-white/20 pt-3 mt-1`}>
-              <Text style={tw`text-xs text-white/70 italic leading-5`}>"{quotes.category.text}"</Text>
-              <Text style={tw`text-xs text-white/60 font-medium mt-1`}>— {quotes.category.author}</Text>
-            </View>
-          </LinearGradient>
+        <View style={tw`mb-10`}>
+          <Text style={tw`text-3xl font-bold text-white text-center mb-3`}>Choose Your Focus</Text>
+          <Text style={tw`text-base text-white/80 text-center leading-6 px-2`}>{habitType === 'good' ? 'Select the area you want to improve' : 'What would you like to overcome?'}</Text>
         </View>
 
-        {/* Categories List - NO STAGGERED ANIMATIONS */}
+        {/* Categories Grid */}
         <View style={tw`gap-3 mb-4`}>
-          {categories.map((category) => {
+          {categories.map((category, index) => {
             const Icon = categoryIcons[category.id];
             const isSelected = selected === category.id;
 
             return (
-              <Animated.View key={category.id} entering={FadeInDown.duration(300)}>
+              <Animated.View key={category.id} entering={FadeInDown.delay(index * 30).duration(300)}>
                 <Pressable
                   onPress={() => onSelect(category.id)}
                   style={({ pressed }) => [
-                    tw`rounded-2xl overflow-hidden`,
-                    {
-                      borderWidth: 1,
-                      borderColor: isSelected ? 'transparent' : '#e5e7eb',
-                      backgroundColor: isSelected ? category.color : '#ffffff',
-                    },
-                    pressed && tw`opacity-90`,
+                    tw`rounded-2xl p-5 flex-row items-center border-2 ${isSelected ? 'border-white/40' : 'border-white/10'}`,
+                    { backgroundColor: isSelected ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.15)' },
+                    pressed && tw`opacity-80`,
                   ]}
                 >
-                  <View style={tw`p-4`}>
-                    <View style={tw`flex-row items-center`}>
-                      <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-3.5`, isSelected ? tw`bg-white/25` : { backgroundColor: `${category.color}15` }]}>
-                        <Icon size={24} color={isSelected ? '#ffffff' : category.color} strokeWidth={2} />
-                      </View>
-
-                      <View style={tw`flex-1`}>
-                        <Text style={[tw`text-base font-semibold mb-0.5`, isSelected ? tw`text-white` : tw`text-stone-800`]}>{category.label}</Text>
-                        <Text style={[tw`text-sm leading-5`, isSelected ? tw`text-white/90` : tw`text-stone-600`]}>{category.description}</Text>
-                      </View>
-
-                      {isSelected && (
-                        <View style={tw`w-5.5 h-5.5 rounded-full bg-white/30 items-center justify-center`}>
-                          <View style={tw`w-2 h-2 bg-white rounded-full`} />
-                        </View>
-                      )}
-                    </View>
+                  <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-4`, { backgroundColor: isSelected ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)' }]}>
+                    {Icon && <Icon size={24} color="#ffffff" strokeWidth={2} />}
                   </View>
+
+                  <View style={tw`flex-1`}>
+                    <Text style={tw`text-base font-semibold text-white mb-0.5`}>{category.label}</Text>
+                    <Text style={tw`text-sm text-white/70 leading-5`}>{category.description}</Text>
+                  </View>
+
+                  {isSelected && (
+                    <View style={tw`w-6 h-6 rounded-full bg-white items-center justify-center`}>
+                      <View style={tw`w-3 h-3 rounded-full bg-purple-600`} />
+                    </View>
+                  )}
                 </Pressable>
               </Animated.View>
             );
@@ -101,41 +82,30 @@ const HabitCategorySelector: React.FC<HabitCategorySelectorProps> = ({ habitType
         </View>
 
         {/* Divider */}
-        <View style={tw`flex-row items-center mb-4`}>
-          <View style={tw`flex-1 h-px bg-stone-200`} />
-          <Text style={tw`px-4 text-xs text-stone-500 font-medium`}>OR</Text>
-          <View style={tw`flex-1 h-px bg-stone-200`} />
+        <View style={tw`flex-row items-center my-6`}>
+          <View style={tw`flex-1 h-px bg-white/20`} />
+          <Text style={tw`px-4 text-xs text-white/50 font-medium`}>OR</Text>
+          <View style={tw`flex-1 h-px bg-white/20`} />
         </View>
 
-        {/* Create Custom Habit */}
-        <Animated.View entering={FadeInDown.duration(300)} style={tw`mb-5`}>
-          <Pressable onPress={onCreateCustom} style={({ pressed }) => [tw`rounded-2xl overflow-hidden bg-white`, { borderWidth: 1, borderColor: '#e5e7eb' }, pressed && tw`opacity-90`]}>
-            <View style={tw`p-4`}>
-              <View style={tw`flex-row items-center`}>
-                <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-3.5`, { backgroundColor: '#fbbf2415' }]}>
-                  <Plus size={24} color="#f59e0b" strokeWidth={2} />
-                </View>
+        {/* Create Custom Button */}
+        <Pressable
+          onPress={onCreateCustom}
+          style={({ pressed }) => [tw`rounded-2xl p-5 flex-row items-center border-2 border-white/20`, { backgroundColor: 'rgba(255, 255, 255, 0.15)' }, pressed && tw`opacity-80`]}
+        >
+          <View style={tw`w-12 h-12 rounded-xl bg-white/10 items-center justify-center mr-4`}>
+            <Plus size={24} color="#ffffff" strokeWidth={2} />
+          </View>
 
-                <View style={tw`flex-1`}>
-                  <Text style={tw`text-base font-semibold text-stone-800 mb-0.5`}>Create Custom Habit</Text>
-                  <Text style={tw`text-sm text-stone-600 leading-5`}>{habitType === 'good' ? 'Build something unique to your goals' : 'Define your own habit to overcome'}</Text>
-                </View>
-
-                <View style={[tw`w-8 h-8 rounded-xl items-center justify-center`, { backgroundColor: '#fbbf2410' }]}>
-                  <Target size={18} color="#f59e0b" strokeWidth={2} />
-                </View>
-              </View>
-            </View>
-          </Pressable>
-        </Animated.View>
+          <View style={tw`flex-1`}>
+            <Text style={tw`text-base font-semibold text-white mb-0.5`}>Create Custom Habit</Text>
+            <Text style={tw`text-sm text-white/70 leading-5`}>{habitType === 'good' ? 'Build something unique' : 'Define your own goal'}</Text>
+          </View>
+        </Pressable>
 
         {/* Tip */}
-        <View style={[tw`bg-sky-50 rounded-2xl p-4`, { borderLeftWidth: 3, borderLeftColor: '#0284c7' }]}>
-          <View style={tw`flex-row items-center mb-2`}>
-            <Target size={18} color="#0284c7" strokeWidth={2} style={tw`mr-2`} />
-            <Text style={tw`text-sm font-semibold text-sky-900`}>{tips.category[0].title}</Text>
-          </View>
-          <Text style={tw`text-sm text-sky-800 leading-5`}>{tips.category[0].content}</Text>
+        <View style={tw`mt-8`}>
+          <Text style={tw`text-xs text-white/50 text-center font-light italic leading-5`}>Choose the category that resonates most{'\n'}with your current goals</Text>
         </View>
       </ScrollView>
     </View>

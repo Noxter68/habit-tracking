@@ -1,206 +1,124 @@
 // src/components/wizard/CustomTaskCreator.tsx
 import React from 'react';
 import { View, Text, ScrollView, Pressable, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
-import { CheckCircle2, Lightbulb, Plus, X } from 'lucide-react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { Plus, X, CheckCircle2 } from 'lucide-react-native';
 import tw from '../../lib/tailwind';
 import { HabitType } from '../../types';
 
 interface CustomTaskCreatorProps {
   habitType: HabitType;
   habitName: string;
-  tasks: string[]; // ✅ Changed from CustomTask[] to string[]
-  onTasksChange: (tasks: string[]) => void; // ✅ Changed from CustomTask[] to string[]
+  tasks: string[];
+  onTasksChange: (tasks: string[]) => void;
 }
 
 const CustomTaskCreator: React.FC<CustomTaskCreatorProps> = ({ habitType, habitName, tasks, onTasksChange }) => {
   const maxTasks = 3;
-  const gradientColors = habitType === 'good' ? ['#fbbf24', '#f59e0b'] : ['#8b5cf6', '#7c3aed'];
-  const primaryColor = habitType === 'good' ? '#fbbf24' : '#8b5cf6';
-  const lightBg = habitType === 'good' ? '#fef3c7' : '#ede9fe';
-  const darkColor = habitType === 'good' ? '#f59e0b' : '#7c3aed';
 
-  // ✅ Add task - simple string
   const addTask = () => {
     if (tasks.length < maxTasks) {
       onTasksChange([...tasks, '']);
     }
   };
 
-  // ✅ Remove task
   const removeTask = (index: number) => {
     if (tasks.length > 1) {
-      const newTasks = tasks.filter((_, i) => i !== index);
-      onTasksChange(newTasks);
+      onTasksChange(tasks.filter((_, i) => i !== index));
     }
   };
 
-  // ✅ Update task - direct string assignment
   const updateTask = (index: number, value: string) => {
     const newTasks = [...tasks];
     newTasks[index] = value;
     onTasksChange(newTasks);
   };
 
-  // ✅ Count completed tasks
   const completedTasks = tasks.filter((t) => t.trim() !== '').length;
 
   return (
-    <KeyboardAvoidingView style={tw`flex-1`} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0}>
-      <View style={tw`flex-1`}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`px-6 pb-4`} keyboardShouldPersistTaps="always" keyboardDismissMode="on-drag">
-          {/* Header */}
-          <Animated.View entering={FadeInUp.duration(400)} style={tw`mb-5`}>
-            <LinearGradient colors={gradientColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-5 shadow-lg`}>
-              <Text style={tw`text-2xl font-light text-white mb-1.5 tracking-tight`}>Define Your Tasks</Text>
-              <Text style={tw`text-sm text-white/90 leading-5 mb-3`}>
-                Create {maxTasks} specific daily actions for <Text style={tw`font-semibold`}>"{habitName}"</Text>
-              </Text>
+    <KeyboardAvoidingView style={tw`flex-1`} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`px-8 py-8`} keyboardShouldPersistTaps="always">
+        {/* Header */}
+        <View style={tw`mb-8`}>
+          <Text style={tw`text-3xl font-bold text-white text-center mb-3`}>Define Your Tasks</Text>
+          <Text style={tw`text-base text-white/80 text-center leading-6 px-2`}>
+            Create specific actions for{'\n'}
+            <Text style={tw`font-semibold`}>"{habitName}"</Text>
+          </Text>
 
-              <View style={tw`border-t border-white/20 pt-3 mt-1`}>
-                <Text style={tw`text-xs text-white/70 italic leading-5`}>"Break down your goals into small, actionable steps. Progress compounds."</Text>
-              </View>
-            </LinearGradient>
-          </Animated.View>
-
-          {/* Progress Indicator */}
-          <Animated.View entering={FadeInUp.duration(400)} style={tw`mb-6`}>
-            <View style={tw`flex-row items-center justify-between mb-2.5`}>
-              <Text style={tw`text-sm font-medium text-stone-600`}>Tasks Created</Text>
-              <Text style={tw`text-xs font-semibold text-stone-700`}>
-                {completedTasks} of {maxTasks}
-              </Text>
-            </View>
-            <View style={[tw`h-1.5 rounded-full overflow-hidden`, { backgroundColor: '#f5f5f5' }]}>
-              <View
-                style={[
-                  tw`h-full rounded-full`,
-                  {
-                    width: `${(completedTasks / maxTasks) * 100}%`,
-                    backgroundColor: primaryColor,
-                  },
-                ]}
-              />
-            </View>
-          </Animated.View>
-
-          {/* Task Input Cards */}
-          <View style={tw`gap-3.5 mb-5`}>
-            {tasks.map((task, index) => (
-              <Animated.View key={index} entering={FadeInDown.duration(300)}>
-                <View style={[tw`bg-white rounded-2xl p-4.5`, { borderWidth: 1, borderColor: '#e5e7eb' }]}>
-                  {/* Task Header */}
-                  <View style={tw`flex-row items-center justify-between mb-3.5`}>
-                    <View style={tw`flex-row items-center`}>
-                      <View style={[tw`w-9 h-9 rounded-xl items-center justify-center mr-3`, { backgroundColor: lightBg }]}>
-                        <Text style={[tw`text-sm font-bold`, { color: darkColor }]}>{index + 1}</Text>
-                      </View>
-                      <Text style={tw`text-base font-semibold text-stone-800`}>Task {index + 1}</Text>
-                    </View>
-                    {tasks.length > 1 && (
-                      <Pressable onPress={() => removeTask(index)} style={({ pressed }) => [tw`w-8 h-8 bg-stone-50 rounded-xl items-center justify-center`, pressed && tw`bg-stone-100`]}>
-                        <X size={16} color="#9ca3af" strokeWidth={2} />
-                      </Pressable>
-                    )}
-                  </View>
-
-                  {/* Task Name Input - ✅ Simplified */}
-                  <View style={tw`mb-3.5`}>
-                    <Text style={tw`text-sm font-medium text-stone-700 mb-2`}>Action</Text>
-                    <TextInput
-                      style={[
-                        tw`px-4 py-4 text-base text-stone-800 rounded-xl`,
-                        {
-                          backgroundColor: '#fafafa',
-                          borderWidth: 1,
-                          borderColor: '#f0f0f0',
-                        },
-                      ]}
-                      placeholder={habitType === 'good' ? `e.g., Write for 10 minutes` : `e.g., Go for a walk instead`}
-                      placeholderTextColor="#9ca3af"
-                      value={task} // ✅ Direct string value
-                      onChangeText={(text) => updateTask(index, text)} // ✅ Direct update
-                      maxLength={50}
-                      returnKeyType="done"
-                    />
-                    <Text style={tw`text-xs text-stone-400 mt-1.5 text-right`}>{task.length}/50</Text>
-                  </View>
-
-                  {/* Completion Indicator */}
-                  {task.trim() !== '' && (
-                    <View style={[tw`flex-row items-center mt-3.5 pt-3.5`, { borderTopWidth: 1, borderTopColor: '#f5f5f5' }]}>
-                      <CheckCircle2 size={16} color="#10b981" strokeWidth={2} style={tw`mr-2`} />
-                      <Text style={tw`text-xs text-emerald-600 font-medium`}>Task complete</Text>
-                    </View>
-                  )}
-                </View>
-              </Animated.View>
-            ))}
-          </View>
-
-          {/* Add Task Button */}
-          {tasks.length < maxTasks && (
-            <Animated.View entering={FadeInDown.duration(300)} style={tw`mb-5`}>
-              <Pressable onPress={addTask} style={({ pressed }) => [tw`rounded-2xl bg-white p-5 items-center justify-center`, { borderWidth: 1, borderColor: '#e5e7eb' }, pressed && tw`bg-stone-50`]}>
-                <View style={tw`w-12 h-12 bg-stone-100 rounded-full items-center justify-center mb-2.5`}>
-                  <Plus size={22} color="#6B7280" strokeWidth={2.5} />
-                </View>
-                <Text style={tw`text-sm font-medium text-stone-700`}>Add Task {tasks.length + 1}</Text>
-                <Text style={tw`text-xs text-stone-500 mt-1`}>Optional</Text>
-              </Pressable>
-            </Animated.View>
-          )}
-
-          {/* Tasks Summary */}
-          {completedTasks === maxTasks && (
-            <Animated.View entering={FadeInDown.duration(300)} style={tw`mb-5`}>
-              <View style={[tw`rounded-2xl p-5`, { backgroundColor: '#fafafa', borderWidth: 1, borderColor: '#e5e7eb' }]}>
-                <View style={tw`flex-row items-center mb-4`}>
-                  <View style={[tw`w-9 h-9 rounded-xl items-center justify-center mr-3`, { backgroundColor: lightBg }]}>
-                    <CheckCircle2 size={18} color={darkColor} strokeWidth={2.5} />
-                  </View>
-                  <Text style={tw`text-base font-semibold text-stone-800`}>Your Daily Commitment</Text>
-                </View>
-
-                <View style={tw`gap-2.5`}>
-                  {tasks
-                    .filter((t) => t.trim() !== '') // ✅ Direct string filtering
-                    .map((task, index) => (
-                      <View key={index} style={[tw`rounded-xl p-3.5`, { backgroundColor: 'white', borderWidth: 1, borderColor: '#f0f0f0' }]}>
-                        <Text style={tw`text-sm font-medium text-stone-800 mb-1`}>
-                          {index + 1}. {task} {/* ✅ Direct string display */}
-                        </Text>
-                      </View>
-                    ))}
-                </View>
-
-                <View style={[tw`mt-4 pt-4`, { borderTopWidth: 1, borderTopColor: '#f0f0f0' }]}>
-                  <Text style={tw`text-xs text-stone-600 leading-5`}>
-                    {habitType === 'good'
-                      ? `Completing these ${maxTasks} tasks daily will help you build this positive habit.`
-                      : `Tracking these ${maxTasks} alternatives will help you overcome this habit.`}
-                  </Text>
-                </View>
-              </View>
-            </Animated.View>
-          )}
-
-          {/* Helpful Tip */}
-          <View style={[tw`rounded-2xl p-4 border border-amber-200`, { backgroundColor: '#fef3c7' }]}>
-            <View style={tw`flex-row items-center mb-2`}>
-              <Lightbulb size={18} color="#78350f" strokeWidth={2} style={tw`mr-2`} />
-              <Text style={tw`text-sm font-semibold text-amber-900`}>Task Design Tips</Text>
-            </View>
-            <Text style={tw`text-sm text-amber-800 leading-5`}>
-              Make tasks specific, measurable, and achievable. Include time estimates when possible.
-              {habitType === 'bad' && " For habits you're quitting, frame tasks as positive replacements."}
+          <View style={tw`mt-4 bg-white/10 rounded-xl px-4 py-2 self-center`}>
+            <Text style={tw`text-sm text-white/90`}>
+              {completedTasks} of {maxTasks} tasks defined
             </Text>
           </View>
-        </ScrollView>
-      </View>
+        </View>
+
+        {/* Task Inputs */}
+        <View style={tw`gap-4 mb-6`}>
+          {tasks.map((task, index) => (
+            <Animated.View key={index} entering={FadeInDown.delay(index * 50).duration(300)}>
+              <View style={tw`flex-row items-center gap-3`}>
+                <View style={tw`flex-1 bg-white/15 border-2 border-white/20 rounded-2xl px-5 py-4 flex-row items-center`}>
+                  <CheckCircle2 size={20} color="rgba(255, 255, 255, 0.5)" strokeWidth={2} style={tw`mr-3`} />
+                  <TextInput
+                    value={task}
+                    onChangeText={(value) => updateTask(index, value)}
+                    placeholder={`Task ${index + 1}`}
+                    placeholderTextColor="rgba(255, 255, 255, 0.3)"
+                    style={tw`flex-1 text-white text-base`}
+                    maxLength={60}
+                  />
+                </View>
+
+                {tasks.length > 1 && (
+                  <Pressable
+                    onPress={() => removeTask(index)}
+                    style={({ pressed }) => [tw`w-12 h-12 rounded-xl bg-white/15 items-center justify-center border-2 border-white/20`, pressed && tw`opacity-70`]}
+                  >
+                    <X size={20} color="#ffffff" strokeWidth={2} />
+                  </Pressable>
+                )}
+              </View>
+            </Animated.View>
+          ))}
+        </View>
+
+        {/* Add Task Button */}
+        {tasks.length < maxTasks && (
+          <Pressable onPress={addTask} style={({ pressed }) => [tw`bg-white/15 border-2 border-white/20 rounded-2xl py-4 flex-row items-center justify-center mb-6`, pressed && tw`opacity-70`]}>
+            <Plus size={20} color="#ffffff" strokeWidth={2} style={tw`mr-2`} />
+            <Text style={tw`text-white font-semibold`}>Add Another Task</Text>
+          </Pressable>
+        )}
+
+        {/* Progress Preview */}
+        {completedTasks > 0 && (
+          <Animated.View entering={FadeInDown.duration(300)}>
+            <View style={tw`bg-emerald-500/20 border-2 border-emerald-400/30 rounded-2xl p-5`}>
+              <View style={tw`flex-row items-center mb-3`}>
+                <CheckCircle2 size={20} color="#10b981" strokeWidth={2} style={tw`mr-2`} />
+                <Text style={tw`text-white font-semibold`}>Tasks Preview</Text>
+              </View>
+              {tasks
+                .filter((t) => t.trim() !== '')
+                .map((task, index) => (
+                  <View key={index} style={tw`flex-row items-center mb-2`}>
+                    <View style={tw`w-2 h-2 rounded-full bg-emerald-400 mr-3`} />
+                    <Text style={tw`text-sm text-white/90 flex-1`}>{task}</Text>
+                  </View>
+                ))}
+            </View>
+          </Animated.View>
+        )}
+
+        {/* Tip */}
+        <View style={tw`mt-8`}>
+          <Text style={tw`text-xs text-white/50 text-center font-light italic leading-5`}>Break down your goals into small steps{'\n'}Progress compounds over time</Text>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
 
-export default React.memo(CustomTaskCreator);
+export default CustomTaskCreator;

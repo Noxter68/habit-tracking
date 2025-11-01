@@ -1,31 +1,23 @@
 // src/screens/PaywallScreen.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, Pressable, ScrollView, Alert, ActivityIndicator, ImageBackground, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
-import { X, Check, Infinity, Shield, Sparkles, Crown } from 'lucide-react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
-import tw from '@/lib/tailwind';
-import { RootStackParamList } from '@/navigation/types';
-import { RevenueCatService, SubscriptionPackage } from '@/services/RevenueCatService';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { X, Crown, Infinity, Shield, Sparkles, Check } from 'lucide-react-native';
+import tw from '../lib/tailwind';
+import { RootStackParamList } from '../../App';
 import { useSubscription } from '@/context/SubscriptionContext';
-import { Image } from 'react-native';
+import { RevenueCatService, SubscriptionPackage } from '@/services/RevenueCatService';
 import Logger from '@/utils/logger';
 
-// ============================================================================
-// Types
-// ============================================================================
-
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Paywall'>;
 
 interface Feature {
   icon: any;
   title: string;
   description: string;
-  isPremium?: boolean;
-  gradient: [string, string];
 }
 
 interface PaywallScreenProps {
@@ -36,47 +28,6 @@ interface PaywallScreenProps {
   };
 }
 
-// ============================================================================
-// Premium Features with Tier Colors
-// ============================================================================
-
-const sharedFeatures: Feature[] = [
-  {
-    icon: Infinity,
-    title: 'Unlimited Habits',
-    description: 'Track as many habits as you need',
-    isPremium: true,
-    gradient: ['#06B6D4', '#0891B2'], // Cyan
-  },
-  {
-    icon: Shield,
-    title: 'Unlimited Holiday Mode',
-    description: 'Pause habits without losing progress',
-    isPremium: true,
-    gradient: ['#8B5CF6', '#7C3AED'], // Amethyst
-  },
-];
-
-const monthlyExtraFeature: Feature = {
-  icon: Sparkles,
-  title: '3 Streak Savers/Month',
-  description: 'Restore missed days automatically',
-  isPremium: true,
-  gradient: ['#F59E0B', '#D97706'], // Amber
-};
-
-const yearlyExtraFeature: Feature = {
-  icon: Crown,
-  title: '50 Streak Savers',
-  description: 'Added to your inventory instantly',
-  isPremium: true,
-  gradient: ['#FBBF24', '#F59E0B'], // Topaz
-};
-
-// ============================================================================
-// Paywall Screen
-// ============================================================================
-
 const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
   const navigation = useNavigation<NavigationProp>();
   const { refreshSubscription } = useSubscription();
@@ -86,10 +37,33 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
   const [packages, setPackages] = useState<SubscriptionPackage[]>([]);
   const [selectedPackage, setSelectedPackage] = useState<SubscriptionPackage | null>(null);
 
-  // ==========================================================================
-  // Load Offerings
-  // ==========================================================================
+  // Features list
+  const sharedFeatures: Feature[] = [
+    {
+      icon: Infinity,
+      title: 'Unlimited Habits',
+      description: 'Track as many habits as you need',
+    },
+    {
+      icon: Shield,
+      title: 'Unlimited Holiday Mode',
+      description: 'Pause habits without losing progress',
+    },
+  ];
 
+  const monthlyExtraFeature: Feature = {
+    icon: Sparkles,
+    title: '3 Streak Savers/Month',
+    description: 'Restore missed days automatically',
+  };
+
+  const yearlyExtraFeature: Feature = {
+    icon: Crown,
+    title: '50 Streak Savers',
+    description: 'Added to your inventory instantly',
+  };
+
+  // Load offerings
   useEffect(() => {
     loadOfferings();
   }, []);
@@ -114,10 +88,6 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
       setLoadingOfferings(false);
     }
   };
-
-  // ==========================================================================
-  // Purchase Flow
-  // ==========================================================================
 
   const handleSubscribe = async () => {
     if (!selectedPackage) {
@@ -175,108 +145,97 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
     }
   };
 
-  const handleClose = () => {
-    navigation.goBack();
-  };
-
-  // ==========================================================================
-  // Loading State
-  // ==========================================================================
-
+  // Loading state
   if (loadingOfferings) {
     return (
-      <View style={tw`flex-1 bg-stone-50 items-center justify-center`}>
-        <ActivityIndicator size="large" color="#78716C" />
-        <Text style={tw`mt-4 text-stone-600 font-medium`}>Loading plans...</Text>
-      </View>
+      <ImageBackground source={require('../../assets/interface/purple-background-stars.png')} style={styles.background} resizeMode="cover">
+        <View style={tw`flex-1 items-center justify-center`}>
+          <ActivityIndicator size="large" color="#ffffff" />
+          <Text style={tw`mt-4 text-white font-medium`}>Loading plans...</Text>
+        </View>
+      </ImageBackground>
     );
   }
 
-  // ==========================================================================
   // Calculations
-  // ==========================================================================
-
   const monthlyPackage = packages.find((pkg) => pkg.packageType === 'MONTHLY');
   const yearlyPackage = packages.find((pkg) => pkg.packageType === 'ANNUAL');
   const isYearlySelected = selectedPackage?.packageType === 'ANNUAL';
-
   const savingsPercentage = monthlyPackage && yearlyPackage ? Math.round((1 - yearlyPackage.product.price / 12 / monthlyPackage.product.price) * 100) : 0;
 
-  // Get features based on selected plan
   const displayFeatures = [...sharedFeatures, isYearlySelected ? yearlyExtraFeature : monthlyExtraFeature];
 
-  // ==========================================================================
-  // Render
-  // ==========================================================================
-
   return (
-    <View style={tw`flex-1 bg-stone-50`}>
-      <SafeAreaView style={tw`flex-1`}>
+    <ImageBackground source={require('../../assets/interface/purple-background-stars.png')} style={styles.background} resizeMode="cover">
+      <SafeAreaView style={tw`flex-1`} edges={['top']}>
         {/* Close Button */}
-        <View style={tw`px-6 py-3 flex-row justify-end`}>
-          <Pressable onPress={handleClose} style={({ pressed }) => [tw`w-10 h-10 rounded-full items-center justify-center bg-white`, pressed && tw`opacity-70`]}>
-            <X size={20} color="#78716C" strokeWidth={2.5} />
+        <View style={tw`px-6 pt-2 pb-4 flex-row justify-end`}>
+          <Pressable onPress={() => navigation.goBack()} style={({ pressed }) => [tw`w-10 h-10 rounded-full items-center justify-center bg-white/15`, pressed && tw`opacity-70`]}>
+            <X size={20} color="#ffffff" strokeWidth={2.5} />
           </Pressable>
         </View>
 
-        <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-6 pb-8`} showsVerticalScrollIndicator={false}>
+        <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-8 pb-8`} showsVerticalScrollIndicator={false}>
           {/* Hero Section */}
           <Animated.View entering={FadeInUp.delay(100)} style={tw`items-center mb-10`}>
-            <LinearGradient colors={['#78716C', '#57534E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`w-20 h-20 rounded-2xl items-center justify-center mb-5 shadow-lg`}>
-              <Crown size={36} color="#FFFFFF" strokeWidth={1.5} />
-            </LinearGradient>
+            <View style={tw`w-20 h-20 rounded-3xl bg-amber-500/30 items-center justify-center mb-5`}>
+              <Crown size={40} color="#fbbf24" strokeWidth={1.5} />
+            </View>
 
-            <Text style={tw`text-3xl font-bold text-stone-900 text-center mb-2 tracking-tight`}>Upgrade to Premium</Text>
-            <Text style={tw`text-base text-stone-600 text-center leading-6 px-4`}>Become the best version of yourself. Build unlimited habits and achieve more every day</Text>
+            <Text style={tw`text-4xl font-light text-white text-center mb-3`}>Upgrade to Premium</Text>
+            <Text style={tw`text-base text-white/80 text-center leading-6 px-2`}>Unlock unlimited potential and{'\n'}achieve more every day</Text>
           </Animated.View>
 
           {/* Plan Selection */}
           {packages.length > 0 && (
             <Animated.View entering={FadeInUp.delay(200)} style={tw`mb-8`}>
-              {packages.map((pkg) => {
+              {packages.map((pkg, index) => {
                 const isYearly = pkg.packageType === 'ANNUAL';
                 const isSelected = selectedPackage?.identifier === pkg.identifier;
                 const monthlyPrice = isYearly ? pkg.product.price / 12 : pkg.product.price;
 
                 return (
-                  <Pressable
-                    key={pkg.identifier}
-                    onPress={() => setSelectedPackage(pkg)}
-                    style={({ pressed }) => [tw`mb-3 rounded-2xl overflow-hidden border-2`, isSelected ? tw`border-stone-600` : tw`border-gray-200`, pressed && tw`opacity-80`]}
-                  >
-                    <View style={tw`p-5 bg-white`}>
+                  <Animated.View key={pkg.identifier} entering={FadeInDown.delay(index * 30).duration(300)}>
+                    <Pressable
+                      onPress={() => setSelectedPackage(pkg)}
+                      style={({ pressed }) => [
+                        tw`mb-3 rounded-2xl p-5 border-2 ${isSelected ? 'border-amber-400/60' : 'border-white/20'}`,
+                        { backgroundColor: isSelected ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255, 255, 255, 0.15)' },
+                        pressed && tw`opacity-80`,
+                      ]}
+                    >
                       <View style={tw`flex-row items-center justify-between mb-3`}>
                         <View style={tw`flex-row items-center flex-1`}>
-                          <Text style={tw`text-lg font-bold text-stone-900`}>{isYearly ? 'Yearly' : 'Monthly'}</Text>
+                          <Text style={tw`text-lg font-bold text-white`}>{isYearly ? 'Yearly' : 'Monthly'}</Text>
                           {isYearly && savingsPercentage > 0 && (
-                            <View style={tw`ml-3 px-2.5 py-1 rounded-full bg-jade-100`}>
-                              <Text style={tw`text-xs font-bold text-jade-700`}>Save {savingsPercentage}%</Text>
+                            <View style={tw`ml-3 px-2.5 py-1 rounded-full bg-emerald-500/30`}>
+                              <Text style={tw`text-xs font-bold text-emerald-300`}>Save {savingsPercentage}%</Text>
                             </View>
                           )}
                         </View>
 
-                        <View style={[tw`w-5.5 h-5.5 rounded-full items-center justify-center`, isSelected ? tw`bg-stone-600` : tw`bg-stone-200`]}>
-                          {isSelected && <Check size={14} color="#FFFFFF" strokeWidth={3} />}
+                        <View style={[tw`w-6 h-6 rounded-full items-center justify-center`, isSelected ? tw`bg-amber-500` : tw`bg-white/20`]}>
+                          {isSelected && <Check size={14} color="#ffffff" strokeWidth={3} />}
                         </View>
                       </View>
 
                       <View style={tw`flex-row items-baseline mb-1`}>
-                        <Text style={tw`text-2xl font-bold text-stone-900`}>{pkg.product.priceString}</Text>
-                        <Text style={tw`text-sm text-stone-600 ml-1.5`}>/ {isYearly ? 'year' : 'month'}</Text>
+                        <Text style={tw`text-3xl font-bold text-white`}>{pkg.product.priceString}</Text>
+                        <Text style={tw`text-sm text-white/70 ml-2`}>/ {isYearly ? 'year' : 'month'}</Text>
                       </View>
 
-                      {isYearly && <Text style={tw`text-sm text-stone-500`}>${monthlyPrice.toFixed(2)} per month</Text>}
+                      {isYearly && <Text style={tw`text-sm text-white/60`}>${monthlyPrice.toFixed(2)} per month</Text>}
 
                       {isYearly && (
-                        <View style={tw`mt-3 pt-3 border-t border-stone-100`}>
+                        <View style={tw`mt-3 pt-3 border-t border-white/20`}>
                           <View style={tw`flex-row items-center`}>
-                            <Crown size={14} color="#78716C" strokeWidth={2} style={tw`mr-1.5`} />
-                            <Text style={tw`text-xs font-medium text-stone-700`}>Includes 50 Streak Savers bonus</Text>
+                            <Crown size={14} color="#fbbf24" strokeWidth={2} style={tw`mr-2`} />
+                            <Text style={tw`text-xs font-medium text-white/90`}>Includes 50 Streak Savers bonus</Text>
                           </View>
                         </View>
                       )}
-                    </View>
-                  </Pressable>
+                    </Pressable>
+                  </Animated.View>
                 );
               })}
             </Animated.View>
@@ -284,27 +243,26 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
 
           {/* Features List */}
           <Animated.View entering={FadeInDown.delay(300)} style={tw`mb-8`}>
-            <Text style={tw`text-sm font-bold text-stone-900 mb-4 tracking-wide`}>INCLUDED IN {isYearlySelected ? 'YEARLY' : 'MONTHLY'}</Text>
+            <Text style={tw`text-sm font-bold text-white/90 mb-4 tracking-wide`}>INCLUDED IN {isYearlySelected ? 'YEARLY' : 'MONTHLY'}</Text>
 
-            <View style={tw`bg-white rounded-2xl overflow-hidden border border-gray-200`}>
-              {displayFeatures.map((feature, index) => (
-                <View key={index} style={[tw`p-4 flex-row items-start`, index !== displayFeatures.length - 1 && tw`border-b border-gray-100`]}>
-                  <LinearGradient colors={feature.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`w-10 h-10 rounded-xl items-center justify-center mr-3.5 mt-0.5`}>
-                    <feature.icon size={20} color="#FFFFFF" strokeWidth={2} />
-                  </LinearGradient>
+            <View style={tw`gap-3`}>
+              {displayFeatures.map((feature, index) => {
+                const Icon = feature.icon;
+                return (
+                  <Animated.View key={index} entering={FadeInDown.delay(index * 30).duration(300)}>
+                    <View style={tw`bg-white/15 border-2 border-white/20 rounded-2xl p-4 flex-row items-start`}>
+                      <View style={tw`w-10 h-10 rounded-xl bg-amber-500/30 items-center justify-center mr-4 mt-0.5`}>
+                        <Icon size={20} color="#fbbf24" strokeWidth={2} />
+                      </View>
 
-                  <View style={tw`flex-1`}>
-                    <Text style={tw`text-base font-semibold text-stone-900 mb-0.5`}>{feature.title}</Text>
-                    <Text style={tw`text-sm text-stone-600 leading-5`}>{feature.description}</Text>
-                  </View>
-
-                  <View style={tw`ml-2 mt-1`}>
-                    <View style={tw`w-5 h-5 rounded-full bg-jade-100 items-center justify-center`}>
-                      <Check size={12} color="#059669" strokeWidth={3} />
+                      <View style={tw`flex-1`}>
+                        <Text style={tw`text-base font-semibold text-white mb-0.5`}>{feature.title}</Text>
+                        <Text style={tw`text-sm text-white/70 leading-5`}>{feature.description}</Text>
+                      </View>
                     </View>
-                  </View>
-                </View>
-              ))}
+                  </Animated.View>
+                );
+              })}
             </View>
           </Animated.View>
 
@@ -313,29 +271,33 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
             <Pressable
               onPress={handleSubscribe}
               disabled={loading || !selectedPackage}
-              style={({ pressed }) => [tw`rounded-2xl overflow-hidden shadow-lg mb-4`, pressed && tw`opacity-90`, (loading || !selectedPackage) && tw`opacity-50`]}
+              style={({ pressed }) => [tw`rounded-2xl py-5 items-center justify-center mb-4 ${loading || !selectedPackage ? 'bg-white/20' : 'bg-white'}`, pressed && tw`opacity-80`]}
             >
-              <LinearGradient colors={['#78716C', '#57534E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`py-4.5 items-center justify-center`}>
-                {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={tw`text-white text-base font-bold tracking-wide`}>Start Premium</Text>}
-              </LinearGradient>
+              {loading ? <ActivityIndicator color="#7c3aed" /> : <Text style={tw`text-purple-600 text-lg font-bold`}>Start Premium</Text>}
             </Pressable>
           </Animated.View>
 
           {/* Trust Indicators */}
           <Animated.View entering={FadeInUp.delay(500)} style={tw`items-center mb-4`}>
-            <Text style={tw`text-xs text-stone-500 text-center leading-5`}>Cancel anytime • Secure payment</Text>
+            <Text style={tw`text-xs text-white/50 text-center leading-5`}>Cancel anytime • Secure payment</Text>
           </Animated.View>
 
           {/* Restore Link */}
           <Animated.View entering={FadeInUp.delay(600)} style={tw`items-center mb-4`}>
             <Pressable onPress={handleRestore} disabled={loading}>
-              <Text style={tw`text-sm text-stone-600 font-medium underline`}>Restore Purchases</Text>
+              <Text style={tw`text-sm text-white/80 font-medium underline`}>Restore Purchases</Text>
             </Pressable>
           </Animated.View>
         </ScrollView>
       </SafeAreaView>
-    </View>
+    </ImageBackground>
   );
 };
+
+const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+  },
+});
 
 export default PaywallScreen;
