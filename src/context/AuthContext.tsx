@@ -7,8 +7,9 @@ import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { RevenueCatService } from '@/services/RevenueCatService';
-import { PushTokenService } from '@/services/pushTokenService'; // ✅ Add this import
+import { PushTokenService } from '@/services/pushTokenService';
 import Logger from '@/utils/logger';
+import { OnboardingService } from '@/services/onboardingService';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -23,6 +24,9 @@ interface AuthContextType {
   signInWithApple: () => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  hasCompletedOnboarding: boolean;
+  completeOnboarding: () => Promise<void>;
+  checkOnboardingStatus: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,8 +36,80 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [username, setUsername] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
-  // ✅ Register device for push notifications when user logs in
+  // ============================================================================
+  // FETCH USERNAME & ONBOARDING STATUS
+  // ============================================================================
+
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase.from('profiles').select('username, has_completed_onboarding').eq('id', userId).maybeSingle();
+
+      if (error) {
+        Logger.error('Error fetching profile:', error);
+        setUsername(null);
+        setHasCompletedOnboarding(false);
+        return;
+      }
+
+      setUsername(data?.username || null);
+      setHasCompletedOnboarding(data?.has_completed_onboarding || false);
+
+      Logger.debug('✅ Profile loaded:', {
+        username: data?.username,
+        onboardingCompleted: data?.has_completed_onboarding,
+      });
+    } catch (error) {
+      Logger.error('Fetch profile error:', error);
+      setUsername(null);
+      setHasCompletedOnboarding(false);
+    }
+  };
+
+  // ============================================================================
+  // ONBOARDING FUNCTIONS
+  // ============================================================================
+
+  const checkOnboardingStatus = async () => {
+    if (!user) {
+      setHasCompletedOnboarding(false);
+      return;
+    }
+
+    try {
+      const completed = await OnboardingService.hasCompletedOnboarding(user.id);
+      setHasCompletedOnboarding(completed);
+      Logger.info('Onboarding status checked:', completed);
+    } catch (error) {
+      Logger.error('Error checking onboarding status:', error);
+      setHasCompletedOnboarding(false);
+    }
+  };
+
+  const completeOnboarding = async () => {
+    if (!user) {
+      Logger.warn('Cannot complete onboarding: no user');
+      return;
+    }
+
+    try {
+      const success = await OnboardingService.completeOnboarding(user.id);
+      if (success) {
+        setHasCompletedOnboarding(true);
+        Logger.info('✅ Onboarding completed successfully');
+      } else {
+        Logger.error('Failed to complete onboarding');
+      }
+    } catch (error) {
+      Logger.error('Error completing onboarding:', error);
+    }
+  };
+
+  // ============================================================================
+  // PUSH NOTIFICATIONS REGISTRATION
+  // ============================================================================
+
   useEffect(() => {
     if (user?.id) {
       PushTokenService.registerDevice(user.id)
@@ -50,20 +126,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [user?.id]);
 
+  // ============================================================================
+  // AUTH STATE INITIALIZATION & LISTENER
+  // ============================================================================
+
   useEffect(() => {
     // Initial session load
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+
       if (session?.user?.id) {
-        fetchUsername(session.user.id);
+        fetchUserProfile(session.user.id);
       } else {
         setUsername(null);
+        setHasCompletedOnboarding(false);
       }
+
       setLoading(false);
     });
 
-    // ✅ UN SEUL listener onAuthStateChange
+    // Listen for auth state changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -73,9 +156,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(session?.user ?? null);
 
       if (session?.user?.id) {
-        fetchUsername(session.user.id);
+        fetchUserProfile(session.user.id);
       } else {
         setUsername(null);
+        setHasCompletedOnboarding(false);
       }
     });
 
@@ -84,22 +168,64 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, []);
 
-  const fetchUsername = async (userId: string) => {
+  // ============================================================================
+  // SIGN UP
+  // ============================================================================
+
+  const signUp = async (email: string, password: string, username?: string) => {
     try {
-      const { data, error } = await supabase.from('profiles').select('username').eq('id', userId).maybeSingle();
+      setLoading(true);
 
-      if (error) {
-        Logger.error('Error fetching username:', error);
-        setUsername(null);
-        return;
-      }
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username: username || email.split('@')[0],
+          },
+        },
+      });
 
-      setUsername(data?.username || null);
-    } catch (error) {
-      Logger.error('Fetch username error:', error);
-      setUsername(null);
+      if (error) throw error;
+
+      Logger.debug('✅ User created, profile will be created by trigger');
+
+      Alert.alert('Success', 'Account created! Please check your email to verify your account.');
+    } catch (error: any) {
+      Logger.error('❌ SignUp error:', error);
+      Alert.alert('Error', error.message);
+    } finally {
+      setLoading(false);
     }
   };
+
+  // ============================================================================
+  // SIGN IN
+  // ============================================================================
+
+  const signIn = async (email: string, password: string) => {
+    try {
+      setLoading(true);
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      Logger.debug('✅ Sign in successful');
+    } catch (error: any) {
+      Logger.error('❌ SignIn error:', error);
+      Alert.alert('Error', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ============================================================================
+  // GOOGLE SIGN IN
+  // ============================================================================
 
   const signInWithGoogle = async () => {
     try {
@@ -133,16 +259,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               access_token,
               refresh_token,
             });
+
+            Logger.debug('✅ Google sign in successful');
           }
         }
       }
     } catch (error: any) {
-      Logger.error('Google Sign-In Error:', error);
+      Logger.error('❌ Google Sign-In Error:', error);
       Alert.alert('Sign-In Failed', error.message || 'Unable to sign in with Google');
     } finally {
       setLoading(false);
     }
   };
+
+  // ============================================================================
+  // APPLE SIGN IN
+  // ============================================================================
 
   const signInWithApple = async () => {
     try {
@@ -166,14 +298,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
             const username = fullName || data.user.email?.split('@')[0] || `User${data.user.id.slice(0, 8)}`;
 
-            // ✅ Prépare les données du profil
+            // Prepare profile data
             const profileData: any = {
               id: data.user.id,
               username: username,
               updated_at: new Date().toISOString(),
             };
 
-            // ✅ Ajoute l'email seulement s'il existe
+            // Add email only if it exists
             if (data.user.email) {
               profileData.email = data.user.email;
             }
@@ -183,17 +315,49 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (profileError) {
               Logger.error('Profile update error:', profileError);
             } else {
-              Logger.debug('✅ Profile created successfully');
+              Logger.debug('✅ Apple sign in - Profile created successfully');
             }
           }
         }
       } else {
-        // OAuth flow pour Android/Web (garde ton code existant)
-        // ...
+        // OAuth flow for Android/Web
+        const redirectUri = AuthSession.makeRedirectUri({
+          scheme: 'nuvoria',
+          path: 'auth',
+        });
+
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'apple',
+          options: {
+            redirectTo: redirectUri,
+            skipBrowserRedirect: true,
+          },
+        });
+
+        if (error) throw error;
+
+        if (data?.url) {
+          const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
+
+          if (result.type === 'success' && result.url) {
+            const params = new URLSearchParams(result.url.split('#')[1]);
+            const access_token = params.get('access_token');
+            const refresh_token = params.get('refresh_token');
+
+            if (access_token && refresh_token) {
+              await supabase.auth.setSession({
+                access_token,
+                refresh_token,
+              });
+
+              Logger.debug('✅ Apple sign in successful (OAuth)');
+            }
+          }
+        }
       }
     } catch (error: any) {
       if (error.code !== 'ERR_CANCELED') {
-        Logger.error('Apple Sign-In Error:', error);
+        Logger.error('❌ Apple Sign-In Error:', error);
         Alert.alert('Sign-In Failed', 'Unable to sign in with Apple');
       }
     } finally {
@@ -201,71 +365,40 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const signUp = async (email: string, password: string, username?: string) => {
-    try {
-      setLoading(true);
-
-      // ✅ Pas besoin de vérifier si le username existe - le trigger le gérera
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username: username || email.split('@')[0], // Envoyé dans raw_user_meta_data
-          },
-        },
-      });
-
-      if (error) throw error;
-
-      // ❌ NE PAS insérer manuellement dans profiles - le trigger le fait automatiquement
-
-      Logger.debug('✅ User created, profile created by trigger');
-
-      Alert.alert('Success', 'Account created! Please check your email to verify your account.');
-    } catch (error: any) {
-      Logger.error('❌ SignUp error:', error);
-      Alert.alert('Error', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const signIn = async (email: string, password: string) => {
-    try {
-      setLoading(true);
-
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-    } catch (error: any) {
-      Alert.alert('Error', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // ============================================================================
+  // SIGN OUT
+  // ============================================================================
 
   const signOut = async () => {
     try {
       setLoading(true);
 
-      // Timeout pour push token (3s max)
+      // Unregister push token with timeout
       if (user?.id) {
         await Promise.race([PushTokenService.unregisterDevice(user.id), new Promise((_, reject) => setTimeout(() => reject(new Error('Push token unregister timeout')), 3000))]).catch((error) => {
           Logger.error('⚠️ Push token unregister failed (continuing anyway):', error.message);
         });
       }
 
-      // Sign out Supabase
+      // Reset onboarding state
+      setHasCompletedOnboarding(false);
+
+      // Sign out from Supabase
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+
+      Logger.debug('✅ Sign out successful');
+    } catch (error: any) {
+      Logger.error('❌ Sign out error:', error);
+      Alert.alert('Error', error.message);
     } finally {
-      setLoading(false); // ✅ Toujours reset
+      setLoading(false);
     }
   };
+
+  // ============================================================================
+  // RESET PASSWORD
+  // ============================================================================
 
   const resetPassword = async (email: string) => {
     try {
@@ -278,12 +411,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (error) throw error;
 
       Alert.alert('Success', 'Password reset email sent! Please check your inbox.');
+
+      Logger.debug('✅ Password reset email sent');
     } catch (error: any) {
+      Logger.error('❌ Reset password error:', error);
       Alert.alert('Error', error.message);
     } finally {
       setLoading(false);
     }
   };
+
+  // ============================================================================
+  // PROVIDER
+  // ============================================================================
 
   return (
     <AuthContext.Provider
@@ -298,6 +438,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         signInWithApple,
         signOut,
         resetPassword,
+        hasCompletedOnboarding,
+        completeOnboarding,
+        checkOnboardingStatus,
       }}
     >
       {children}

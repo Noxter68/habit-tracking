@@ -1,6 +1,6 @@
 // src/screens/SettingsScreen.tsx
 import React, { JSX, useCallback, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Switch, SafeAreaView, StatusBar, ActivityIndicator, Linking, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Switch, SafeAreaView, StatusBar, ActivityIndicator, Linking, Alert, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import * as Notifications from 'expo-notifications';
@@ -12,10 +12,13 @@ import { useSubscription } from '@/context/SubscriptionContext';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/types';
-import { HolidayModeService, HolidayPeriod } from '@/services/holidayModeService';
+import { HolidayModeService } from '@/services/holidayModeService';
 import { NotificationPreferencesService } from '@/services/notificationPreferenceService';
 import { AppConfig } from '@/config/appConfig'; // ✅ NEW
 import Logger from '@/utils/logger';
+import { OnboardingService } from '@/services/onboardingService';
+import { ChevronRight } from 'lucide-react-native';
+import { HolidayPeriod } from '@/types/holiday.types';
 
 // ============================================================================
 // Types
@@ -272,7 +275,7 @@ const SettingsScreen: React.FC = () => {
 
   const [signingOut, setSigningOut] = useState(false);
 
-  const { signOut, loading, user } = useAuth();
+  const { signOut, loading, user, checkOnboardingStatus } = useAuth();
   const { isPremium } = useSubscription();
   const navigation = useNavigation<NavigationProp>();
 
@@ -297,6 +300,27 @@ const SettingsScreen: React.FC = () => {
       loadHolidayStatus();
     }, [loadHolidayStatus])
   );
+
+  const handleReviewOnboarding = async () => {
+    if (!user) return;
+
+    Alert.alert('Review Onboarding', 'Would you like to see the introduction tour again?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Yes, Show Me',
+        onPress: async () => {
+          // Temporarily reset to show onboarding
+          await OnboardingService.resetOnboarding(user.id);
+          await checkOnboardingStatus();
+
+          // Navigate to onboarding
+          navigation.navigate('Onboarding');
+
+          // Will be marked as complete again when they finish
+        },
+      },
+    ]);
+  };
 
   const loadNotificationPreferences = async () => {
     if (!user) return;
@@ -554,6 +578,20 @@ const SettingsScreen: React.FC = () => {
               onPress={() => Logger.debug('Help pressed')}
               isLast
             />
+
+            <View style={tw`mt-6`}>
+              <Text style={tw`text-sm font-bold text-stone-500 uppercase tracking-wider mb-3 px-4`}>Help</Text>
+
+              <Pressable onPress={handleReviewOnboarding} style={tw`bg-white px-4 py-4 flex-row items-center justify-between`}>
+                <View style={tw`flex-row items-center gap-3`}>
+                  <View style={tw`w-10 h-10 rounded-full bg-blue-100 items-center justify-center`}>
+                    <Text>📚</Text>
+                  </View>
+                  <Text style={tw`text-base font-semibold text-stone-800`}>Review Introduction Tour</Text>
+                </View>
+                <ChevronRight size={20} color="#9CA3AF" />
+              </Pressable>
+            </View>
           </SettingsSection>
 
           <Animated.View entering={FadeInDown.delay(500).duration(600).springify()} style={tw`mt-8 mb-6`}>
