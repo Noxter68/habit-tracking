@@ -17,8 +17,10 @@ import { NotificationPreferencesService } from '@/services/notificationPreferenc
 import { AppConfig } from '@/config/appConfig';
 import Logger from '@/utils/logger';
 import { OnboardingService } from '@/services/onboardingService';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight, Pencil } from 'lucide-react-native';
 import { HolidayPeriod } from '@/types/holiday.types';
+import { supabase } from '@/lib/supabase';
+import EditUsernameModal from '@/components/settings/EditUserModal';
 
 const APP_ICON = require('../../assets/icon/icon-v2.png');
 
@@ -46,7 +48,8 @@ type IconName =
   | 'credit-card'
   | 'beach-outline'
   | 'bug'
-  | 'diagnostic';
+  | 'diagnostic'
+  | 'create-outline';
 
 interface SettingsSectionProps {
   title: string;
@@ -142,6 +145,12 @@ const Icon: React.FC<IconProps> = ({ name, size = 22, color = '#9333EA' }) => {
         <Path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
       </Svg>
     ),
+    'create-outline': (
+      <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <Path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        <Path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      </Svg>
+    ),
   };
 
   return icons[name] || null;
@@ -154,56 +163,98 @@ const Icon: React.FC<IconProps> = ({ name, size = 22, color = '#9333EA' }) => {
 const ProfileHeader: React.FC = () => {
   const { user } = useAuth();
   const { isPremium } = useSubscription();
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [currentUsername, setCurrentUsername] = useState<string>('');
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchUsername();
+    }
+  }, [user?.id]);
+
+  const fetchUsername = async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data, error } = await supabase.from('profiles').select('username').eq('id', user.id).single();
+
+      if (!error && data) {
+        setCurrentUsername(data.username || getDisplayName());
+      }
+    } catch (error) {
+      Logger.error('Error fetching username:', error);
+    }
+  };
 
   const getInitials = () => {
-    const email = user?.email || 'User';
-    return email.substring(0, 2).toUpperCase();
+    const name = currentUsername || user?.email || 'User';
+    return name.substring(0, 2).toUpperCase();
   };
 
   const getDisplayName = () => {
-    return user?.email?.split('@')[0] || 'User';
+    return currentUsername || user?.email?.split('@')[0] || 'User';
+  };
+
+  const handleUsernameUpdate = (newUsername: string) => {
+    setCurrentUsername(newUsername);
   };
 
   return (
-    <Animated.View entering={FadeInDown.delay(100).duration(600).springify()} style={tw`mx-6 mb-6`}>
-      <View style={tw`bg-white rounded-3xl p-6 shadow-lg`}>
-        <View style={tw`flex-row items-center`}>
-          <LinearGradient
-            colors={isPremium ? ['#78716C', '#57534E'] : ['#9CA3AF', '#6B7280']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={tw`w-16 h-16 rounded-2xl items-center justify-center`}
+    <>
+      <Animated.View entering={FadeInDown.delay(100).duration(600).springify()} style={tw`mx-6 mb-6`}>
+        <View style={tw`bg-white rounded-3xl p-6 shadow-lg`}>
+          {/* Edit Button - Positioned top right */}
+          <TouchableOpacity
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setShowEditModal(true);
+            }}
+            style={tw`absolute top-4 right-4 bg-gray-100 rounded-full p-2 z-10`}
           >
-            <Text style={tw`text-white text-2xl font-extrabold`}>{getInitials()}</Text>
-          </LinearGradient>
+            <Pencil size={18} color="#6B7280" strokeWidth={2.5} />
+          </TouchableOpacity>
 
-          <View style={tw`flex-1 ml-4`}>
-            <View style={tw`flex-row items-center mb-1`}>
-              <Text style={tw`text-gray-800 font-bold text-lg`}>{getDisplayName()}</Text>
-              {isPremium && (
-                <View style={tw`ml-2`}>
-                  <Icon name="crown" size={18} color="#D4AF37" />
-                </View>
-              )}
-            </View>
+          <View style={tw`flex-row items-center pr-10`}>
+            <LinearGradient
+              colors={isPremium ? ['#78716C', '#57534E'] : ['#9CA3AF', '#6B7280']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={tw`w-16 h-16 rounded-2xl items-center justify-center`}
+            >
+              <Text style={tw`text-white text-2xl font-extrabold`}>{getInitials()}</Text>
+            </LinearGradient>
 
-            <Text style={tw`text-gray-500 text-sm mb-1`}>{user?.email || 'user@example.com'}</Text>
+            <View style={tw`flex-1 ml-4`}>
+              <View style={tw`flex-row items-center mb-1`}>
+                <Text style={tw`text-gray-800 font-bold text-lg`}>{getDisplayName()}</Text>
+                {isPremium && (
+                  <View style={tw`ml-2`}>
+                    <Icon name="crown" size={18} color="#D4AF37" />
+                  </View>
+                )}
+              </View>
 
-            <View style={tw`mt-1`}>
-              {isPremium ? (
-                <View style={tw`px-2.5 py-1 bg-stone-100 rounded-lg self-start`}>
-                  <Text style={tw`text-stone-700 text-xs font-bold`}>Premium Active</Text>
-                </View>
-              ) : (
-                <View style={tw`px-2.5 py-1 bg-gray-100 rounded-lg self-start`}>
-                  <Text style={tw`text-gray-600 text-xs font-bold`}>Free Plan</Text>
-                </View>
-              )}
+              <Text style={tw`text-gray-500 text-sm mb-1`}>{user?.email || 'user@example.com'}</Text>
+
+              <View style={tw`mt-1`}>
+                {isPremium ? (
+                  <View style={tw`px-2.5 py-1 bg-stone-100 rounded-lg self-start`}>
+                    <Text style={tw`text-stone-700 text-xs font-bold`}>Premium Active</Text>
+                  </View>
+                ) : (
+                  <View style={tw`px-2.5 py-1 bg-gray-100 rounded-lg self-start`}>
+                    <Text style={tw`text-gray-600 text-xs font-bold`}>Free Plan</Text>
+                  </View>
+                )}
+              </View>
             </View>
           </View>
         </View>
-      </View>
-    </Animated.View>
+      </Animated.View>
+
+      {/* Edit Username Modal */}
+      <EditUsernameModal visible={showEditModal} currentUsername={currentUsername} userId={user?.id || ''} onClose={() => setShowEditModal(false)} onSuccess={handleUsernameUpdate} />
+    </>
   );
 };
 
@@ -578,21 +629,21 @@ const SettingsScreen: React.FC = () => {
               onPress={() => Logger.debug('Help pressed')}
               isLast
             />
-
-            <View style={tw`mt-6`}>
-              <Text style={tw`text-sm font-bold text-stone-500 uppercase tracking-wider mb-3 px-4`}>Help</Text>
-
-              <Pressable onPress={handleReviewOnboarding} style={tw`bg-white px-4 py-4 flex-row items-center justify-between`}>
-                <View style={tw`flex-row items-center gap-3`}>
-                  <View style={tw`w-10 h-10 rounded-full bg-blue-100 items-center justify-center`}>
-                    <Text>📚</Text>
-                  </View>
-                  <Text style={tw`text-base font-semibold text-stone-800`}>Review Introduction Tour</Text>
-                </View>
-                <ChevronRight size={20} color="#9CA3AF" />
-              </Pressable>
-            </View>
           </SettingsSection>
+
+          <View style={tw`mt-6`}>
+            <Text style={tw`text-sm font-bold text-stone-500 uppercase tracking-wider mb-3 px-1`}>Help</Text>
+
+            <Pressable onPress={handleReviewOnboarding} style={tw`bg-white rounded-2xl px-4 py-4 flex-row items-center justify-between shadow-md`}>
+              <View style={tw`flex-row items-center gap-3`}>
+                <View style={tw`w-10 h-10 rounded-full bg-blue-100 items-center justify-center`}>
+                  <Text>📚</Text>
+                </View>
+                <Text style={tw`text-base font-semibold text-stone-800`}>Review Introduction Tour</Text>
+              </View>
+              <ChevronRight size={20} color="#9CA3AF" />
+            </Pressable>
+          </View>
 
           <Animated.View entering={FadeInDown.delay(500).duration(600).springify()} style={tw`mt-8 mb-6`}>
             <TouchableOpacity activeOpacity={0.8} disabled={signingOut} onPress={handleSignOut}>
