@@ -1,7 +1,7 @@
 // src/components/onboarding/SaverStep.tsx
 import React from 'react';
 import { View, Text } from 'react-native';
-import { Shield, Zap, Award } from 'lucide-react-native';
+import { Shield, Zap, Gift } from 'lucide-react-native';
 import tw from '../../lib/tailwind';
 
 interface FeatureItemProps {
@@ -49,7 +49,7 @@ const SaverStep: React.FC<SaverStepProps> = ({ gradient }) => {
       >
         <FeatureItem icon={<Shield size={20} color="white" strokeWidth={2} />} title="Protect Your Streak" desc="Use savers when you miss a day" />
         <FeatureItem icon={<Zap size={20} color="white" strokeWidth={2} />} title="Instant Restore" desc="Get back on track immediately" />
-        <FeatureItem icon={<Award size={20} color="white" strokeWidth={2} />} title="Earn Through Progress" desc="Unlock savers as you level up" />
+        <FeatureItem icon={<Gift size={20} color="white" strokeWidth={2} />} title="Welcome Gift" desc="You earn 3 Streak Savers to get started" />
       </View>
     </View>
   );

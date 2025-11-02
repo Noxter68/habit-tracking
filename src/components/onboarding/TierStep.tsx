@@ -75,9 +75,9 @@ const TierStep: React.FC<TierStepProps> = ({ gradient }) => {
 
       {/* Tier Progression */}
       <View style={tw`w-full gap-2.5`}>
-        <TierCard gemSource={require('../../../assets/interface/gems/crystal-gem.png')} name="Crystal" streak="0-29 days" color="#60a5fa" />
-        <TierCard gemSource={require('../../../assets/interface/gems/ruby-gem.png')} name="Ruby" streak="30-99 days" color="#ef4444" />
-        <TierCard gemSource={require('../../../assets/interface/gems/amethyst-gem.png')} name="Amethyst" streak="100+ days" color="#8b5cf6" special />
+        <TierCard gemSource={require('../../../assets/interface/gems/crystal-gem.png')} name="Crystal" streak="0-49 days" color="#60a5fa" />
+        <TierCard gemSource={require('../../../assets/interface/gems/ruby-gem.png')} name="Ruby" streak="50-149 days" color="#ef4444" />
+        <TierCard gemSource={require('../../../assets/interface/gems/amethyst-gem.png')} name="Amethyst" streak="150+ days" color="#8b5cf6" special />
       </View>
     </View>
   );

@@ -1,11 +1,13 @@
 // src/components/habits/HabitCard.tsx
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, Pressable, ImageBackground, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withSpring, withSequence, withTiming } from 'react-native-reanimated';
 import tw from '@/lib/tailwind';
-import { HabitProgressionService, HabitTier } from '@/services/habitProgressionService';
+import { HabitProgressionService } from '@/services/habitProgressionService';
 import { tierThemes } from '@/utils/tierTheme';
+import { supabase } from '@/lib/supabase';
+import Logger from '@/utils/logger';
 
 import { Habit, DailyTaskProgress } from '@/types';
 import { getTodayString } from '@/utils/dateHelpers';
@@ -23,6 +25,9 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onToggleDay, onToggleTask,
   const glowOpacity = useSharedValue(0);
   const progressAnimation = useSharedValue(0);
   const completeStateScale = useSharedValue(1);
+
+  // ✅ State pour l'XP réel
+  const [todayXP, setTodayXP] = useState<number>(0);
 
   // Get today's progress
   const today = useMemo(() => getTodayString(), []);
@@ -58,12 +63,33 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onToggleDay, onToggleTask,
   };
 
   const multiplier = tier.multiplier;
-  const currentXP = useMemo(() => {
-    const baseXP = totalTasks > 0 ? completedTasksCount * 10 : isCompleted ? 20 : 0;
-    const streakBonus = habit.currentStreak > 7 ? 10 : habit.currentStreak > 3 ? 5 : 0;
-    const totalXP = (baseXP + streakBonus) * multiplier;
-    return totalXP;
-  }, [completedTasksCount, totalTasks, isCompleted, habit.currentStreak, multiplier]);
+
+  // ✅ FETCH REAL XP from task_completions
+  useEffect(() => {
+    const fetchTodayXP = async () => {
+      if (!habit?.id) {
+        setTodayXP(0);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase.from('task_completions').select('xp_earned').eq('habit_id', habit.id).eq('date', today).maybeSingle();
+
+        if (error) {
+          Logger.debug('No XP data for today (normal if no tasks completed)');
+          setTodayXP(0);
+          return;
+        }
+
+        setTodayXP(data?.xp_earned || 0);
+      } catch (err) {
+        Logger.error('Exception fetching XP:', err);
+        setTodayXP(0);
+      }
+    };
+
+    fetchTodayXP();
+  }, [habit?.id, today, completedTasksCount]); // Re-fetch when tasks change
 
   // Animations
   useEffect(() => {
@@ -116,16 +142,7 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onToggleDay, onToggleTask,
     <Animated.View entering={FadeIn.delay(index * 50)} style={animatedCardStyle}>
       <Pressable onPress={handlePress}>
         <ImageBackground source={theme.texture} style={tw`rounded-2xl overflow-hidden`} imageStyle={tw`rounded-2xl opacity-70`} resizeMode="cover">
-          <LinearGradient
-            colors={[
-              theme.gradient[0] + 'e6', // Slightly more opaque
-              theme.gradient[1] + 'dd',
-              theme.gradient[2] + 'cc',
-            ]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={tw`p-4`}
-          >
+          <LinearGradient colors={[theme.gradient[0] + 'e6', theme.gradient[1] + 'dd', theme.gradient[2] + 'cc']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`p-4`}>
             {/* Gem Icon - Absolute Position Top Right */}
             <View style={tw`absolute top-3 right-3 z-10`}>
               <Image source={getGemIcon()} style={tw`w-12 h-12`} resizeMode="contain" />
@@ -146,10 +163,10 @@ const HabitCard: React.FC<HabitCardProps> = ({ habit, onToggleDay, onToggleTask,
                 <Text style={tw`text-sm text-white/80 font-medium`}>day streak</Text>
               </View>
 
-              {/* XP if earned */}
-              {currentXP > 0 && isCompleted && (
+              {/* ✅ Afficher l'XP réel */}
+              {todayXP > 0 && (
                 <View style={tw`mt-1`}>
-                  <Text style={tw`text-xs text-white/90 font-bold`}>+{currentXP} XP earned</Text>
+                  <Text style={tw`text-xs text-white/90 font-bold`}>+{todayXP} XP earned today</Text>
                 </View>
               )}
             </View>

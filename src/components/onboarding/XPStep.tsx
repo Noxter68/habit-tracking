@@ -55,10 +55,10 @@ const XPStep: React.FC<XPStepProps> = ({ gradient }) => {
 
       {/* XP Examples */}
       <View style={tw`w-full gap-2.5`}>
-        <XPCard title="Complete a task" xp="+3 XP" color={gradient[0]} />
-        <XPCard title="7-day streak" xp="+5 XP" color={gradient[1]} />
-        <XPCard title="30-day streak" xp="+20 XP" color={gradient[2]} />
-        <XPCard title="Perfect day" xp="+50 XP" color="#fbbf24" special />
+        <XPCard title="Complete your 1st task" xp="+3 XP" color={gradient[0]} />
+        <XPCard title="Complete your 2nd task" xp="+7 XP" color={gradient[1]} />
+        <XPCard title="Complete your 3rd task" xp="+12 XP" color={gradient[2]} />
+        <XPCard title="Perfect day (all tasks done)" xp="+20 XP" color="#fbbf24" special />
       </View>
     </View>
   );
