@@ -1,6 +1,6 @@
 // src/screens/SettingsScreen.tsx
 import React, { JSX, useCallback, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Switch, SafeAreaView, StatusBar, ActivityIndicator, Linking, Alert, Pressable } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Switch, SafeAreaView, StatusBar, ActivityIndicator, Linking, Alert, Pressable, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import * as Notifications from 'expo-notifications';
@@ -14,11 +14,13 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/types';
 import { HolidayModeService } from '@/services/holidayModeService';
 import { NotificationPreferencesService } from '@/services/notificationPreferenceService';
-import { AppConfig } from '@/config/appConfig'; // ✅ NEW
+import { AppConfig } from '@/config/appConfig';
 import Logger from '@/utils/logger';
 import { OnboardingService } from '@/services/onboardingService';
 import { ChevronRight } from 'lucide-react-native';
 import { HolidayPeriod } from '@/types/holiday.types';
+
+const APP_ICON = require('../../assets/icon/icon-v2.png');
 
 // ============================================================================
 // Types
@@ -43,8 +45,8 @@ type IconName =
   | 'sparkles'
   | 'credit-card'
   | 'beach-outline'
-  | 'bug' // ✅ NEW
-  | 'diagnostic'; // ✅ NEW
+  | 'bug'
+  | 'diagnostic';
 
 interface SettingsSectionProps {
   title: string;
@@ -128,7 +130,6 @@ const Icon: React.FC<IconProps> = ({ name, size = 22, color = '#9333EA' }) => {
         <Path d="M12 3L4 9h16l-8-6zm-8 8v10h16V11H4zm8 8c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
       </Svg>
     ),
-    // ✅ NEW DEBUG ICONS
     bug: (
       <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
         <Path d="M12 2v3m0 14v3M4 7h3m10 0h3M4 17h3m10 0h3M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" stroke={color} strokeWidth={2} strokeLinecap="round" />
@@ -309,14 +310,9 @@ const SettingsScreen: React.FC = () => {
       {
         text: 'Yes, Show Me',
         onPress: async () => {
-          // Temporarily reset to show onboarding
           await OnboardingService.resetOnboarding(user.id);
           await checkOnboardingStatus();
-
-          // Navigate to onboarding
           navigation.navigate('Onboarding');
-
-          // Will be marked as complete again when they finish
         },
       },
     ]);
@@ -439,6 +435,11 @@ const SettingsScreen: React.FC = () => {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`pb-24`}>
         <Animated.View entering={FadeInDown.duration(600).springify()} style={tw`px-6 pt-15 pb-8`}>
           <View style={tw`items-center`}>
+            {/* Icône de l'app */}
+            <View style={tw`mb-4`}>
+              <Image source={APP_ICON} style={{ width: 120, height: 120, borderRadius: 20 }} resizeMode="contain" />
+            </View>
+
             <View style={tw`bg-stone-100 px-5 py-2 rounded-2xl mb-3`}>
               <Text style={tw`text-xs font-bold text-stone-600 tracking-widest`}>PREFERENCES</Text>
             </View>
@@ -539,7 +540,6 @@ const SettingsScreen: React.FC = () => {
             />
           </SettingsSection>
 
-          {/* ✅ NEW DEBUG SECTION - Only visible when debug mode is enabled */}
           {AppConfig.debug.showDebugScreen && (
             <SettingsSection title="Developer Tools" delay={450} gradient={['#F59E0B', '#D97706']}>
               <SettingsItem
@@ -603,7 +603,6 @@ const SettingsScreen: React.FC = () => {
                   ) : (
                     <>
                       <Icon name="log-out-outline" size={22} color="#FFFFFF" />
-
                       <Text style={tw`ml-2.5 text-white font-bold text-base tracking-wide`}>Sign Out</Text>
                     </>
                   )}

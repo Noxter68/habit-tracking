@@ -2,7 +2,7 @@
 // Main dashboard screen with habit tracking, holiday mode, and streak savers
 
 import React, { useCallback, useRef, useEffect, useState, useMemo } from 'react';
-import { ScrollView, RefreshControl, View, Text, ActivityIndicator, Pressable, Alert, StatusBar, Image } from 'react-native';
+import { ScrollView, RefreshControl, View, Text, ActivityIndicator, Pressable, Alert, StatusBar, Image, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInUp } from 'react-native-reanimated';
@@ -24,10 +24,11 @@ import { useHabits } from '../context/HabitContext';
 import { useStats } from '../context/StatsContext';
 import { useLevelUp } from '@/context/LevelUpContext';
 import { useSubscription } from '@/context/SubscriptionContext';
-import { HolidayModeService, HolidayPeriod } from '@/services/holidayModeService';
+import { HolidayModeService } from '@/services/holidayModeService';
 import { getAchievementByLevel } from '@/utils/achievements';
 import { HapticFeedback } from '@/utils/haptics';
 import Logger from '@/utils/logger';
+import { HolidayPeriod } from '@/types/holiday.types';
 
 // ============================================================================
 // Main Component
@@ -288,11 +289,13 @@ const Dashboard: React.FC = () => {
 
   if (isInitialLoad && (habitsLoading || statsLoading || holidayLoading)) {
     return (
-      <SafeAreaView style={tw`flex-1 bg-sand`}>
-        <View style={tw`flex-1 items-center justify-center`}>
-          <ActivityIndicator size="large" color="#3b82f6" />
-        </View>
-      </SafeAreaView>
+      <ImageBackground source={require('../../assets/interface/textures/texture-white.png')} style={tw`flex-1`} imageStyle={{ opacity: 0.15 }}>
+        <SafeAreaView style={tw`flex-1 bg-transparent`}>
+          <View style={tw`flex-1 items-center justify-center`}>
+            <ActivityIndicator size="large" color="#3b82f6" />
+          </View>
+        </SafeAreaView>
+      </ImageBackground>
     );
   }
 
@@ -301,182 +304,184 @@ const Dashboard: React.FC = () => {
   // ============================================================================
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-sand mt-6`} edges={['top']}>
-      <StatusBar barStyle="dark-content" />
+    <ImageBackground source={require('../../assets/interface/textures/texture-white.png')} style={tw`flex-1`} imageStyle={{ opacity: 0.2 }} resizeMode="repeat">
+      <SafeAreaView style={tw`flex-1 bg-transparent mt-6`} edges={['top']}>
+        <StatusBar barStyle="dark-content" />
 
-      <ScrollView
-        style={tw`flex-1 px-5`}
-        refreshControl={<RefreshControl refreshing={false} onRefresh={handleManualRefresh} tintColor="#3b82f6" />}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={tw`pb-28`}
-      >
-        {/* Debug: Level Up Test */}
-        <DebugButton onPress={handleTestLevelUp} label={`Test Level ${testLevel} → ${testLevel + 1}`} icon={Zap} variant="secondary" />
+        <ScrollView
+          style={tw`flex-1 px-5`}
+          refreshControl={<RefreshControl refreshing={false} onRefresh={handleManualRefresh} tintColor="#3b82f6" />}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={tw`pb-28`}
+        >
+          {/* Debug: Level Up Test */}
+          <DebugButton onPress={handleTestLevelUp} label={`Test Level ${testLevel} → ${testLevel + 1}`} icon={Zap} variant="secondary" />
 
-        {/* Header with stats & progress */}
-        <DashboardHeader
-          userTitle={stats?.title ?? 'Novice'}
-          userLevel={stats?.level ?? 1}
-          totalStreak={stats?.totalStreak ?? 0}
-          activeHabits={stats?.activeHabits ?? 0}
-          completedTasksToday={stats?.completedTasksToday ?? 0}
-          totalTasksToday={stats?.totalTasksToday ?? 0}
-          currentAchievement={stats?.currentAchievement}
-          currentLevelXP={stats?.currentLevelXP ?? 0}
-          xpForNextLevel={stats?.xpForNextLevel ?? 100}
-          levelProgress={stats?.levelProgress ?? 0}
-          onStatsRefresh={handleStatsRefresh}
-          totalXP={stats?.totalXP ?? 0}
-        />
+          {/* Header with stats & progress */}
+          <DashboardHeader
+            userTitle={stats?.title ?? 'Novice'}
+            userLevel={stats?.level ?? 1}
+            totalStreak={stats?.totalStreak ?? 0}
+            activeHabits={stats?.activeHabits ?? 0}
+            completedTasksToday={stats?.completedTasksToday ?? 0}
+            totalTasksToday={stats?.totalTasksToday ?? 0}
+            currentAchievement={stats?.currentAchievement}
+            currentLevelXP={stats?.currentLevelXP ?? 0}
+            xpForNextLevel={stats?.xpForNextLevel ?? 100}
+            levelProgress={stats?.levelProgress ?? 0}
+            onStatsRefresh={handleStatsRefresh}
+            totalXP={stats?.totalXP ?? 0}
+          />
 
-        {/* Streak Saver Badge (only when not on full holiday) */}
-        {!showPartialPauseMode && !hasTasksPaused && !showFullHolidayMode && (
-          <>
-            <StreakSaverBadge
-              onShopPress={() => {
-                HapticFeedback.light();
-                setShowShop(true);
-              }}
-            />
-            <StreakSaverShopModal
-              visible={showShop}
-              onClose={() => {
-                HapticFeedback.light();
-                setShowShop(false);
-              }}
-              onPurchaseSuccess={() => setShowShop(false)}
-            />
-          </>
-        )}
+          {/* Streak Saver Badge (only when not on full holiday) */}
+          {!showPartialPauseMode && !hasTasksPaused && !showFullHolidayMode && (
+            <>
+              <StreakSaverBadge
+                onShopPress={() => {
+                  HapticFeedback.light();
+                  setShowShop(true);
+                }}
+              />
+              <StreakSaverShopModal
+                visible={showShop}
+                onClose={() => {
+                  HapticFeedback.light();
+                  setShowShop(false);
+                }}
+                onPurchaseSuccess={() => setShowShop(false)}
+              />
+            </>
+          )}
 
-        {/* Partial Holiday Mode Banner */}
-        {(showPartialPauseMode || hasTasksPaused) && !showFullHolidayMode && (
-          <Animated.View entering={FadeInUp.delay(100)} style={tw`mt-4 mb-2`}>
-            <LinearGradient
-              colors={['rgba(59, 130, 246, 0.08)', 'rgba(37, 99, 235, 0.05)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={[tw`mx-1 px-4 py-3.5 rounded-2xl flex-row items-center gap-3`, { borderWidth: 1, borderColor: 'rgba(59, 130, 246, 0.2)' }]}
-            >
-              <View style={tw`w-9 h-9 bg-blue-100 rounded-xl items-center justify-center`}>
-                <PauseCircle size={18} color="#2563EB" strokeWidth={2.5} />
+          {/* Partial Holiday Mode Banner */}
+          {(showPartialPauseMode || hasTasksPaused) && !showFullHolidayMode && (
+            <Animated.View entering={FadeInUp.delay(100)} style={tw`mt-4 mb-2`}>
+              <LinearGradient
+                colors={['rgba(59, 130, 246, 0.08)', 'rgba(37, 99, 235, 0.05)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={[tw`mx-1 px-4 py-3.5 rounded-2xl flex-row items-center gap-3`, { borderWidth: 1, borderColor: 'rgba(59, 130, 246, 0.2)' }]}
+              >
+                <View style={tw`w-9 h-9 bg-blue-100 rounded-xl items-center justify-center`}>
+                  <PauseCircle size={18} color="#2563EB" strokeWidth={2.5} />
+                </View>
+                <View style={tw`flex-1`}>
+                  <Text style={tw`text-sm font-bold text-blue-700`}>Holiday Mode Active</Text>
+                  <Text style={tw`text-xs text-blue-600 mt-0.5`}>
+                    {pausedHabitsCount > 0 && `${pausedHabitsCount} ${pausedHabitsCount === 1 ? 'habit' : 'habits'} paused`}
+                    {pausedHabitsCount > 0 && hasTasksPaused && ' • '}
+                    {hasTasksPaused && `${frozenTasksMap.size} ${frozenTasksMap.size === 1 ? 'habit has' : 'habits have'} paused tasks`}
+                  </Text>
+                </View>
+              </LinearGradient>
+            </Animated.View>
+          )}
+
+          {/* Habits Section */}
+          <Animated.View entering={FadeInUp.delay(200)} style={tw`mt-6`}>
+            {/* Free user habit limit indicator */}
+            {!isPremium && habitCount > 0 && (
+              <View
+                style={[
+                  tw`mx-1 mb-3 px-4 py-3 rounded-2xl flex-row items-center justify-center`,
+                  {
+                    backgroundColor: isHabitLimitReached ? 'rgba(251, 146, 60, 0.08)' : 'rgba(59, 130, 246, 0.08)',
+                    borderWidth: 1,
+                    borderColor: isHabitLimitReached ? 'rgba(251, 146, 60, 0.2)' : 'rgba(59, 130, 246, 0.2)',
+                  },
+                ]}
+              >
+                {isHabitLimitReached ? (
+                  <>
+                    <Lock size={14} color="#EA580C" strokeWidth={2.5} style={tw`mr-2`} />
+                    <Text style={tw`text-xs font-bold text-orange-700 tracking-wide flex-shrink`}>Habit limit reached • Upgrade for unlimited</Text>
+                  </>
+                ) : (
+                  <Text style={tw`text-xs font-bold text-blue-700 tracking-wide`}>
+                    {habitCount} of {maxHabits} free habits
+                  </Text>
+                )}
               </View>
-              <View style={tw`flex-1`}>
-                <Text style={tw`text-sm font-bold text-blue-700`}>Holiday Mode Active</Text>
-                <Text style={tw`text-xs text-blue-600 mt-0.5`}>
-                  {pausedHabitsCount > 0 && `${pausedHabitsCount} ${pausedHabitsCount === 1 ? 'habit' : 'habits'} paused`}
-                  {pausedHabitsCount > 0 && hasTasksPaused && ' • '}
-                  {hasTasksPaused && `${frozenTasksMap.size} ${frozenTasksMap.size === 1 ? 'habit has' : 'habits have'} paused tasks`}
+            )}
+
+            {/* Section Header */}
+            <View style={tw`flex-row items-center justify-between mb-4`}>
+              <View>
+                <Text style={tw`text-xl font-bold text-stone-700`}>{showFullHolidayMode ? 'On Holiday' : activeHabits.length > 0 ? "Today's Habits" : 'Get Started'}</Text>
+                <Text style={tw`text-sm text-stone-500 mt-0.5`}>
+                  {showFullHolidayMode
+                    ? 'All habits are paused'
+                    : activeHabits.length > 0
+                    ? `${stats?.completedTasksToday ?? 0} of ${stats?.totalTasksToday ?? 0} tasks done`
+                    : 'Start building your first habit'}
                 </Text>
               </View>
-            </LinearGradient>
-          </Animated.View>
-        )}
 
-        {/* Habits Section */}
-        <Animated.View entering={FadeInUp.delay(200)} style={tw`mt-6`}>
-          {/* Free user habit limit indicator */}
-          {!isPremium && habitCount > 0 && (
-            <View
-              style={[
-                tw`mx-1 mb-3 px-4 py-3 rounded-2xl flex-row items-center justify-center`,
-                {
-                  backgroundColor: isHabitLimitReached ? 'rgba(251, 146, 60, 0.08)' : 'rgba(59, 130, 246, 0.08)',
-                  borderWidth: 1,
-                  borderColor: isHabitLimitReached ? 'rgba(251, 146, 60, 0.2)' : 'rgba(59, 130, 246, 0.2)',
-                },
-              ]}
-            >
-              {isHabitLimitReached ? (
-                <>
-                  <Lock size={14} color="#EA580C" strokeWidth={2.5} style={tw`mr-2`} />
-                  <Text style={tw`text-xs font-bold text-orange-700 tracking-wide flex-shrink`}>Habit limit reached • Upgrade for unlimited</Text>
-                </>
-              ) : (
-                <Text style={tw`text-xs font-bold text-blue-700 tracking-wide`}>
-                  {habitCount} of {maxHabits} free habits
-                </Text>
+              {/* Add Habit Button */}
+              {habits.length > 0 && !showFullHolidayMode && (
+                <Pressable onPress={handleCreateHabit} style={({ pressed }) => [tw`w-10 h-10 rounded-xl items-center justify-center`, pressed && tw`scale-95`]}>
+                  <Image source={require('../../assets/interface/add-habit-button.png')} style={{ width: 40, height: 40 }} resizeMode="contain" />
+                </Pressable>
               )}
             </View>
-          )}
 
-          {/* Section Header */}
-          <View style={tw`flex-row items-center justify-between mb-4`}>
-            <View>
-              <Text style={tw`text-xl font-bold text-stone-700`}>{showFullHolidayMode ? 'On Holiday' : activeHabits.length > 0 ? "Today's Habits" : 'Get Started'}</Text>
-              <Text style={tw`text-sm text-stone-500 mt-0.5`}>
-                {showFullHolidayMode
-                  ? 'All habits are paused'
-                  : activeHabits.length > 0
-                  ? `${stats?.completedTasksToday ?? 0} of ${stats?.totalTasksToday ?? 0} tasks done`
-                  : 'Start building your first habit'}
-              </Text>
-            </View>
-
-            {/* Add Habit Button */}
-            {habits.length > 0 && !showFullHolidayMode && (
-              <Pressable onPress={handleCreateHabit} style={({ pressed }) => [tw`w-10 h-10 rounded-xl items-center justify-center`, pressed && tw`scale-95`]}>
-                <Image source={require('../../assets/interface/add-habit-button.png')} style={{ width: 40, height: 40 }} resizeMode="contain" />
-              </Pressable>
-            )}
-          </View>
-
-          {/* Full Holiday Mode Display */}
-          {showFullHolidayMode ? (
-            activeHoliday ? (
-              <HolidayModeDisplay endDate={activeHoliday.endDate} reason={activeHoliday.reason} onEndEarly={handleEndHoliday} />
-            ) : (
-              <View style={tw`px-5`}>
-                <LinearGradient colors={['rgba(59, 130, 246, 0.08)', 'rgba(37, 99, 235, 0.05)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`rounded-3xl p-8 border border-blue-200/20`}>
-                  <View style={tw`items-center`}>
-                    <View style={tw`w-20 h-20 bg-blue-100 rounded-2xl items-center justify-center mb-5`}>
-                      <PauseCircle size={40} color="#2563EB" strokeWidth={2} />
+            {/* Full Holiday Mode Display */}
+            {showFullHolidayMode ? (
+              activeHoliday ? (
+                <HolidayModeDisplay endDate={activeHoliday.endDate} reason={activeHoliday.reason} onEndEarly={handleEndHoliday} />
+              ) : (
+                <View style={tw`px-5`}>
+                  <LinearGradient colors={['rgba(59, 130, 246, 0.08)', 'rgba(37, 99, 235, 0.05)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`rounded-3xl p-8 border border-blue-200/20`}>
+                    <View style={tw`items-center`}>
+                      <View style={tw`w-20 h-20 bg-blue-100 rounded-2xl items-center justify-center mb-5`}>
+                        <PauseCircle size={40} color="#2563EB" strokeWidth={2} />
+                      </View>
+                      <Text style={tw`text-2xl font-bold text-blue-800 mb-2`}>All Habits Paused</Text>
+                      <Text style={tw`text-sm text-blue-600 text-center px-4`}>All your habits are currently paused. They'll automatically resume when their pause periods end.</Text>
                     </View>
-                    <Text style={tw`text-2xl font-bold text-blue-800 mb-2`}>All Habits Paused</Text>
-                    <Text style={tw`text-sm text-blue-600 text-center px-4`}>All your habits are currently paused. They'll automatically resume when their pause periods end.</Text>
-                  </View>
-                </LinearGradient>
+                  </LinearGradient>
+                </View>
+              )
+            ) : activeHabits.length > 0 ? (
+              /* Active Habits List */
+              <View style={tw`gap-3`}>
+                {activeHabits.map((habit, index) => (
+                  <SwipeableHabitCard
+                    key={habit.id}
+                    habit={habit}
+                    onToggleDay={handleDayToggle}
+                    onToggleTask={handleTaskToggle}
+                    onDelete={handleDeleteHabit}
+                    onPress={() => handleHabitPress(habit.id)}
+                    index={index}
+                  />
+                ))}
               </View>
-            )
-          ) : activeHabits.length > 0 ? (
-            /* Active Habits List */
-            <View style={tw`gap-3`}>
-              {activeHabits.map((habit, index) => (
-                <SwipeableHabitCard
-                  key={habit.id}
-                  habit={habit}
-                  onToggleDay={handleDayToggle}
-                  onToggleTask={handleTaskToggle}
-                  onDelete={handleDeleteHabit}
-                  onPress={() => handleHabitPress(habit.id)}
-                  index={index}
-                />
-              ))}
-            </View>
-          ) : (
-            /* Empty State - Create First Habit */
-            <View style={tw`px-5`}>
-              <Pressable onPress={handleCreateHabit} style={({ pressed }) => [pressed && tw`scale-[0.98]`]}>
-                <LinearGradient colors={['rgba(243, 244, 246, 0.5)', 'rgba(229, 231, 235, 0.3)']} style={tw`rounded-2xl p-8 items-center border border-stone-200`}>
-                  <View style={tw`w-16 h-16 mb-4`}>
-                    <LinearGradient colors={['#9CA3AF', '#6B7280']} style={tw`w-full h-full rounded-2xl items-center justify-center shadow-lg`}>
-                      <Plus size={28} color="#ffffff" strokeWidth={2.5} />
-                    </LinearGradient>
-                  </View>
+            ) : (
+              /* Empty State - Create First Habit */
+              <View style={tw`px-5`}>
+                <Pressable onPress={handleCreateHabit} style={({ pressed }) => [pressed && tw`scale-[0.98]`]}>
+                  <LinearGradient colors={['rgba(243, 244, 246, 0.5)', 'rgba(229, 231, 235, 0.3)']} style={tw`rounded-2xl p-8 items-center border border-stone-200`}>
+                    <View style={tw`w-16 h-16 mb-4`}>
+                      <LinearGradient colors={['#9CA3AF', '#6B7280']} style={tw`w-full h-full rounded-2xl items-center justify-center shadow-lg`}>
+                        <Plus size={28} color="#ffffff" strokeWidth={2.5} />
+                      </LinearGradient>
+                    </View>
 
-                  <Text style={tw`text-lg font-bold text-stone-700 mb-2`}>Create Your First Habit</Text>
-                  <Text style={tw`text-sm text-stone-500 text-center px-4`}>Start your journey to build better habits and earn achievements!</Text>
+                    <Text style={tw`text-lg font-bold text-stone-700 mb-2`}>Create Your First Habit</Text>
+                    <Text style={tw`text-sm text-stone-500 text-center px-4`}>Start your journey to build better habits and earn achievements!</Text>
 
-                  <View style={tw`mt-4 px-6 py-2 bg-sand rounded-full border border-stone-300 shadow-sm`}>
-                    <Text style={tw`text-sm font-semibold text-stone-600`}>Tap to Begin →</Text>
-                  </View>
-                </LinearGradient>
-              </Pressable>
-            </View>
-          )}
-        </Animated.View>
-      </ScrollView>
-    </SafeAreaView>
+                    <View style={tw`mt-4 px-6 py-2 bg-sand rounded-full border border-stone-300 shadow-sm`}>
+                      <Text style={tw`text-sm font-semibold text-stone-600`}>Tap to Begin →</Text>
+                    </View>
+                  </LinearGradient>
+                </Pressable>
+              </View>
+            )}
+          </Animated.View>
+        </ScrollView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 };
 
