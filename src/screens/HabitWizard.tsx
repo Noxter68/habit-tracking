@@ -1,11 +1,10 @@
 // src/screens/HabitWizard.tsx
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { View, Text, Pressable, ScrollView, Alert } from 'react-native';
+import { View, Text, Pressable, ScrollView, Alert, ImageBackground, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
-import { ChevronLeft, ChevronRight, X, Check } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { ChevronLeft } from 'lucide-react-native';
 import tw from '../lib/tailwind';
 import { Habit, HabitType } from '../types';
 import { useHabits } from '../context/HabitContext';
@@ -19,7 +18,6 @@ import TaskSelector from '../components/wizard/TaskSelector';
 import GoalSetting from '../components/wizard/GoalSetting';
 import FrequencySelector from '../components/wizard/FrequencySelector';
 import NotificationSetup from '../components/wizard/NotificationSetup';
-import ProgressIndicator from '../components/ProgressIndicator';
 import { getCategoryName } from '../utils/habitHelpers';
 import { NotificationService } from '../services/notificationService';
 import { NotificationPreferencesService } from '@/services/notificationPreferenceService';
@@ -36,11 +34,10 @@ const HabitWizard: React.FC = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [previousCategory, setPreviousCategory] = useState<string | undefined>();
 
-  // Custom habit state - ✅ SIMPLIFIED: Just string array
   const [isCustomHabit, setIsCustomHabit] = useState(false);
   const [customHabitName, setCustomHabitName] = useState('');
   const [customHabitIcon, setCustomHabitIcon] = useState('');
-  const [customTasks, setCustomTasks] = useState<string[]>(['']); // ✅ Changed from CustomTask[] to string[]
+  const [customTasks, setCustomTasks] = useState<string[]>(['']);
 
   const [habitData, setHabitData] = useState<Partial<Habit>>({
     frequency: 'daily',
@@ -53,19 +50,16 @@ const HabitWizard: React.FC = () => {
     dailyTasks: {},
   });
 
-  // Memoized calculations
   const totalSteps = useMemo(() => (isCustomHabit ? 7 : 6), [isCustomHabit]);
   const isFirstStep = step === 1;
   const isLastStep = step === totalSteps;
 
-  // Scroll to top when step changes
   const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     scrollViewRef.current?.scrollTo({ y: 0, animated: false });
   }, [step]);
 
-  // Request notification permissions when reaching notification step
   useEffect(() => {
     const notificationStep = isCustomHabit ? 7 : 6;
     if (step === notificationStep) {
@@ -73,7 +67,6 @@ const HabitWizard: React.FC = () => {
     }
   }, [step, isCustomHabit]);
 
-  // Reset tasks when category changes (for standard habits)
   useEffect(() => {
     if (habitData.category && habitData.category !== previousCategory && !isCustomHabit) {
       setHabitData((prev) => ({ ...prev, tasks: [] }));
@@ -88,13 +81,11 @@ const HabitWizard: React.FC = () => {
   }, []);
 
   const handleNext = useCallback(async () => {
-    // Step 1: Habit Type Selection
     if (step === 1 && !habitData.type) {
       Alert.alert('Please select', 'Choose whether you want to build or quit a habit');
       return;
     }
 
-    // Step 2: Category Selection (or custom creation trigger)
     if (step === 2) {
       if (!isCustomHabit && !habitData.category) {
         Alert.alert('Please select', 'Choose a category for your habit');
@@ -102,7 +93,6 @@ const HabitWizard: React.FC = () => {
       }
     }
 
-    // Step 3: Custom Habit Creation (name & icon)
     if (step === 3 && isCustomHabit) {
       if (customHabitName.trim().length === 0) {
         Alert.alert('Habit name required', 'Please enter a name for your habit');
@@ -116,20 +106,17 @@ const HabitWizard: React.FC = () => {
       return;
     }
 
-    // Step 4: Custom Task Creation - ✅ SIMPLIFIED
     if (step === 4 && isCustomHabit) {
       const validTasks = customTasks.filter((t) => t.trim() !== '');
       if (validTasks.length === 0) {
         Alert.alert('Tasks required', 'Please create at least one task for your habit');
         return;
       }
-      // ✅ Store task names directly
       setHabitData((prev) => ({ ...prev, tasks: validTasks }));
       setStep(5);
       return;
     }
 
-    // Step 3 (standard): Task Selection - only for standard habits
     if (step === 3 && !isCustomHabit) {
       if (!habitData.tasks || habitData.tasks.length === 0) {
         Alert.alert('Please select', 'Choose at least one task to track');
@@ -137,13 +124,11 @@ const HabitWizard: React.FC = () => {
       }
     }
 
-    // Final step: Create habit
     if (isLastStep) {
       await createHabit();
       return;
     }
 
-    // Move to next step
     setStep(step + 1);
   }, [step, habitData, isCustomHabit, customHabitName, customHabitIcon, customTasks, isLastStep]);
 
@@ -152,20 +137,14 @@ const HabitWizard: React.FC = () => {
 
     try {
       const habitName = isCustomHabit ? customHabitName : getCategoryName(habitData.category!, habitData.type!);
-
-      // ✅ SIMPLIFIED: Both habit types now store tasks the same way
-      // For custom habits, tasks are already stored as string[] in habitData.tasks
-      // For pre-defined habits, tasks are also string[]
       const tasks = habitData.tasks || [];
-
-      Logger.debug('📝 Creating habit with tasks:', tasks);
 
       const newHabit: Habit = {
         id: Date.now().toString(),
         name: habitName,
         type: habitData.type || 'good',
         category: isCustomHabit ? 'custom' : habitData.category || 'health',
-        tasks: tasks, // ✅ Simple string array for both types
+        tasks: tasks,
         dailyTasks: {},
         frequency: habitData.frequency || 'daily',
         notifications: habitData.notifications || false,
@@ -190,17 +169,16 @@ const HabitWizard: React.FC = () => {
         if (isFirstHabit && permissionRequested) {
           if (permissionGranted) {
             if (habitData.notifications) {
-              Alert.alert('Notifications Enabled! 🔔', "You'll receive reminders to help you stay on track with your new habit.", [{ text: 'Great!' }]);
+              Alert.alert('Notifications Enabled! 🔔', "You'll receive reminders to help you stay on track.", [{ text: 'Great!' }]);
             }
           } else {
             newHabit.notifications = false;
-            Alert.alert('Notifications Disabled', 'You can enable notifications later in Settings if you change your mind.', [{ text: 'OK' }]);
+            Alert.alert('Notifications Disabled', 'You can enable them later in Settings.', [{ text: 'OK' }]);
           }
         }
       }
 
       await addHabit(newHabit);
-
       navigation.replace('MainTabs');
     } catch (error) {
       setIsCreating(false);
@@ -215,7 +193,7 @@ const HabitWizard: React.FC = () => {
         setIsCustomHabit(false);
         setCustomHabitName('');
         setCustomHabitIcon('');
-        setCustomTasks(['']); // ✅ Reset to empty string array
+        setCustomTasks(['']);
         setStep(2);
       } else if (step > 1) {
         setStep(step - 1);
@@ -254,9 +232,7 @@ const HabitWizard: React.FC = () => {
             <FrequencySelector
               selected={habitData.frequency || 'daily'}
               customDays={habitData.customDays}
-              onSelect={(frequency, customDays) => {
-                setHabitData((prev) => ({ ...prev, frequency, customDays }));
-              }}
+              onSelect={(frequency, customDays) => setHabitData((prev) => ({ ...prev, frequency, customDays }))}
             />
           );
         case 6:
@@ -264,14 +240,7 @@ const HabitWizard: React.FC = () => {
             <GoalSetting
               hasEndGoal={habitData.hasEndGoal || false}
               endGoalDays={habitData.endGoalDays}
-              onChange={(hasEndGoal, days) => {
-                setHabitData((prev) => ({
-                  ...prev,
-                  hasEndGoal,
-                  endGoalDays: days,
-                  totalDays: days || 61,
-                }));
-              }}
+              onChange={(hasEndGoal, days) => setHabitData((prev) => ({ ...prev, hasEndGoal, endGoalDays: days, totalDays: days || 61 }))}
             />
           );
         case 7:
@@ -279,9 +248,7 @@ const HabitWizard: React.FC = () => {
             <NotificationSetup
               enabled={habitData.notifications || false}
               time={habitData.notificationTime}
-              onChange={(enabled, time) => {
-                setHabitData((prev) => ({ ...prev, notifications: enabled, notificationTime: time }));
-              }}
+              onChange={(enabled, time) => setHabitData((prev) => ({ ...prev, notifications: enabled, notificationTime: time }))}
             />
           );
         default:
@@ -289,7 +256,6 @@ const HabitWizard: React.FC = () => {
       }
     }
 
-    // Standard habit flow
     switch (step) {
       case 1:
         return <HabitTypeCards selected={habitData.type} onSelect={(type) => setHabitData((prev) => ({ ...prev, type }))} />;
@@ -311,14 +277,7 @@ const HabitWizard: React.FC = () => {
           <GoalSetting
             hasEndGoal={habitData.hasEndGoal || false}
             endGoalDays={habitData.endGoalDays}
-            onChange={(hasEndGoal, days) => {
-              setHabitData((prev) => ({
-                ...prev,
-                hasEndGoal,
-                endGoalDays: days,
-                totalDays: days || 61,
-              }));
-            }}
+            onChange={(hasEndGoal, days) => setHabitData((prev) => ({ ...prev, hasEndGoal, endGoalDays: days, totalDays: days || 61 }))}
           />
         );
       case 5:
@@ -326,9 +285,7 @@ const HabitWizard: React.FC = () => {
           <FrequencySelector
             selected={habitData.frequency || 'daily'}
             customDays={habitData.customDays}
-            onSelect={(frequency, customDays) => {
-              setHabitData((prev) => ({ ...prev, frequency, customDays }));
-            }}
+            onSelect={(frequency, customDays) => setHabitData((prev) => ({ ...prev, frequency, customDays }))}
           />
         );
       case 6:
@@ -336,9 +293,7 @@ const HabitWizard: React.FC = () => {
           <NotificationSetup
             enabled={habitData.notifications || false}
             time={habitData.notificationTime}
-            onChange={(enabled, time) => {
-              setHabitData((prev) => ({ ...prev, notifications: enabled, notificationTime: time }));
-            }}
+            onChange={(enabled, time) => setHabitData((prev) => ({ ...prev, notifications: enabled, notificationTime: time }))}
           />
         );
       default:
@@ -346,88 +301,48 @@ const HabitWizard: React.FC = () => {
     }
   }, [step, isCustomHabit, habitData, customHabitName, customHabitIcon, customTasks, handleCreateCustom]);
 
-  // Memoize gradient colors
-  const gradientColors = useMemo(() => {
-    if (step === 1) return ['#8b5cf6', '#7c3aed'];
-    if (step === 2) return habitData.type === 'good' ? ['#10b981', '#059669'] : ['#ef4444', '#dc2626'];
-    if (isCustomHabit && (step === 3 || step === 4)) return habitData.type === 'good' ? ['#06b6d4', '#0891b2'] : ['#f97316', '#ea580c'];
-    if ((isCustomHabit && step === 5) || (!isCustomHabit && step === 3)) return habitData.type === 'good' ? ['#fbbf24', '#f59e0b'] : ['#8b5cf6', '#7c3aed'];
-    if ((isCustomHabit && step === 6) || (!isCustomHabit && step === 4)) return ['#ef4444', '#dc2626'];
-    if (!isCustomHabit && step === 5) return ['#06b6d4', '#0891b2'];
-    if ((isCustomHabit && step === 7) || (!isCustomHabit && step === 6)) return ['#fbbf24', '#f59e0b'];
-    return ['#8b5cf6', '#7c3aed'];
-  }, [step, habitData.type, isCustomHabit]);
-
   return (
-    <SafeAreaView style={tw`flex-1 bg-stone-50`} edges={['top']}>
-      <View style={tw`flex-1`}>
-        {/* Header with Progress */}
-        <View style={tw`px-5 py-4`}>
-          <ProgressIndicator current={step} total={totalSteps} />
-        </View>
-
-        {/* Content */}
-        <ScrollView ref={scrollViewRef} style={tw`flex-1`} showsVerticalScrollIndicator={false} contentContainerStyle={tw`pb-4 mt-4`}>
-          <View style={tw`flex-1`}>{renderStep()}</View>
-        </ScrollView>
-
-        {/* Navigation Footer */}
-        <View style={tw`bg-white border-t border-stone-200 pb-0`}>
-          <View style={tw`px-5 pt-4 pb-2`}>
-            <View style={tw`flex-row gap-3`}>
-              {/* Back/Cancel Button */}
-              <Pressable
-                onPress={handleBack}
-                disabled={isCreating}
-                style={({ pressed }) => [tw`flex-1 py-4 rounded-2xl bg-stone-100 border border-stone-200`, pressed && tw`opacity-80`, isCreating && tw`opacity-50`]}
-              >
-                <View style={tw`flex-row items-center justify-center`}>
-                  {isFirstStep ? (
-                    <>
-                      <X size={18} color="#6B7280" style={tw`mr-2`} />
-                      <Text style={tw`text-stone-600 font-medium text-base`}>Cancel</Text>
-                    </>
-                  ) : (
-                    <>
-                      <ChevronLeft size={18} color="#6B7280" style={tw`mr-1.5`} />
-                      <Text style={tw`text-stone-600 font-medium text-base`}>Back</Text>
-                    </>
-                  )}
-                </View>
-              </Pressable>
-
-              {/* Next/Create Button */}
-              <Pressable onPress={handleNext} disabled={isCreating} style={({ pressed }) => [tw`flex-1 py-4 rounded-2xl overflow-hidden`, pressed && tw`opacity-90`, isCreating && tw`opacity-50`]}>
-                <LinearGradient colors={gradientColors} style={tw`absolute inset-0`} />
-                <View style={tw`flex-row items-center justify-center`}>
-                  {isCreating ? (
-                    <Text style={tw`text-white font-medium text-base`}>Creating...</Text>
-                  ) : isLastStep ? (
-                    <>
-                      <Check size={18} color="#ffffff" style={tw`mr-2`} />
-                      <Text style={tw`text-white font-medium text-base`}>Create Habit</Text>
-                    </>
-                  ) : (
-                    <>
-                      <Text style={tw`text-white font-medium text-base`}>Continue</Text>
-                      <ChevronRight size={18} color="#ffffff" style={tw`ml-1.5`} />
-                    </>
-                  )}
-                </View>
+    <ImageBackground source={require('../../assets/interface/variante-purple-background.png')} style={styles.background} resizeMode="cover">
+      <SafeAreaView style={tw`flex-1`} edges={['top']}>
+        <View style={tw`flex-1`}>
+          {/* Header - Back Button Only */}
+          {!isFirstStep && (
+            <View style={tw`px-6 pt-2`}>
+              <Pressable onPress={handleBack} disabled={isCreating} style={({ pressed }) => [tw`w-12 h-12 rounded-full items-center justify-center`, pressed && tw`opacity-70`]}>
+                <ChevronLeft size={28} color="#ffffff" strokeWidth={2} />
               </Pressable>
             </View>
+          )}
 
-            {/* Step Indicator Text */}
-            <View style={tw`mt-3 items-center`}>
-              <Text style={tw`text-xs text-stone-500 font-light`}>
-                Step {step} of {totalSteps}
-              </Text>
+          {/* Content */}
+          <ScrollView ref={scrollViewRef} style={tw`flex-1`} showsVerticalScrollIndicator={false} contentContainerStyle={tw`flex-grow`}>
+            <View style={tw`flex-1`}>{renderStep()}</View>
+          </ScrollView>
+
+          {/* Progress Dots + Continue Button */}
+          <View style={tw`px-6 pb-8`}>
+            {/* Progress Dots */}
+            <View style={tw`flex-row justify-center gap-2 mb-6`}>
+              {Array.from({ length: totalSteps }).map((_, index) => (
+                <View key={index} style={[tw`h-2 rounded-full transition-all`, index + 1 === step ? tw`w-8 bg-white` : tw`w-2 bg-white/30`]} />
+              ))}
             </View>
+
+            {/* Continue Button */}
+            <Pressable onPress={handleNext} disabled={isCreating} style={({ pressed }) => [tw`bg-white rounded-full py-4 px-8`, pressed && tw`opacity-80`, isCreating && tw`opacity-50`]}>
+              <Text style={tw`text-purple-600 text-lg font-bold text-center`}>{isCreating ? 'Creating...' : isLastStep ? 'Create Habit' : 'Continue'}</Text>
+            </Pressable>
           </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 };
+
+const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+  },
+});
 
 export default HabitWizard;

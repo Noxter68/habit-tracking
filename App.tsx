@@ -16,7 +16,7 @@ import tw from './src/lib/tailwind';
 
 // Screens
 import AuthScreen from './src/screens/AuthScreen';
-import WelcomeScreen from './src/screens/WelcomeScreen';
+import OnboardingScreen from './src/screens/OnboardingScreen';
 import HabitWizard from './src/screens/HabitWizard';
 import Dashboard from './src/screens/Dashboard';
 import HabitDetails from './src/screens/HabitDetails';
@@ -25,8 +25,7 @@ import LeaderboardScreen from './src/screens/LeaderboardScreen';
 import StatsScreen from './src/screens/StatsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import AchievementsScreen from './src/screens/AchievementScreen';
-import DiagnosticScreen from './src/screens/DiagnosticScreen'; // ✅ NEW
-
+import DiagnosticScreen from './src/screens/DiagnosticScreen';
 // Contexts
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { HabitProvider } from './src/context/HabitContext';
@@ -67,6 +66,7 @@ export type RootStackParamList = {
   Debug: undefined;
   NotificationManager: undefined;
   HolidayMode: undefined;
+  Onboarding: undefined;
 };
 
 export type TabParamList = {
@@ -224,7 +224,7 @@ function MainTabs() {
 // ============================================
 
 function AppNavigator() {
-  const { user, loading } = useAuth();
+  const { user, loading, hasCompletedOnboarding } = useAuth();
   const [isFirstLaunch, setIsFirstLaunch] = useState<boolean | null>(null);
   const [isCheckingFirstLaunch, setIsCheckingFirstLaunch] = useState(true);
 
@@ -275,7 +275,22 @@ function AppNavigator() {
           animation: 'fade',
         }}
       >
-        <Stack.Screen name="Auth" component={AuthScreen} />
+        {!user ? (
+          // Auth Stack
+          <>
+            <Stack.Screen name="Auth" component={AuthScreen} />
+          </>
+        ) : !hasCompletedOnboarding ? (
+          // Onboarding Stack (shown once after signup)
+          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+        ) : (
+          // Main App Stack
+          <>
+            <Stack.Screen name="Dashboard" component={Dashboard} />
+            <Stack.Screen name="HabitWizard" component={HabitWizard} />
+            {/* ... other screens */}
+          </>
+        )}
       </Stack.Navigator>
     );
   }
@@ -289,7 +304,6 @@ function AppNavigator() {
           animation: 'fade',
         }}
       >
-        <Stack.Screen name="Welcome">{(props) => <WelcomeScreen {...props} onComplete={handleWelcomeComplete} />}</Stack.Screen>
         <Stack.Screen name="HabitWizard" component={HabitWizard} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="MainTabs" component={MainTabs} options={{ animation: 'fade' }} />
         <Stack.Screen name="HabitDetails" component={HabitDetails} options={{ animation: 'slide_from_right' }} />
@@ -327,6 +341,8 @@ function AppNavigator() {
             animation: 'slide_from_right',
           }}
         />
+
+        <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
 
         {/* ✅ DEBUG MODE SCREENS - Only show when debug is enabled */}
         {showDebugScreen && (

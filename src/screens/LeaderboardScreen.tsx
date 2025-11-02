@@ -1,24 +1,27 @@
 // src/screens/LeaderboardScreen.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, Image, StatusBar, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Pressable, Image, StatusBar, RefreshControl, ActivityIndicator, ImageBackground, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
 import { LeaderboardService, LeaderboardEntry } from '@/services/LeaderboardService';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import tw from '@/lib/tailwind';
 import Logger from '@/utils/logger';
 
 const CROWN_IMAGE = require('../../assets/leaderboard/leaderboard-crown.png');
+const BACKGROUND = require('../../assets/interface/background-v3.png');
 
-// Gem assets
-const CRYSTAL_GEM = require('../../assets/interface/gems/crystal-gem.png');
-const RUBY_GEM = require('../../assets/interface/gems/ruby-gem.png');
-const AMETHYST_GEM = require('../../assets/interface/gems/amethyst-gem.png');
+// Podium icons
+const FIRST_PLACE = require('../../assets/interface/Leaderboard/1st.png');
+const SECOND_PLACE = require('../../assets/interface/Leaderboard/2nd.png');
+const THIRD_PLACE = require('../../assets/interface/Leaderboard/3rd.png');
 
 const TIER_COLORS = {
-  1: { bg: '#8b5cf6', light: '#a78bfa', border: '#7c3aed', gem: AMETHYST_GEM },
-  2: { bg: '#ef4444', light: '#f87171', border: '#dc2626', gem: RUBY_GEM },
-  3: { bg: '#60a5fa', light: '#93c5fd', border: '#3b82f6', gem: CRYSTAL_GEM },
+  1: { bg: '#fbbf24', light: '#fde047', border: '#f59e0b' },
+  2: { bg: '#94a3b8', light: '#cbd5e1', border: '#64748b' },
+  3: { bg: '#cd7f32', light: '#d4a574', border: '#a0522d' },
 };
 
 type LeaderboardMode = 'global' | 'weekly';
@@ -72,265 +75,249 @@ const LeaderboardScreen = () => {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#0f172a', justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#8b5cf6" />
-      </View>
+      <ImageBackground source={BACKGROUND} style={styles.background} resizeMode="cover">
+        <View style={[StyleSheet.absoluteFill, tw`bg-black/50`]} />
+        <View style={tw`flex-1 items-center justify-center`}>
+          <ActivityIndicator size="large" color="#8b5cf6" />
+        </View>
+      </ImageBackground>
     );
   }
 
   return (
-    <LinearGradient colors={['#1e293b', '#0f172a', '#020617']} style={{ flex: 1 }}>
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 100 }}
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadLeaderboard(true)} tintColor="#8b5cf6" />}
-      >
-        {/* Header */}
-        <LinearGradient colors={['#1F2937', '#111827', '#030712']} style={{ paddingHorizontal: 24, paddingTop: 60, paddingBottom: 32 }}>
-          {/* Crown */}
-          <View style={{ alignItems: 'center', marginBottom: 24 }}>
-            <LinearGradient
-              colors={['rgba(251, 191, 36, 0.25)', 'rgba(251, 191, 36, 0.15)', 'rgba(251, 191, 36, 0.05)']}
-              style={{
-                width: 140,
-                height: 140,
-                borderRadius: 70,
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderWidth: 2,
-                borderColor: 'rgba(251, 191, 36, 0.4)',
-              }}
-            >
-              <Image source={CROWN_IMAGE} style={{ width: 120, height: 120 }} resizeMode="contain" />
-            </LinearGradient>
-          </View>
+    <ImageBackground source={BACKGROUND} style={styles.background} resizeMode="cover">
+      <View style={[StyleSheet.absoluteFill, tw`bg-black/50`]} />
 
-          <View style={{ alignItems: 'center', marginBottom: 20 }}>
-            <View
-              style={{
-                backgroundColor: 'rgba(251, 191, 36, 0.15)',
-                paddingHorizontal: 20,
-                paddingVertical: 8,
-                borderRadius: 16,
-                marginBottom: 12,
-                borderWidth: 1,
-                borderColor: 'rgba(251, 191, 36, 0.3)',
-              }}
-            >
-              <Text style={{ fontSize: 11, fontWeight: '800', color: '#fcd34d', letterSpacing: 2, textTransform: 'uppercase' }}>Hall of Champions</Text>
+      {/* Texture overlay subtile */}
+
+      <SafeAreaView style={tw`flex-1`} edges={['top']}>
+        <ScrollView
+          style={tw`flex-1`}
+          contentContainerStyle={tw`pb-24`}
+          showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadLeaderboard(true)} tintColor="#8b5cf6" />}
+        >
+          {/* Header */}
+          <Animated.View entering={FadeInUp.delay(100)} style={tw`px-6 pt-4 pb-8`}>
+            {/* Crown */}
+            <View style={tw`items-center mb-2`}>
+              <Image source={CROWN_IMAGE} style={tw`w-40 h-40`} resizeMode="contain" />
             </View>
-            <Text style={{ fontSize: 28, fontWeight: '900', color: '#FFFFFF', marginBottom: 6 }}>Leaderboard</Text>
-            <Text style={{ fontSize: 13, color: '#9CA3AF', fontWeight: '600' }}>Rise through the ranks</Text>
-          </View>
 
-          {/* Mode Switcher */}
-          <View style={{ flexDirection: 'row', backgroundColor: 'rgba(255, 255, 255, 0.08)', borderRadius: 14, padding: 3, gap: 3 }}>
-            <Pressable onPress={() => setMode('global')} style={{ flex: 1, paddingVertical: 9, borderRadius: 11, backgroundColor: mode === 'global' ? 'rgba(251, 191, 36, 0.25)' : 'transparent' }}>
-              <Text style={{ fontSize: 12, fontWeight: '800', color: mode === 'global' ? '#fcd34d' : '#9CA3AF', textAlign: 'center' }}>ALL TIME</Text>
-            </Pressable>
-            <Pressable onPress={() => setMode('weekly')} style={{ flex: 1, paddingVertical: 9, borderRadius: 11, backgroundColor: mode === 'weekly' ? 'rgba(251, 191, 36, 0.25)' : 'transparent' }}>
-              <Text style={{ fontSize: 12, fontWeight: '800', color: mode === 'weekly' ? '#fcd34d' : '#9CA3AF', textAlign: 'center' }}>THIS WEEK</Text>
-            </Pressable>
-          </View>
-        </LinearGradient>
+            {/* Title */}
+            <View style={tw`items-center mb-8`}>
+              <Text style={tw`text-4xl font-bold text-white text-center mb-2`}>Leaderboard</Text>
+              <Text style={tw`text-base text-white/80 text-center`}>Compete with the best habit trackers</Text>
+            </View>
 
-        {/* Top 3 Podium */}
-        <View style={{ paddingHorizontal: 20, marginTop: 20 }}>
-          <LinearGradient
-            colors={['#2d3748', '#1a202c', '#111827']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{
-              borderRadius: 24,
-              padding: 20,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: 0.4,
-              shadowRadius: 16,
-            }}
-          >
-            {/* 1st Place */}
-            {topThree[0] && (
-              <Animated.View entering={FadeInDown.delay(100)} style={{ marginBottom: 16 }}>
-                <LinearGradient
-                  colors={['rgba(255, 255, 255, 0.15)', 'rgba(255, 255, 255, 0.1)']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={{
-                    borderRadius: 20,
-                    padding: 18,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    borderWidth: 3,
-                    borderColor: `${TIER_COLORS[1].bg}80`,
-                    shadowColor: TIER_COLORS[1].bg,
-                    shadowOffset: { width: 0, height: 6 },
-                    shadowOpacity: 0.6,
-                    shadowRadius: 16,
-                  }}
-                >
-                  <Image source={TIER_COLORS[1].gem} style={{ width: 80, height: 80, marginRight: 16 }} resizeMode="contain" />
+            {/* Mode Toggle */}
+            <View style={tw`bg-white/15 rounded-2xl p-1 flex-row border-2 border-white/20`}>
+              <Pressable
+                onPress={() => setMode('global')}
+                style={({ pressed }) => [tw`flex-1 py-3 rounded-xl items-center`, mode === 'global' ? tw`bg-violet-600` : tw`bg-transparent`, pressed && tw`opacity-80`]}
+              >
+                <Text style={tw`text-sm font-bold ${mode === 'global' ? 'text-white' : 'text-white/70'}`}>ALL TIME</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setMode('weekly')}
+                style={({ pressed }) => [tw`flex-1 py-3 rounded-xl items-center`, mode === 'weekly' ? tw`bg-violet-600` : tw`bg-transparent`, pressed && tw`opacity-80`]}
+              >
+                <Text style={tw`text-sm font-bold ${mode === 'weekly' ? 'text-white' : 'text-white/70'}`}>THIS WEEK</Text>
+              </Pressable>
+            </View>
+          </Animated.View>
 
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 19, fontWeight: '900', color: '#FFFFFF', marginBottom: 10 }} numberOfLines={1}>
-                      {topThree[0].username}
-                    </Text>
+          {/* Top 3 Podium */}
+          {topThree.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(200)} style={tw`mb-8 px-4`}>
+              <View style={tw`flex-row items-end justify-center gap-2`}>
+                {/* 2nd Place - Moyenne hauteur */}
+                {topThree[1] && (
+                  <Animated.View entering={FadeInDown.delay(300).springify()} style={tw`flex-1 items-center`}>
+                    <View style={tw`mb-3`}>
+                      <Image source={SECOND_PLACE} style={{ width: 80, height: 80 }} resizeMode="contain" />
+                    </View>
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                      <Text style={{ fontSize: 28, fontWeight: '900', color: TIER_COLORS[1].light, letterSpacing: -1 }}>
-                        {mode === 'weekly' ? (topThree[0].weeklyXP || 0).toLocaleString() : topThree[0].total_xp.toLocaleString()}
-                      </Text>
-                      <Text style={{ fontSize: 14, fontWeight: '700', color: '#9CA3AF' }}>XP</Text>
-                      <View style={{ backgroundColor: `${TIER_COLORS[1].bg}30`, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
-                        <Text style={{ fontSize: 11, fontWeight: '800', color: TIER_COLORS[1].light }}>LVL {topThree[0].current_level}</Text>
+                    <View style={[tw`w-full bg-white/15 border-2 border-white/20 rounded-2xl p-2 items-center`, { minHeight: 130 }]}>
+                      <View style={tw`bg-slate-500/30 rounded-full px-3 py-1 mb-2`}>
+                        <Text style={tw`text-xs font-black text-slate-200`}>#2</Text>
+                      </View>
+
+                      <View style={tw`bg-white/90 rounded-full px-3 py-1 mb-3`}>
+                        <Text style={{ fontSize: 10, fontWeight: '900', color: '#1e293b' }} numberOfLines={1}>
+                          {topThree[1].username}
+                        </Text>
+                      </View>
+
+                      <View style={tw`items-center`}>
+                        <Text style={{ fontSize: 18, fontWeight: '900', color: '#FFFFFF' }}>
+                          {mode === 'weekly' ? (topThree[1].weeklyXP || 0).toLocaleString() : topThree[1].total_xp.toLocaleString()}
+                        </Text>
+                        <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: '600', marginBottom: 8 }}>XP</Text>
+
+                        <Text style={{ fontSize: 18, fontWeight: '900', color: '#FFFFFF' }}>{topThree[1].current_level}</Text>
+                        <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>LVL</Text>
                       </View>
                     </View>
-                  </View>
-                </LinearGradient>
-              </Animated.View>
-            )}
+                  </Animated.View>
+                )}
 
-            {/* 2nd and 3rd Place */}
-            <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 10 }}>
-              {/* 2nd Place */}
-              {topThree[1] && (
-                <Animated.View entering={FadeInDown.delay(200)} style={{ flex: 1, alignItems: 'center' }}>
-                  <LinearGradient
-                    colors={['rgba(255, 255, 255, 0.12)', 'rgba(255, 255, 255, 0.08)']}
-                    style={{
-                      borderRadius: 18,
-                      padding: 14,
-                      width: '100%',
-                      alignItems: 'center',
-                      borderWidth: 2,
-                      borderColor: `${TIER_COLORS[2].bg}60`,
-                      shadowColor: TIER_COLORS[2].bg,
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.5,
-                      shadowRadius: 12,
-                    }}
-                  >
-                    <Image source={TIER_COLORS[2].gem} style={{ width: 64, height: 64, marginBottom: 10 }} resizeMode="contain" />
-
-                    <Text style={{ fontSize: 14, fontWeight: '800', color: '#FFFFFF', marginBottom: 8 }} numberOfLines={1}>
-                      {topThree[1].username}
-                    </Text>
-
-                    <Text style={{ fontSize: 22, fontWeight: '900', color: TIER_COLORS[2].light, letterSpacing: -0.5 }}>
-                      {mode === 'weekly' ? (topThree[1].weeklyXP || 0).toLocaleString() : topThree[1].total_xp.toLocaleString()}
-                    </Text>
-                    <Text style={{ fontSize: 10, color: '#9CA3AF', fontWeight: '600' }}>XP</Text>
-
-                    <View style={{ backgroundColor: `${TIER_COLORS[2].bg}30`, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginTop: 8 }}>
-                      <Text style={{ fontSize: 10, fontWeight: '800', color: TIER_COLORS[2].light }}>LVL {topThree[1].current_level}</Text>
+                {/* 1st Place - LA PLUS HAUTE */}
+                {topThree[0] && (
+                  <Animated.View entering={FadeInDown.delay(100).springify()} style={tw`flex-1 items-center`}>
+                    <View style={tw`mb-3`}>
+                      <Image source={FIRST_PLACE} style={{ width: 120, height: 120 }} resizeMode="contain" />
                     </View>
-                  </LinearGradient>
-                </Animated.View>
-              )}
 
-              {/* 3rd Place */}
-              {topThree[2] && (
-                <Animated.View entering={FadeInDown.delay(300)} style={{ flex: 1, alignItems: 'center' }}>
-                  <LinearGradient
-                    colors={['rgba(255, 255, 255, 0.12)', 'rgba(255, 255, 255, 0.08)']}
-                    style={{
-                      borderRadius: 18,
-                      padding: 14,
-                      width: '100%',
-                      alignItems: 'center',
-                      borderWidth: 2,
-                      borderColor: `${TIER_COLORS[3].bg}60`,
-                      shadowColor: TIER_COLORS[3].bg,
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.5,
-                      shadowRadius: 12,
-                    }}
-                  >
-                    <Image source={TIER_COLORS[3].gem} style={{ width: 64, height: 64, marginBottom: 10 }} resizeMode="contain" />
+                    <View
+                      style={[
+                        tw`w-full rounded-2xl p-2 items-center border-2`,
+                        {
+                          backgroundColor: 'rgba(251, 191, 36, 0.3)',
+                          borderColor: TIER_COLORS[1].border,
+                          minHeight: 180,
+                        },
+                      ]}
+                    >
+                      <View style={tw`bg-amber-500/40 rounded-full px-3 py-1 mb-2`}>
+                        <Text style={tw`text-xs font-black text-amber-100`}>#1</Text>
+                      </View>
 
-                    <Text style={{ fontSize: 14, fontWeight: '800', color: '#FFFFFF', marginBottom: 8 }} numberOfLines={1}>
-                      {topThree[2].username}
-                    </Text>
+                      <View style={tw`bg-white/90 rounded-full px-3 py-1.5 mb-4`}>
+                        <Text style={{ fontSize: 10, fontWeight: '900', color: '#92400e' }} numberOfLines={1}>
+                          {topThree[0].username}
+                        </Text>
+                      </View>
 
-                    <Text style={{ fontSize: 22, fontWeight: '900', color: TIER_COLORS[3].light, letterSpacing: -0.5 }}>
-                      {mode === 'weekly' ? (topThree[2].weeklyXP || 0).toLocaleString() : topThree[2].total_xp.toLocaleString()}
-                    </Text>
-                    <Text style={{ fontSize: 10, color: '#9CA3AF', fontWeight: '600' }}>XP</Text>
+                      <View style={tw`items-center`}>
+                        <Text style={{ fontSize: 18, fontWeight: '900', color: '#FFFFFF' }}>
+                          {mode === 'weekly' ? (topThree[0].weeklyXP || 0).toLocaleString() : topThree[0].total_xp.toLocaleString()}
+                        </Text>
+                        <Text style={{ fontSize: 11, color: 'rgba(253,224,71,0.8)', fontWeight: '700', marginBottom: 10 }}>XP</Text>
 
-                    <View style={{ backgroundColor: `${TIER_COLORS[3].bg}30`, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginTop: 8 }}>
-                      <Text style={{ fontSize: 10, fontWeight: '800', color: TIER_COLORS[3].light }}>LVL {topThree[2].current_level}</Text>
+                        <Text style={{ fontSize: 18, fontWeight: '900', color: '#FFFFFF' }}>{topThree[0].current_level}</Text>
+                        <Text style={{ fontSize: 11, color: 'rgba(253,224,71,0.8)', fontWeight: '700' }}>LVL</Text>
+                      </View>
                     </View>
-                  </LinearGradient>
-                </Animated.View>
-              )}
-            </View>
-          </LinearGradient>
-        </View>
+                  </Animated.View>
+                )}
 
-        {/* Rest of Leaderboard */}
-        {remaining.length > 0 && (
-          <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
-            <LinearGradient
-              colors={['rgba(255, 255, 255, 0.08)', 'rgba(255, 255, 255, 0.05)']}
-              style={{ borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }}
-            >
-              {remaining.map((user, index) => (
-                <View
-                  key={user.id}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    padding: 16,
-                    backgroundColor: user.isCurrentUser ? 'rgba(139, 92, 246, 0.15)' : index % 2 === 0 ? 'rgba(255, 255, 255, 0.03)' : 'transparent',
-                    borderBottomWidth: index < remaining.length - 1 ? 1 : 0,
-                    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
-                    borderLeftWidth: user.isCurrentUser ? 3 : 0,
-                    borderLeftColor: '#8b5cf6',
-                  }}
-                >
-                  <Text style={{ fontSize: 16, fontWeight: '800', color: user.isCurrentUser ? '#a78bfa' : '#6B7280', width: 40 }}>{user.rank}</Text>
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={{ fontSize: 15, fontWeight: '700', color: '#FFFFFF' }}>{user.username}</Text>
-                      {user.isCurrentUser && (
-                        <View style={{ backgroundColor: 'rgba(139, 92, 246, 0.3)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-                          <Text style={{ fontSize: 8, fontWeight: '900', color: '#a78bfa' }}>YOU</Text>
+                {/* 3rd Place - La plus petite */}
+                {topThree[2] && (
+                  <Animated.View entering={FadeInDown.delay(400).springify()} style={tw`flex-1 items-center`}>
+                    <View style={tw`mb-3`}>
+                      <Image source={THIRD_PLACE} style={{ width: 100, height: 100 }} resizeMode="contain" />
+                    </View>
+
+                    <View style={[tw`w-full bg-white/15 border-2 border-white/20 rounded-2xl p-2 items-center`, { minHeight: 110 }]}>
+                      <View style={tw`bg-orange-800/40 rounded-full px-3 py-1 mb-2`}>
+                        <Text style={tw`text-xs font-black text-orange-200`}>#3</Text>
+                      </View>
+
+                      <View style={tw`bg-white/90 rounded-full px-2 py-1 mb-3`}>
+                        <Text style={{ fontSize: 10, fontWeight: '900', color: '#7c2d12' }} numberOfLines={1}>
+                          {topThree[2].username}
+                        </Text>
+                      </View>
+
+                      <View style={tw`items-center`}>
+                        <Text style={{ fontSize: 18, fontWeight: '900', color: '#FFFFFF' }}>
+                          {mode === 'weekly' ? (topThree[2].weeklyXP || 0).toLocaleString() : topThree[2].total_xp.toLocaleString()}
+                        </Text>
+                        <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: '600', marginBottom: 6 }}>XP</Text>
+
+                        <Text style={{ fontSize: 18, fontWeight: '900', color: '#FFFFFF' }}>{topThree[2].current_level}</Text>
+                        <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>LVL</Text>
+                      </View>
+                    </View>
+                  </Animated.View>
+                )}
+              </View>
+            </Animated.View>
+          )}
+
+          {/* Rest of Leaderboard */}
+          {remaining.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(500)} style={tw`px-6`}>
+              <View style={tw`mb-4 flex-row items-center`}>
+                <View style={tw`flex-1 h-px bg-white/20`} />
+                <Text style={tw`text-xs font-bold text-white/50 mx-3 tracking-wider`}>OTHER CHAMPIONS</Text>
+                <View style={tw`flex-1 h-px bg-white/20`} />
+              </View>
+
+              <View style={tw`gap-2`}>
+                {remaining.map((user, index) => (
+                  <Animated.View key={user.id} entering={FadeInDown.delay(600 + index * 30).duration(300)}>
+                    <View
+                      style={[
+                        tw`flex-row items-center p-4 rounded-xl border-2`,
+                        {
+                          backgroundColor: user.isCurrentUser ? 'rgba(139, 92, 246, 0.25)' : 'rgba(255, 255, 255, 0.10)',
+                          borderColor: user.isCurrentUser ? '#8b5cf6' : 'rgba(255, 255, 255, 0.20)',
+                        },
+                      ]}
+                    >
+                      <View style={tw`mr-4`}>
+                        <View style={[tw`w-10 h-10 rounded-xl items-center justify-center`, { backgroundColor: user.isCurrentUser ? '#7c3aed' : 'rgba(255, 255, 255, 0.15)' }]}>
+                          <Text style={tw`text-white font-black text-sm`}>{user.rank}</Text>
                         </View>
-                      )}
-                    </View>
-                    <Text style={{ fontSize: 11, color: '#9CA3AF', fontWeight: '600', marginTop: 2 }}>Level {user.current_level}</Text>
-                  </View>
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={{ fontSize: 15, fontWeight: '800', color: '#D1D5DB' }}>{mode === 'weekly' ? (user.weeklyXP || 0).toLocaleString() : user.total_xp.toLocaleString()}</Text>
-                    <Text style={{ fontSize: 9, color: '#6B7280', fontWeight: '600' }}>XP</Text>
-                  </View>
-                </View>
-              ))}
-            </LinearGradient>
-          </View>
-        )}
+                      </View>
 
-        {/* Your Position (if outside top 20) */}
-        {currentUser && currentUser.rank > 20 && (
-          <View style={{ paddingHorizontal: 20, marginTop: 20 }}>
-            <LinearGradient colors={['#4B5563', '#374151']} style={{ borderRadius: 20, padding: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <View>
-                <Text style={{ fontSize: 10, color: '#D1D5DB', fontWeight: '800', marginBottom: 2 }}>YOUR RANK</Text>
-                <Text style={{ fontSize: 17, fontWeight: '900', color: '#FFFFFF' }}>{currentUser.username}</Text>
-                <Text style={{ fontSize: 12, color: '#9CA3AF', fontWeight: '700', marginTop: 2 }}>
-                  {mode === 'weekly' ? `${(currentUser.weeklyXP || 0).toLocaleString()} XP` : `${currentUser.total_xp.toLocaleString()} XP • Lv.${currentUser.current_level}`}
-                </Text>
+                      <View style={tw`flex-1`}>
+                        <View style={tw`flex-row items-center gap-2 mb-0.5`}>
+                          <Text style={tw`text-white font-bold text-sm`}>{user.username}</Text>
+                          {user.isCurrentUser && (
+                            <View style={tw`bg-violet-600/50 px-2 py-0.5 rounded`}>
+                              <Text style={tw`text-violet-200 text-xs font-black`}>YOU</Text>
+                            </View>
+                          )}
+                        </View>
+                        <Text style={tw`text-white/60 text-xs font-semibold`}>Level {user.current_level}</Text>
+                      </View>
+
+                      <View style={tw`items-end`}>
+                        <Text style={tw`text-white font-bold text-sm`}>{mode === 'weekly' ? (user.weeklyXP || 0).toLocaleString() : user.total_xp.toLocaleString()}</Text>
+                        <Text style={tw`text-white/50 text-xs font-semibold`}>XP</Text>
+                      </View>
+                    </View>
+                  </Animated.View>
+                ))}
               </View>
-              <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 14 }}>
-                <Text style={{ fontSize: 24, fontWeight: '900', color: '#FFFFFF' }}>{currentUserRank}</Text>
+            </Animated.View>
+          )}
+
+          {/* Your Position (if outside top 20) */}
+          {currentUser && currentUser.rank > 20 && (
+            <Animated.View entering={FadeInUp.delay(700)} style={tw`px-6 mt-6`}>
+              <View style={tw`mb-2`}>
+                <Text style={tw`text-xs font-bold text-white/50 text-center tracking-wider`}>YOUR RANK</Text>
               </View>
-            </LinearGradient>
-          </View>
-        )}
-      </ScrollView>
-    </LinearGradient>
+
+              <View style={tw`bg-slate-600/40 border-2 border-slate-500/50 rounded-2xl p-5 flex-row items-center justify-between`}>
+                <View>
+                  <Text style={tw`text-xs font-bold text-white/80 mb-1 tracking-wide`}>YOUR POSITION</Text>
+                  <Text style={tw`text-white font-black text-lg mb-1`}>{currentUser.username}</Text>
+                  <Text style={tw`text-white/70 text-xs font-semibold`}>
+                    {mode === 'weekly' ? `${(currentUser.weeklyXP || 0).toLocaleString()} XP` : `${currentUser.total_xp.toLocaleString()} XP • Lv.${currentUser.current_level}`}
+                  </Text>
+                </View>
+
+                <View style={tw`bg-white/15 rounded-2xl px-5 py-3`}>
+                  <Text style={tw`text-white font-black text-2xl`}>{currentUserRank}</Text>
+                </View>
+              </View>
+            </Animated.View>
+          )}
+        </ScrollView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 };
+
+const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+  },
+});
 
 export default LeaderboardScreen;

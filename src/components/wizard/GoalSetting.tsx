@@ -1,11 +1,9 @@
 // src/components/wizard/GoalSetting.tsx
 import React, { useState } from 'react';
-import { View, Text, Pressable, TextInput } from 'react-native';
+import { View, Text, Pressable, TextInput, ScrollView } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Target, Sparkles, Lightbulb, Calendar } from 'lucide-react-native';
+import { Target, Calendar, Sparkles } from 'lucide-react-native';
 import tw from '../../lib/tailwind';
-import { quotes, tips } from '../../utils/habitHelpers';
 
 interface GoalSettingProps {
   hasEndGoal: boolean;
@@ -37,122 +35,103 @@ const GoalSetting: React.FC<GoalSettingProps> = ({ hasEndGoal, endGoalDays, onCh
   };
 
   return (
-    <View style={tw`px-5`}>
-      {/* Header with Quote Integrated */}
-      <View style={tw`mb-5`}>
-        <LinearGradient colors={['#ef4444', '#dc2626']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-5 shadow-lg`}>
-          <Text style={tw`text-2xl font-light text-white mb-1.5 tracking-tight`}>Set Your Goal</Text>
-          <Text style={tw`text-sm text-white/90 leading-5 mb-3`}>Choose how long you want to track this habit</Text>
-
-          {/* Integrated Quote */}
-          <View style={tw`border-t border-white/20 pt-3 mt-1`}>
-            <Text style={tw`text-xs text-white/70 italic leading-5`}>"{quotes.goal.text}"</Text>
-            <Text style={tw`text-xs text-white/60 font-medium mt-1`}>— {quotes.goal.author}</Text>
-          </View>
-        </LinearGradient>
-      </View>
-
-      <View style={tw`gap-3 mb-6`}>
-        {/* Default 61-Day Challenge */}
-        <Pressable onPress={() => onChange(false)} style={({ pressed }) => [tw`rounded-2xl overflow-hidden`, pressed && tw`opacity-90`]}>
-          <LinearGradient colors={!hasEndGoal ? ['#10b981', '#059669dd'] : ['#ffffff', '#f9fafb']} style={[tw`p-4`, { borderWidth: 1, borderColor: !hasEndGoal ? 'transparent' : '#e5e7eb' }]}>
-            <View style={tw`flex-row items-start`}>
-              {/* Icon Container */}
-              <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-3.5`, !hasEndGoal ? tw`bg-white/25` : tw`bg-stone-100`]}>
-                <Target size={24} color={!hasEndGoal ? '#ffffff' : '#6B7280'} strokeWidth={2} />
-              </View>
-
-              {/* Text Content */}
-              <View style={tw`flex-1 mr-3 pt-0.5`}>
-                <Text style={[tw`text-base font-semibold mb-0.5`, !hasEndGoal ? tw`text-white` : tw`text-stone-800`]}>61-Day Challenge</Text>
-                <Text style={[tw`text-sm leading-5`, !hasEndGoal ? tw`text-white/90` : tw`text-stone-600`]}>Science-backed duration for lasting habit formation</Text>
-                {!hasEndGoal && (
-                  <View style={tw`flex-row items-center mt-1.5`}>
-                    <Sparkles size={12} color="#ffffff" strokeWidth={2} style={tw`mr-1`} />
-                    <Text style={tw`text-xs text-white/80`}>Optimal for habit building</Text>
-                  </View>
-                )}
-              </View>
-
-              {/* Selection Indicator */}
-              {!hasEndGoal && (
-                <View style={tw`w-5.5 h-5.5 rounded-full bg-white/30 items-center justify-center flex-shrink-0 mt-0.5`}>
-                  <View style={tw`w-2 h-2 bg-white rounded-full`} />
-                </View>
-              )}
-            </View>
-          </LinearGradient>
-        </Pressable>
-
-        {/* Custom Duration */}
-        <Pressable onPress={() => onChange(true, endGoalDays || 30)} style={({ pressed }) => [tw`rounded-2xl overflow-hidden`, pressed && tw`opacity-90`]}>
-          <LinearGradient colors={hasEndGoal ? ['#8b5cf6', '#7c3aeddd'] : ['#ffffff', '#f9fafb']} style={[tw`p-4`, { borderWidth: 1, borderColor: hasEndGoal ? 'transparent' : '#e5e7eb' }]}>
-            <View style={tw`flex-row items-center mb-${hasEndGoal ? '3' : '0'}`}>
-              {/* Icon Container */}
-              <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-3.5`, hasEndGoal ? tw`bg-white/25` : tw`bg-stone-100`]}>
-                <Calendar size={24} color={hasEndGoal ? '#ffffff' : '#6B7280'} strokeWidth={2} />
-              </View>
-
-              {/* Text Content */}
-              <View style={tw`flex-1 mr-3`}>
-                <Text style={[tw`text-base font-semibold mb-0.5`, hasEndGoal ? tw`text-white` : tw`text-stone-800`]}>Custom Duration</Text>
-                <Text style={[tw`text-sm leading-5`, hasEndGoal ? tw`text-white/90` : tw`text-stone-600`]}>Set your own timeline that works for you</Text>
-              </View>
-
-              {/* Selection Indicator */}
-              {hasEndGoal && (
-                <View style={tw`w-5.5 h-5.5 rounded-full bg-white/30 items-center justify-center flex-shrink-0`}>
-                  <View style={tw`w-2 h-2 bg-white rounded-full`} />
-                </View>
-              )}
-            </View>
-
-            {hasEndGoal && (
-              <Animated.View entering={FadeInDown.duration(400)} style={tw`mt-3`}>
-                {/* Preset Goals */}
-                <View style={tw`flex-row flex-wrap gap-2 mb-3`}>
-                  {presetGoals.map((goal) => (
-                    <Pressable
-                      key={goal.days}
-                      onPress={() => handlePresetSelect(goal.days)}
-                      style={({ pressed }) => [
-                        tw`flex-1 min-w-[45%] px-3 py-2.5 rounded-xl`,
-                        endGoalDays === goal.days ? tw`bg-white/25 border-2 border-white` : tw`bg-white/10 border border-white/30`,
-                        pressed && tw`opacity-80`,
-                      ]}
-                    >
-                      <Text style={[tw`text-sm font-semibold text-center`, endGoalDays === goal.days ? tw`text-white` : tw`text-white/80`]}>{goal.label}</Text>
-                      <Text style={tw`text-xs text-white/60 text-center mt-0.5`}>{goal.subtitle}</Text>
-                    </Pressable>
-                  ))}
-                </View>
-
-                {/* Custom Input */}
-                <View style={tw`bg-white/10 rounded-xl p-3`}>
-                  <Text style={tw`text-xs text-white/80 mb-2 font-medium`}>Or enter custom days:</Text>
-                  <TextInput
-                    value={inputValue}
-                    onChangeText={handleCustomDays}
-                    placeholder="Enter number of days"
-                    placeholderTextColor="rgba(255,255,255,0.4)"
-                    keyboardType="numeric"
-                    style={tw`bg-white/20 rounded-lg px-3 py-2.5 text-white text-base`}
-                  />
-                </View>
-              </Animated.View>
-            )}
-          </LinearGradient>
-        </Pressable>
-      </View>
-
-      {/* Professional Tip */}
-      <LinearGradient colors={['#e0e7ff', '#c7d2fe', '#a5b4fc']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-2xl p-4 border border-indigo-200`}>
-        <View style={tw`flex-row items-center mb-2`}>
-          <Lightbulb size={18} color="#4338ca" strokeWidth={2} style={tw`mr-2`} />
-          <Text style={tw`text-sm font-semibold text-indigo-900`}>{tips.goal[0].title}</Text>
+    <View style={tw`flex-1 justify-center`}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`px-8 py-8`}>
+        {/* Header */}
+        <View style={tw`mb-10`}>
+          <Text style={tw`text-3xl font-bold text-white text-center mb-3`}>Set Your Goal</Text>
+          <Text style={tw`text-base text-white/80 text-center leading-6 px-2`}>How long do you want to track this habit?</Text>
         </View>
-        <Text style={tw`text-sm text-indigo-800 leading-5`}>{tips.goal[0].content}</Text>
-      </LinearGradient>
+
+        {/* Default 61-Day Option */}
+        <Pressable
+          onPress={() => onChange(false)}
+          style={({ pressed }) => [
+            tw`rounded-2xl p-5 flex-row items-center border-2 mb-4 ${!hasEndGoal ? 'border-emerald-400/60' : 'border-white/10'}`,
+            { backgroundColor: !hasEndGoal ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.15)' },
+            pressed && tw`opacity-80`,
+          ]}
+        >
+          <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-4`, { backgroundColor: !hasEndGoal ? 'rgba(16, 185, 129, 0.25)' : 'rgba(255, 255, 255, 0.1)' }]}>
+            <Target size={24} color="#ffffff" strokeWidth={2} />
+          </View>
+
+          <View style={tw`flex-1`}>
+            <Text style={tw`text-base font-semibold text-white mb-0.5`}>61-Day Challenge</Text>
+            <Text style={tw`text-sm text-white/70 leading-5`}>Science-backed habit formation</Text>
+            <View style={tw`flex-row items-center mt-1`}>
+              <Sparkles size={12} color="rgba(255, 255, 255, 0.5)" strokeWidth={2} style={tw`mr-1.5`} />
+              <Text style={tw`text-xs text-white/50`}>Recommended</Text>
+            </View>
+          </View>
+
+          {!hasEndGoal && (
+            <View style={tw`w-6 h-6 rounded-full bg-emerald-500 items-center justify-center`}>
+              <View style={tw`w-3 h-3 rounded-full bg-white`} />
+            </View>
+          )}
+        </Pressable>
+
+        {/* Divider */}
+        <View style={tw`flex-row items-center my-6`}>
+          <View style={tw`flex-1 h-px bg-white/20`} />
+          <Text style={tw`px-4 text-xs text-white/50 font-medium`}>OR CHOOSE CUSTOM</Text>
+          <View style={tw`flex-1 h-px bg-white/20`} />
+        </View>
+
+        {/* Preset Goals */}
+        <View style={tw`gap-2 mb-6`}>
+          {presetGoals.map((goal, index) => {
+            const isSelected = hasEndGoal && endGoalDays === goal.days;
+
+            return (
+              <Animated.View key={goal.days} entering={FadeInDown.delay(index * 30).duration(300)}>
+                <Pressable
+                  onPress={() => handlePresetSelect(goal.days)}
+                  style={({ pressed }) => [
+                    tw`rounded-2xl p-4 flex-row items-center justify-between border-2 ${isSelected ? 'border-amber-400/60' : 'border-white/10'}`,
+                    { backgroundColor: isSelected ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255, 255, 255, 0.15)' },
+                    pressed && tw`opacity-80`,
+                  ]}
+                >
+                  <View style={tw`flex-row items-center flex-1`}>
+                    <Calendar size={20} color="#ffffff" strokeWidth={2} style={tw`mr-3`} />
+                    <View>
+                      <Text style={tw`text-base font-semibold text-white`}>{goal.label}</Text>
+                      <Text style={tw`text-xs text-white/60`}>{goal.subtitle}</Text>
+                    </View>
+                  </View>
+
+                  {isSelected && (
+                    <View style={tw`w-6 h-6 rounded-full bg-amber-500 items-center justify-center`}>
+                      <View style={tw`w-3 h-3 rounded-full bg-white`} />
+                    </View>
+                  )}
+                </Pressable>
+              </Animated.View>
+            );
+          })}
+        </View>
+
+        {/* Custom Input */}
+        <View>
+          <Text style={tw`text-sm font-medium text-white/90 mb-3`}>Or set custom days:</Text>
+          <TextInput
+            value={inputValue}
+            onChangeText={handleCustomDays}
+            placeholder="e.g., 100"
+            placeholderTextColor="rgba(255, 255, 255, 0.3)"
+            keyboardType="numeric"
+            style={tw`bg-white/15 border-2 border-white/20 rounded-2xl px-5 py-4 text-white text-base`}
+            maxLength={4}
+          />
+        </View>
+
+        {/* Tip */}
+        <View style={tw`mt-8`}>
+          <Text style={tw`text-xs text-white/50 text-center font-light italic leading-5`}>Research shows 66 days is the average time{'\n'}to form a new automatic habit</Text>
+        </View>
+      </ScrollView>
     </View>
   );
 };

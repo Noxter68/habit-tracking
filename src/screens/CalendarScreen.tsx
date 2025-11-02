@@ -1,6 +1,6 @@
 // src/screens/CalendarScreen.tsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, ScrollView, RefreshControl, Text } from 'react-native';
+import { View, ScrollView, RefreshControl, Text, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -175,54 +175,60 @@ const CalendarScreen: React.FC = () => {
   // Empty state
   if (habits.length === 0) {
     return (
-      <SafeAreaView style={tw`flex-1 bg-stone-50`}>
-        <EmptyState onCreateHabit={handleCreateHabit} />
-      </SafeAreaView>
+      <ImageBackground source={require('../../assets/interface/textures/texture-white.png')} style={tw`flex-1`} imageStyle={{ opacity: 0.1 }} resizeMode="repeat">
+        <SafeAreaView style={tw`flex-1 bg-transparent`}>
+          <EmptyState onCreateHabit={handleCreateHabit} />
+        </SafeAreaView>
+      </ImageBackground>
     );
   }
 
   if (!selectedHabit) {
     return (
-      <SafeAreaView style={tw`flex-1 bg-stone-50 items-center justify-center`}>
-        <Text style={tw`text-sand-500`}>Loading...</Text>
-      </SafeAreaView>
+      <ImageBackground source={require('../../assets/interface/textures/texture-white.png')} style={tw`flex-1`} imageStyle={{ opacity: 0.15 }} resizeMode="repeat">
+        <SafeAreaView style={tw`flex-1 bg-transparent items-center justify-center`}>
+          <Text style={tw`text-sand-500`}>Loading...</Text>
+        </SafeAreaView>
+      </ImageBackground>
     );
   }
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-stone-50`}>
-      <ScrollView
-        style={tw`flex-1`}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={tw`pb-20`}
-        refreshControl={<RefreshControl refreshing={loading || holidayLoading} onRefresh={handleRefresh} tintColor={tw.color('sand-400')} />}
-      >
-        {/* Header */}
-        <CalendarHeader habit={selectedHabit} />
+    <ImageBackground source={require('../../assets/interface/textures/texture-white.png')} style={tw`flex-1`} imageStyle={{ opacity: 0.15 }} resizeMode="repeat">
+      <SafeAreaView style={tw`flex-1 bg-transparent`}>
+        <ScrollView
+          style={tw`flex-1`}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={tw`pb-20`}
+          refreshControl={<RefreshControl refreshing={loading || holidayLoading} onRefresh={handleRefresh} tintColor={tw.color('sand-400')} />}
+        >
+          {/* Header */}
+          <CalendarHeader habit={selectedHabit} />
 
-        {/* Habit Selector */}
-        <HabitSelector habits={habits} selectedHabit={selectedHabit} onSelectHabit={handleHabitSelect} />
+          {/* Habit Selector */}
+          <HabitSelector habits={habits} selectedHabit={selectedHabit} onSelectHabit={handleHabitSelect} />
 
-        {/* Stats */}
-        <StatsBar habit={selectedHabit} />
+          {/* Stats */}
+          <StatsBar habit={selectedHabit} />
 
-        {/* Calendar with Holiday Support */}
-        <View style={tw`mx-5 mt-4 mb-6`}>
-          <CalendarGrid
-            habit={selectedHabit}
-            currentMonth={currentMonth}
-            selectedDate={selectedDate}
-            onSelectDate={handleDateSelect}
-            onNavigateMonth={navigateMonth}
-            activeHoliday={activeHoliday}
-            allHolidays={allHolidays}
-          />
+          {/* Calendar with Holiday Support */}
+          <View style={tw`mx-5 mt-4 mb-6`}>
+            <CalendarGrid
+              habit={selectedHabit}
+              currentMonth={currentMonth}
+              selectedDate={selectedDate}
+              onSelectDate={handleDateSelect}
+              onNavigateMonth={navigateMonth}
+              activeHoliday={activeHoliday}
+              allHolidays={allHolidays}
+            />
 
-          {/* Selected Date Details with Holiday Info */}
-          <DateDetails habit={selectedHabit} selectedDate={selectedDate} activeHoliday={activeHoliday} allHolidays={allHolidays} />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+            {/* Selected Date Details with Holiday Info */}
+            <DateDetails habit={selectedHabit} selectedDate={selectedDate} activeHoliday={activeHoliday} allHolidays={allHolidays} />
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 };
 

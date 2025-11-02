@@ -1,13 +1,11 @@
 // src/components/wizard/NotificationSetup.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, Switch, Pressable, Modal, Alert, Platform, Linking } from 'react-native';
-import { Bell, BellOff, Sun, Sunrise, Sunset, Moon, Clock, Sparkles, TrendingUp } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { View, Text, Switch, Pressable, Modal, Alert, Platform, ScrollView } from 'react-native';
+import { Bell, BellOff, Sun, Sunrise, Moon, Clock } from 'lucide-react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Notifications from 'expo-notifications';
 import TimePicker from '../TimePicker';
 import tw from '@/lib/tailwind';
-import { quotes, tips } from '@/utils/habitHelpers';
 
 interface NotificationSetupProps {
   enabled: boolean;
@@ -19,11 +17,6 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, on
   const [selectedTime, setSelectedTime] = useState(time || '09:00');
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [hasPermission, setHasPermission] = useState(false);
-
-  const switchScale = useSharedValue(1);
-  const toggleAnimation = useAnimatedStyle(() => ({
-    transform: [{ scale: switchScale.value }],
-  }));
 
   useEffect(() => {
     checkNotificationPermissions();
@@ -44,10 +37,7 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, on
     }
 
     if (finalStatus !== 'granted') {
-      Alert.alert('Permission Required', 'Please enable notifications in your device settings to receive habit reminders.', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Open Settings', onPress: () => Linking.openSettings() },
-      ]);
+      Alert.alert('Permission Required', 'Please enable notifications in your device settings.', [{ text: 'OK' }]);
       return false;
     }
 
@@ -55,196 +45,121 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, on
     return true;
   };
 
-  const handleToggle = async () => {
-    if (!enabled) {
+  const handleToggle = async (value: boolean) => {
+    if (value && !hasPermission) {
       const granted = await requestNotificationPermission();
-      if (granted) {
-        switchScale.value = withSpring(1.1, {}, () => {
-          switchScale.value = withSpring(1);
-        });
-        onChange(true, selectedTime);
-      }
-    } else {
-      onChange(false);
+      if (!granted) return;
     }
+    onChange(value, selectedTime);
   };
 
-  const quickTimes = [
-    { time: '07:00', label: 'Morning', icon: Sunrise, description: 'Start fresh' },
-    { time: '09:00', label: 'Mid-Morning', icon: Sun, description: 'After breakfast' },
-    { time: '18:00', label: 'Evening', icon: Sunset, description: 'After work' },
-    { time: '21:00', label: 'Night', icon: Moon, description: 'Before bed' },
-  ];
-
-  const handleQuickTime = (time: string) => {
-    setSelectedTime(time);
-    onChange(enabled, time);
-  };
-
-  const handleCustomTimeConfirm = (hour: number, minute: number) => {
-    const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-    setSelectedTime(timeStr);
-    onChange(enabled, timeStr);
+  const handleTimeChange = (hour: number, minute: number) => {
+    const newTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+    setSelectedTime(newTime);
+    onChange(enabled, newTime);
     setShowTimePicker(false);
   };
 
-  // Check if selected time is one of the quick times
-  const isQuickTime = quickTimes.some((qt) => qt.time === selectedTime);
-
-  // Format time for display (12-hour format with AM/PM)
-  const formatTime = (timeStr: string) => {
-    const [hourStr, minuteStr] = timeStr.split(':');
-    const hour = parseInt(hourStr);
-    const minute = parseInt(minuteStr);
-    const period = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour > 12 ? hour - 12 : hour || 12;
-    return `${displayHour}:${minute.toString().padStart(2, '0')} ${period}`;
-  };
+  const quickTimes = [
+    { time: '07:00', label: 'Morning', subtitle: '7:00 AM', icon: Sunrise },
+    { time: '12:00', label: 'Noon', subtitle: '12:00 PM', icon: Sun },
+    { time: '18:00', label: 'Evening', subtitle: '6:00 PM', icon: Moon },
+  ];
 
   return (
-    <View style={tw`px-5`}>
-      {/* Header with Quote Integrated */}
-      <View style={tw`mb-5`}>
-        <LinearGradient colors={['#fbbf24', '#f59e0b']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-5 shadow-lg`}>
-          <Text style={tw`text-2xl font-light text-white mb-1.5 tracking-tight`}>Stay on Track</Text>
-          <Text style={tw`text-sm text-white/90 leading-5 mb-3`}>Set up reminders to build consistency</Text>
+    <View style={tw`flex-1 justify-center`}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`px-8 py-8`}>
+        {/* Header */}
+        <View style={tw`mb-10`}>
+          <Text style={tw`text-3xl font-bold text-white text-center mb-3`}>Daily Reminders</Text>
+          <Text style={tw`text-base text-white/80 text-center leading-6 px-2`}>Get gentle nudges to stay on track</Text>
+        </View>
 
-          {/* Integrated Quote */}
-          <View style={tw`border-t border-white/20 pt-3 mt-1`}>
-            <Text style={tw`text-xs text-white/70 italic leading-5`}>"{quotes.notification.text}"</Text>
-            <Text style={tw`text-xs text-white/60 font-medium mt-1`}>— {quotes.notification.author}</Text>
-          </View>
-        </LinearGradient>
-      </View>
-
-      {/* Main Toggle Card */}
-      <Animated.View entering={FadeInDown.delay(200).duration(500)} style={tw`mb-4`}>
-        <View style={[tw`bg-white rounded-2xl p-5 shadow-sm`, { borderWidth: 1, borderColor: '#e5e7eb' }]}>
-          <View style={tw`flex-row items-center justify-between`}>
+        {/* Enable/Disable Toggle */}
+        <View style={tw`bg-white/15 border-2 border-white/20 rounded-2xl p-5 mb-6`}>
+          <View style={tw`flex-row items-center justify-between mb-3`}>
             <View style={tw`flex-row items-center flex-1`}>
-              <View style={tw`w-12 h-12 rounded-xl bg-amber-50 items-center justify-center mr-4`}>
-                {enabled ? <Bell size={24} color="#f59e0b" strokeWidth={2} /> : <BellOff size={24} color="#9ca3af" strokeWidth={2} />}
-              </View>
+              {enabled ? <Bell size={24} color="#10b981" strokeWidth={2} style={tw`mr-3`} /> : <BellOff size={24} color="rgba(255, 255, 255, 0.5)" strokeWidth={2} style={tw`mr-3`} />}
               <View style={tw`flex-1`}>
-                <Text style={tw`text-lg font-semibold text-stone-800 mb-1`}>{enabled ? 'Reminders Enabled' : 'Enable Reminders'}</Text>
-                <Text style={tw`text-sm text-stone-600`}>{enabled ? 'You will receive daily notifications' : 'Get notified to stay consistent'}</Text>
+                <Text style={tw`text-base font-semibold text-white mb-0.5`}>{enabled ? 'Notifications On' : 'Notifications Off'}</Text>
+                <Text style={tw`text-sm text-white/70`}>{enabled ? 'Daily reminder active' : 'No reminders'}</Text>
               </View>
             </View>
-            <Animated.View style={toggleAnimation}>
-              <Switch value={enabled} onValueChange={handleToggle} trackColor={{ false: '#e5e7eb', true: '#fbbf24' }} thumbColor={enabled ? '#ffffff' : '#f3f4f6'} />
-            </Animated.View>
+            <Switch value={enabled} onValueChange={handleToggle} trackColor={{ false: 'rgba(255, 255, 255, 0.2)', true: '#10b981' }} thumbColor="#ffffff" />
           </View>
         </View>
-      </Animated.View>
 
-      {/* Quick Time Selection */}
-      {enabled && (
-        <Animated.View entering={FadeInDown.delay(300).duration(500)} style={tw`mb-4`}>
-          <Text style={tw`text-sm font-medium text-stone-700 mb-3`}>Choose your reminder time:</Text>
-          <View style={tw`gap-2`}>
-            {quickTimes.map((qt, index) => {
-              const Icon = qt.icon;
-              const isSelected = selectedTime === qt.time;
+        {/* Time Selection (only if enabled) */}
+        {enabled && (
+          <Animated.View entering={FadeInDown.duration(300)}>
+            {/* Quick Time Options */}
+            <Text style={tw`text-sm font-medium text-white/90 mb-3`}>Quick select:</Text>
+            <View style={tw`gap-2 mb-6`}>
+              {quickTimes.map((quickTime, index) => {
+                const Icon = quickTime.icon;
+                const isSelected = selectedTime === quickTime.time;
 
-              return (
-                <Pressable
-                  key={qt.time}
-                  onPress={() => handleQuickTime(qt.time)}
-                  style={({ pressed }) => [tw`rounded-xl overflow-hidden`, { borderWidth: 1, borderColor: isSelected ? '#fde68a' : '#e5e7eb' }, pressed && tw`opacity-90`]}
-                >
-                  <View style={[tw`p-4 flex-row items-center`, isSelected ? tw`bg-amber-50` : tw`bg-white`]}>
-                    <View style={[tw`w-10 h-10 rounded-lg items-center justify-center mr-3`, isSelected ? tw`bg-amber-100` : tw`bg-stone-50`]}>
-                      <Icon size={20} color={isSelected ? '#f59e0b' : '#9ca3af'} strokeWidth={2} />
-                    </View>
-                    <View style={tw`flex-1`}>
-                      <Text style={[tw`text-base font-semibold`, isSelected ? tw`text-amber-900` : tw`text-stone-800`]}>{qt.label}</Text>
-                      <Text style={[tw`text-sm`, isSelected ? tw`text-amber-700` : tw`text-stone-600`]}>
-                        {qt.time} • {qt.description}
-                      </Text>
-                    </View>
-                    {isSelected && (
-                      <View style={tw`w-5 h-5 rounded-full bg-amber-500 items-center justify-center`}>
-                        <View style={tw`w-2 h-2 bg-white rounded-full`} />
+                return (
+                  <Animated.View key={quickTime.time} entering={FadeInDown.delay(index * 30).duration(300)}>
+                    <Pressable
+                      onPress={() => {
+                        setSelectedTime(quickTime.time);
+                        onChange(true, quickTime.time);
+                      }}
+                      style={({ pressed }) => [
+                        tw`rounded-2xl p-4 flex-row items-center border-2 ${isSelected ? 'border-amber-400/60' : 'border-white/10'}`,
+                        { backgroundColor: isSelected ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255, 255, 255, 0.15)' },
+                        pressed && tw`opacity-80`,
+                      ]}
+                    >
+                      <View style={[tw`w-10 h-10 rounded-xl items-center justify-center mr-3`, { backgroundColor: isSelected ? 'rgba(251, 191, 36, 0.25)' : 'rgba(255, 255, 255, 0.1)' }]}>
+                        <Icon size={20} color="#ffffff" strokeWidth={2} />
                       </View>
-                    )}
-                  </View>
-                </Pressable>
-              );
-            })}
+
+                      <View style={tw`flex-1`}>
+                        <Text style={tw`text-base font-semibold text-white`}>{quickTime.label}</Text>
+                        <Text style={tw`text-sm text-white/70`}>{quickTime.subtitle}</Text>
+                      </View>
+
+                      {isSelected && (
+                        <View style={tw`w-6 h-6 rounded-full bg-amber-500 items-center justify-center`}>
+                          <View style={tw`w-3 h-3 rounded-full bg-white`} />
+                        </View>
+                      )}
+                    </Pressable>
+                  </Animated.View>
+                );
+              })}
+            </View>
 
             {/* Custom Time Button */}
             <Pressable
               onPress={() => setShowTimePicker(true)}
-              style={({ pressed }) => [tw`rounded-xl overflow-hidden`, { borderWidth: 1, borderColor: !isQuickTime ? '#fde68a' : '#e5e7eb' }, pressed && tw`opacity-90`]}
+              style={({ pressed }) => [tw`rounded-2xl p-4 flex-row items-center justify-center bg-white/15 border-2 border-white/20`, pressed && tw`opacity-70`]}
             >
-              <View style={[tw`p-4 flex-row items-center`, !isQuickTime ? tw`bg-amber-50` : tw`bg-white`]}>
-                <View style={[tw`w-10 h-10 rounded-lg items-center justify-center mr-3`, !isQuickTime ? tw`bg-amber-100` : tw`bg-stone-50`]}>
-                  <Clock size={20} color={!isQuickTime ? '#f59e0b' : '#9ca3af'} strokeWidth={2} />
-                </View>
-                <View style={tw`flex-1`}>
-                  <Text style={[tw`text-base font-semibold`, !isQuickTime ? tw`text-amber-900` : tw`text-stone-800`]}>Custom Time</Text>
-                  {!isQuickTime && <Text style={tw`text-sm text-amber-700 mt-0.5`}>{formatTime(selectedTime)}</Text>}
-                </View>
-                {!isQuickTime && (
-                  <View style={tw`w-5 h-5 rounded-full bg-amber-500 items-center justify-center`}>
-                    <View style={tw`w-2 h-2 bg-white rounded-full`} />
-                  </View>
-                )}
-              </View>
+              <Clock size={20} color="#ffffff" strokeWidth={2} style={tw`mr-2`} />
+              <Text style={tw`text-white font-semibold`}>Choose Custom Time</Text>
             </Pressable>
-          </View>
-        </Animated.View>
-      )}
 
-      {/* Stats Card */}
-      {enabled && (
-        <Animated.View entering={FadeInDown.delay(400).duration(500)} style={tw`mb-6`}>
-          <LinearGradient colors={['#fbbf24', '#f59e0b']} style={tw`rounded-2xl p-4`}>
-            <View style={tw`flex-row justify-around`}>
-              <View style={tw`items-center`}>
-                <Text style={tw`text-white/70 text-xs font-light`}>Success Rate</Text>
-                <Text style={tw`text-white text-lg font-bold mt-0.5`}>+40%</Text>
-              </View>
-              <View style={tw`w-px bg-white/20`} />
-              <View style={tw`items-center`}>
-                <Text style={tw`text-white/70 text-xs font-light`}>Best Time</Text>
-                <Text style={tw`text-white text-lg font-bold mt-0.5`}>Morning</Text>
-              </View>
-              <View style={tw`w-px bg-white/20`} />
-              <View style={tw`items-center`}>
-                <Text style={tw`text-white/70 text-xs font-light`}>Avg Streak</Text>
-                <Text style={tw`text-white text-lg font-bold mt-0.5`}>21 days</Text>
-              </View>
+            {/* Current Time Display */}
+            <View style={tw`mt-4 bg-emerald-500/20 border-2 border-emerald-400/30 rounded-2xl p-4`}>
+              <Text style={tw`text-sm text-white/70 text-center mb-1`}>You'll be reminded at</Text>
+              <Text style={tw`text-2xl font-bold text-white text-center`}>{selectedTime}</Text>
             </View>
-          </LinearGradient>
-        </Animated.View>
-      )}
+          </Animated.View>
+        )}
 
-      {/* Professional Tip */}
-      <View style={[tw`bg-blue-50 rounded-2xl p-4`, { borderLeftWidth: 3, borderLeftColor: '#3b82f6' }]}>
-        <View style={tw`flex-row items-center mb-2`}>
-          <TrendingUp size={18} color="#3b82f6" strokeWidth={2} style={tw`mr-2`} />
-          <Text style={tw`text-sm font-semibold text-blue-900`}>{tips.notification[1].title}</Text>
+        {/* Tip */}
+        <View style={tw`mt-8`}>
+          <Text style={tw`text-xs text-white/50 text-center font-light italic leading-5`}>
+            {enabled ? 'Choose a time that fits naturally into your routine' : 'You can always enable reminders later in settings'}
+          </Text>
         </View>
-        <Text style={tw`text-sm text-blue-800 leading-5`}>
-          {enabled
-            ? selectedTime.startsWith('07') || selectedTime.startsWith('08') || selectedTime.startsWith('09')
-              ? `${tips.notification[1].content.split('.')[0]}. Great choice for building willpower!`
-              : selectedTime.startsWith('18') || selectedTime.startsWith('19') || selectedTime.startsWith('20')
-              ? 'Evening habits are perfect after dinner or during your wind-down routine.'
-              : 'Choose a trigger moment that already happens daily in your life for best results.'
-            : tips.notification[0].content}
-        </Text>
-      </View>
+      </ScrollView>
 
       {/* Time Picker Modal */}
       <Modal visible={showTimePicker} transparent animationType="slide" onRequestClose={() => setShowTimePicker(false)}>
-        <TimePicker
-          initialHour={parseInt(selectedTime.split(':')[0])}
-          initialMinute={parseInt(selectedTime.split(':')[1])}
-          onConfirm={handleCustomTimeConfirm}
-          onCancel={() => setShowTimePicker(false)}
-        />
+        <TimePicker initialHour={parseInt(selectedTime.split(':')[0])} initialMinute={parseInt(selectedTime.split(':')[1])} onConfirm={handleTimeChange} onCancel={() => setShowTimePicker(false)} />
       </Modal>
     </View>
   );

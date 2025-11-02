@@ -2,10 +2,8 @@
 import React from 'react';
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Calendar, CalendarDays, CalendarClock, Award, Sparkles } from 'lucide-react-native';
+import { Calendar, CalendarDays, CalendarClock } from 'lucide-react-native';
 import tw from '../../lib/tailwind';
-import { quotes, tips } from '../../utils/habitHelpers';
 
 interface FrequencySelectorProps {
   selected: 'daily' | 'weekly' | 'custom';
@@ -19,101 +17,79 @@ const FrequencySelector: React.FC<FrequencySelectorProps> = ({ selected, customD
       id: 'daily' as const,
       title: 'Daily',
       subtitle: 'Every single day',
-      description: 'Build consistency with daily practice',
+      description: 'Build consistency',
       icon: Calendar,
-      gradient: ['#10b981', '#059669'],
-      stats: '2.5x more likely to stick',
     },
     {
       id: 'weekly' as const,
       title: 'Weekly',
       subtitle: 'Once per week',
-      description: 'Perfect for reflection and planning',
+      description: 'Perfect for planning',
       icon: CalendarDays,
-      gradient: ['#3b82f6', '#2563eb'],
-      stats: 'Great for recovery-based habits',
     },
     {
       id: 'custom' as const,
-      title: 'Custom Schedule',
+      title: 'Custom',
       subtitle: 'Choose specific days',
-      description: 'Flexible schedule around commitments',
+      description: 'Flexible schedule',
       icon: CalendarClock,
-      gradient: ['#8b5cf6', '#7c3aed'],
-      stats: 'Adapt to your lifestyle',
     },
   ];
 
-  return (
-    <View style={tw`flex-1`}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`px-5 pb-4`}>
-        {/* Header with Quote Integrated */}
-        <View style={tw`mb-5`}>
-          <LinearGradient colors={['#06b6d4', '#0891b2']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-5 shadow-lg`}>
-            <Text style={tw`text-2xl font-light text-white mb-1.5 tracking-tight`}>Set Your Rhythm</Text>
-            <Text style={tw`text-sm text-white/90 leading-5 mb-3`}>How often do you want to practice this habit?</Text>
+  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-            {/* Integrated Quote */}
-            <View style={tw`border-t border-white/20 pt-3 mt-1`}>
-              <Text style={tw`text-xs text-white/70 italic leading-5`}>"{quotes.frequency.text}"</Text>
-              <Text style={tw`text-xs text-white/60 font-medium mt-1`}>— {quotes.frequency.author}</Text>
-            </View>
-          </LinearGradient>
+  return (
+    <View style={tw`flex-1 justify-center`}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`px-8 py-8`}>
+        {/* Header */}
+        <View style={tw`mb-10`}>
+          <Text style={tw`text-3xl font-bold text-white text-center mb-3`}>Set Your Rhythm</Text>
+          <Text style={tw`text-base text-white/80 text-center leading-6 px-2`}>How often will you practice this habit?</Text>
         </View>
 
-        {/* Frequency Cards */}
+        {/* Frequency Options */}
         <View style={tw`gap-3 mb-6`}>
           {frequencies.map((frequency, index) => {
             const Icon = frequency.icon;
             const isSelected = selected === frequency.id;
 
             return (
-              <Animated.View key={frequency.id} entering={FadeInDown.delay(index * 30).duration(400)}>
+              <Animated.View key={frequency.id} entering={FadeInDown.delay(index * 30).duration(300)}>
                 <Pressable
                   onPress={() => onSelect(frequency.id)}
-                  style={({ pressed }) => [tw`rounded-2xl overflow-hidden`, { borderWidth: 1, borderColor: isSelected ? 'transparent' : '#e5e7eb' }, pressed && tw`opacity-90`]}
+                  style={({ pressed }) => [
+                    tw`rounded-2xl p-5 flex-row items-center border-2 ${isSelected ? 'border-cyan-400/60' : 'border-white/10'}`,
+                    { backgroundColor: isSelected ? 'rgba(6, 182, 212, 0.2)' : 'rgba(255, 255, 255, 0.15)' },
+                    pressed && tw`opacity-80`,
+                  ]}
                 >
-                  <LinearGradient colors={isSelected ? [frequency.gradient[0], `${frequency.gradient[1]}dd`] : ['#ffffff', '#f9fafb']} style={tw`p-4`}>
-                    <View style={tw`flex-row items-start`}>
-                      {/* Icon Container */}
-                      <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-3.5`, isSelected ? tw`bg-white/25` : tw`bg-stone-100`]}>
-                        <Icon size={24} color={isSelected ? '#ffffff' : '#6B7280'} strokeWidth={2} />
-                      </View>
+                  <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-4`, { backgroundColor: isSelected ? 'rgba(6, 182, 212, 0.25)' : 'rgba(255, 255, 255, 0.1)' }]}>
+                    <Icon size={24} color="#ffffff" strokeWidth={2} />
+                  </View>
 
-                      {/* Text Content */}
-                      <View style={tw`flex-1 mr-3 pt-0.5`}>
-                        <Text style={[tw`text-base font-semibold mb-0.5`, isSelected ? tw`text-white` : tw`text-stone-800`]}>{frequency.title}</Text>
-                        <Text style={[tw`text-sm leading-5 mb-1.5`, isSelected ? tw`text-white/90` : tw`text-stone-600`]}>{frequency.subtitle}</Text>
-                        <Text style={[tw`text-sm leading-5`, isSelected ? tw`text-white/85` : tw`text-stone-600`]}>{frequency.description}</Text>
+                  <View style={tw`flex-1`}>
+                    <Text style={tw`text-base font-semibold text-white mb-0.5`}>{frequency.title}</Text>
+                    <Text style={tw`text-sm text-white/70 leading-5`}>{frequency.subtitle}</Text>
+                    <Text style={tw`text-xs text-white/50 mt-1`}>{frequency.description}</Text>
+                  </View>
 
-                        {isSelected && (
-                          <View style={tw`flex-row items-center mt-2`}>
-                            <Sparkles size={12} color="#ffffff" strokeWidth={2} style={tw`mr-1.5`} />
-                            <Text style={tw`text-xs text-white/90 font-medium`}>{frequency.stats}</Text>
-                          </View>
-                        )}
-                      </View>
-
-                      {/* Selection Indicator */}
-                      {isSelected && (
-                        <View style={tw`w-5.5 h-5.5 rounded-full bg-white/30 items-center justify-center flex-shrink-0 mt-0.5`}>
-                          <View style={tw`w-2 h-2 bg-white rounded-full`} />
-                        </View>
-                      )}
+                  {isSelected && (
+                    <View style={tw`w-6 h-6 rounded-full bg-cyan-500 items-center justify-center`}>
+                      <View style={tw`w-3 h-3 rounded-full bg-white`} />
                     </View>
-                  </LinearGradient>
+                  )}
                 </Pressable>
               </Animated.View>
             );
           })}
         </View>
 
-        {/* Custom Days Selector (if custom selected) */}
+        {/* Custom Days Selector */}
         {selected === 'custom' && (
-          <Animated.View entering={FadeInDown.duration(400)} style={tw`mb-6`}>
-            <Text style={tw`text-sm font-medium text-stone-700 mb-3`}>Select days of the week:</Text>
+          <Animated.View entering={FadeInDown.duration(300)} style={tw`mb-6`}>
+            <Text style={tw`text-sm font-medium text-white/90 mb-3`}>Select days:</Text>
             <View style={tw`flex-row flex-wrap gap-2`}>
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => {
+              {weekDays.map((day, index) => {
                 const isDaySelected = customDays?.includes(index);
                 return (
                   <Pressable
@@ -122,9 +98,9 @@ const FrequencySelector: React.FC<FrequencySelectorProps> = ({ selected, customD
                       const newDays = isDaySelected ? customDays?.filter((d) => d !== index) : [...(customDays || []), index];
                       onSelect('custom', newDays);
                     }}
-                    style={({ pressed }) => [tw`px-4 py-3 rounded-xl`, isDaySelected ? tw`bg-purple-500` : tw`bg-stone-100`, pressed && tw`opacity-80`]}
+                    style={({ pressed }) => [tw`px-5 py-3 rounded-xl ${isDaySelected ? 'bg-cyan-500' : 'bg-white/15'}`, pressed && tw`opacity-70`]}
                   >
-                    <Text style={[tw`text-sm font-semibold`, isDaySelected ? tw`text-white` : tw`text-stone-600`]}>{day}</Text>
+                    <Text style={tw`text-sm font-semibold ${isDaySelected ? 'text-white' : 'text-white/70'}`}>{day}</Text>
                   </Pressable>
                 );
               })}
@@ -132,20 +108,10 @@ const FrequencySelector: React.FC<FrequencySelectorProps> = ({ selected, customD
           </Animated.View>
         )}
 
-        {/* Professional Tip */}
-        <LinearGradient colors={['#d1fae5', '#a7f3d0', '#6ee7b7']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-2xl p-4 border border-emerald-200`}>
-          <View style={tw`flex-row items-center mb-2`}>
-            <Award size={18} color="#047857" strokeWidth={2} style={tw`mr-2`} />
-            <Text style={tw`text-sm font-semibold text-emerald-900`}>{tips.frequency[0].title}</Text>
-          </View>
-          <Text style={tw`text-sm text-emerald-800 leading-5`}>
-            {selected === 'daily'
-              ? tips.frequency[0].content
-              : selected === 'weekly'
-              ? tips.frequency[1].content
-              : 'Custom schedules are perfect for working around existing commitments and building sustainable routines.'}
-          </Text>
-        </LinearGradient>
+        {/* Tip */}
+        <View style={tw`mt-4`}>
+          <Text style={tw`text-xs text-white/50 text-center font-light italic leading-5`}>Daily habits are 2.5x more likely to stick{'\n'}Start small and build momentum</Text>
+        </View>
       </ScrollView>
     </View>
   );

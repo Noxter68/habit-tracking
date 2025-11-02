@@ -10,6 +10,7 @@ import { RootStackParamList } from '@/navigation/types';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { AppConfig } from '@/config/appConfig';
 import Logger from '@/utils/logger';
+import { OnboardingService } from '@/services/onboardingService';
 
 // ============================================================================
 // Types
@@ -65,7 +66,7 @@ const DiagnosticIcon: React.FC<IconProps> = ({ size = 20, color }) => (
 
 const DebugScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
+  const { user, checkOnboardingStatus } = useAuth();
   const debug = useDebugDailyChallenge();
   const navigation = useNavigation<NavigationProp>();
 
@@ -85,6 +86,15 @@ const DebugScreen: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleResetOnboarding = async () => {
+    if (!user) return;
+
+    await OnboardingService.resetOnboarding(user.id);
+    await checkOnboardingStatus();
+
+    Alert.alert('Success', 'Onboarding has been reset. Restart the app to see it again.');
   };
 
   const debugActions = [
@@ -153,6 +163,14 @@ const DebugScreen: React.FC = () => {
           </View>
           <Text style={tw`text-blue-100 text-sm text-center mt-2`}>Complete health check of XP system & database</Text>
         </Pressable>
+
+        <View style={tw`mt-6`}>
+          <Text style={tw`text-sm font-bold text-stone-500 uppercase px-4 mb-3`}>Onboarding</Text>
+
+          <Pressable onPress={handleResetOnboarding} style={tw`bg-white px-4 py-4 mb-2`}>
+            <Text style={tw`text-base font-semibold text-stone-800`}>🔄 Reset Onboarding Flag</Text>
+          </Pressable>
+        </View>
 
         {/* Debug Actions */}
         <View style={tw`mb-6`}>
