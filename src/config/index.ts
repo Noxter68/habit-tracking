@@ -1,22 +1,45 @@
-import Logger from '@/utils/logger';
+// src/config/index.ts
 import { DEBUG_MODE, API_URL, ENVIRONMENT } from '@env';
 
-// Default values as fallback
+// Fallback values
 const defaults = {
   DEBUG_MODE: 'false',
   API_URL: 'http://localhost:3000',
   ENVIRONMENT: 'development',
 };
 
-// Create config with fallbacks
+// Parse environment variables with fallbacks
+const debugMode = (DEBUG_MODE || defaults.DEBUG_MODE) === 'true';
+const apiUrl = API_URL || defaults.API_URL;
+const environment = ENVIRONMENT || defaults.ENVIRONMENT;
+
 export const Config = {
-  // Use imported value or fallback to default
-  DEBUG_MODE: DEBUG_MODE || defaults.DEBUG_MODE,
-  API_URL: API_URL || defaults.API_URL,
-  ENVIRONMENT: ENVIRONMENT || defaults.ENVIRONMENT,
+  // Debug settings
+  debug: {
+    enabled: debugMode,
+    showDebugScreen: debugMode,
+    showTestButtons: debugMode,
+    logNetworkRequests: debugMode,
+    showPerformanceMonitor: debugMode,
+  },
+
+  // API settings
+  api: {
+    baseUrl: apiUrl,
+    timeout: 30000,
+    retryAttempts: 3,
+  },
+
+  // Environment
+  env: {
+    name: environment,
+    isDev: environment === 'development',
+    isStaging: environment === 'staging',
+    isProd: environment === 'production',
+  },
 
   // Computed values
-  isDebug: (DEBUG_MODE || defaults.DEBUG_MODE) === 'true',
-  isProduction: (ENVIRONMENT || defaults.ENVIRONMENT) === 'production',
-  isDevelopment: (ENVIRONMENT || defaults.ENVIRONMENT) === 'development',
-};
+  isDebug: debugMode,
+  isProduction: environment === 'production',
+  isDevelopment: environment === 'development',
+} as const;

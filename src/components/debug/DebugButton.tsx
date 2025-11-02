@@ -3,22 +3,20 @@ import React from 'react';
 import { Pressable, Text, View, ViewStyle, TextStyle } from 'react-native';
 import { LucideIcon } from 'lucide-react-native';
 import tw from '../../lib/tailwind';
-import { useDebugMode } from '../../hooks/useDebugMode';
+import { Config } from '@/config';
 
 interface DebugButtonProps {
   onPress: () => void;
   label: string;
   icon?: LucideIcon;
   variant?: 'primary' | 'secondary' | 'danger';
-  customStyle?: ViewStyle; // Allow custom styling for special cases
-  customTextStyle?: TextStyle; // Allow custom text styling
+  customStyle?: ViewStyle;
+  customTextStyle?: TextStyle;
 }
 
 export const DebugButton: React.FC<DebugButtonProps> = ({ onPress, label, icon: Icon, variant = 'primary', customStyle, customTextStyle }) => {
-  const { showTestButtons } = useDebugMode();
-
   // Don't render anything if debug mode is off
-  if (!showTestButtons) return null;
+  if (!Config.debug.showTestButtons) return null;
 
   const colors = {
     primary: 'bg-sage-500',

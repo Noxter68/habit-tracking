@@ -1,9 +1,18 @@
-import { AppConfig } from '../config/appConfig';
+// src/hooks/useAppConfig.ts
+import { Config } from '../config';
 
+/**
+ * Hook to access app configuration
+ * Uses environment variables from .env file
+ */
 export const useAppConfig = () => {
-  return AppConfig;
+  return Config;
 };
 
+/**
+ * Hook to check if debug mode is enabled
+ * @returns boolean - true if DEBUG_MODE=true in .env
+ */
 export const useDebugMode = () => {
-  return AppConfig.debug.enabled;
+  return Config.debug.enabled;
 };

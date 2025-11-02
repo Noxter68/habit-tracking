@@ -1,4 +1,4 @@
-// App.tsx - With RevenueCat Initialization and Diagnostic Screen
+// App.tsx - With RevenueCat Initialization and Unified Config
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -9,10 +9,9 @@ import { View, ActivityIndicator, Platform, LogBox, StatusBar, AppState } from '
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
-import Purchases, { LOG_LEVEL } from 'react-native-purchases';
-import { REVENUECAT_IOS_API_KEY } from '@env';
 import { diagnoseRevenueCatSetup } from './src/utils/RevenueCatDiagnostic';
 import tw from './src/lib/tailwind';
+import { DEBUG_MODE } from '@env';
 
 // Screens
 import AuthScreen from './src/screens/AuthScreen';
@@ -26,32 +25,30 @@ import StatsScreen from './src/screens/StatsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import AchievementsScreen from './src/screens/AchievementScreen';
 import DiagnosticScreen from './src/screens/DiagnosticScreen';
+import DebugScreen from './src/screens/debugScreen';
+import PaywallScreen from './src/screens/PaywallScreen';
+import HolidayModeScreen from './src/screens/HolidayModeScreen';
+import NotificationManagerScreen from './src/screens/NotificationManagerScreen';
+
 // Contexts
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { HabitProvider } from './src/context/HabitContext';
 import { AchievementProvider } from './src/context/AchievementContext';
 import { StatsProvider } from './src/context/StatsContext';
 import { LevelUpProvider } from './src/context/LevelUpContext';
+import { SubscriptionProvider } from './src/context/SubscriptionContext';
 
 // Components
 import TabBarIcon from './src/components/TabBarIcon';
+import { EpicLevelUpModal } from '@/components/dashboard/EpicLevelUpModal';
 
 // Utils & Config
-import { AppConfig } from './src/config/appConfig';
+import { Config } from './src/config';
+import Logger from './src/utils/logger';
 import { PerformanceMonitor } from './src/utils/performanceMonitor';
-import { EpicLevelUpModal } from '@/components/dashboard/EpicLevelUpModal';
-import { useDebugMode } from '@/hooks/useDebugMode';
-import { DebugButton } from '@/components/debug/DebugButton';
-import DebugScreen from '@/screens/debugScreen';
-import { DEBUG_MODE } from '@env';
-import { SubscriptionProvider } from '@/context/SubscriptionContext';
-import PaywallScreen from '@/screens/PaywallScreen';
 import { RevenueCatService } from '@/services/RevenueCatService';
-import HolidayModeScreen from '@/screens/HolidayModeScreen';
-import NotificationManagerScreen from '@/screens/NotificationManagerScreen';
 import { NotificationService } from '@/services/notificationService';
 import { HapticFeedback } from '@/utils/haptics';
-import Logger from '@/utils/logger';
 
 // Type Definitions
 export type RootStackParamList = {
@@ -62,7 +59,7 @@ export type RootStackParamList = {
   HabitDetails: { habitId: string };
   Achievements: undefined;
   Paywall: { source?: 'habit_limit' | 'streak_saver' | 'settings' | 'stats' };
-  Diagnostic: undefined; // ✅ NEW
+  Diagnostic: undefined;
   Debug: undefined;
   NotificationManager: undefined;
   HolidayMode: undefined;
@@ -80,6 +77,32 @@ export type TabParamList = {
 // ============================================
 // Configuration
 // ============================================
+
+// 🔍 DEBUG LOGS - BEFORE Logger configuration
+console.log('\n========= PRE-CONFIG DEBUG =========');
+console.log('1. Raw DEBUG_MODE from @env:', DEBUG_MODE);
+console.log('2. Config.debug.enabled BEFORE configure:', Config.debug.enabled);
+console.log('====================================\n');
+
+// Configure Logger from environment - DO THIS FIRST!
+Logger.configure({ enabled: Config.debug.enabled });
+
+// 🔍 DEBUG LOGS - AFTER Logger configuration
+console.log('========= POST-CONFIG DEBUG =========');
+console.log('Logger configured with enabled:', Config.debug.enabled);
+console.log('Config.isDebug:', Config.isDebug);
+console.log('__DEV__:', __DEV__);
+console.log('====================================\n');
+
+// Log startup info (these will only show if debug is enabled)
+if (Config.debug.enabled) {
+  Logger.info('🚀 App Starting');
+  Logger.debug('Environment:', Config.env.name);
+  Logger.debug('Debug Mode:', Config.debug.enabled);
+  Logger.debug('API URL:', Config.api.baseUrl);
+} else {
+  console.log('✅ Logger is DISABLED - No debug logs should appear below\n');
+}
 
 // Configure Reanimated Logger
 configureReanimatedLogger({
@@ -228,8 +251,6 @@ function AppNavigator() {
   const [isFirstLaunch, setIsFirstLaunch] = useState<boolean | null>(null);
   const [isCheckingFirstLaunch, setIsCheckingFirstLaunch] = useState(true);
 
-  const { showDebugScreen } = useDebugMode();
-
   useEffect(() => {
     checkFirstLaunch();
   }, []);
@@ -250,15 +271,6 @@ function AppNavigator() {
     }
   };
 
-  const handleWelcomeComplete = async () => {
-    try {
-      await AsyncStorage.setItem('hasLaunched', 'true');
-      setIsFirstLaunch(false);
-    } catch (error) {
-      Logger.error('Error setting first launch:', error);
-    }
-  };
-
   if (loading || isCheckingFirstLaunch) {
     return (
       <View style={tw`flex-1 items-center justify-center bg-slate-50`}>
@@ -275,22 +287,7 @@ function AppNavigator() {
           animation: 'fade',
         }}
       >
-        {!user ? (
-          // Auth Stack
-          <>
-            <Stack.Screen name="Auth" component={AuthScreen} />
-          </>
-        ) : !hasCompletedOnboarding ? (
-          // Onboarding Stack (shown once after signup)
-          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-        ) : (
-          // Main App Stack
-          <>
-            <Stack.Screen name="Dashboard" component={Dashboard} />
-            <Stack.Screen name="HabitWizard" component={HabitWizard} />
-            {/* ... other screens */}
-          </>
-        )}
+        <Stack.Screen name="Auth" component={AuthScreen} />
       </Stack.Navigator>
     );
   }
@@ -298,14 +295,14 @@ function AppNavigator() {
   return (
     <>
       <Stack.Navigator
-        initialRouteName={isFirstLaunch ? 'Welcome' : 'MainTabs'}
+        initialRouteName={isFirstLaunch ? 'Onboarding' : 'MainTabs'}
         screenOptions={{
           headerShown: false,
           animation: 'fade',
         }}
       >
-        <Stack.Screen name="HabitWizard" component={HabitWizard} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="MainTabs" component={MainTabs} options={{ animation: 'fade' }} />
+        <Stack.Screen name="HabitWizard" component={HabitWizard} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="HabitDetails" component={HabitDetails} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen
           name="Achievements"
@@ -341,11 +338,10 @@ function AppNavigator() {
             animation: 'slide_from_right',
           }}
         />
-
         <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
 
         {/* ✅ DEBUG MODE SCREENS - Only show when debug is enabled */}
-        {showDebugScreen && (
+        {Config.debug.showDebugScreen && (
           <>
             <Stack.Screen
               name="Debug"
@@ -439,86 +435,12 @@ function useNotificationSetup() {
   }, []);
 }
 
-// ============================================
-// CRITICAL: RevenueCat Initialization Hook
-// ============================================
-function useRevenueCatSetup() {
-  const [isInitialized, setIsInitialized] = useState(false);
-
-  useEffect(() => {
-    const initRevenueCat = () => {
-      try {
-        // Check if we're in Expo Go (where RevenueCat won't work)
-        const isExpoGo = typeof expo !== 'undefined' && expo?.modules?.ExpoGo;
-
-        if (isExpoGo) {
-          Logger.warn('⚠️  [App] Running in Expo Go - RevenueCat will NOT work!');
-          Logger.warn('⚠️  [App] You need to build a development build to test purchases');
-          Logger.warn('⚠️  [App] Run: npx expo run:ios or eas build --profile development');
-          return;
-        }
-
-        // DIAGNOSTIC: Run this first to check your setup
-        if (__DEV__) {
-          diagnoseRevenueCatSetup();
-        }
-
-        Logger.debug('🔵 [App] Initializing RevenueCat...');
-
-        // Get the correct API key for the platform
-        const apiKey = Platform.OS === 'ios' ? REVENUECAT_IOS_API_KEY : REVENUECAT_ANDROID_API_KEY;
-
-        if (!apiKey) {
-          Logger.error('❌ [App] RevenueCat API key not found for platform:', Platform.OS);
-          Logger.error('❌ [App] Check your .env file has REVENUECAT_IOS_API_KEY or REVENUECAT_ANDROID_API_KEY');
-          return;
-        }
-
-        // Validate API key format
-        const expectedPrefix = Platform.OS === 'ios' ? 'appl_' : 'goog_';
-        if (!apiKey.startsWith(expectedPrefix)) {
-          Logger.error(`❌ [App] Invalid API key format for ${Platform.OS}. Should start with "${expectedPrefix}"`);
-          Logger.error(`❌ [App] Got: ${apiKey.substring(0, 10)}...`);
-          return;
-        }
-
-        Logger.debug('🔵 [App] API Key validated:', {
-          platform: Platform.OS,
-          keyPrefix: apiKey.substring(0, 10) + '...',
-          keyLength: apiKey.length,
-        });
-
-        // Set log level BEFORE configuring
-        Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.DEBUG : LOG_LEVEL.INFO);
-        Logger.debug('🔵 [App] Log level set to:', __DEV__ ? 'DEBUG' : 'INFO');
-
-        // Configure RevenueCat - SYNCHRONOUS, don't await
-        Logger.debug('🔵 [App] Calling Purchases.configure...');
-        Purchases.configure({ apiKey });
-
-        setIsInitialized(true);
-        Logger.debug('✅ [App] RevenueCat initialized successfully');
-      } catch (error) {
-        Logger.error('❌ [App] Failed to initialize RevenueCat:', error);
-        Logger.error('❌ [App] Error details:', JSON.stringify(error, null, 2));
-      }
-    };
-
-    // Initialize RevenueCat immediately on app start
-    initRevenueCat();
-  }, []); // Empty deps - only run once on mount
-
-  return isInitialized;
-}
-
 function usePerformanceMonitoring() {
   useEffect(() => {
-    if (!AppConfig.debug.enabled) return;
+    if (!Config.debug.enabled) return;
 
-    if (AppConfig.debug.enabled) {
-      Logger.debug('🚀 App started in', AppConfig.env.name, 'mode');
-      Logger.debug('📝 Debug features:', AppConfig.debug);
-    }
+    Logger.debug('🚀 App started in', Config.env.name, 'mode');
+    Logger.debug('📝 Debug features:', Config.debug);
 
     const reportInterval = setInterval(() => {
       Logger.debug('📊 Performance Report:');
@@ -553,6 +475,21 @@ export default function App() {
     // Initialize RevenueCat with proper async handling
     const initRevenueCat = async () => {
       try {
+        // Check if we're in Expo Go (where RevenueCat won't work)
+        const isExpoGo = typeof expo !== 'undefined' && expo?.modules?.ExpoGo;
+
+        if (isExpoGo) {
+          Logger.warn('⚠️  [App] Running in Expo Go - RevenueCat will NOT work!');
+          Logger.warn('⚠️  [App] You need to build a development build to test purchases');
+          Logger.warn('⚠️  [App] Run: npx expo run:ios or eas build --profile development');
+          return;
+        }
+
+        // Run diagnostic if in debug mode
+        if (Config.debug.enabled) {
+          diagnoseRevenueCatSetup();
+        }
+
         Logger.debug('🚀 [App] Starting RevenueCat initialization...');
         await RevenueCatService.initialize();
         Logger.debug('✅ [App] RevenueCat initialized successfully');

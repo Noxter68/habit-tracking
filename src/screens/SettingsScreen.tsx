@@ -14,7 +14,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/types';
 import { HolidayModeService } from '@/services/holidayModeService';
 import { NotificationPreferencesService } from '@/services/notificationPreferenceService';
-import { AppConfig } from '@/config/appConfig';
+import { Config } from '@/config';
 import Logger from '@/utils/logger';
 import { OnboardingService } from '@/services/onboardingService';
 import { ChevronRight, Pencil } from 'lucide-react-native';
@@ -591,7 +591,7 @@ const SettingsScreen: React.FC = () => {
             />
           </SettingsSection>
 
-          {AppConfig.debug.showDebugScreen && (
+          {Config.debug.showDebugScreen && (
             <SettingsSection title="Developer Tools" delay={450} gradient={['#F59E0B', '#D97706']}>
               <SettingsItem
                 icon="diagnostic"

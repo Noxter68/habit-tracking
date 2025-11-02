@@ -8,7 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/types';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
-import { AppConfig } from '@/config/appConfig';
+import { Config } from '@/config';
 import Logger from '@/utils/logger';
 import { OnboardingService } from '@/services/onboardingService';
 
@@ -226,7 +226,7 @@ const DebugScreen: React.FC = () => {
         <View style={tw`bg-gray-100 rounded-2xl p-4 mt-6`}>
           <Text style={tw`text-xs font-semibold text-gray-600 mb-2`}>Debug Configuration</Text>
           <View style={tw`space-y-1`}>
-            <Text style={tw`text-xs font-mono text-gray-700`}>Debug Enabled: {AppConfig.debug.enabled ? '✅' : '❌'}</Text>
+            <Text style={tw`text-xs font-mono text-gray-700`}>Debug Enabled: {Config.debug.enabled ? '✅' : '❌'}</Text>
             <Text style={tw`text-xs font-mono text-gray-700`}>Show Debug Screen: {AppConfig.debug.showDebugScreen ? '✅' : '❌'}</Text>
             <Text style={tw`text-xs font-mono text-gray-700`}>Environment: {AppConfig.env.name}</Text>
           </View>

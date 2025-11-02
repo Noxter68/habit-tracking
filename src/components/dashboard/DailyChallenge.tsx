@@ -6,9 +6,9 @@ import { CheckCircle2 } from 'lucide-react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withSequence, Easing, runOnJS } from 'react-native-reanimated';
 import { XPService } from '../../services/xpService';
 import { supabase } from '../../lib/supabase';
-import { useDebugMode } from '@/hooks/useDebugMode';
 import { getTodayString } from '@/utils/dateHelpers';
 import Logger from '@/utils/logger';
+import { Config } from '@/config'; // ✅ Updated
 
 interface TierTheme {
   gradient: string[];
@@ -17,8 +17,8 @@ interface TierTheme {
 }
 
 interface DailyChallengeProps {
-  completedToday: number; // ✅ Now represents completed HABITS
-  totalTasksToday: number; // ✅ Now represents total HABITS
+  completedToday: number;
+  totalTasksToday: number;
   onCollect: (amount: number) => void;
   userId: string;
   currentLevelXP: number;
@@ -45,11 +45,8 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
   const [isAnimating, setIsAnimating] = useState(false);
   const [showXPBadge, setShowXPBadge] = useState(false);
 
-  // ✅ UPDATED: A habit is complete when ALL its tasks are done
   const isComplete = completedToday >= totalTasksToday && totalTasksToday > 0;
   const completionPercentage = totalTasksToday > 0 ? Math.min(100, Math.round((completedToday / totalTasksToday) * 100)) : 0;
-
-  const { showTestButtons } = useDebugMode();
 
   // Animation values
   const scale = useSharedValue(1);
@@ -87,10 +84,10 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
 
   // Extract accent color with opacity variations
   const accentColor = theme.accent;
-  const glowColor = `${accentColor}80`; // 50% opacity
-  const progressColor = `${accentColor}E6`; // 90% opacity
+  const glowColor = `${accentColor}80`;
+  const progressColor = `${accentColor}E6`;
 
-  // Glow animation when complete - using tier accent color
+  // Glow animation when complete
   React.useEffect(() => {
     if (isComplete && !isCollected) {
       glowOpacity.value = withTiming(0.6, {
@@ -206,7 +203,6 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
     }
   };
 
-  // ✅ UPDATED: Dynamic text based on habits remaining
   const getProgressText = () => {
     if (isCollected) return 'Collected!';
     if (isComplete) return 'Perfect Day!';
@@ -216,11 +212,9 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
     return `${remaining} habits to go`;
   };
 
-  // ✅ UPDATED: Show habits count
   const getCountText = () => {
     if (isCollected) return 'See you tomorrow!';
 
-    // Use "habit" for singular, "habits" for plural
     if (totalTasksToday === 1) {
       return `${completedToday} / ${totalTasksToday} habit`;
     }
@@ -229,7 +223,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
 
   return (
     <View style={{ position: 'relative' }}>
-      {/* Floating XP Badge - using tier accent color */}
+      {/* Floating XP Badge */}
       {showXPBadge && (
         <Animated.View
           style={[
@@ -242,7 +236,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
               zIndex: 10,
               flexDirection: 'row',
               alignItems: 'center',
-              backgroundColor: `${accentColor}F2`, // 95% opacity
+              backgroundColor: `${accentColor}F2`,
               paddingHorizontal: 14,
               paddingVertical: 8,
               borderRadius: 20,
@@ -273,7 +267,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
         </Animated.View>
       )}
 
-      {/* Glow effect when complete - using tier accent color */}
+      {/* Glow effect when complete */}
       {isComplete && !isCollected && (
         <Animated.View
           style={[
@@ -284,7 +278,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
               right: -4,
               bottom: -4,
               borderRadius: 22,
-              backgroundColor: `${accentColor}4D`, // 30% opacity
+              backgroundColor: `${accentColor}4D`,
             },
             animatedGlowStyle,
           ]}
@@ -300,7 +294,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
               padding: 12,
               paddingBottom: 10,
               borderWidth: 1,
-              borderColor: isComplete && !isCollected ? `${accentColor}66` : 'rgba(255, 255, 255, 0.2)', // 40% opacity for complete
+              borderColor: isComplete && !isCollected ? `${accentColor}66` : 'rgba(255, 255, 255, 0.2)',
             }}
           >
             {/* Header */}
@@ -313,10 +307,9 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
               }}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                {/* Flask Icon - themed with tier accent */}
+                {/* Flask Icon */}
                 <View style={{ width: 38, height: 38 }}>
                   {isCollected ? (
-                    // ✅ FIXED: White opaque background with white border when collected
                     <View
                       style={{
                         width: 38,
@@ -337,11 +330,11 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
                         width: 38,
                         height: 38,
                         borderRadius: 19,
-                        backgroundColor: `${accentColor}26`, // 15% opacity
+                        backgroundColor: `${accentColor}26`,
                         alignItems: 'center',
                         justifyContent: 'center',
                         borderWidth: 1,
-                        borderColor: `${accentColor}40`, // 25% opacity
+                        borderColor: `${accentColor}40`,
                       }}
                     >
                       {isComplete ? (
@@ -410,7 +403,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
               </View>
             </View>
 
-            {/* Progress Bar - themed with tier accent */}
+            {/* Progress Bar */}
             {!isCollected && (
               <View
                 style={{
@@ -449,7 +442,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
                 marginTop: 6,
               }}
             >
-              {/* Habit count badge - matching XP badge style */}
+              {/* Habit count badge */}
               <View
                 style={{
                   backgroundColor: 'rgba(255, 255, 255, 0.3)',
@@ -506,7 +499,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({
       </Pressable>
 
       {/* Debug Reset Button */}
-      {showTestButtons && isCollected && (
+      {Config.debug.showTestButtons && isCollected && (
         <Pressable
           onPress={handleDebugReset}
           style={{

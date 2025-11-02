@@ -150,7 +150,7 @@ const HabitDetails: React.FC = () => {
   // ============================================================================
 
   /**
-   * Handle task toggle with per-task loading state
+   * Handle task toggle - DON'T refresh progression to avoid streak jump
    */
   const handleToggleTask = useCallback(
     async (taskId: string): Promise<void> => {
@@ -163,8 +163,8 @@ const HabitDetails: React.FC = () => {
       try {
         await toggleTask(habit.id, today, taskId);
 
-        // Refresh progression data after toggle
-        await refreshProgression();
+        // ✅ DON'T call refreshProgression() here - it causes the jump
+        // The hook automatically updates from habit.currentStreak changes
       } catch (error) {
         Logger.error('❌ Task toggle failed:', error);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -173,7 +173,7 @@ const HabitDetails: React.FC = () => {
         setLoadingTaskId(null);
       }
     },
-    [habit, today, toggleTask, isTogglingTask, refreshProgression]
+    [habit, today, toggleTask, isTogglingTask]
   );
 
   const handleGoBack = useCallback(() => {
