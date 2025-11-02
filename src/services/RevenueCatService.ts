@@ -3,7 +3,7 @@ import Purchases, { LOG_LEVEL, CustomerInfo, PurchasesPackage } from 'react-nati
 import { Platform } from 'react-native';
 import Logger from '@/utils/logger';
 
-const REVENUECAT_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY || '';
+const REVENUECAT_API_KEY = process.env.REVENUECAT_API_KEY || '';
 
 // ============================================================================
 // Types & Interfaces

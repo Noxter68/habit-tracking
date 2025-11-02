@@ -13,7 +13,7 @@
     },
     "ios": {
       "associatedDomains": ["applinks:xbmbocxrubdpzkgkmwyp.supabase.co", "applinks:xbmbocxrubdpzkgkmwyp.supabase.co"],
-      "icon": "./assets/icon/nuvoria_icon.png",
+      "icon": "./icons/icon/nuvoria_icon.png",
       "splash": {
         "image": "./icons/splash/splashScreen2732.png",
         "resizeMode": "cover",

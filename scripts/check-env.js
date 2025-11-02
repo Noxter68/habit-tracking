@@ -21,7 +21,7 @@ console.log('📋 Environment variables:');
 console.log('─'.repeat(50));
 
 // Required variables
-const required = ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'EXPO_PUBLIC_REVENUECAT_API_KEY', 'DEBUG_MODE', 'ENVIRONMENT', 'API_URL'];
+const required = ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'REVENUECAT_API_KEY', 'DEBUG_MODE', 'ENVIRONMENT', 'API_URL'];
 
 let hasErrors = false;
 
