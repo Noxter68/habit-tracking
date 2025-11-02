@@ -295,7 +295,7 @@ function AppNavigator() {
   return (
     <>
       <Stack.Navigator
-        initialRouteName={isFirstLaunch ? 'Onboarding' : 'MainTabs'}
+        initialRouteName={!hasCompletedOnboarding ? 'Onboarding' : 'MainTabs'}
         screenOptions={{
           headerShown: false,
           animation: 'fade',

@@ -123,9 +123,15 @@ const HabitDetails: React.FC = () => {
     userId: user?.id || '',
     enabled: !!habit && !!user,
     onStreakRestored: (newStreak) => {
-      Logger.debug('🎉 Streak restored to:', newStreak);
+      Logger.debug('Streak restored to:', newStreak);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       refreshHabits();
+
+      // ✅ Notifie le Dashboard via navigation params
+      navigation.setParams({
+        refreshStreakSaver: Date.now(),
+      } as any);
+
       setTimeout(() => navigation.goBack(), 2000);
     },
   });

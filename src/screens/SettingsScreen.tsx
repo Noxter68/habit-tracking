@@ -621,14 +621,14 @@ const SettingsScreen: React.FC = () => {
 
           <SettingsSection title="Support" delay={400} gradient={['#EC4899', '#DB2777']}>
             <SettingsItem icon="information-circle-outline" title="Version" subtitle="1.0.0" color="#EC4899" />
-            <SettingsItem
+            {/* <SettingsItem
               icon="help-circle-outline"
               title="Help & Support"
               color="#EC4899"
               trailing={<Icon name="chevron-forward" size={20} color="#EC4899" />}
               onPress={() => Logger.debug('Help pressed')}
               isLast
-            />
+            /> */}
           </SettingsSection>
 
           <View style={tw`mt-6`}>

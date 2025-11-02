@@ -29,6 +29,7 @@ import { getAchievementByLevel } from '@/utils/achievements';
 import { HapticFeedback } from '@/utils/haptics';
 import Logger from '@/utils/logger';
 import { HolidayPeriod } from '@/types/holiday.types';
+import { StreakSaverService } from '@/services/StreakSaverService';
 
 // ============================================================================
 // Main Component
@@ -51,6 +52,7 @@ const Dashboard: React.FC = () => {
   const [holidayLoading, setHolidayLoading] = useState(true);
   const [frozenHabits, setFrozenHabits] = useState<Set<string>>(new Set());
   const [frozenTasksMap, setFrozenTasksMap] = useState<Map<string, Record<string, { pausedUntil: string }>>>(new Map());
+  const [streakSaverRefreshTrigger, setStreakSaverRefreshTrigger] = useState(0);
 
   // State: Debug
   const [testLevel, setTestLevel] = useState(1);
@@ -255,6 +257,42 @@ const Dashboard: React.FC = () => {
     await refreshStats(true);
   }, [refreshStats]);
 
+  const handleStreakSaverPress = async () => {
+    if (!user) return;
+
+    HapticFeedback.light();
+
+    try {
+      // Récupère les habitudes sauvables
+      const saveableHabits = await StreakSaverService.getSaveableHabits(user.id);
+
+      if (saveableHabits.length === 0) {
+        Logger.debug('No saveable habits found');
+        return;
+      }
+
+      // Si une seule habitude, navigue directement vers elle
+      if (saveableHabits.length === 1) {
+        const habit = saveableHabits[0];
+        Logger.debug('🎯 Navigating to habit:', habit.habitId);
+        navigation.navigate('HabitDetails', {
+          habitId: habit.habitId,
+          pausedTasks: frozenTasksMap.get(habit.habitId) || {},
+        });
+      } else {
+        // Si plusieurs habitudes, navigue vers la première (ou tu peux créer un modal de sélection)
+        const firstHabit = saveableHabits[0];
+        Logger.debug('🎯 Multiple saveable habits, navigating to first:', firstHabit.habitId);
+        navigation.navigate('HabitDetails', {
+          habitId: firstHabit.habitId,
+          pausedTasks: frozenTasksMap.get(firstHabit.habitId) || {},
+        });
+      }
+    } catch (error) {
+      Logger.error('Error handling streak saver press:', error);
+    }
+  };
+
   // ============================================================================
   // Effects
   // ============================================================================
@@ -281,6 +319,13 @@ const Dashboard: React.FC = () => {
         isMounted = false;
       };
     }, [user?.id, loadHolidayModeData, refreshSubscription])
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      // Refresh le badge quand on revient sur le Dashboard
+      setStreakSaverRefreshTrigger((prev) => prev + 1);
+    }, [])
   );
 
   // ============================================================================
@@ -337,10 +382,12 @@ const Dashboard: React.FC = () => {
           {!showPartialPauseMode && !hasTasksPaused && !showFullHolidayMode && (
             <>
               <StreakSaverBadge
+                onPress={handleStreakSaverPress}
                 onShopPress={() => {
                   HapticFeedback.light();
                   setShowShop(true);
                 }}
+                refreshTrigger={streakSaverRefreshTrigger} // ✅ Passe le trigger
               />
               <StreakSaverShopModal
                 visible={showShop}
@@ -348,7 +395,10 @@ const Dashboard: React.FC = () => {
                   HapticFeedback.light();
                   setShowShop(false);
                 }}
-                onPurchaseSuccess={() => setShowShop(false)}
+                onPurchaseSuccess={() => {
+                  setShowShop(false);
+                  setStreakSaverRefreshTrigger((prev) => prev + 1); // ✅ Trigger refresh après achat
+                }}
               />
             </>
           )}

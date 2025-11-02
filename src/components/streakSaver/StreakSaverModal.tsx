@@ -169,12 +169,6 @@ export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({ visible, hab
                         <View style={tw`w-20 h-20 rounded-full bg-white items-center justify-center shadow-2xl`}>
                           <Sparkles size={40} color="#10b981" fill="#10b981" strokeWidth={2} />
                         </View>
-                        <View style={tw`absolute -top-2 -right-2`}>
-                          <Sparkles size={24} color="#FCD34D" fill="#FCD34D" />
-                        </View>
-                        <View style={tw`absolute -bottom-1 -left-2`}>
-                          <Sparkles size={20} color="#FCD34D" fill="#FCD34D" />
-                        </View>
                       </View>
                     </Animated.View>
 

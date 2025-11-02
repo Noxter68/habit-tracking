@@ -4,25 +4,28 @@
     "slug": "Nuvoria",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon/nuvoria_icon.png",
+    "icon": "./icons/icon/nuvoria_icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash/splashScreen2732.png",
+      "image": "./icons/splash/splashScreen2732.png",
       "resizeMode": "contain",
       "backgroundColor": "#6366f1"
     },
     "ios": {
-      "associatedDomains": ["applinks:xbmbocxrubdpzkgkmwyp.supabase.co"],
+      "associatedDomains": ["applinks:xbmbocxrubdpzkgkmwyp.supabase.co", "applinks:xbmbocxrubdpzkgkmwyp.supabase.co"],
       "icon": "./assets/icon/nuvoria_icon.png",
       "splash": {
-        "image": "./assets/splash/splashScreen2732.png",
+        "image": "./icons/splash/splashScreen2732.png",
         "resizeMode": "cover",
         "backgroundColor": "#6366f1"
       },
       "supportsTablet": true,
       "bundleIdentifier": "com.davidplanchon.nuvoria",
       "usesAppleSignIn": true,
-      "buildNumber": "1.0.0"
+      "buildNumber": "1.0.0",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
