@@ -263,14 +263,6 @@ function AppNavigator() {
     setIsCheckingFirstLaunch(false);
   }, []);
 
-  useEffect(() => {
-    console.log('🔍 AppNavigator state:', {
-      user: user?.id,
-      loading,
-      hasCompletedOnboarding,
-    });
-  }, [user, loading, hasCompletedOnboarding]);
-
   const checkFirstLaunch = async () => {
     try {
       const hasLaunched = await AsyncStorage.getItem('hasLaunched');
