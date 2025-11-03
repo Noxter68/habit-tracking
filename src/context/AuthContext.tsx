@@ -311,28 +311,37 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           if (error) throw error;
 
           if (data.user) {
-            const fullName = credential.fullName ? `${credential.fullName.givenName || ''} ${credential.fullName.familyName || ''}`.trim() : null;
+            // ✅ Check if profile already exists
+            const { data: existingProfile } = await supabase.from('profiles').select('id, username').eq('id', data.user.id).maybeSingle();
 
-            const username = fullName || data.user.email?.split('@')[0] || `User${data.user.id.slice(0, 8)}`;
+            if (!existingProfile) {
+              // First time sign in - create profile
+              const fullName = credential.fullName ? `${credential.fullName.givenName || ''} ${credential.fullName.familyName || ''}`.trim() : null;
 
-            // Prepare profile data
-            const profileData: any = {
-              id: data.user.id,
-              username: username,
-              updated_at: new Date().toISOString(),
-            };
+              const username = fullName || data.user.email?.split('@')[0] || `User${data.user.id.slice(0, 8)}`;
 
-            // Add email only if it exists
-            if (data.user.email) {
-              profileData.email = data.user.email;
-            }
+              const profileData: any = {
+                id: data.user.id,
+                username: username,
+                updated_at: new Date().toISOString(),
+              };
 
-            const { error: profileError } = await supabase.from('profiles').upsert(profileData);
+              if (data.user.email) {
+                profileData.email = data.user.email;
+              }
 
-            if (profileError) {
-              Logger.error('Profile update error:', profileError);
+              const { error: profileError } = await supabase.from('profiles').insert(profileData); // ✅ INSERT au lieu d'UPSERT
+
+              if (profileError) {
+                Logger.error('Profile creation error:', profileError);
+              } else {
+                Logger.debug('✅ Apple sign in - Profile created successfully');
+              }
             } else {
-              Logger.debug('✅ Apple sign in - Profile created successfully');
+              // Profile exists - don't touch username, just update timestamp
+              await supabase.from('profiles').update({ updated_at: new Date().toISOString() }).eq('id', data.user.id);
+
+              Logger.debug('✅ Apple sign in - Existing profile found, username preserved');
             }
           }
         }

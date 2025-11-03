@@ -42,9 +42,7 @@
       }
     },
     "owner": "noxter68",
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/b814beca-39ec-424e-b3df-ede00d802c77"
     }

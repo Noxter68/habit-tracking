@@ -209,7 +209,7 @@ const AuthScreen: React.FC = () => {
                       },
                     ]}
                   >
-                    Grow through consistency
+                    Consistency Transforms Everything
                   </Text>
                 </View>
               </Animated.View>
