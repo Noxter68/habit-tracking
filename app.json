@@ -12,7 +12,7 @@
       "backgroundColor": "#6366f1"
     },
     "ios": {
-      "associatedDomains": ["applinks:xbmbocxrubdpzkgkmwyp.supabase.co", "applinks:xbmbocxrubdpzkgkmwyp.supabase.co"],
+      "associatedDomains": ["applinks:xbmbocxrubdpzkgkmwyp.supabase.co"],
       "icon": "./icons/icon/nuvoria_icon.png",
       "splash": {
         "image": "./icons/splash/splashScreen2732.png",
@@ -41,6 +41,12 @@
         "projectId": "b814beca-39ec-424e-b3df-ede00d802c77"
       }
     },
-    "owner": "noxter68"
+    "owner": "noxter68",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/b814beca-39ec-424e-b3df-ede00d802c77"
+    }
   }
 }
