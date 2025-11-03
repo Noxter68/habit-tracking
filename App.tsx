@@ -259,6 +259,18 @@ function AppNavigator() {
     NotificationService.initialize();
   }, []);
 
+  useEffect(() => {
+    setIsCheckingFirstLaunch(false);
+  }, []);
+
+  useEffect(() => {
+    console.log('🔍 AppNavigator state:', {
+      user: user?.id,
+      loading,
+      hasCompletedOnboarding,
+    });
+  }, [user, loading, hasCompletedOnboarding]);
+
   const checkFirstLaunch = async () => {
     try {
       const hasLaunched = await AsyncStorage.getItem('hasLaunched');
@@ -295,7 +307,7 @@ function AppNavigator() {
   return (
     <>
       <Stack.Navigator
-        initialRouteName={!hasCompletedOnboarding ? 'Onboarding' : 'MainTabs'}
+        initialRouteName={hasCompletedOnboarding ? 'MainTabs' : 'Onboarding'}
         screenOptions={{
           headerShown: false,
           animation: 'fade',

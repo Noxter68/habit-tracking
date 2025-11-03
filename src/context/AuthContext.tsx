@@ -41,8 +41,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // ============================================================================
   // FETCH USERNAME & ONBOARDING STATUS
   // ============================================================================
-
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUserProfile = async (userId: string, retries = 3) => {
     try {
       const { data, error } = await supabase.from('profiles').select('username, has_completed_onboarding').eq('id', userId).maybeSingle();
 
@@ -53,12 +52,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return;
       }
 
-      setUsername(data?.username || null);
-      setHasCompletedOnboarding(data?.has_completed_onboarding || false);
+      if (!data) {
+        Logger.warn('⚠️ No profile found for user:', userId);
+
+        // ✅ Retry si pas de profil et qu'il reste des tentatives
+        if (retries > 0) {
+          Logger.debug(`🔄 Retrying fetchUserProfile in 500ms... (${retries} attempts left)`);
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          return fetchUserProfile(userId, retries - 1);
+        }
+
+        setUsername(null);
+        setHasCompletedOnboarding(false);
+        return;
+      }
+
+      setUsername(data.username || null);
+      setHasCompletedOnboarding(data.has_completed_onboarding === true);
 
       Logger.debug('✅ Profile loaded:', {
-        username: data?.username,
-        onboardingCompleted: data?.has_completed_onboarding,
+        username: data.username,
+        onboardingCompleted: data.has_completed_onboarding,
       });
     } catch (error) {
       Logger.error('Fetch profile error:', error);
@@ -96,6 +110,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const success = await OnboardingService.completeOnboarding(user.id);
       if (success) {
+        // ✅ Update direct du state - pas besoin de refetch
         setHasCompletedOnboarding(true);
         Logger.info('✅ Onboarding completed successfully');
       } else {
@@ -132,31 +147,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   useEffect(() => {
     // Initial session load
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      // ✅ Async function pour pouvoir await
       setSession(session);
       setUser(session?.user ?? null);
 
       if (session?.user?.id) {
-        fetchUserProfile(session.user.id);
+        await fetchUserProfile(session.user.id); // ✅ Attend que le profil soit chargé
       } else {
         setUsername(null);
         setHasCompletedOnboarding(false);
       }
 
-      setLoading(false);
+      setLoading(false); // ✅ Maintenant on est sûr que tout est chargé
     });
 
     // Listen for auth state changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      // ✅ Async callback
       Logger.debug('🔄 Auth state changed:', _event);
 
       setSession(session);
       setUser(session?.user ?? null);
 
       if (session?.user?.id) {
-        fetchUserProfile(session.user.id);
+        await fetchUserProfile(session.user.id); // ✅ Attend ici aussi
       } else {
         setUsername(null);
         setHasCompletedOnboarding(false);
