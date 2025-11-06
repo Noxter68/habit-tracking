@@ -31,6 +31,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// ✅ TIMEOUT pour éviter que le loading reste bloqué
+const PROFILE_FETCH_TIMEOUT = 5000; // 5 secondes max
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [username, setUsername] = useState<string | null>(null);
@@ -39,11 +42,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
   // ============================================================================
-  // FETCH USERNAME & ONBOARDING STATUS
+  // FETCH USERNAME & ONBOARDING STATUS avec timeout
   // ============================================================================
-  const fetchUserProfile = async (userId: string, retries = 3) => {
+  const fetchUserProfile = async (userId: string, retries = 3): Promise<void> => {
     try {
-      const { data, error } = await supabase.from('profiles').select('username, has_completed_onboarding').eq('id', userId).maybeSingle();
+      // ✅ Ajouter un timeout pour éviter les blocages
+      const timeoutPromise = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Profile fetch timeout')), PROFILE_FETCH_TIMEOUT));
+
+      const fetchPromise = supabase.from('profiles').select('username, has_completed_onboarding').eq('id', userId).maybeSingle();
+
+      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
 
       if (error) {
         Logger.error('Error fetching profile:', error);
@@ -55,13 +63,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!data) {
         Logger.warn('⚠️ No profile found for user:', userId);
 
-        // ✅ Retry si pas de profil et qu'il reste des tentatives
+        // ✅ Retry avec timeout
         if (retries > 0) {
-          Logger.debug(`🔄 Retrying fetchUserProfile in 500ms... (${retries} attempts left)`);
+          Logger.debug(`🔄 Retrying fetchUserProfile (${retries} attempts left)`);
           await new Promise((resolve) => setTimeout(resolve, 500));
           return fetchUserProfile(userId, retries - 1);
         }
 
+        // ❌ Après 3 tentatives, on abandonne
+        Logger.error('❌ Failed to fetch profile after retries');
         setUsername(null);
         setHasCompletedOnboarding(false);
         return;
@@ -74,8 +84,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         username: data.username,
         onboardingCompleted: data.has_completed_onboarding,
       });
-    } catch (error) {
-      Logger.error('Fetch profile error:', error);
+    } catch (error: any) {
+      Logger.error('Fetch profile error:', error.message);
       setUsername(null);
       setHasCompletedOnboarding(false);
     }
@@ -110,7 +120,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const success = await OnboardingService.completeOnboarding(user.id);
       if (success) {
-        // ✅ Update direct du state - pas besoin de refetch
         setHasCompletedOnboarding(true);
         Logger.info('✅ Onboarding completed successfully');
       } else {
@@ -142,38 +151,78 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [user?.id]);
 
   // ============================================================================
-  // AUTH STATE INITIALIZATION & LISTENER
+  // AUTH STATE INITIALIZATION & LISTENER - FIX PRINCIPAL
   // ============================================================================
 
   useEffect(() => {
-    // Initial session load
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      // ✅ Async function pour pouvoir await
-      setSession(session);
-      setUser(session?.user ?? null);
+    let isMounted = true;
 
-      if (session?.user?.id) {
-        await fetchUserProfile(session.user.id); // ✅ Attend que le profil soit chargé
-      } else {
+    const initializeAuth = async () => {
+      try {
+        // ✅ Timeout global pour l'initialisation complète
+        const timeoutPromise = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Auth initialization timeout')), 10000));
+
+        const initPromise = (async () => {
+          // Initial session load
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+
+          if (!isMounted) return;
+
+          setSession(session);
+          setUser(session?.user ?? null);
+
+          if (session?.user?.id) {
+            try {
+              await fetchUserProfile(session.user.id);
+            } catch (error) {
+              Logger.error('Failed to fetch user profile, continuing anyway:', error);
+              // ✅ On continue même si le profil échoue
+            }
+          } else {
+            setUsername(null);
+            setHasCompletedOnboarding(false);
+          }
+        })();
+
+        await Promise.race([initPromise, timeoutPromise]);
+      } catch (error) {
+        Logger.error('❌ Auth initialization error:', error);
+        // ✅ Même en cas d'erreur, on débloque l'UI
+        setSession(null);
+        setUser(null);
         setUsername(null);
         setHasCompletedOnboarding(false);
+      } finally {
+        if (isMounted) {
+          // ✅ TOUJOURS débloquer le loading
+          setLoading(false);
+        }
       }
+    };
 
-      setLoading(false); // ✅ Maintenant on est sûr que tout est chargé
-    });
+    initializeAuth();
 
-    // Listen for auth state changes
+    // ✅ Listen for auth state changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      // ✅ Async callback
+      if (!isMounted) return;
+
       Logger.debug('🔄 Auth state changed:', _event);
 
       setSession(session);
       setUser(session?.user ?? null);
 
       if (session?.user?.id) {
-        await fetchUserProfile(session.user.id); // ✅ Attend ici aussi
+        try {
+          await fetchUserProfile(session.user.id);
+        } catch (error) {
+          Logger.error('Failed to fetch user profile on auth change:', error);
+          setUsername(null);
+          setHasCompletedOnboarding(false);
+        }
       } else {
         setUsername(null);
         setHasCompletedOnboarding(false);
@@ -181,6 +230,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -205,12 +255,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (error) throw error;
 
-      Logger.debug('✅ User created, profile will be created by trigger');
-
-      Alert.alert('Success', 'Account created! Please check your email to verify your account.');
+      if (data.user) {
+        await RevenueCatService.setAppUserId(data.user.id);
+        Logger.debug('✅ Sign up successful');
+      }
     } catch (error: any) {
-      Logger.error('❌ SignUp error:', error);
+      Logger.error('❌ Sign up error:', error);
       Alert.alert('Error', error.message);
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -224,66 +276,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       setLoading(true);
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
 
-      Logger.debug('✅ Sign in successful');
-    } catch (error: any) {
-      Logger.error('❌ SignIn error:', error);
-      Alert.alert('Error', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ============================================================================
-  // GOOGLE SIGN IN
-  // ============================================================================
-
-  const signInWithGoogle = async () => {
-    try {
-      setLoading(true);
-
-      const redirectUri = AuthSession.makeRedirectUri({
-        scheme: 'nuvoria',
-        path: 'auth',
-      });
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUri,
-          skipBrowserRedirect: true,
-        },
-      });
-
-      if (error) throw error;
-
-      if (data?.url) {
-        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
-
-        if (result.type === 'success' && result.url) {
-          const params = new URLSearchParams(result.url.split('#')[1]);
-          const access_token = params.get('access_token');
-          const refresh_token = params.get('refresh_token');
-
-          if (access_token && refresh_token) {
-            await supabase.auth.setSession({
-              access_token,
-              refresh_token,
-            });
-
-            Logger.debug('✅ Google sign in successful');
-          }
-        }
+      if (data.user) {
+        await RevenueCatService.setAppUserId(data.user.id);
+        Logger.debug('✅ Sign in successful');
       }
     } catch (error: any) {
-      Logger.error('❌ Google Sign-In Error:', error);
-      Alert.alert('Sign-In Failed', error.message || 'Unable to sign in with Google');
+      Logger.error('❌ Sign in error:', error);
+      Alert.alert('Error', error.message);
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -297,98 +304,41 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       setLoading(true);
 
-      if (Platform.OS === 'ios') {
-        const credential = await AppleAuthentication.signInAsync({
-          requestedScopes: [AppleAuthentication.AppleAuthenticationScope.FULL_NAME, AppleAuthentication.AppleAuthenticationScope.EMAIL],
-        });
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [AppleAuthentication.AppleAuthenticationScope.FULL_NAME, AppleAuthentication.AppleAuthenticationScope.EMAIL],
+      });
 
-        if (credential.identityToken) {
-          const { data, error } = await supabase.auth.signInWithIdToken({
-            provider: 'apple',
-            token: credential.identityToken,
-          });
-
-          if (error) throw error;
-
-          if (data.user) {
-            // ✅ Check if profile already exists
-            const { data: existingProfile } = await supabase.from('profiles').select('id, username').eq('id', data.user.id).maybeSingle();
-
-            if (!existingProfile) {
-              // First time sign in - create profile
-              const fullName = credential.fullName ? `${credential.fullName.givenName || ''} ${credential.fullName.familyName || ''}`.trim() : null;
-
-              const username = fullName || data.user.email?.split('@')[0] || `User${data.user.id.slice(0, 8)}`;
-
-              const profileData: any = {
-                id: data.user.id,
-                username: username,
-                updated_at: new Date().toISOString(),
-              };
-
-              if (data.user.email) {
-                profileData.email = data.user.email;
-              }
-
-              const { error: profileError } = await supabase.from('profiles').insert(profileData); // ✅ INSERT au lieu d'UPSERT
-
-              if (profileError) {
-                Logger.error('Profile creation error:', profileError);
-              } else {
-                Logger.debug('✅ Apple sign in - Profile created successfully');
-              }
-            } else {
-              // Profile exists - don't touch username, just update timestamp
-              await supabase.from('profiles').update({ updated_at: new Date().toISOString() }).eq('id', data.user.id);
-
-              Logger.debug('✅ Apple sign in - Existing profile found, username preserved');
-            }
-          }
-        }
-      } else {
-        // OAuth flow for Android/Web
-        const redirectUri = AuthSession.makeRedirectUri({
-          scheme: 'nuvoria',
-          path: 'auth',
-        });
-
-        const { data, error } = await supabase.auth.signInWithOAuth({
+      if (credential.identityToken) {
+        const { data, error } = await supabase.auth.signInWithIdToken({
           provider: 'apple',
-          options: {
-            redirectTo: redirectUri,
-            skipBrowserRedirect: true,
-          },
+          token: credential.identityToken,
         });
 
         if (error) throw error;
 
-        if (data?.url) {
-          const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
-
-          if (result.type === 'success' && result.url) {
-            const params = new URLSearchParams(result.url.split('#')[1]);
-            const access_token = params.get('access_token');
-            const refresh_token = params.get('refresh_token');
-
-            if (access_token && refresh_token) {
-              await supabase.auth.setSession({
-                access_token,
-                refresh_token,
-              });
-
-              Logger.debug('✅ Apple sign in successful (OAuth)');
-            }
-          }
+        if (data.user) {
+          await RevenueCatService.setAppUserId(data.user.id);
+          Logger.debug('✅ Apple sign in successful');
         }
       }
     } catch (error: any) {
-      if (error.code !== 'ERR_CANCELED') {
-        Logger.error('❌ Apple Sign-In Error:', error);
-        Alert.alert('Sign-In Failed', 'Unable to sign in with Apple');
+      if (error.code === 'ERR_REQUEST_CANCELED') {
+        Logger.debug('Apple sign in cancelled by user');
+      } else {
+        Logger.error('❌ Apple sign in error:', error);
+        Alert.alert('Error', error.message);
       }
     } finally {
       setLoading(false);
     }
+  };
+
+  // ============================================================================
+  // GOOGLE SIGN IN (placeholder)
+  // ============================================================================
+
+  const signInWithGoogle = async () => {
+    Alert.alert('Coming Soon', 'Google Sign In will be available soon!');
   };
 
   // ============================================================================
@@ -399,17 +349,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       setLoading(true);
 
-      // Unregister push token with timeout
       if (user?.id) {
-        await Promise.race([PushTokenService.unregisterDevice(user.id), new Promise((_, reject) => setTimeout(() => reject(new Error('Push token unregister timeout')), 3000))]).catch((error) => {
-          Logger.error('⚠️ Push token unregister failed (continuing anyway):', error.message);
+        await Promise.race([PushTokenService.unregisterDevice(user.id), new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))]).catch((error) => {
+          Logger.error('⚠️ Push token unregister failed (continuing anyway):', error);
         });
       }
 
-      // Reset onboarding state
       setHasCompletedOnboarding(false);
 
-      // Sign out from Supabase
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
 
@@ -437,7 +384,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (error) throw error;
 
       Alert.alert('Success', 'Password reset email sent! Please check your inbox.');
-
       Logger.debug('✅ Password reset email sent');
     } catch (error: any) {
       Logger.error('❌ Reset password error:', error);
