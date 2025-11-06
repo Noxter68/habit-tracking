@@ -24,7 +24,8 @@
       "usesAppleSignIn": true,
       "buildNumber": "1.0.0",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": ["remote-notification"]
       }
     },
     "android": {
@@ -35,7 +36,7 @@
       "package": "com.davidplanchon.nuvoria",
       "versionCode": 1
     },
-    "plugins": ["expo-web-browser", "expo-apple-authentication"],
+    "plugins": ["expo-web-browser", "expo-apple-authentication", "expo-notifications"],
     "extra": {
       "eas": {
         "projectId": "b814beca-39ec-424e-b3df-ede00d802c77"
