@@ -2,16 +2,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { Alert, Platform } from 'react-native';
-import * as AuthSession from 'expo-auth-session';
-import * as WebBrowser from 'expo-web-browser';
+import { Alert } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { RevenueCatService } from '@/services/RevenueCatService';
 import { PushTokenService } from '@/services/pushTokenService';
 import Logger from '@/utils/logger';
 import { OnboardingService } from '@/services/onboardingService';
-
-WebBrowser.maybeCompleteAuthSession();
 
 interface AuthContextType {
   user: User | null;
@@ -31,9 +27,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// ✅ TIMEOUT pour éviter que le loading reste bloqué
-const PROFILE_FETCH_TIMEOUT = 5000; // 5 secondes max
-
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [username, setUsername] = useState<string | null>(null);
@@ -42,38 +35,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
   // ============================================================================
-  // FETCH USERNAME & ONBOARDING STATUS avec timeout
+  // FETCH PROFILE - Rapide et critique
   // ============================================================================
-  const fetchUserProfile = async (userId: string, retries = 3): Promise<void> => {
+
+  const fetchUserProfile = async (userId: string): Promise<void> => {
     try {
-      // ✅ Ajouter un timeout pour éviter les blocages
-      const timeoutPromise = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Profile fetch timeout')), PROFILE_FETCH_TIMEOUT));
-
-      const fetchPromise = supabase.from('profiles').select('username, has_completed_onboarding').eq('id', userId).maybeSingle();
-
-      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
+      const { data, error } = await supabase.from('profiles').select('username, has_completed_onboarding').eq('id', userId).maybeSingle();
 
       if (error) {
         Logger.error('Error fetching profile:', error);
-        setUsername(null);
-        setHasCompletedOnboarding(false);
         return;
       }
 
       if (!data) {
         Logger.warn('⚠️ No profile found for user:', userId);
-
-        // ✅ Retry avec timeout
-        if (retries > 0) {
-          Logger.debug(`🔄 Retrying fetchUserProfile (${retries} attempts left)`);
-          await new Promise((resolve) => setTimeout(resolve, 500));
-          return fetchUserProfile(userId, retries - 1);
-        }
-
-        // ❌ Après 3 tentatives, on abandonne
-        Logger.error('❌ Failed to fetch profile after retries');
-        setUsername(null);
-        setHasCompletedOnboarding(false);
         return;
       }
 
@@ -86,13 +61,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
     } catch (error: any) {
       Logger.error('Fetch profile error:', error.message);
-      setUsername(null);
-      setHasCompletedOnboarding(false);
     }
   };
 
   // ============================================================================
-  // ONBOARDING FUNCTIONS
+  // ONBOARDING
   // ============================================================================
 
   const checkOnboardingStatus = async () => {
@@ -104,7 +77,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const completed = await OnboardingService.hasCompletedOnboarding(user.id);
       setHasCompletedOnboarding(completed);
-      Logger.info('Onboarding status checked:', completed);
     } catch (error) {
       Logger.error('Error checking onboarding status:', error);
       setHasCompletedOnboarding(false);
@@ -112,18 +84,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const completeOnboarding = async () => {
-    if (!user) {
-      Logger.warn('Cannot complete onboarding: no user');
-      return;
-    }
+    if (!user) return;
 
     try {
       const success = await OnboardingService.completeOnboarding(user.id);
       if (success) {
         setHasCompletedOnboarding(true);
-        Logger.info('✅ Onboarding completed successfully');
-      } else {
-        Logger.error('Failed to complete onboarding');
+        Logger.info('✅ Onboarding completed');
       }
     } catch (error) {
       Logger.error('Error completing onboarding:', error);
@@ -131,27 +98,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   // ============================================================================
-  // PUSH NOTIFICATIONS REGISTRATION
+  // PUSH NOTIFICATIONS - En arrière-plan
   // ============================================================================
 
   useEffect(() => {
     if (user?.id) {
-      PushTokenService.registerDevice(user.id)
-        .then((success) => {
-          if (success) {
-            Logger.debug('✅ Device registered for push notifications');
-          } else {
-            Logger.debug('⚠️ Push notification registration failed (permissions may be denied)');
-          }
-        })
-        .catch((error) => {
-          Logger.error('❌ Error registering device for push:', error);
-        });
+      PushTokenService.registerDevice(user.id).catch((error) => Logger.error('Push token registration failed:', error));
     }
   }, [user?.id]);
 
   // ============================================================================
-  // AUTH STATE INITIALIZATION & LISTENER - FIX PRINCIPAL
+  // AUTH INITIALIZATION - OPTIMISÉ POUR RAPIDITÉ
   // ============================================================================
 
   useEffect(() => {
@@ -159,52 +116,45 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const initializeAuth = async () => {
       try {
-        // ✅ Timeout global pour l'initialisation complète
-        const timeoutPromise = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Auth initialization timeout')), 10000));
+        Logger.debug('🔄 Initializing auth...');
 
-        const initPromise = (async () => {
-          // Initial session load
-          const {
-            data: { session },
-          } = await supabase.auth.getSession();
+        // Charge session + profil en SÉRIE (mais rapide)
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
 
-          if (!isMounted) return;
+        if (!isMounted) return;
 
-          setSession(session);
-          setUser(session?.user ?? null);
+        setSession(session);
+        setUser(session?.user ?? null);
 
-          if (session?.user?.id) {
-            try {
-              await fetchUserProfile(session.user.id);
-            } catch (error) {
-              Logger.error('Failed to fetch user profile, continuing anyway:', error);
-              // ✅ On continue même si le profil échoue
-            }
-          } else {
-            setUsername(null);
-            setHasCompletedOnboarding(false);
-          }
-        })();
+        // Si user connecté, charge son profil (critique pour l'UI)
+        if (session?.user?.id) {
+          await fetchUserProfile(session.user.id);
+        } else {
+          setUsername(null);
+          setHasCompletedOnboarding(false);
+        }
 
-        await Promise.race([initPromise, timeoutPromise]);
+        Logger.debug('✅ Auth initialized');
       } catch (error) {
         Logger.error('❌ Auth initialization error:', error);
-        // ✅ Même en cas d'erreur, on débloque l'UI
-        setSession(null);
-        setUser(null);
-        setUsername(null);
-        setHasCompletedOnboarding(false);
+        if (isMounted) {
+          setSession(null);
+          setUser(null);
+          setUsername(null);
+          setHasCompletedOnboarding(false);
+        }
       } finally {
         if (isMounted) {
-          // ✅ TOUJOURS débloquer le loading
-          setLoading(false);
+          setLoading(false); // ✅ Débloque après avoir chargé le profil
         }
       }
     };
 
     initializeAuth();
 
-    // ✅ Listen for auth state changes
+    // Auth state listener
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -216,13 +166,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(session?.user ?? null);
 
       if (session?.user?.id) {
-        try {
-          await fetchUserProfile(session.user.id);
-        } catch (error) {
-          Logger.error('Failed to fetch user profile on auth change:', error);
-          setUsername(null);
-          setHasCompletedOnboarding(false);
-        }
+        await fetchUserProfile(session.user.id);
       } else {
         setUsername(null);
         setHasCompletedOnboarding(false);
@@ -247,16 +191,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         email,
         password,
         options: {
-          data: {
-            username: username || email.split('@')[0],
-          },
+          data: { username: username || email.split('@')[0] },
         },
       });
 
       if (error) throw error;
 
       if (data.user) {
-        await RevenueCatService.setAppUserId(data.user.id);
+        RevenueCatService.setAppUserId(data.user.id).catch(() => {});
         Logger.debug('✅ Sign up successful');
       }
     } catch (error: any) {
@@ -284,7 +226,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (error) throw error;
 
       if (data.user) {
-        await RevenueCatService.setAppUserId(data.user.id);
+        RevenueCatService.setAppUserId(data.user.id).catch(() => {});
         Logger.debug('✅ Sign in successful');
       }
     } catch (error: any) {
@@ -317,13 +259,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (error) throw error;
 
         if (data.user) {
-          await RevenueCatService.setAppUserId(data.user.id);
+          RevenueCatService.setAppUserId(data.user.id).catch(() => {});
           Logger.debug('✅ Apple sign in successful');
         }
       }
     } catch (error: any) {
       if (error.code === 'ERR_REQUEST_CANCELED') {
-        Logger.debug('Apple sign in cancelled by user');
+        Logger.debug('Apple sign in cancelled');
       } else {
         Logger.error('❌ Apple sign in error:', error);
         Alert.alert('Error', error.message);
@@ -350,9 +292,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(true);
 
       if (user?.id) {
-        await Promise.race([PushTokenService.unregisterDevice(user.id), new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))]).catch((error) => {
-          Logger.error('⚠️ Push token unregister failed (continuing anyway):', error);
-        });
+        await Promise.race([PushTokenService.unregisterDevice(user.id), new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2000))]).catch(() => {});
       }
 
       setHasCompletedOnboarding(false);

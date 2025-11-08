@@ -15,14 +15,14 @@
       "associatedDomains": ["applinks:xbmbocxrubdpzkgkmwyp.supabase.co"],
       "icon": "./icons/icon/nuvoria_icon.png",
       "splash": {
-        "image": "./icons/splash/splashScreen2732.png",
+        "image": "./icons/icon/nuvoria_icon.png",
         "resizeMode": "cover",
-        "backgroundColor": "#6366f1"
+        "backgroundColor": "#FFFFFF"
       },
       "supportsTablet": true,
       "bundleIdentifier": "com.davidplanchon.nuvoria",
       "usesAppleSignIn": true,
-      "buildNumber": "1.0.9",
+      "buildNumber": "1.0.10",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": ["remote-notification"]

@@ -34,8 +34,12 @@ const StatsContext = createContext<StatsContextType | undefined>(undefined);
 export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // ✅ false par défaut !
   const lastUpdatedRef = useRef(0);
+
+  // ============================================================================
+  // REFRESH STATS - NON BLOQUANT
+  // ============================================================================
 
   const refreshStats = useCallback(
     async (forceRefresh: boolean = false) => {
@@ -55,10 +59,10 @@ export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
 
       try {
-        setLoading(true);
+        // ✅ Pas de setLoading(true) - ne bloque pas l'UI
         Logger.debug('StatsContext: Fetching fresh data from backend...');
 
-        // Fetch all data from existing services
+        // ✅ Fetch tout en parallèle
         const [xpStats, habitStats, activeHabitsCount, todayStats] = await Promise.all([
           XPService.getUserXPStats(user.id),
           HabitService.getAggregatedStats(user.id),
@@ -73,14 +77,10 @@ export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           xp_for_next_level: xpStats?.xp_for_next_level,
         });
 
-        // Use data from the database/view directly
+        // Use data from the database
         const totalXP = xpStats?.total_xp || 0;
         const level = xpStats?.current_level || 1;
-
-        // Use current_level_xp from the view (which maps from level_progress)
         const currentLevelXP = xpStats?.current_level_xp || 0;
-
-        // Use xp_for_next_level from the view (calculated by DB function)
         const nextLevelXP = xpStats?.xp_for_next_level || getXPForNextLevel(level);
 
         // Calculate progress percentage
@@ -117,14 +117,15 @@ export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       } catch (err) {
         Logger.error('StatsContext: Error refreshing stats:', err);
         // Don't clear stats on error, keep last known good state
-      } finally {
-        setLoading(false);
       }
     },
     [user?.id]
   );
 
-  // Optimistic update method - updates UI immediately without backend call
+  // ============================================================================
+  // OPTIMISTIC UPDATE - Immediate UI feedback
+  // ============================================================================
+
   const updateStatsOptimistically = useCallback(
     (xpAmount: number) => {
       if (!stats) {
@@ -189,11 +190,15 @@ export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     [stats]
   );
 
-  // Initial load when user changes
+  // ============================================================================
+  // EFFECT - FIRE AND FORGET
+  // ============================================================================
+
   useEffect(() => {
     if (user?.id) {
       Logger.debug('StatsContext: User detected, loading initial stats');
-      refreshStats(true); // Force refresh on user change
+      // ✅ Fire and forget - ne bloque pas
+      refreshStats(true);
     } else {
       setStats(null);
       lastUpdatedRef.current = 0;

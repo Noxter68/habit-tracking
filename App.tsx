@@ -1,16 +1,15 @@
 // App.tsx - With RevenueCat Initialization and Unified Config
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react'; // ✅ useMemo ajouté
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { View, ActivityIndicator, Platform, LogBox, StatusBar, AppState } from 'react-native';
+import { Platform, LogBox, StatusBar, AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
 import { diagnoseRevenueCatSetup } from './src/utils/RevenueCatDiagnostic';
-import tw from './src/lib/tailwind';
 import { DEBUG_MODE } from '@env';
 
 // Screens
@@ -41,6 +40,7 @@ import { SubscriptionProvider } from './src/context/SubscriptionContext';
 // Components
 import TabBarIcon from './src/components/TabBarIcon';
 import { EpicLevelUpModal } from '@/components/dashboard/EpicLevelUpModal';
+import BeautifulLoader from '@/components/BeautifulLoader';
 
 // Utils & Config
 import { Config } from './src/config';
@@ -78,23 +78,19 @@ export type TabParamList = {
 // Configuration
 // ============================================
 
-// 🔍 DEBUG LOGS - BEFORE Logger configuration
 console.log('\n========= PRE-CONFIG DEBUG =========');
 console.log('1. Raw DEBUG_MODE from @env:', DEBUG_MODE);
 console.log('2. Config.debug.enabled BEFORE configure:', Config.debug.enabled);
 console.log('====================================\n');
 
-// Configure Logger from environment - DO THIS FIRST!
 Logger.configure({ enabled: Config.debug.enabled });
 
-// 🔍 DEBUG LOGS - AFTER Logger configuration
 console.log('========= POST-CONFIG DEBUG =========');
 console.log('Logger configured with enabled:', Config.debug.enabled);
 console.log('Config.isDebug:', Config.isDebug);
 console.log('__DEV__:', __DEV__);
 console.log('====================================\n');
 
-// Log startup info (these will only show if debug is enabled)
 if (Config.debug.enabled) {
   Logger.info('🚀 App Starting');
   Logger.debug('Environment:', Config.env.name);
@@ -104,16 +100,13 @@ if (Config.debug.enabled) {
   console.log('✅ Logger is DISABLED - No debug logs should appear below\n');
 }
 
-// Configure Reanimated Logger
 configureReanimatedLogger({
   level: ReanimatedLogLevel.error,
   strict: false,
 });
 
-// Configure LogBox
 LogBox.ignoreLogs(['[Reanimated]', "It looks like you might be using shared value's"]);
 
-// Configure Notifications
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -150,10 +143,7 @@ function MainTabs() {
           borderWidth: 2,
           borderColor: '#cbd5e1',
           shadowColor: '#1e293b',
-          shadowOffset: {
-            width: 0,
-            height: 8,
-          },
+          shadowOffset: { width: 0, height: 8 },
           shadowOpacity: 0.12,
           shadowRadius: 16,
           elevation: 12,
@@ -165,12 +155,8 @@ function MainTabs() {
           letterSpacing: 0.5,
           textTransform: 'uppercase',
         },
-        tabBarIconStyle: {
-          marginTop: 0,
-        },
-        tabBarItemStyle: {
-          paddingVertical: 2,
-        },
+        tabBarIconStyle: { marginTop: 0 },
+        tabBarItemStyle: { paddingVertical: 2 },
       }}
     >
       <Tab.Screen
@@ -180,11 +166,7 @@ function MainTabs() {
           tabBarLabel: 'Home',
           tabBarIcon: ({ color, focused }) => <TabBarIcon name="home" color={color} focused={focused} />,
         }}
-        listeners={{
-          tabPress: () => {
-            HapticFeedback.selection();
-          },
-        }}
+        listeners={{ tabPress: () => HapticFeedback.selection() }}
       />
       <Tab.Screen
         name="Calendar"
@@ -193,11 +175,7 @@ function MainTabs() {
           tabBarLabel: 'Calendar',
           tabBarIcon: ({ color, focused }) => <TabBarIcon name="calendar" color={color} focused={focused} />,
         }}
-        listeners={{
-          tabPress: () => {
-            HapticFeedback.selection();
-          },
-        }}
+        listeners={{ tabPress: () => HapticFeedback.selection() }}
       />
       <Tab.Screen
         name="Leaderboard"
@@ -206,11 +184,7 @@ function MainTabs() {
           tabBarLabel: 'League',
           tabBarIcon: ({ color, focused }) => <TabBarIcon name="leaderboard" color={color} focused={focused} />,
         }}
-        listeners={{
-          tabPress: () => {
-            HapticFeedback.selection();
-          },
-        }}
+        listeners={{ tabPress: () => HapticFeedback.selection() }}
       />
       <Tab.Screen
         name="Stats"
@@ -219,11 +193,7 @@ function MainTabs() {
           tabBarLabel: 'Stats',
           tabBarIcon: ({ color, focused }) => <TabBarIcon name="chart" color={color} focused={focused} />,
         }}
-        listeners={{
-          tabPress: () => {
-            HapticFeedback.selection();
-          },
-        }}
+        listeners={{ tabPress: () => HapticFeedback.selection() }}
       />
       <Tab.Screen
         name="Settings"
@@ -232,11 +202,7 @@ function MainTabs() {
           tabBarLabel: 'Settings',
           tabBarIcon: ({ color, focused }) => <TabBarIcon name="settings" color={color} focused={focused} />,
         }}
-        listeners={{
-          tabPress: () => {
-            HapticFeedback.selection();
-          },
-        }}
+        listeners={{ tabPress: () => HapticFeedback.selection() }}
       />
     </Tab.Navigator>
   );
@@ -247,9 +213,14 @@ function MainTabs() {
 // ============================================
 
 function AppNavigator() {
-  const { user, loading, hasCompletedOnboarding } = useAuth();
+  const { user, loading: authLoading, hasCompletedOnboarding } = useAuth();
   const [isFirstLaunch, setIsFirstLaunch] = useState<boolean | null>(null);
   const [isCheckingFirstLaunch, setIsCheckingFirstLaunch] = useState(true);
+  const [minLoadingTimePassed, setMinLoadingTimePassed] = useState(false);
+
+  // ============================================================================
+  // INITIALIZATION
+  // ============================================================================
 
   useEffect(() => {
     checkFirstLaunch();
@@ -257,10 +228,6 @@ function AppNavigator() {
 
   useEffect(() => {
     NotificationService.initialize();
-  }, []);
-
-  useEffect(() => {
-    setIsCheckingFirstLaunch(false);
   }, []);
 
   const checkFirstLaunch = async () => {
@@ -275,76 +242,60 @@ function AppNavigator() {
     }
   };
 
-  if (loading || isCheckingFirstLaunch) {
-    return (
-      <View style={tw`flex-1 items-center justify-center bg-slate-50`}>
-        <ActivityIndicator size="large" color="#1e293b" />
-      </View>
-    );
+  // ============================================================================
+  // SMART LOADING SYSTEM
+  // ============================================================================
+
+  // Minimum 800ms pour éviter le flash
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMinLoadingTimePassed(true);
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Détermine si on peut afficher l'UI
+  const canShowUI = useMemo(() => {
+    return !authLoading && !isCheckingFirstLaunch && minLoadingTimePassed;
+  }, [authLoading, isCheckingFirstLaunch, minLoadingTimePassed]);
+
+  // ============================================================================
+  // RENDER: LOADER
+  // ============================================================================
+
+  if (!canShowUI) {
+    return <BeautifulLoader />;
   }
+
+  // ============================================================================
+  // RENDER: AUTH SCREEN
+  // ============================================================================
 
   if (!user) {
     return (
-      <Stack.Navigator
-        screenOptions={{
-          headerShown: false,
-          animation: 'fade',
-        }}
-      >
+      <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
         <Stack.Screen name="Auth" component={AuthScreen} />
       </Stack.Navigator>
     );
   }
 
+  // ============================================================================
+  // RENDER: MAIN APP
+  // ============================================================================
+
   return (
     <>
-      <Stack.Navigator
-        initialRouteName={hasCompletedOnboarding ? 'MainTabs' : 'Onboarding'}
-        screenOptions={{
-          headerShown: false,
-          animation: 'fade',
-        }}
-      >
+      <Stack.Navigator initialRouteName={hasCompletedOnboarding ? 'MainTabs' : 'Onboarding'} screenOptions={{ headerShown: false, animation: 'fade' }}>
         <Stack.Screen name="MainTabs" component={MainTabs} options={{ animation: 'fade' }} />
         <Stack.Screen name="HabitWizard" component={HabitWizard} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="HabitDetails" component={HabitDetails} options={{ animation: 'slide_from_right' }} />
-        <Stack.Screen
-          name="Achievements"
-          component={AchievementsScreen}
-          options={{
-            animation: 'slide_from_bottom',
-            presentation: 'modal',
-          }}
-        />
-        <Stack.Screen
-          name="NotificationManager"
-          component={NotificationManagerScreen}
-          options={{
-            headerShown: false,
-            presentation: 'card',
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen
-          name="Paywall"
-          component={PaywallScreen}
-          options={{
-            presentation: 'modal',
-            animation: 'slide_from_bottom',
-          }}
-        />
-        <Stack.Screen
-          name="HolidayMode"
-          component={HolidayModeScreen}
-          options={{
-            headerShown: false,
-            presentation: 'card',
-            animation: 'slide_from_right',
-          }}
-        />
+        <Stack.Screen name="Achievements" component={AchievementsScreen} options={{ animation: 'slide_from_bottom', presentation: 'modal' }} />
+        <Stack.Screen name="NotificationManager" component={NotificationManagerScreen} options={{ headerShown: false, presentation: 'card', animation: 'slide_from_right' }} />
+        <Stack.Screen name="Paywall" component={PaywallScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="HolidayMode" component={HolidayModeScreen} options={{ headerShown: false, presentation: 'card', animation: 'slide_from_right' }} />
         <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
 
-        {/* ✅ DEBUG MODE SCREENS - Only show when debug is enabled */}
         {Config.debug.showDebugScreen && (
           <>
             <Stack.Screen
@@ -354,13 +305,9 @@ function AppNavigator() {
                 title: 'Debug Tools',
                 animation: 'slide_from_right',
                 headerShown: true,
-                headerStyle: {
-                  backgroundColor: '#1e293b',
-                },
+                headerStyle: { backgroundColor: '#1e293b' },
                 headerTintColor: '#fff',
-                headerTitleStyle: {
-                  fontWeight: 'bold',
-                },
+                headerTitleStyle: { fontWeight: 'bold' },
               }}
             />
             <Stack.Screen
@@ -370,13 +317,9 @@ function AppNavigator() {
                 title: '🏥 System Diagnostics',
                 animation: 'slide_from_right',
                 headerShown: true,
-                headerStyle: {
-                  backgroundColor: '#3b82f6',
-                },
+                headerStyle: { backgroundColor: '#3b82f6' },
                 headerTintColor: '#fff',
-                headerTitleStyle: {
-                  fontWeight: 'bold',
-                },
+                headerTitleStyle: { fontWeight: 'bold' },
               }}
             />
           </>
@@ -476,10 +419,8 @@ export default function App() {
   usePerformanceMonitoring();
 
   useEffect(() => {
-    // Initialize RevenueCat with proper async handling
     const initRevenueCat = async () => {
       try {
-        // Check if we're in Expo Go (where RevenueCat won't work)
         const isExpoGo = typeof expo !== 'undefined' && expo?.modules?.ExpoGo;
 
         if (isExpoGo) {
@@ -489,7 +430,6 @@ export default function App() {
           return;
         }
 
-        // Run diagnostic if in debug mode
         if (Config.debug.enabled) {
           diagnoseRevenueCatSetup();
         }
@@ -504,7 +444,6 @@ export default function App() {
 
     initRevenueCat();
 
-    // Listen to app state changes to sync purchases
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'active' && RevenueCatService.isInitialized()) {
         Logger.debug('🔄 [App] App became active, syncing purchases...');
@@ -514,9 +453,7 @@ export default function App() {
       }
     });
 
-    return () => {
-      subscription.remove();
-    };
+    return () => subscription.remove();
   }, []);
 
   return (

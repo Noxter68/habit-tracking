@@ -51,12 +51,10 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (!user) return;
 
     try {
-      setLoading(true);
       const fetchedHabits = await HabitService.fetchHabits(user.id);
       setHabits(fetchedHabits);
     } catch (error: any) {
       Logger.error('Error loading habits:', error);
-      Alert.alert('Error', 'Failed to load habits. Please check your connection.');
     } finally {
       setLoading(false);
     }
