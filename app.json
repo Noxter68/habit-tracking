@@ -2,27 +2,25 @@
   "expo": {
     "name": "Nuvoria",
     "slug": "Nuvoria",
-    "version": "1.0.0",
+    "version": "1.0.11",
     "orientation": "portrait",
     "icon": "./icons/icon/nuvoria_icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./icons/icon/nuvoria_icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#FFFFFF"
+      "backgroundColor": "#ffffff",
+      "resizeMode": "contain"
     },
     "ios": {
       "associatedDomains": ["applinks:xbmbocxrubdpzkgkmwyp.supabase.co"],
       "icon": "./icons/icon/nuvoria_icon.png",
       "splash": {
-        "image": "./icons/icon/nuvoria_icon.png",
-        "resizeMode": "cover",
-        "backgroundColor": "#FFFFFF"
+        "backgroundColor": "#ffffff",
+        "resizeMode": "contain"
       },
       "supportsTablet": true,
       "bundleIdentifier": "com.davidplanchon.nuvoria",
       "usesAppleSignIn": true,
-      "buildNumber": "1.0.10",
+      "buildNumber": "11",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": ["remote-notification"]
