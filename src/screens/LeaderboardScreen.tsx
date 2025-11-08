@@ -135,7 +135,7 @@ const LeaderboardScreen = () => {
                 {topThree[1] && (
                   <Animated.View entering={FadeInDown.delay(300).springify()} style={tw`flex-1 items-center`}>
                     <View style={tw`mb-3`}>
-                      <Image source={SECOND_PLACE} style={{ width: 80, height: 80 }} resizeMode="contain" />
+                      <Image source={SECOND_PLACE} style={{ width: 100, height: 100 }} resizeMode="contain" />
                     </View>
 
                     <View style={[tw`w-full bg-white/15 border-2 border-white/20 rounded-2xl p-2 items-center`, { minHeight: 130 }]}>

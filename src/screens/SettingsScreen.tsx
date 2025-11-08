@@ -620,7 +620,7 @@ const SettingsScreen: React.FC = () => {
           )}
 
           <SettingsSection title="Support" delay={400} gradient={['#EC4899', '#DB2777']}>
-            <SettingsItem icon="information-circle-outline" title="Version" subtitle="1.0.0" color="#EC4899" />
+            <SettingsItem icon="information-circle-outline" title="Version" subtitle="1.0.10" color="#EC4899" />
             {/* <SettingsItem
               icon="help-circle-outline"
               title="Help & Support"

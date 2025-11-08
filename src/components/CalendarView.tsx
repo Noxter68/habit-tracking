@@ -5,11 +5,14 @@ import Animated, { FadeIn, useAnimatedStyle, withSpring } from 'react-native-rea
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import tw from '../lib/tailwind';
 import { Habit } from '../types';
+import { HolidayPeriod } from '@/types/holiday.types';
+import { HolidayModeService } from '@/services/holidayModeService';
 
 interface CalendarViewProps {
   habit: Habit;
   selectedDate: Date;
   onDateSelect: (date: Date) => void;
+  allHolidays?: HolidayPeriod[];
 }
 
 // Helper to get local date string
@@ -20,7 +23,7 @@ const getLocalDateString = (date: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
-const CalendarView: React.FC<CalendarViewProps> = ({ habit, selectedDate, onDateSelect }) => {
+const CalendarView: React.FC<CalendarViewProps> = ({ habit, selectedDate, onDateSelect, allHolidays = [] }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   // Update month when selected date changes
@@ -137,9 +140,12 @@ const CalendarView: React.FC<CalendarViewProps> = ({ habit, selectedDate, onDate
           const today = isToday(date);
           const beforeCreation = isBeforeHabitCreation(date);
 
+          //Vérifier si c'est un jour de holiday
+          const taskIds = habit.tasks.map((t) => t.id);
+          const isHoliday = HolidayModeService.isDateInAnyHoliday(date, allHolidays, habit.id, taskIds);
           // Check if day is in the past (missed) - only after habit creation
           const isPast = date < new Date() && !today;
-          const isMissed = isPast && !status.completed && !status.partial && !beforeCreation;
+          const isMissed = isPast && !status.completed && !status.partial && !beforeCreation && !isHoliday;
 
           // Determine if this day should be clickable
           const isClickable = !beforeCreation; // Only clickable after habit creation

@@ -49,6 +49,7 @@ import { PerformanceMonitor } from './src/utils/performanceMonitor';
 import { RevenueCatService } from '@/services/RevenueCatService';
 import { NotificationService } from '@/services/notificationService';
 import { HapticFeedback } from '@/utils/haptics';
+import notificationBadgeService from '@/services/notificationBadgeService';
 
 // Type Definitions
 export type RootStackParamList = {
@@ -443,6 +444,8 @@ export default function App() {
     };
 
     initRevenueCat();
+
+    notificationBadgeService.clearBadge();
 
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'active' && RevenueCatService.isInitialized()) {

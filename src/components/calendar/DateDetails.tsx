@@ -53,7 +53,11 @@ const DateDetails: React.FC<DateDetailsProps> = ({ habit, selectedDate, activeHo
   // Only dates strictly BEFORE creation date are considered "before creation"
   const beforeCreation = checkDate.getTime() < creationDate.getTime();
 
-  const isPast = selectedDate < new Date();
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+
+  // ✅ FIX: Un jour en holiday n'est JAMAIS "past/missed"
+  const isPast = checkDate < now && !isHoliday;
   const isToday = selectedDate.toDateString() === new Date().toDateString();
 
   const formattedDate = selectedDate.toLocaleDateString('en-US', {
@@ -65,10 +69,10 @@ const DateDetails: React.FC<DateDetailsProps> = ({ habit, selectedDate, activeHo
 
   // ============================================================================
   // HOLIDAY STATE - TOPAZ THEME
-  // ✅ UPDATED: Shows full UI for ACTIVE holidays, simple badge for PAST holidays
+  // ✅ SIMPLIFIED: Message simple pour holiday actif
   // ============================================================================
   if (isHoliday) {
-    // If it's the ACTIVE holiday, show full UI
+    // If it's the ACTIVE holiday, show simplified message
     if (isActiveHoliday && holidayInfo.isHoliday) {
       return (
         <Animated.View entering={FadeInDown.duration(400)} style={tw`mt-4`}>
@@ -84,34 +88,17 @@ const DateDetails: React.FC<DateDetailsProps> = ({ habit, selectedDate, activeHo
               </View>
             </View>
 
-            {/* Info Box */}
+            {/* Info Box - Message simplifié uniquement */}
             <View style={tw`bg-white/20 rounded-xl p-3`}>
               <Text style={tw`text-white font-semibold text-sm text-center mb-1`}>Your streak is safe!</Text>
               <Text style={tw`text-white/90 text-xs text-center`}>Tracking paused. Enjoy your break!</Text>
-
-              {completedCount > 0 && (
-                <View style={tw`mt-3 pt-3 border-t border-white/30`}>
-                  <Text style={tw`text-white text-xs font-semibold mb-2`}>
-                    Completed during holiday ({completedCount}/{totalTasks})
-                  </Text>
-                  {habit.tasks.map((task: any, index: number) => {
-                    const isTaskCompleted = completedTaskIds.includes(task.id);
-                    return (
-                      <View key={`holiday-task-${task.id}-${index}`} style={tw`flex-row items-center py-1.5`}>
-                        {isTaskCompleted ? <CheckCircle2 size={14} color="#FFFFFF" strokeWidth={2.5} /> : <Circle size={14} color="rgba(255, 255, 255, 0.4)" strokeWidth={2} />}
-                        <Text style={[tw`ml-2 flex-1 text-xs`, isTaskCompleted ? tw`text-white font-medium` : tw`text-white/60`]}>{task.name}</Text>
-                      </View>
-                    );
-                  })}
-                </View>
-              )}
             </View>
           </LinearGradient>
         </Animated.View>
       );
     }
 
-    // ✅ NEW: Otherwise, it's a PAST holiday - show simple historical badge
+    // ✅ PAST holiday - show simple historical badge
     return (
       <Animated.View entering={FadeInDown.duration(400)} style={tw`mt-4`}>
         <View style={tw`bg-amber-50 rounded-2xl p-4 border border-amber-200`}>
@@ -229,7 +216,7 @@ const DateDetails: React.FC<DateDetailsProps> = ({ habit, selectedDate, activeHo
                       {completedCount}/{totalTasks}
                     </Text>
                   </>
-                ) : isPast ? (
+                ) : isPast && !isHoliday ? (
                   <Text style={tw`text-white text-xs font-bold`}>MISSED</Text>
                 ) : (
                   <Text style={tw`text-white text-xs font-bold`}>TODO</Text>
@@ -288,8 +275,8 @@ const DateDetails: React.FC<DateDetailsProps> = ({ habit, selectedDate, activeHo
             </>
           )}
 
-          {/* Compact Summary */}
-          {totalTasks > 0 && (
+          {/* Compact Summary - Cache si tout est complété */}
+          {totalTasks > 0 && !isCompleted && (
             <View style={tw`mt-2 pt-2 border-t border-gray-100`}>
               {isPartial ? (
                 <View style={tw`bg-amber-50 rounded-lg p-2.5`}>
@@ -297,17 +284,17 @@ const DateDetails: React.FC<DateDetailsProps> = ({ habit, selectedDate, activeHo
                     {totalTasks - completedCount} task{totalTasks - completedCount > 1 ? 's' : ''} remaining
                   </Text>
                 </View>
-              ) : isPast ? (
+              ) : isPast && !isHoliday ? (
                 <View style={tw`bg-red-50 rounded-lg p-2.5`}>
                   <Text style={tw`text-red-700 font-semibold text-xs`}>Missed • Tomorrow is a new opportunity</Text>
                 </View>
-              ) : !isCompleted ? (
+              ) : (
                 <View style={tw`bg-blue-50 rounded-lg p-2.5`}>
                   <Text style={tw`text-blue-700 font-semibold text-xs`}>
                     {totalTasks} task{totalTasks > 1 ? 's' : ''} ready to start
                   </Text>
                 </View>
-              ) : null}
+              )}
             </View>
           )}
         </View>
