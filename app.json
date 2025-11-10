@@ -21,10 +21,12 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.davidplanchon.nuvoria",
       "usesAppleSignIn": true,
-      "buildNumber": "12",
+      "buildNumber": "13",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "UIBackgroundModes": ["remote-notification"]
+        "UIBackgroundModes": ["remote-notification"],
+        "NSLocalNetworkUsageDescription": "L’accès au réseau local est nécessaire pour le développement.",
+        "NSAppTransportSecurity": { "NSAllowsArbitraryLoads": true }
       }
     },
     "android": {
@@ -35,7 +37,7 @@
       "package": "com.davidplanchon.nuvoria",
       "versionCode": 1
     },
-    "plugins": ["expo-web-browser", "expo-apple-authentication", "expo-notifications"],
+    "plugins": ["expo-apple-authentication", "expo-notifications", "expo-dev-client"],
     "extra": {
       "eas": {
         "projectId": "b814beca-39ec-424e-b3df-ede00d802c77"
