@@ -90,3 +90,22 @@ export const formatMonthYear = (date: Date): string => {
     year: 'numeric',
   });
 };
+
+/**
+ * Calculate hours remaining until midnight (for daily habit reset timer)
+ * Returns the number of hours from now until 00:00 of the next day
+ *
+ * @example
+ * // At 10:00 AM -> returns 14 (14 hours until midnight)
+ * // At 11:30 PM -> returns 1 (30 minutes rounded up to 1 hour)
+ */
+export const getHoursUntilMidnight = (): number => {
+  const now = new Date();
+  const midnight = new Date();
+  midnight.setHours(24, 0, 0, 0); // Set to next midnight
+
+  const diffMs = midnight.getTime() - now.getTime();
+  const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
+
+  return diffHours;
+};

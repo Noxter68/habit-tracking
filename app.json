@@ -2,7 +2,7 @@
   "expo": {
     "name": "Nuvoria",
     "slug": "Nuvoria",
-    "version": "1.0.11",
+    "version": "1.0.12",
     "orientation": "portrait",
     "icon": "./icons/icon/nuvoria_icon.png",
     "userInterfaceStyle": "light",

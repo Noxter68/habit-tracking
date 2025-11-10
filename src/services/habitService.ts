@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { Habit, HabitProgression } from '../types';
 import { HabitProgressionService } from './habitProgressionService';
 import Logger from '@/utils/logger';
+import { getTasksForCategory } from '@/utils/habitHelpers';
 
 export interface StreakHistoryEntry {
   date: string;
@@ -307,36 +308,96 @@ export class HabitService {
 
   /**
    * Create a new habit
+   *
+   * Logic:
+   * - Predefined habits: Store full task objects from habitHelpers
+   * - Custom habits: Store simple objects with just the name
    */
   static async createHabit(habit: Habit, userId: string): Promise<Habit> {
-    const { data, error } = await supabase
-      .from('habits')
-      .insert({
-        user_id: userId,
-        name: habit.name,
-        type: habit.type,
-        category: habit.category,
-        tasks: habit.tasks,
-        frequency: habit.frequency,
-        custom_days: habit.customDays,
-        notifications: habit.notifications,
-        notification_time: habit.notificationTime,
-        has_end_goal: habit.hasEndGoal,
-        end_goal_days: habit.endGoalDays,
-        total_days: habit.totalDays,
-        current_streak: habit.currentStreak,
-        best_streak: habit.bestStreak,
-      })
-      .select()
-      .single();
+    try {
+      let tasksToSave: any[];
 
-    if (error) throw error;
+      // Check if it's a custom habit
+      const isCustomHabit = habit.category === 'custom';
 
-    return {
-      ...habit,
-      id: data.id,
-      createdAt: new Date(data.created_at),
-    };
+      if (isCustomHabit) {
+        // ✅ CUSTOM HABIT: Store just the name
+        tasksToSave = habit.tasks.map((task, index) => {
+          const taskName = typeof task === 'string' ? task : task.name || task;
+          return {
+            id: `custom-task-${Date.now()}-${index}`,
+            name: taskName,
+          };
+        });
+      } else {
+        // ✅ PREDEFINED HABIT: Store full task objects
+        const availableTasks = getTasksForCategory(habit.category, habit.type);
+
+        tasksToSave = habit.tasks.map((task) => {
+          const taskId = typeof task === 'string' ? task : task.id;
+          const taskDetails = availableTasks.find((t) => t.id === taskId);
+
+          if (taskDetails) {
+            return {
+              id: taskDetails.id,
+              name: taskDetails.name,
+              description: taskDetails.description || '',
+              duration: taskDetails.duration || '',
+            };
+          }
+
+          // Fallback if task not found
+          return {
+            id: taskId,
+            name: typeof task === 'string' ? task : task.name || 'Task',
+            description: '',
+            duration: '',
+          };
+        });
+      }
+
+      const { data, error } = await supabase
+        .from('habits')
+        .insert({
+          user_id: userId,
+          name: habit.name,
+          type: habit.type,
+          category: habit.category,
+          tasks: tasksToSave,
+          frequency: habit.frequency,
+          custom_days: habit.customDays,
+          notifications: habit.notifications,
+          notification_time: habit.notificationTime,
+          has_end_goal: habit.hasEndGoal,
+          end_goal_days: habit.endGoalDays,
+          total_days: habit.totalDays,
+          current_streak: habit.currentStreak || 0,
+          best_streak: habit.bestStreak || 0,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        Logger.error('Error creating habit:', error);
+        throw error;
+      }
+
+      Logger.debug('✅ Habit created:', {
+        habitId: data.id,
+        isCustom: isCustomHabit,
+        taskCount: tasksToSave.length,
+      });
+
+      return {
+        ...habit,
+        id: data.id,
+        tasks: tasksToSave,
+        createdAt: new Date(data.created_at),
+      };
+    } catch (error) {
+      Logger.error('Error in createHabit:', error);
+      throw error;
+    }
   }
 
   /**
@@ -421,86 +482,175 @@ export class HabitService {
 
   // Calculate streaks with better logic
   // In src/services/habitService.ts
+  // src/services/habitService.ts
+  // Ajout à la classe HabitService - REMPLACE UNIQUEMENT la méthode calculateStreaks
+
+  /**
+   * Calculate streaks with proper weekly habit support
+   *
+   * WEEKLY HABITS LOGIC:
+   * - Created on Day 0
+   * - Can complete tasks during any 7-day window starting from Day 0
+   * - Streak increments when ALL tasks are completed within the week
+   * - Streak breaks if week ends without all tasks completed
+   * - Next window: Day 7-13, then Day 14-20, etc.
+   */
   static async calculateStreaks(habitId: string, userId: string, date: string, allCompleted: boolean): Promise<{ currentStreak: number; bestStreak: number }> {
     try {
-      // ✅ Get ALL completions (any progress counts for streak)
-      const { data: completions, error } = await supabase
-        .from('task_completions')
-        .select('date, all_completed')
-        .eq('habit_id', habitId)
-        // ✅ REMOVE: .eq('all_completed', true)
-        .order('date', { ascending: false });
+      // Get habit info
+      const { data: habit, error: habitError } = await supabase.from('habits').select('frequency, created_at').eq('id', habitId).single();
+
+      if (habitError) throw habitError;
+
+      const frequency = habit.frequency as 'daily' | 'weekly' | 'monthly' | 'custom';
+      const createdAt = new Date(habit.created_at);
+
+      // Get ALL completions (any progress counts for daily, all_completed for weekly)
+      const { data: completions, error } = await supabase.from('task_completions').select('date, all_completed, completed_tasks').eq('habit_id', habitId).order('date', { ascending: false });
 
       if (error) throw error;
 
-      let currentStreak = 0;
-      let bestStreak = 0;
-
-      if (completions && completions.length > 0) {
-        const today = getTodayString();
-
-        // ✅ Get unique dates (any progress on that day)
-        const dates = [...new Set(completions.map((c) => c.date))];
-
-        // Calculate current streak - check if we have activity today or yesterday
-        const todayHasProgress = dates.includes(today) || date === today;
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = getLocalDateString(yesterday);
-        const yesterdayHasProgress = dates.includes(yesterdayStr);
-
-        // Start counting if today OR yesterday has progress
-        if (todayHasProgress || yesterdayHasProgress) {
-          currentStreak = 1;
-
-          // Start from yesterday if today has no progress
-          let startDay = todayHasProgress ? 0 : 1;
-
-          for (let i = 1; i < 365; i++) {
-            const checkDate = new Date();
-            checkDate.setDate(checkDate.getDate() - (i + startDay));
-            const dateStr = getLocalDateString(checkDate);
-
-            if (dates.includes(dateStr)) {
-              currentStreak++;
-            } else {
-              break; // Stop at first gap
-            }
-          }
-        }
-
-        // Calculate best streak ever
-        let tempStreak = 0;
-        const sortedDates = [...dates].sort();
-
-        for (let i = 0; i < sortedDates.length; i++) {
-          if (i === 0) {
-            tempStreak = 1;
-          } else {
-            const prevDate = new Date(sortedDates[i - 1]);
-            const currDate = new Date(sortedDates[i]);
-            const diffDays = Math.round((currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
-
-            if (diffDays === 1) {
-              tempStreak++;
-            } else {
-              tempStreak = 1;
-            }
-          }
-          bestStreak = Math.max(bestStreak, tempStreak);
-        }
+      if (!completions || completions.length === 0) {
+        return { currentStreak: 0, bestStreak: 0 };
       }
 
-      return {
-        currentStreak,
-        bestStreak: Math.max(bestStreak, currentStreak),
-      };
+      // Different calculation based on frequency
+      if (frequency === 'weekly') {
+        return this.calculateWeeklyStreaks(completions, createdAt);
+      } else if (frequency === 'daily') {
+        return this.calculateDailyStreaks(completions);
+      } else if (frequency === 'custom') {
+        // Custom days - treat like daily but only count selected days
+        return this.calculateDailyStreaks(completions);
+      }
+
+      return { currentStreak: 0, bestStreak: 0 };
     } catch (error) {
       Logger.error('Error calculating streaks:', error);
       return { currentStreak: 0, bestStreak: 0 };
     }
   }
 
+  /**
+   * Calculate weekly habit streaks
+   * Counts consecutive WEEKS where all tasks were completed
+   */
+  private static calculateWeeklyStreaks(completions: any[], createdAt: Date): { currentStreak: number; bestStreak: number } {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const created = new Date(createdAt);
+    created.setHours(0, 0, 0, 0);
+
+    // Calculate which week we're in (0-indexed)
+    const daysSinceCreation = Math.floor((today.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
+    const currentWeekIndex = Math.floor(daysSinceCreation / 7);
+
+    // Group completions by week
+    const weekCompletions = new Map<number, boolean>();
+
+    completions.forEach((completion) => {
+      const completionDate = new Date(completion.date);
+      const daysSince = Math.floor((completionDate.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
+      const weekIndex = Math.floor(daysSince / 7);
+
+      // Mark week as complete if all tasks were done
+      if (completion.all_completed) {
+        weekCompletions.set(weekIndex, true);
+      }
+    });
+
+    // Calculate current streak (consecutive weeks backwards from current)
+    let currentStreak = 0;
+    for (let week = currentWeekIndex; week >= 0; week--) {
+      if (weekCompletions.get(week)) {
+        currentStreak++;
+      } else {
+        break;
+      }
+    }
+
+    // Calculate best streak
+    let bestStreak = 0;
+    let tempStreak = 0;
+
+    const maxWeek = Math.max(...Array.from(weekCompletions.keys()));
+    for (let week = 0; week <= maxWeek; week++) {
+      if (weekCompletions.get(week)) {
+        tempStreak++;
+        bestStreak = Math.max(bestStreak, tempStreak);
+      } else {
+        tempStreak = 0;
+      }
+    }
+
+    return {
+      currentStreak,
+      bestStreak: Math.max(bestStreak, currentStreak),
+    };
+  }
+
+  /**
+   * Calculate daily habit streaks
+   * Counts consecutive DAYS with any progress
+   */
+  private static calculateDailyStreaks(completions: any[]): { currentStreak: number; bestStreak: number } {
+    let currentStreak = 0;
+    let bestStreak = 0;
+
+    const today = getTodayString();
+    const dates = [...new Set(completions.map((c) => c.date))];
+
+    // Calculate current streak
+    const todayHasProgress = dates.includes(today);
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = getLocalDateString(yesterday);
+    const yesterdayHasProgress = dates.includes(yesterdayStr);
+
+    if (todayHasProgress || yesterdayHasProgress) {
+      currentStreak = 1;
+      const startDay = todayHasProgress ? 0 : 1;
+
+      for (let i = 1; i < 365; i++) {
+        const checkDate = new Date();
+        checkDate.setDate(checkDate.getDate() - (i + startDay));
+        const dateStr = getLocalDateString(checkDate);
+
+        if (dates.includes(dateStr)) {
+          currentStreak++;
+        } else {
+          break;
+        }
+      }
+    }
+
+    // Calculate best streak
+    let tempStreak = 0;
+    const sortedDates = [...dates].sort();
+
+    for (let i = 0; i < sortedDates.length; i++) {
+      if (i === 0) {
+        tempStreak = 1;
+      } else {
+        const prevDate = new Date(sortedDates[i - 1]);
+        const currDate = new Date(sortedDates[i]);
+        const diffDays = Math.round((currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 1) {
+          tempStreak++;
+        } else {
+          tempStreak = 1;
+        }
+      }
+      bestStreak = Math.max(bestStreak, tempStreak);
+    }
+
+    return {
+      currentStreak,
+      bestStreak: Math.max(bestStreak, currentStreak),
+    };
+  }
   /**
    * Update streak in habits table
    */

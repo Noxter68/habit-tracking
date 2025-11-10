@@ -1,17 +1,25 @@
 // src/components/habits/TasksCard.tsx
 import React from 'react';
-import { View, Text, Pressable, ImageBackground, ActivityIndicator } from 'react-native';
+import { View, Text, Pressable, ImageBackground } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, useAnimatedStyle, withSpring, useSharedValue, withRepeat, withTiming, Easing } from 'react-native-reanimated';
-import { Circle, CheckCircle2, Clock, ArrowRight, PauseCircle, Loader2 } from 'lucide-react-native';
+import { Circle, CheckCircle2, Clock, Loader2, PauseCircle } from 'lucide-react-native';
 import tw from '@/lib/tailwind';
 import { tierThemes } from '@/utils/tierTheme';
 import { HabitTier } from '@/services/habitProgressionService';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
+// ✨ Task with full details
+interface Task {
+  id: string;
+  name: string;
+  description?: string;
+  duration?: string;
+}
+
 interface TasksCardProps {
-  tasks: any[];
+  tasks: Task[];
   todayTasks: { completedTasks: string[]; allCompleted: boolean };
   habitId: string;
   today: string;
@@ -20,10 +28,11 @@ interface TasksCardProps {
   pausedTasks?: Record<string, { pausedUntil: string; reason?: string }>;
   isLoading?: boolean;
   loadingTaskId?: string | null;
+  frequency?: 'daily' | 'weekly' | 'monthly' | 'custom';
 }
 
 const TaskItem: React.FC<{
-  task: any;
+  task: Task;
   isCompleted: boolean;
   theme: any;
   onPress: () => void;
@@ -40,7 +49,6 @@ const TaskItem: React.FC<{
   // Animate spinner rotation when processing
   React.useEffect(() => {
     if (isProcessing) {
-      // Continuous rotation for spinner
       spinnerRotation.value = withRepeat(withTiming(360, { duration: 1000, easing: Easing.linear }), -1, false);
     } else {
       spinnerRotation.value = 0;
@@ -66,8 +74,6 @@ const TaskItem: React.FC<{
   const spinnerStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${spinnerRotation.value}deg` }],
   }));
-
-  const taskId = typeof task === 'string' ? task : task.id;
 
   const formatPausedDate = (dateString: string): string => {
     const date = new Date(dateString);
@@ -103,7 +109,7 @@ const TaskItem: React.FC<{
         },
       ]}
     >
-      {/* Status Icon */}
+      {/* Status Icon - Check Circle Only */}
       <View style={tw`w-6 h-6 mr-3.5 items-center justify-center shrink-0`}>
         {isProcessing ? (
           <Animated.View style={spinnerStyle}>
@@ -118,57 +124,90 @@ const TaskItem: React.FC<{
         )}
       </View>
 
-      {/* Task Name & Pause Label */}
-      <View style={tw`flex-1 min-w-0`}>
-        <Text style={[tw`text-sm font-medium`, isPaused ? tw`text-stone-400` : isCompleted ? tw`text-stone-400 line-through` : tw`text-stone-800`]} numberOfLines={2}>
-          {typeof task === 'string' ? task : task.name}
+      {/* Task Content */}
+      <View style={tw`flex-1 min-w-0 mr-3`}>
+        {/* Task Name */}
+        <Text style={[tw`text-sm font-semibold mb-0.5`, isPaused ? tw`text-stone-400` : isCompleted ? tw`text-stone-400 line-through` : tw`text-stone-800`]} numberOfLines={1}>
+          {task.name}
         </Text>
 
+        {/* Task Description */}
+        {task.description && (
+          <Text style={[tw`text-xs mt-0.5`, isPaused ? tw`text-stone-400` : tw`text-stone-500`]} numberOfLines={1}>
+            {task.description}
+          </Text>
+        )}
+
+        {/* Paused Info */}
         {isPaused && pausedUntil && <Text style={tw`text-xs text-stone-400 mt-1`}>Paused {formatPausedDate(pausedUntil)}</Text>}
       </View>
 
-      {/* Duration or Status Icon */}
-      {!isPaused && typeof task === 'object' && task.duration && !isCompleted ? (
+      {/* Duration Badge (on the right) */}
+      {!isPaused && task.duration && !isCompleted && (
         <View style={[tw`flex-row items-center gap-1.5 px-3 py-1.5 rounded-xl shrink-0`, { backgroundColor: theme.accent + '10' }]}>
           <Clock size={13} color={theme.accent} />
           <Text style={[tw`text-xs font-semibold`, { color: theme.accent }]}>{task.duration}</Text>
         </View>
-      ) : (
-        !isPaused &&
-        !isCompleted && (
-          <View style={[tw`w-8 h-8 rounded-full items-center justify-center shrink-0`, { backgroundColor: theme.accent + '15' }]}>
-            <ArrowRight size={16} color={theme.accent} strokeWidth={2.5} />
-          </View>
-        )
       )}
     </AnimatedPressable>
   );
 };
 
-export const TasksCard: React.FC<TasksCardProps> = ({ tasks, todayTasks, habitId, today, onToggleTask, tier, pausedTasks = {}, isLoading = false, loadingTaskId = null }) => {
+export const TasksCard: React.FC<TasksCardProps> = ({ tasks, todayTasks, habitId, today, onToggleTask, tier, pausedTasks = {}, isLoading = false, loadingTaskId = null, frequency = 'daily' }) => {
   const theme = tierThemes[tier];
   const completedTasksToday = todayTasks.completedTasks?.length || 0;
   const totalTasks = tasks?.length || 0;
   const taskProgress = totalTasks > 0 ? (completedTasksToday / totalTasks) * 100 : 0;
 
-  const progressWidth = useSharedValue(taskProgress);
+  const progressWidth = useSharedValue(0);
+  const prevProgress = React.useRef(0);
 
+  // ✅ FIX: Initialiser la valeur au premier render
   React.useEffect(() => {
-    progressWidth.value = withSpring(taskProgress, {
-      damping: 25,
-      stiffness: 200,
-    });
+    progressWidth.value = taskProgress;
+    prevProgress.current = taskProgress;
+  }, []);
+
+  // ✅ FIX: Animer SEULEMENT lors de vrais changements
+  React.useEffect(() => {
+    const roundedProgress = Math.round(taskProgress);
+    const roundedPrev = Math.round(prevProgress.current);
+
+    // Animer seulement si changement d'au moins 1% arrondi
+    if (roundedProgress !== roundedPrev) {
+      progressWidth.value = withSpring(taskProgress, {
+        damping: 35,
+        stiffness: 120,
+        mass: 1,
+        overshootClamping: true, // ✅ Empêche le dépassement
+      });
+      prevProgress.current = taskProgress;
+    }
   }, [taskProgress]);
 
   const progressAnimatedStyle = useAnimatedStyle(() => ({
     width: `${Math.max(progressWidth.value, 5)}%`,
   }));
 
+  // ✨ Dynamic title based on frequency
+  const getTitle = () => {
+    switch (frequency) {
+      case 'daily':
+        return "Today's Tasks";
+      case 'weekly':
+        return 'Weekly Tasks';
+      case 'custom':
+        return 'Tasks';
+      default:
+        return "Today's Tasks";
+    }
+  };
+
   return (
     <View style={tw`bg-white rounded-3xl p-5 mb-4 shadow-md border border-stone-100`}>
       {/* Header */}
       <View style={tw`flex-row items-center justify-between mb-4`}>
-        <Text style={tw`text-base font-bold text-stone-800`}>Today's Tasks</Text>
+        <Text style={tw`text-base font-bold text-stone-800`}>{getTitle()}</Text>
         <View
           style={[
             tw`px-3 py-1.5 rounded-xl border`,
@@ -195,7 +234,21 @@ export const TasksCard: React.FC<TasksCardProps> = ({ tasks, todayTasks, habitId
 
       {/* Task List */}
       {tasks.map((task, idx) => {
-        const taskId = typeof task === 'string' ? task : task.id;
+        // ✅ Handle both task objects and strings safely
+        const taskId = typeof task === 'string' ? task : task?.id || `task-${idx}`;
+        const taskName = typeof task === 'string' ? task : task?.name || task;
+
+        // Create a proper task object
+        const taskObject =
+          typeof task === 'object' && task.name
+            ? task
+            : {
+                id: taskId,
+                name: taskName,
+                description: typeof task === 'object' ? task.description : undefined,
+                duration: typeof task === 'object' ? task.duration : undefined,
+              };
+
         const isCompleted = todayTasks.completedTasks.includes(taskId);
         const isPaused = !!pausedTasks[taskId];
         const pausedInfo = pausedTasks[taskId];
@@ -203,8 +256,8 @@ export const TasksCard: React.FC<TasksCardProps> = ({ tasks, todayTasks, habitId
 
         return (
           <TaskItem
-            key={`task-${taskId}`}
-            task={task}
+            key={`task-${taskId}-${idx}`}
+            task={taskObject}
             isCompleted={isCompleted}
             theme={theme}
             onPress={() => onToggleTask(taskId)}

@@ -19,6 +19,8 @@ import { useStats } from '@/context/StatsContext';
 import { getAchievementTierTheme } from '@/utils/tierTheme';
 import type { AchievementTierName } from '@/utils/tierTheme';
 import { HapticFeedback } from '@/utils/haptics';
+import { getTodayString } from '@/utils/dateHelpers';
+import { Habit } from '@/types';
 
 interface DashboardHeaderProps {
   userTitle: string;
@@ -35,6 +37,7 @@ interface DashboardHeaderProps {
   levelProgress?: number;
   onStatsRefresh?: () => void;
   totalXP?: number;
+  habits: Habit[];
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -51,6 +54,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   levelProgress = 0,
   onStatsRefresh,
   totalXP = 0,
+  habits,
 }) => {
   const navigation = useNavigation();
   const { user, username } = useAuth();
@@ -165,6 +169,51 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     };
   }, [optimisticXP, xpForNextLevel]);
 
+  // Dans Dashboard.tsx ou DashboardHeader.tsx
+
+  const calculateTaskStats = (habits: Habit[]) => {
+    const today = getTodayString();
+
+    let totalTasks = 0;
+    let completedTasks = 0;
+    let dailyTasksTotal = 0;
+    let dailyTasksCompleted = 0;
+    let hasWeekly = false;
+    let hasMonthly = false;
+
+    habits.forEach((habit) => {
+      const taskCount = habit.tasks?.length || 0;
+      const todayData = habit.dailyTasks?.[today];
+      const completedCount = todayData?.completedTasks?.length || 0;
+
+      // Compter TOUTES les tâches
+      totalTasks += taskCount;
+      completedTasks += completedCount;
+
+      // Compter seulement les tâches DAILY
+      if (habit.frequency === 'daily') {
+        dailyTasksTotal += taskCount;
+        dailyTasksCompleted += completedCount;
+      }
+
+      // Détecter weekly/monthly
+      if (habit.frequency === 'weekly') hasWeekly = true;
+      if (habit.frequency === 'monthly') hasMonthly = true;
+    });
+
+    return {
+      totalTasks,
+      completedTasks,
+      dailyTasksTotal,
+      dailyTasksCompleted,
+      hasWeekly,
+      hasMonthly,
+    };
+  };
+
+  // Utilisation
+  const taskStats = calculateTaskStats(habits);
+
   // ✅ Memoize GradientContainer component
   const GradientContainer = useMemo(() => {
     return ({ children }: { children: React.ReactNode }) => {
@@ -236,9 +285,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   }, [tierTheme.gradient, tierTheme.texture, isObsidian]);
 
   return (
-    <Animated.View entering={FadeIn} style={{ position: 'relative', marginBottom: 16 }}>
+    <Animated.View entering={FadeIn} style={{ position: 'relative', marginBottom: 4 }}>
       <GradientContainer>
-        <View style={{ padding: 20, paddingBottom: 0 }}>
+        <View style={{ padding: 16, paddingBottom: 0 }}>
           {/* Greeting and Level Section */}
           <View style={{ marginBottom: 16 }}>
             {/* Greeting with username */}
@@ -399,6 +448,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 debugMode={__DEV__}
                 tierTheme={tierTheme}
                 textColor={textColors.secondary}
+                habits={habits}
               />
             </View>
           )}

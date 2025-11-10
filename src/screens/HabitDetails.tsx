@@ -43,7 +43,7 @@ import Logger from '@/utils/logger';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'HabitDetails'>;
 type RouteProps = RouteProp<RootStackParamList, 'HabitDetails'>;
-type TabType = 'overview' | 'calendar' | 'tiers';
+type TabType = 'overview' | 'tiers';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -156,7 +156,7 @@ const HabitDetails: React.FC = () => {
   // ============================================================================
 
   /**
-   * Handle task toggle - DON'T refresh progression to avoid streak jump
+   * Handle task toggle - WITH DEBOUNCING to prevent rapid re-renders
    */
   const handleToggleTask = useCallback(
     async (taskId: string): Promise<void> => {
@@ -167,10 +167,11 @@ const HabitDetails: React.FC = () => {
       setLoadingTaskId(taskId);
 
       try {
+        // ✅ Attendre la fin du toggle AVANT de permettre d'autres actions
         await toggleTask(habit.id, today, taskId);
 
-        // ✅ DON'T call refreshProgression() here - it causes the jump
-        // The hook automatically updates from habit.currentStreak changes
+        // ✅ Petit délai pour éviter les re-renders trop rapides
+        await new Promise((resolve) => setTimeout(resolve, 150));
       } catch (error) {
         Logger.error('❌ Task toggle failed:', error);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -337,6 +338,7 @@ const HabitDetails: React.FC = () => {
                     pausedTasks={pausedTasks}
                     isLoading={isTogglingTask}
                     loadingTaskId={loadingTaskId}
+                    frequency={habit.frequency}
                   />
                 )}
               </Animated.View>
@@ -346,22 +348,6 @@ const HabitDetails: React.FC = () => {
             {selectedTab === 'tiers' && (
               <Animated.View entering={FadeInDown.duration(300)}>
                 <MilestonesCard milestones={milestoneStatus?.all || []} currentStreak={debugStreak !== null ? debugStreak : habit.currentStreak} unlockedMilestones={milestoneStatus?.unlocked || []} />
-              </Animated.View>
-            )}
-
-            {/* ========== CALENDAR TAB ========== */}
-            {selectedTab === 'calendar' && (
-              <Animated.View entering={FadeInDown.duration(300)}>
-                <LinearGradient colors={['rgba(251, 191, 36, 0.05)', 'rgba(245, 158, 11, 0.02)']} style={tw`rounded-3xl p-8 border border-stone-200/20`}>
-                  <View style={tw`items-center`}>
-                    <View style={tw`w-20 h-20 bg-sand-100 rounded-full items-center justify-center mb-4`}>
-                      <Calendar size={40} color="#d97706" strokeWidth={1.5} />
-                    </View>
-                    <Text style={tw`text-xl font-bold text-gray-800 mb-2`}>Calendar View</Text>
-                    <Text style={tw`text-sm text-sand-500 text-center`}>Visual calendar tracking coming soon!</Text>
-                    <Text style={tw`text-xs text-stone-300 mt-2 text-center`}>Track your daily progress with a beautiful calendar</Text>
-                  </View>
-                </LinearGradient>
               </Animated.View>
             )}
           </View>

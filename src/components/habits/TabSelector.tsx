@@ -5,7 +5,7 @@ import tw from '@/lib/tailwind';
 import { HabitTier } from '@/services/habitProgressionService';
 import { tierThemes } from '@/utils/tierTheme';
 
-export type TabType = 'overview' | 'tiers' | 'calendar';
+export type TabType = 'overview' | 'tiers';
 
 interface TabSelectorProps {
   selected: TabType;
@@ -13,7 +13,7 @@ interface TabSelectorProps {
   tier: HabitTier;
 }
 
-const TABS: TabType[] = ['overview', 'tiers', 'calendar'];
+const TABS: TabType[] = ['overview', 'tiers'];
 
 export const TabSelector: React.FC<TabSelectorProps> = ({ selected, onChange, tier }) => {
   const theme = tierThemes[tier];

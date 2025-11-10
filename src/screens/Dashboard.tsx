@@ -30,6 +30,9 @@ import { HapticFeedback } from '@/utils/haptics';
 import Logger from '@/utils/logger';
 import { HolidayPeriod } from '@/types/holiday.types';
 import { StreakSaverService } from '@/services/StreakSaverService';
+import { getTodayString } from '@/utils/dateHelpers';
+import TaskBadge from '@/components/TasksBadge';
+import AddHabitButton from '@/components/dashboard/AddHabitButton';
 
 // ============================================================================
 // Main Component
@@ -257,6 +260,70 @@ const Dashboard: React.FC = () => {
     await refreshStats(true);
   }, [refreshStats]);
 
+  const realTimeTasksStats = useMemo(() => {
+    const today = getTodayString();
+    let completed = 0;
+    let total = 0;
+
+    habits.forEach((habit) => {
+      const taskCount = habit.tasks?.length || 0;
+      total += taskCount;
+
+      const todayData = habit.dailyTasks?.[today];
+      if (todayData?.completedTasks) {
+        completed += todayData.completedTasks.length;
+      }
+    });
+
+    return { completed, total };
+  }, [habits]);
+
+  const completionRate = realTimeTasksStats.total > 0 ? Math.round((realTimeTasksStats.completed / realTimeTasksStats.total) * 100) : 0;
+
+  // ✅ Titres dynamiques basés sur l'accomplissement
+  const getAccomplishmentTitle = () => {
+    const rate = completionRate;
+
+    if (rate === 100) return { title: 'Perfect Day!', emoji: '🎉', subtitle: 'All tasks completed!' };
+    if (rate >= 75) return { title: 'Almost There!', emoji: '🔥', subtitle: "You're crushing it today" };
+    if (rate >= 50) return { title: 'Building Momentum', emoji: '💪', subtitle: 'Keep the streak going' };
+    return { title: 'Just Getting Started', emoji: '🌱', subtitle: 'Every step counts' };
+  };
+
+  // ✅ Couleurs dynamiques selon l'accomplissement
+  const getProgressColors = () => {
+    if (completionRate === 100) {
+      return {
+        primary: '#10b981', // green-500
+        light: '#ecfdf5', // green-50
+        border: '#86efac', // green-300
+        badge: '#10b981',
+      };
+    }
+    if (completionRate >= 75) {
+      return {
+        primary: '#f59e0b', // amber-500
+        light: '#fffbeb', // amber-50
+        border: '#fcd34d', // amber-300
+        badge: '#f59e0b',
+      };
+    }
+    if (completionRate >= 50) {
+      return {
+        primary: '#3b82f6', // blue-500
+        light: '#eff6ff', // blue-50
+        border: '#93c5fd', // blue-300
+        badge: '#3b82f6',
+      };
+    }
+    return {
+      primary: '#64748b', // slate-500
+      light: '#f8fafc', // slate-50
+      border: '#cbd5e1', // slate-300
+      badge: '#64748b',
+    };
+  };
+
   const handleStreakSaverPress = async () => {
     if (!user) return;
 
@@ -376,6 +443,7 @@ const Dashboard: React.FC = () => {
             levelProgress={stats?.levelProgress ?? 0}
             onStatsRefresh={handleStatsRefresh}
             totalXP={stats?.totalXP ?? 0}
+            habits={habits}
           />
 
           {/* Streak Saver Badge (only when not on full holiday) */}
@@ -455,25 +523,27 @@ const Dashboard: React.FC = () => {
             )}
 
             {/* Section Header */}
-            <View style={tw`flex-row items-center justify-between mb-4`}>
-              <View>
-                <Text style={tw`text-xl font-bold text-stone-700`}>{showFullHolidayMode ? 'On Holiday' : activeHabits.length > 0 ? "Today's Habits" : 'Get Started'}</Text>
-                <Text style={tw`text-sm text-stone-500 mt-0.5`}>
-                  {showFullHolidayMode
-                    ? 'All habits are paused'
-                    : activeHabits.length > 0
-                    ? `${stats?.completedTasksToday ?? 0} of ${stats?.totalTasksToday ?? 0} tasks done`
-                    : 'Start building your first habit'}
-                </Text>
+            {!showFullHolidayMode && activeHabits.length > 0 ? (
+              <View style={tw`mb-4`}>
+                {/* Header with Dynamic Title */}
+                <AddHabitButton onPress={handleCreateHabit} />
+                <TaskBadge completed={realTimeTasksStats.completed} total={realTimeTasksStats.total} onAddPress={handleCreateHabit} showAddButton={habits.length > 0} />
               </View>
-
-              {/* Add Habit Button */}
-              {habits.length > 0 && !showFullHolidayMode && (
-                <Pressable onPress={handleCreateHabit} style={({ pressed }) => [tw`w-10 h-10 rounded-xl items-center justify-center`, pressed && tw`scale-95`]}>
-                  <Image source={require('../../assets/interface/add-habit-button.png')} style={{ width: 40, height: 40 }} resizeMode="contain" />
-                </Pressable>
-              )}
-            </View>
+            ) : showFullHolidayMode ? (
+              <View style={tw`flex-row items-center justify-between mb-4`}>
+                <View>
+                  <Text style={tw`text-xl font-bold text-stone-700`}>On Holiday</Text>
+                  <Text style={tw`text-sm text-stone-500 mt-0.5`}>All habits are paused</Text>
+                </View>
+              </View>
+            ) : (
+              <View style={tw`flex-row items-center justify-between mb-4`}>
+                <View>
+                  <Text style={tw`text-xl font-bold text-stone-700`}>Get Started</Text>
+                  <Text style={tw`text-sm text-stone-500 mt-0.5`}>Start building your first habit</Text>
+                </View>
+              </View>
+            )}
 
             {/* Full Holiday Mode Display */}
             {showFullHolidayMode ? (
