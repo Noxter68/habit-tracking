@@ -10,6 +10,7 @@ import { getTodayString } from '@/utils/dateHelpers';
 import Logger from '@/utils/logger';
 import { Config } from '@/config';
 import { Habit } from '@/types';
+import FloatingXP from './FloatingXp';
 
 interface TierTheme {
   gradient: string[];
@@ -328,45 +329,8 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
       <View style={{ position: 'relative' }}>
         {/* Floating XP Badge */}
         {showXPBadge && (
-          <Animated.View
-            style={[
-              {
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                marginLeft: -40,
-                marginTop: -20,
-                zIndex: 10,
-                flexDirection: 'row',
-                alignItems: 'center',
-                backgroundColor: `${accentColor}F2`,
-                paddingHorizontal: 14,
-                paddingVertical: 8,
-                borderRadius: 20,
-                borderWidth: 2,
-                borderColor: accentColor,
-                shadowColor: accentColor,
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.6,
-                shadowRadius: 12,
-                elevation: 10,
-              },
-              badgeAnimatedStyle,
-            ]}
-          >
-            <Image source={require('../../../assets/interface/consumable-xp.png')} style={{ width: 22, height: 22, marginRight: 8 }} resizeMode="contain" />
-            <Text
-              style={{
-                color: '#FFFFFF',
-                fontSize: 15,
-                fontWeight: '800',
-                textShadowColor: 'rgba(0, 0, 0, 0.3)',
-                textShadowOffset: { width: 0, height: 1 },
-                textShadowRadius: 2,
-              }}
-            >
-              +20 XP
-            </Text>
+          <Animated.View style={badgeAnimatedStyle}>
+            <FloatingXP show={showXPBadge} amount={20} accentColor={accentColor} texture={tierTheme?.texture} onComplete={hideBadge} />
           </Animated.View>
         )}
 
