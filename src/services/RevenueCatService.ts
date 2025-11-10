@@ -95,36 +95,32 @@ export class RevenueCatService {
    */
   private static async performInitialization(userId?: string): Promise<void> {
     try {
-      // Validate API key
       if (!REVENUECAT_API_KEY) {
-        throw new Error('RevenueCat API key is missing. Check your .env file.');
+        throw new Error('RevenueCat API key is missing');
       }
 
       const expectedPrefix = Platform.OS === 'ios' ? 'appl_' : 'goog_';
       if (!REVENUECAT_API_KEY.startsWith(expectedPrefix)) {
-        Logger.warn(`⚠️ [RevenueCat] API key doesn't match expected prefix for ${Platform.OS}`);
+        Logger.warn(`⚠️ [RevenueCat] API key doesn't match expected prefix`);
       }
 
-      // Enable debug logging in development
       Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.DEBUG : LOG_LEVEL.INFO);
 
-      // Configure SDK
+      // ✅ Configure seulement (instantané)
       Purchases.configure({
         apiKey: REVENUECAT_API_KEY,
         appUserID: userId,
       });
 
       this.initialized = true;
+      Logger.debug('✅ [RevenueCat] SDK configured (verification in background)');
 
-      // Verify initialization by fetching customer info
-      try {
-        const customerInfo = await Purchases.getCustomerInfo();
-        Logger.debug('✅ [RevenueCat] Initialized successfully');
-      } catch (verifyError) {
-        Logger.warn('⚠️ [RevenueCat] Initialized but verification failed');
-      }
+      // ✅ Vérifie en arrière-plan SANS bloquer
+      Purchases.getCustomerInfo()
+        .then(() => Logger.debug('✅ [RevenueCat] Verification successful'))
+        .catch((error) => Logger.warn('⚠️ [RevenueCat] Verification failed:', error));
 
-      // Listen for subscription changes
+      // ✅ Écoute les changements
       Purchases.addCustomerInfoUpdateListener(this.handleCustomerInfoUpdate);
     } catch (error) {
       Logger.error('❌ [RevenueCat] Initialization failed:', error);

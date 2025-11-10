@@ -45,7 +45,6 @@ const SubscriptionContext = createContext<SubscriptionContextType | undefined>(u
 export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { user } = useAuth();
 
-  // ✅ State avec valeurs par défaut pour débloquer immédiatement
   const [subscription, setSubscription] = useState<SubscriptionData>({
     tier: 'free',
     status: 'inactive',
@@ -55,7 +54,7 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
     transactionId: null,
   });
 
-  const [loading, setLoading] = useState(false); // ✅ false par défaut !
+  const [loading, setLoading] = useState(false);
   const [habitCount, setHabitCount] = useState(0);
   const [streakSavers, setStreakSavers] = useState(0);
   const [totalStreakSaversUsed, setTotalStreakSaversUsed] = useState(0);
@@ -66,7 +65,7 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
   const canCreateHabit = isPremium || habitCount < 2;
 
   // ==========================================================================
-  // Load Subscription - NON BLOQUANT
+  // Load Subscription (non-blocking)
   // ==========================================================================
 
   const loadSubscription = async () => {
@@ -83,9 +82,7 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
 
     try {
-      // ✅ Pas de setLoading(true) - on ne bloque pas l'UI
-
-      // ✅ Charge tout en parallèle avec Promise.allSettled
+      // Load everything in parallel
       const [revenueCatStatus, profileResult, habitCountResult] = await Promise.allSettled([
         RevenueCatService.getSubscriptionStatus(),
         supabase
@@ -99,14 +96,14 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
       // Extract RevenueCat status
       const hasPremium = revenueCatStatus.status === 'fulfilled' && revenueCatStatus.value.isSubscribed;
 
-      // ✅ Sync premium status to database (non-blocking, fire and forget)
-      if (hasPremium) {
+      // Sync premium status to database (fire and forget)
+      if (hasPremium && revenueCatStatus.status === 'fulfilled') {
         supabase
           .from('profiles')
           .update({
             subscription_tier: 'premium',
             subscription_status: 'active',
-            subscription_end_date: revenueCatStatus.status === 'fulfilled' ? revenueCatStatus.value.expirationDate : null,
+            subscription_end_date: revenueCatStatus.value.expirationDate,
             updated_at: new Date().toISOString(),
           })
           .eq('id', user.id)
@@ -140,30 +137,12 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
   };
 
   // ==========================================================================
-  // Effects - TOUS OPTIMISÉS
+  // Initialize RevenueCat + Load Subscription
   // ==========================================================================
 
-  // ✅ Setup RevenueCat user ID (non-bloquant)
   useEffect(() => {
-    if (user?.id) {
-      RevenueCatService.setAppUserId(user.id).catch((error) => {
-        Logger.error('❌ [Subscription] Failed to set RevenueCat user ID:', error);
-      });
-    }
-
-    return () => {
-      if (user?.id) {
-        RevenueCatService.clearAppUserId().catch(() => {});
-      }
-    };
-  }, [user?.id]);
-
-  // ✅ Load subscription (non-bloquant, sans délai)
-  useEffect(() => {
-    if (user) {
-      // ✅ Pas de setTimeout ! Charge immédiatement en arrière-plan
-      loadSubscription();
-    } else {
+    if (!user?.id) {
+      // Reset state when user logs out
       setSubscription({
         tier: 'free',
         status: 'inactive',
@@ -175,10 +154,43 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
       setStreakSavers(0);
       setTotalStreakSaversUsed(0);
       setHabitCount(0);
+      return;
     }
+
+    const initUserSubscription = async () => {
+      try {
+        // Initialize RevenueCat with user ID if not already initialized
+        if (!RevenueCatService.isInitialized()) {
+          Logger.debug('🚀 [Subscription] Initializing RevenueCat with user:', user.id);
+          await RevenueCatService.initialize(user.id);
+        } else {
+          // If already initialized, just set the user ID
+          Logger.debug('🔄 [Subscription] Setting user ID:', user.id);
+          await RevenueCatService.setAppUserId(user.id);
+        }
+
+        // Load subscription data
+        loadSubscription();
+      } catch (error) {
+        Logger.error('❌ [Subscription] Failed to initialize:', error);
+      }
+    };
+
+    initUserSubscription();
+
+    // Cleanup: logout RevenueCat when user session ends
+    return () => {
+      if (user?.id && RevenueCatService.isInitialized()) {
+        Logger.debug('🚪 [Subscription] User session ending, logging out RevenueCat');
+        RevenueCatService.clearAppUserId().catch(() => {});
+      }
+    };
   }, [user?.id]);
 
-  // ✅ Realtime updates (optionnel, ne bloque pas)
+  // ==========================================================================
+  // Realtime Subscription Updates
+  // ==========================================================================
+
   useEffect(() => {
     if (!user?.id) return;
 
@@ -193,7 +205,7 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
           filter: `id=eq.${user.id}`,
         },
         () => {
-          // Refresh en arrière-plan
+          Logger.debug('🔔 [Subscription] Profile updated, refreshing...');
           loadSubscription();
         }
       )
@@ -219,9 +231,7 @@ export const SubscriptionProvider: React.FC<{ children: ReactNode }> = ({ childr
       const { count } = await supabase.from('habits').select('*', { count: 'exact', head: true }).eq('user_id', user.id);
 
       setHabitCount(count || 0);
-      const canCreate = isPremium || (count || 0) < 2;
-
-      return canCreate;
+      return isPremium || (count || 0) < 2;
     } catch (error) {
       Logger.error('❌ [Subscription] Error checking habit limit:', error);
       return false;

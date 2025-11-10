@@ -437,9 +437,9 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
                           }}
                         >
                           {canClaimChallenge ? (
-                            <Image source={require('../../../assets/interface/consumable-xp.png')} style={{ width: 28, height: 28 }} resizeMode="contain" />
+                            <Image source={require('../../../assets/interface/consumable-xp.png')} style={{ width: 60, height: 60 }} resizeMode="contain" />
                           ) : (
-                            <Image source={require('../../../assets/interface/challenge.png')} style={{ width: 28, height: 28 }} resizeMode="contain" />
+                            <Image source={require('../../../assets/interface/challenge.png')} style={{ width: 60, height: 60 }} resizeMode="contain" />
                           )}
                         </View>
                       )}

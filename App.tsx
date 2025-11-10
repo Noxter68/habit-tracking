@@ -423,11 +423,8 @@ export default function App() {
     const initRevenueCat = async () => {
       try {
         const isExpoGo = typeof expo !== 'undefined' && expo?.modules?.ExpoGo;
-
         if (isExpoGo) {
-          Logger.warn('⚠️  [App] Running in Expo Go - RevenueCat will NOT work!');
-          Logger.warn('⚠️  [App] You need to build a development build to test purchases');
-          Logger.warn('⚠️  [App] Run: npx expo run:ios or eas build --profile development');
+          Logger.warn('⚠️  Running in Expo Go - RevenueCat will NOT work!');
           return;
         }
 
@@ -435,24 +432,21 @@ export default function App() {
           diagnoseRevenueCatSetup();
         }
 
-        Logger.debug('🚀 [App] Starting RevenueCat initialization...');
-        await RevenueCatService.initialize();
-        Logger.debug('✅ [App] RevenueCat initialized successfully');
+        // ❌ RETIRE ÇA - Ne pas initialiser ici !
+        // await RevenueCatService.initialize();
+
+        Logger.debug('✅ [App] RevenueCat will initialize with user context');
       } catch (error) {
-        Logger.error('❌ [App] Failed to initialize RevenueCat:', error);
+        Logger.error('❌ [App] Setup error:', error);
       }
     };
 
     initRevenueCat();
-
     notificationBadgeService.clearBadge();
 
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'active' && RevenueCatService.isInitialized()) {
-        Logger.debug('🔄 [App] App became active, syncing purchases...');
-        RevenueCatService.getSubscriptionStatus().catch((error) => {
-          Logger.error('❌ [App] Error syncing purchases:', error);
-        });
+        RevenueCatService.getSubscriptionStatus().catch(() => {});
       }
     });
 
