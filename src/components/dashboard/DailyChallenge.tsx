@@ -274,7 +274,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
               textShadowRadius: 3,
             }}
           >
-            {stats.dailyTasksTotal} {stats.dailyTasksTotal === 1 ? 'Daily' : "Daily's"}
+            {stats.dailyTasksTotal} {stats.dailyTasksTotal === 1 ? 'Daily Task' : 'Daily Tasks'}
           </Text>
         </View>
       );
@@ -303,7 +303,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
               textShadowRadius: 3,
             }}
           >
-            {stats.weeklyTasksTotal} {stats.weeklyTasksTotal === 1 ? 'Weekly' : "Weekly's"}
+            {stats.weeklyTasksTotal} {stats.weeklyTasksTotal === 1 ? 'Weekly Task' : 'Weekly Tasks'}
           </Text>
         </View>
       );
