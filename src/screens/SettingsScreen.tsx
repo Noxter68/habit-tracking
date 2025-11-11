@@ -21,6 +21,8 @@ import { ChevronRight, Pencil } from 'lucide-react-native';
 import { HolidayPeriod } from '@/types/holiday.types';
 import { supabase } from '@/lib/supabase';
 import EditUsernameModal from '@/components/settings/EditUserModal';
+import { t } from 'i18next';
+import i18n from '@/i18n';
 
 const APP_ICON = require('../../assets/icon/icon-v2.png');
 
@@ -582,12 +584,11 @@ const SettingsScreen: React.FC = () => {
 
             <SettingsItem
               icon="language-outline"
-              title="Language"
-              subtitle="English"
-              color="#9333EA"
-              trailing={<Icon name="chevron-forward" size={20} color="#9333EA" />}
-              onPress={() => Logger.debug('Language pressed')}
-              isLast
+              title={t('settings.language')}
+              subtitle={i18n.language === 'fr' ? 'Français' : 'English'}
+              color="#8B5CF6"
+              trailing={<Icon name="chevron-forward" size={20} color="#8B5CF6" />}
+              onPress={() => navigation.navigate('LanguageSelector')}
             />
           </SettingsSection>
 
