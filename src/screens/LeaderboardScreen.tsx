@@ -100,7 +100,7 @@ const LeaderboardScreen = () => {
           {/* Header */}
           <Animated.View entering={FadeInUp.delay(100)} style={tw`px-6 pt-4 pb-8`}>
             {/* Crown */}
-            <View style={tw`items-center mb-2`}>
+            <View style={tw`items-center `}>
               <Image source={CROWN_IMAGE} style={tw`w-40 h-40`} resizeMode="contain" />
             </View>
 

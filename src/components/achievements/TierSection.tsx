@@ -44,7 +44,6 @@ export const TierSection: React.FC<TierSectionProps> = ({ tierName, tierKey, tie
         style={({ pressed }) => ({
           marginHorizontal: 8,
           marginBottom: isExpanded ? 12 : 0,
-          borderRadius: 20,
           overflow: 'hidden',
           opacity: pressed ? 0.85 : 1,
         })}

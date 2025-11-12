@@ -276,6 +276,11 @@
     "lockedBadge": "Verrouillé",
     "complete": "Terminé",
     "percentComplete": "{{percent}}% Terminé",
+    "filters": {
+      "all": "Tous",
+      "unlocked": "Débloqués",
+      "locked": "Verrouillés"
+    },
     "tiers": {
       "novice": "Novice",
       "risingHero": "Héros Montant",
@@ -1744,6 +1749,70 @@
       "friday": "V",
       "saturday": "S",
       "sunday": "D"
+    }
+  },
+  "holidayPremium": {
+    "title": "Mode Vacances",
+    "subtitle": "Prenez une pause sans perdre votre progression",
+    "premiumFeature": "Fonctionnalité Premium",
+    "description": "Avec Premium, profitez du Mode Vacances illimité pour protéger vos séries quand vous avez besoin d'une pause.",
+
+    "benefits": {
+      "title": "Avantages",
+      "unlimited": "Jours de Vacances Illimités",
+      "unlimitedDesc": "Utilisez le Mode Vacances autant que nécessaire",
+      "protection": "Protection Complète des Séries",
+      "protectionDesc": "Votre progression reste intacte pendant votre pause",
+      "flexibility": "Flexibilité Totale",
+      "flexibilityDesc": "Planifiez à l'avance ou activez instantanément"
+    },
+
+    "howItWorks": {
+      "title": "Comment ça fonctionne",
+      "step1": "Activez le Mode Vacances",
+      "step1Desc": "Choisissez vos dates de début et de fin",
+      "step2": "Profitez de votre pause",
+      "step2Desc": "Vos séries sont gelées et protégées",
+      "step3": "Revenez quand vous êtes prêt",
+      "step3Desc": "Reprenez exactement où vous vous étiez arrêté"
+    },
+
+    "comparison": {
+      "title": "Gratuit vs Premium",
+      "free": "Forfait Gratuit",
+      "premium": "Premium",
+      "limitedDays": "30 jours par an",
+      "unlimitedDays": "Jours illimités",
+      "basicProtection": "Protection basique",
+      "fullProtection": "Protection complète",
+      "singlePeriod": "1 période à la fois",
+      "multiplePeriods": "Périodes multiples"
+    },
+
+    "cta": {
+      "upgrade": "Passer à Premium",
+      "learnMore": "En savoir plus"
+    }
+  },
+  "editUsername": {
+    "title": "Modifier le pseudo",
+    "subtitle": "Choisissez un pseudo unique (3-20 caractères, lettres, chiffres et underscores uniquement)",
+    "inputLabel": "Pseudo",
+    "placeholder": "Entrez votre pseudo",
+    "characterCount": "{{count}}/20 caractères",
+    "errors": {
+      "emptyTitle": "Pseudo invalide",
+      "emptyMessage": "Le pseudo ne peut pas être vide",
+      "tooShortTitle": "Pseudo invalide",
+      "tooShortMessage": "Le pseudo doit contenir au moins 3 caractères",
+      "tooLongTitle": "Pseudo invalide",
+      "tooLongMessage": "Le pseudo doit contenir moins de 20 caractères",
+      "invalidCharsTitle": "Pseudo invalide",
+      "invalidCharsMessage": "Le pseudo ne peut contenir que des lettres, chiffres et underscores",
+      "takenTitle": "Pseudo déjà pris",
+      "takenMessage": "Ce pseudo est déjà utilisé. Veuillez en choisir un autre.",
+      "updateFailedTitle": "Échec de la mise à jour",
+      "updateFailedMessage": "Impossible de mettre à jour le pseudo"
     }
   }
 }

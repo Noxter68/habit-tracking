@@ -225,7 +225,7 @@ const AchievementsScreen: React.FC = () => {
         contentContainerStyle={{ paddingBottom: 20 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[currentTierTheme.accent]} tintColor={currentTierTheme.accent} />}
       >
-        <View style={tw`px-4 pt-4`}>
+        <View style={tw`px-4 pt-4 mb-4`}>
           <CurrentLevelHero
             currentLevel={currentLevel}
             currentTitle={currentTitle}

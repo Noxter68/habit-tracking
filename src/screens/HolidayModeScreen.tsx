@@ -13,11 +13,12 @@ import { useSubscription } from '../context/SubscriptionContext';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
-import { HolidayModeService, HolidayPeriod, HolidayStats, HolidayScope, HabitWithTasks } from '../services/holidayModeService';
+import { HolidayModeService, HolidayScope, HabitWithTasks } from '../services/holidayModeService';
 import { ChevronLeft, Diamond, Info, Calendar, Sparkles, Globe, CheckSquare, ListChecks, InfinityIcon, Crown, Sun } from 'lucide-react-native';
 import { HabitSelector } from '../components/holidays/HabitSelector';
 import { TaskSelector } from '../components/holidays/TaskSelector';
 import Logger from '@/utils/logger';
+import { HolidayPeriod, HolidayStats } from '@/types/holiday.types';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 

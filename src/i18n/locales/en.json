@@ -1519,6 +1519,11 @@
     "lockedBadge": "Locked",
     "complete": "Complete",
     "percentComplete": "{{percent}}% Complete",
+    "filters": {
+      "all": "All",
+      "unlocked": "Unlocked",
+      "locked": "Locked"
+    },
     "tiers": {
       "novice": "Novice",
       "risingHero": "Rising Hero",
@@ -1740,6 +1745,70 @@
       "friday": "F",
       "saturday": "S",
       "sunday": "S"
+    }
+  },
+  "holidayPremium": {
+    "title": "Holiday Mode",
+    "subtitle": "Take a break without losing your progress",
+    "premiumFeature": "Premium Feature",
+    "description": "With Premium, enjoy unlimited Holiday Mode to protect your streaks whenever you need a break.",
+
+    "benefits": {
+      "title": "Benefits",
+      "unlimited": "Unlimited Holiday Days",
+      "unlimitedDesc": "Use Holiday Mode as much as you need",
+      "protection": "Complete Streak Protection",
+      "protectionDesc": "Your progress stays intact during your break",
+      "flexibility": "Total Flexibility",
+      "flexibilityDesc": "Schedule breaks ahead or activate instantly"
+    },
+
+    "howItWorks": {
+      "title": "How It Works",
+      "step1": "Activate Holiday Mode",
+      "step1Desc": "Choose your start and end dates",
+      "step2": "Take Your Break",
+      "step2Desc": "Your streaks are frozen and protected",
+      "step3": "Return When Ready",
+      "step3Desc": "Pick up right where you left off"
+    },
+
+    "comparison": {
+      "title": "Free vs Premium",
+      "free": "Free Plan",
+      "premium": "Premium",
+      "limitedDays": "30 days per year",
+      "unlimitedDays": "Unlimited days",
+      "basicProtection": "Basic protection",
+      "fullProtection": "Full protection",
+      "singlePeriod": "1 period at a time",
+      "multiplePeriods": "Multiple periods"
+    },
+
+    "cta": {
+      "upgrade": "Upgrade to Premium",
+      "learnMore": "Learn More"
+    }
+  },
+  "editUsername": {
+    "title": "Edit Username",
+    "subtitle": "Choose a unique username (3-20 characters, letters, numbers, and underscores only)",
+    "inputLabel": "Username",
+    "placeholder": "Enter username",
+    "characterCount": "{{count}}/20 characters",
+    "errors": {
+      "emptyTitle": "Invalid Username",
+      "emptyMessage": "Username cannot be empty",
+      "tooShortTitle": "Invalid Username",
+      "tooShortMessage": "Username must be at least 3 characters",
+      "tooLongTitle": "Invalid Username",
+      "tooLongMessage": "Username must be less than 20 characters",
+      "invalidCharsTitle": "Invalid Username",
+      "invalidCharsMessage": "Username can only contain letters, numbers, and underscores",
+      "takenTitle": "Username Taken",
+      "takenMessage": "This username is already in use. Please choose another one.",
+      "updateFailedTitle": "Update Failed",
+      "updateFailedMessage": "Unable to update username"
     }
   }
 }
