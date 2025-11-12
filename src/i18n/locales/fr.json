@@ -483,18 +483,48 @@
   },
 
   "streakSaver": {
-    "title": "Sauvegarde de série",
-    "available": "Disponible",
-    "useStreakSaver": "Utiliser une sauvegarde",
-    "restore": "Restaurer {{count}} jour | Restaurer {{count}} jours",
+    "title": "Sauvegarde de Série !",
+    "description": "Votre série de {{streak}} jours pour \"{{habitName}}\" ne doit pas se terminer !",
+    "stats": {
+      "days": "Jours",
+      "left": "Restant"
+    },
+    "warning": {
+      "title": "Fenêtre de 24h :",
+      "message": "Après cela, cette série sera définitivement perdue."
+    },
+    "buttons": {
+      "use": "UTILISER SAUVEGARDE",
+      "maybeLater": "Plus Tard",
+      "restoring": "Restauration..."
+    },
+    "success": {
+      "title": "Série Restaurée !",
+      "subtitle": "Votre dévouement est de retour sur les rails",
+      "days": "jours",
+      "keepGoing": "Continuez !",
+      "closingIn": "Fermeture dans {{seconds}} secondes..."
+    },
+    "motivational": [
+      "La régularité est la clé de la maîtrise !",
+      "Chaque jour compte vers votre objectif !",
+      "Votre dévouement est inspirant !",
+      "Les petits pas mènent à de grands changements !",
+      "Vous construisez une habitude incroyable !"
+    ],
     "shop": {
-      "title": "Boutique de sauvegardes",
-      "yourInventory": "Votre inventaire",
-      "monthlyRefill": "Recharge mensuelle",
-      "refillDate": "Prochaine recharge : {{date}}",
-      "premiumOnly": "Les membres Premium reçoivent 3 sauvegardes chaque mois",
-      "notPremium": "Passez à Premium pour obtenir des sauvegardes mensuelles",
-      "upgradeToPremium": "Passer à Premium"
+      "title": "Sauvegardes de Série",
+      "loading": "Chargement des forfaits...",
+      "noPackages": "Aucun forfait disponible",
+      "savers": "{{count}} Sauvegardes",
+      "popular": "POPULAIRE",
+      "save20": "Économisez 20%",
+      "save40": "Économisez 40%",
+      "buyNow": "ACHETER",
+      "footer": "Achats uniques · Protégez votre progression",
+      "purchaseSuccess": "Achat Réussi !",
+      "purchaseFailed": "Échec de l'Achat",
+      "addedToInventory": "Sauvegardes de série ajoutées à votre inventaire"
     }
   },
 
@@ -1464,6 +1494,12 @@
       "error": {
         "title": "Erreur",
         "message": "Échec de la création de l'habitude. Veuillez réessayer."
+      },
+      "exitWizard": {
+        "title": "Quitter la création ?",
+        "message": "Votre progression sera perdue. Êtes-vous sûr de vouloir quitter ?",
+        "cancel": "Continuer",
+        "confirm": "Quitter"
       }
     },
     "habitTypeSelector": {
@@ -1819,6 +1855,77 @@
       "takenMessage": "Ce pseudo est déjà utilisé. Veuillez en choisir un autre.",
       "updateFailedTitle": "Échec de la mise à jour",
       "updateFailedMessage": "Impossible de mettre à jour le pseudo"
+    }
+  },
+  "habitDetails": {
+    "title": "Parcours d'Habitude",
+    "notFound": "Habitude introuvable",
+
+    "hero": {
+      "building": "Construction",
+      "breaking": "Abandon",
+      "progressTo": "Progression vers {{tier}}",
+      "stats": {
+        "streak": "Série",
+        "best": "Meilleure",
+        "totalXP": "XP Total",
+        "consistency": "Régularité"
+      }
+    },
+
+    "tabs": {
+      "overview": "Vue d'ensemble",
+      "tiers": "Paliers"
+    },
+
+    "tasks": {
+      "title": "Tâches du Jour",
+      "weeklyTitle": "Tâches Hebdomadaires",
+      "customTitle": "Tâches",
+      "completed": "{{completed}}/{{total}}",
+      "pausedUntil": "En pause {{date}}",
+      "pausedToday": "jusqu'à aujourd'hui",
+      "pausedTomorrow": "jusqu'à demain"
+    },
+
+    "milestones": {
+      "title": "Paliers",
+      "achieved": "Atteint ! +{{xp}} XP",
+      "missed": "Manqué",
+      "daysAway_one": "Dans {{count}} jour",
+      "daysAway_other": "Dans {{count}} jours"
+    },
+    "milestoneZoomModal": {
+      "achieved": "✓ Débloqué",
+      "locked": "Verrouillé · Nécessite {{days}} jours consécutifs",
+      "day": "Jour {{count}}",
+      "xpReward": "+{{xp}} XP",
+      "tapToClose": "Appuyez n'importe où pour fermer"
+    },
+
+    "tierCelebration": {
+      "unlocked": "Palier Débloqué",
+      "streak": "SÉRIE",
+      "days": "{{days}}+ Jours",
+      "multiplier": "MULTIPLICATEUR",
+      "xpBonus": "{{multiplier}}x XP",
+      "tapToContinue": "Appuyez n'importe où pour continuer",
+      "closingIn": "Fermeture dans {{seconds}} secondes..."
+    }
+  },
+  "levelUp": {
+    "title": "NIVEAU SUPÉRIEUR !",
+    "levelLabel": "NIVEAU",
+    "newAchievement": "Nouveau Succès",
+    "tapToContinue": "Appuyez pour continuer",
+    "closingIn": "Fermeture dans {{seconds}}s...",
+    "motivational": {
+      "level5": "Excellent début de parcours !",
+      "level10": "Vous êtes en feu !",
+      "level15": "Progression inarrêtable !",
+      "level20": "Guerrier légendaire !",
+      "level30": "Accomplissement d'élite !",
+      "levelMax": "STATUT MYTHIQUE ATTEINT !"
     }
   }
 }

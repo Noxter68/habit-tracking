@@ -1,11 +1,12 @@
 // src/screens/HabitWizard.tsx
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { View, Text, Pressable, ScrollView, Alert, ImageBackground, StyleSheet } from 'react-native';
+import { View, Text, Pressable, ScrollView, Alert, ImageBackground, StyleSheet, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft, X } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 import tw from '../lib/tailwind';
 import { Habit, HabitType } from '../types';
 import { useHabits } from '../context/HabitContext';
@@ -190,6 +191,8 @@ const HabitWizard: React.FC = () => {
   };
 
   const handleBack = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
     if (isCustomHabit) {
       if (step === 3) {
         setIsCustomHabit(false);
@@ -210,6 +213,24 @@ const HabitWizard: React.FC = () => {
       }
     }
   }, [step, isCustomHabit, navigation]);
+
+  const handleExit = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    Alert.alert(t('wizard.alerts.exitWizard.title'), t('wizard.alerts.exitWizard.message'), [
+      {
+        text: t('wizard.alerts.exitWizard.cancel'),
+        style: 'cancel',
+      },
+      {
+        text: t('wizard.alerts.exitWizard.confirm'),
+        style: 'destructive',
+        onPress: () => {
+          navigation.navigate('MainTabs', { screen: 'Dashboard' });
+        },
+      },
+    ]);
+  }, [navigation, t]);
 
   const renderStep = useCallback(() => {
     if (isCustomHabit) {
@@ -305,16 +326,25 @@ const HabitWizard: React.FC = () => {
 
   return (
     <ImageBackground source={require('../../assets/interface/variante-purple-background.png')} style={styles.background} resizeMode="cover">
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       <SafeAreaView style={tw`flex-1`} edges={['top']}>
         <View style={tw`flex-1`}>
-          {/* Header - Back Button Only */}
-          {!isFirstStep && (
-            <View style={tw`px-6 pt-2`}>
-              <Pressable onPress={handleBack} disabled={isCreating} style={({ pressed }) => [tw`w-12 h-12 rounded-full items-center justify-center`, pressed && tw`opacity-70`]}>
-                <ChevronLeft size={28} color="#ffffff" strokeWidth={2} />
+          {/* Header - Exit & Back Buttons */}
+          <View style={tw`px-6 pt-2 flex-row items-center ${isFirstStep ? 'justify-between' : 'justify-start'}`}>
+            {/* Exit Button - Only visible on first step */}
+            {isFirstStep && (
+              <Pressable onPress={handleExit} disabled={isCreating} style={({ pressed }) => [tw`w-12 h-12 rounded-full items-center justify-center bg-white/10`, pressed && tw`opacity-70`]}>
+                <X size={24} color="#ffffff" strokeWidth={2.5} />
               </Pressable>
-            </View>
-          )}
+            )}
+
+            {/* Back Button - Only visible when not on first step */}
+            {!isFirstStep && (
+              <Pressable onPress={handleBack} disabled={isCreating} style={({ pressed }) => [tw`w-12 h-12 rounded-full items-center justify-center bg-white/10`, pressed && tw`opacity-70`]}>
+                <ChevronLeft size={24} color="#ffffff" strokeWidth={2.5} />
+              </Pressable>
+            )}
+          </View>
 
           {/* Content */}
           <ScrollView ref={scrollViewRef} style={tw`flex-1`} showsVerticalScrollIndicator={false} contentContainerStyle={tw`flex-grow`}>

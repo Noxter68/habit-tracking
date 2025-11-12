@@ -247,14 +247,14 @@
     "todaysTasks": "Today's Tasks",
     "tasksPaused_one": "{{count}} task paused",
     "tasksPaused_other": "{{count}} tasks paused",
-    "dayStreak_one": "{{count}} day",
-    "dayStreak_other": "{{count}} days",
-    "weekStreak_one": "{{count}} week",
-    "weekStreak_other": "{{count}} weeks",
-    "monthStreak_one": "{{count}} month",
-    "monthStreak_other": "{{count}} months",
-    "task_one": "task",
-    "task_other": "tasks"
+    "dayStreak_one": "Day",
+    "dayStreak_other": "Days",
+    "weekStreak_one": "Week",
+    "weekStreak_other": "Weeks",
+    "monthStreak_one": "Month",
+    "monthStreak_other": "Months",
+    "task_one": "Task",
+    "task_other": "Tasks"
   },
   "notifications": {
     "title": "Notifications",
@@ -365,18 +365,48 @@
   },
 
   "streakSaver": {
-    "title": "Streak Saver",
-    "available": "Available",
-    "useStreakSaver": "Use Streak Saver",
-    "restore": "Restore {{count}} day | Restore {{count}} days",
+    "title": "Streak Rescue!",
+    "description": "Your {{streak}}-day streak for \"{{habitName}}\" doesn't have to end!",
+    "stats": {
+      "days": "Days",
+      "left": "Left"
+    },
+    "warning": {
+      "title": "24h window:",
+      "message": "After that, this streak is permanently lost."
+    },
+    "buttons": {
+      "use": "USE STREAK SAVER",
+      "maybeLater": "Maybe Later",
+      "restoring": "Restoring..."
+    },
+    "success": {
+      "title": "Streak Restored!",
+      "subtitle": "Your dedication is back on track",
+      "days": "days",
+      "keepGoing": "Keep Going!",
+      "closingIn": "Closing in {{seconds}} seconds..."
+    },
+    "motivational": [
+      "Consistency is the key to mastery!",
+      "Every day counts towards your goal!",
+      "Your dedication is inspiring!",
+      "Small steps lead to big changes!",
+      "You're building an incredible habit!"
+    ],
     "shop": {
-      "title": "Streak Saver Shop",
-      "yourInventory": "Your Inventory",
-      "monthlyRefill": "Monthly Refill",
-      "refillDate": "Next refill: {{date}}",
-      "premiumOnly": "Premium members get 3 Streak Savers every month",
-      "notPremium": "Upgrade to Premium to get monthly Streak Savers",
-      "upgradeToPremium": "Upgrade to Premium"
+      "title": "Streak Savers",
+      "loading": "Loading packages...",
+      "noPackages": "No packages available",
+      "savers": "{{count}} Savers",
+      "popular": "POPULAR",
+      "save20": "Save 20%",
+      "save40": "Save 40%",
+      "buyNow": "BUY NOW",
+      "footer": "One-time purchases · Protect your progress",
+      "purchaseSuccess": "Purchase Successful!",
+      "purchaseFailed": "Purchase Failed",
+      "addedToInventory": "Streak Savers added to your inventory"
     }
   },
 
@@ -1346,6 +1376,12 @@
       "error": {
         "title": "Error",
         "message": "Failed to create habit. Please try again."
+      },
+      "exitWizard": {
+        "title": "Exit Habit Creation?",
+        "message": "Your progress will be lost. Are you sure you want to exit?",
+        "cancel": "Continue Creating",
+        "confirm": "Exit"
       }
     },
     "habitTypeSelector": {
@@ -1817,6 +1853,78 @@
       "takenMessage": "This username is already in use. Please choose another one.",
       "updateFailedTitle": "Update Failed",
       "updateFailedMessage": "Unable to update username"
+    }
+  },
+  "habitDetails": {
+    "title": "Habit Journey",
+    "notFound": "Habit not found",
+
+    "hero": {
+      "building": "Building",
+      "breaking": "Breaking",
+      "progressTo": "Progress to {{tier}}",
+      "stats": {
+        "streak": "Streak",
+        "best": "Best",
+        "totalXP": "Total XP",
+        "consistency": "Consistency"
+      }
+    },
+
+    "tabs": {
+      "overview": "Overview",
+      "tiers": "Tiers"
+    },
+
+    "tasks": {
+      "title": "Today's Tasks",
+      "weeklyTitle": "Weekly Tasks",
+      "customTitle": "Tasks",
+      "completed": "{{completed}}/{{total}}",
+      "pausedUntil": "Paused {{date}}",
+      "pausedToday": "until today",
+      "pausedTomorrow": "until tomorrow"
+    },
+
+    "milestones": {
+      "title": "Milestones",
+      "achieved": "Achieved! +{{xp}} XP",
+      "missed": "Missed",
+      "daysAway_one": "{{count}} day away",
+      "daysAway_other": "{{count}} days away"
+    },
+
+    "milestoneZoomModal": {
+      "achieved": "✓ Débloqué",
+      "locked": "Verrouillé · Nécessite {{days}} jours consécutifs",
+      "day": "Jour {{count}}",
+      "xpReward": "+{{xp}} XP",
+      "tapToClose": "Appuyez n'importe où pour fermer"
+    },
+
+    "tierCelebration": {
+      "unlocked": "Tier Unlocked",
+      "streak": "STREAK",
+      "days": "{{days}}+ Days",
+      "multiplier": "MULTIPLIER",
+      "xpBonus": "{{multiplier}}x XP",
+      "tapToContinue": "Tap anywhere to continue",
+      "closingIn": "Closing in {{seconds}} seconds..."
+    }
+  },
+  "levelUp": {
+    "title": "LEVEL UP!",
+    "levelLabel": "LEVEL",
+    "newAchievement": "New Achievement",
+    "tapToContinue": "Tap to continue",
+    "closingIn": "Closing in {{seconds}}s...",
+    "motivational": {
+      "level5": "Great start on your journey!",
+      "level10": "You're on fire!",
+      "level15": "Unstoppable progress!",
+      "level20": "Legendary warrior!",
+      "level30": "Elite achiever!",
+      "levelMax": "MYTHIC STATUS ACHIEVED!"
     }
   }
 }

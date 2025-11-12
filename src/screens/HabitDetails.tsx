@@ -238,7 +238,7 @@ const HabitDetails: React.FC = () => {
 
   return (
     <View style={tw`flex-1 bg-stone-50`}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
       <ScrollView contentContainerStyle={tw`pb-8`} showsVerticalScrollIndicator={false}>
         {/* ========== HERO SECTION ========== */}

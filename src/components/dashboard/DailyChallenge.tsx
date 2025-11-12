@@ -262,19 +262,19 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
         <View
           key="weekly"
           style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.25)',
+            backgroundColor: 'rgba(255, 255, 255, 0.3)',
             paddingHorizontal: 10,
             paddingVertical: 4,
             borderRadius: 12,
             borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.3)',
+            borderColor: 'rgba(255, 255, 255, 0.4)',
           }}
         >
           <Text
             style={{
               fontSize: 10,
-              fontWeight: '700',
-              color: 'rgba(255, 255, 255, 0.85)',
+              fontWeight: '800',
+              color: '#FFFFFF',
               textShadowColor: 'rgba(0, 0, 0, 0.3)',
               textShadowOffset: { width: 0, height: 1 },
               textShadowRadius: 3,

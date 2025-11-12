@@ -7,6 +7,7 @@ import { Circle, CheckCircle2, Clock, Loader2, PauseCircle } from 'lucide-react-
 import tw from '@/lib/tailwind';
 import { tierThemes } from '@/utils/tierTheme';
 import { HabitTier } from '@/services/habitProgressionService';
+import { t } from 'i18next';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -82,15 +83,15 @@ const TaskItem: React.FC<{
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     if (date.toDateString() === today.toDateString()) {
-      return 'until today';
+      return t('habitDetails.tasks.pausedToday');
     }
     if (date.toDateString() === tomorrow.toDateString()) {
-      return 'until tomorrow';
+      return t('habitDetails.tasks.pausedTomorrow');
     }
-    return `until ${date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
-    })}`;
+    });
   };
 
   return (
@@ -130,16 +131,14 @@ const TaskItem: React.FC<{
         <Text style={[tw`text-sm font-semibold mb-0.5`, isPaused ? tw`text-stone-400` : isCompleted ? tw`text-stone-400 line-through` : tw`text-stone-800`]} numberOfLines={1}>
           {task.name}
         </Text>
-
         {/* Task Description */}
         {task.description && (
           <Text style={[tw`text-xs mt-0.5`, isPaused ? tw`text-stone-400` : tw`text-stone-500`]} numberOfLines={1}>
             {task.description}
           </Text>
         )}
-
         {/* Paused Info */}
-        {isPaused && pausedUntil && <Text style={tw`text-xs text-stone-400 mt-1`}>Paused {formatPausedDate(pausedUntil)}</Text>}
+        {isPaused && pausedUntil && <Text style={tw`text-xs text-stone-400 mt-1`}>{t('habitDetails.tasks.pausedUntil', { date: formatPausedDate(pausedUntil) })}</Text>}
       </View>
 
       {/* Duration Badge (on the right) */}
@@ -193,13 +192,13 @@ export const TasksCard: React.FC<TasksCardProps> = ({ tasks, todayTasks, habitId
   const getTitle = () => {
     switch (frequency) {
       case 'daily':
-        return "Today's Tasks";
+        return t('habitDetails.tasks.title');
       case 'weekly':
-        return 'Weekly Tasks';
+        return t('habitDetails.tasks.weeklyTitle');
       case 'custom':
-        return 'Tasks';
+        return t('habitDetails.tasks.customTitle');
       default:
-        return "Today's Tasks";
+        return t('habitDetails.tasks.title');
     }
   };
 

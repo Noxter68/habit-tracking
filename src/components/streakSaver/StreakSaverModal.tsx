@@ -3,9 +3,10 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Modal, Pressable, ActivityIndicator, Image } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut, useSharedValue, useAnimatedStyle, withRepeat, withSequence, withSpring, withTiming, Easing, ZoomIn } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
-import { Flame, X, Clock, Sparkles, TrendingUp } from 'lucide-react-native';
+import { Flame, X, Clock, Sparkles } from 'lucide-react-native';
 import tw from '@/lib/tailwind';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 
 interface StreakSaverModalProps {
   visible: boolean;
@@ -24,14 +25,7 @@ const FlaskIcon = () => {
   const rotate = useSharedValue(0);
 
   useEffect(() => {
-    bounce.value = withRepeat(
-      withSequence(
-        withSpring(1.08, { damping: 3, stiffness: 80 }), // Less aggressive
-        withSpring(1, { damping: 3, stiffness: 80 })
-      ),
-      -1,
-      false
-    );
+    bounce.value = withRepeat(withSequence(withSpring(1.08, { damping: 3, stiffness: 80 }), withSpring(1, { damping: 3, stiffness: 80 })), -1, false);
 
     rotate.value = withRepeat(
       withSequence(
@@ -53,11 +47,7 @@ const FlaskIcon = () => {
       <View style={tw`relative`}>
         <View style={tw`absolute inset-0 bg-orange-400 rounded-full opacity-30 blur-xl scale-110`} />
         <View style={tw`w-20 h-20 rounded-full bg-white items-center justify-center shadow-2xl`}>
-          <Image
-            source={require('../../../assets/interface/streak-saver.png')}
-            style={{ width: 48, height: 48 }} // Larger icon
-            resizeMode="contain"
-          />
+          <Image source={require('../../../assets/interface/streak-saver.png')} style={{ width: 48, height: 48 }} resizeMode="contain" />
         </View>
         <View style={tw`absolute -top-1 -right-1`}>
           <Text style={{ fontSize: 16 }}>✨</Text>
@@ -68,19 +58,13 @@ const FlaskIcon = () => {
 };
 
 const StreakSaverButton = ({ onPress, loading, disabled }: any) => {
+  const { t } = useTranslation();
   const buttonBounce = useSharedValue(1);
   const scale = useSharedValue(1);
 
   useEffect(() => {
     if (!loading && !disabled) {
-      buttonBounce.value = withRepeat(
-        withSequence(
-          withSpring(1.03, { damping: 4 }), // Gentler bounce
-          withSpring(1, { damping: 4 })
-        ),
-        -1,
-        false
-      );
+      buttonBounce.value = withRepeat(withSequence(withSpring(1.03, { damping: 4 }), withSpring(1, { damping: 4 })), -1, false);
     }
   }, [loading, disabled]);
 
@@ -108,10 +92,10 @@ const StreakSaverButton = ({ onPress, loading, disabled }: any) => {
           {loading ? (
             <View style={tw`flex-row items-center`}>
               <ActivityIndicator color="white" size="small" />
-              <Text style={tw`text-white font-bold text-base ml-3`}>Restoring...</Text>
+              <Text style={tw`text-white font-bold text-base ml-3`}>{t('habitDetails.streakSaver.buttons.restoring')}</Text>
             </View>
           ) : (
-            <Text style={tw`text-white font-black text-base`}>USE STREAK SAVER</Text>
+            <Text style={tw`text-white font-black text-base`}>{t('habitDetails.streakSaver.buttons.use')}</Text>
           )}
         </LinearGradient>
       </Pressable>
@@ -120,7 +104,9 @@ const StreakSaverButton = ({ onPress, loading, disabled }: any) => {
 };
 
 export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({ visible, habitName, previousStreak, availableSavers, loading = false, success = false, newStreak = 0, onUse, onClose }) => {
+  const { t } = useTranslation();
   const glowPulse = useSharedValue(0);
+  const [countdown, setCountdown] = useState(8);
 
   useEffect(() => {
     if (visible) {
@@ -128,13 +114,28 @@ export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({ visible, hab
     }
   }, [visible]);
 
-  // Auto-close after 8 seconds on success
+  // Auto-close after 8 seconds on success with countdown
   useEffect(() => {
     if (success) {
+      setCountdown(8);
+      const interval = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
       const timer = setTimeout(() => {
         onClose();
       }, 8000);
-      return () => clearTimeout(timer);
+
+      return () => {
+        clearTimeout(timer);
+        clearInterval(interval);
+      };
     }
   }, [success, onClose]);
 
@@ -142,14 +143,7 @@ export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({ visible, hab
     opacity: glowPulse.value * 0.5,
   }));
 
-  const motivationalMessages = [
-    'Consistency is the key to mastery!',
-    'Every day counts towards your goal!',
-    'Your dedication is inspiring!',
-    'Small steps lead to big changes!',
-    "You're building an incredible habit!",
-  ];
-
+  const motivationalMessages = t('habitDetails.streakSaver.motivational', { returnObjects: true }) as string[];
   const randomMessage = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
 
   return (
@@ -172,8 +166,8 @@ export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({ visible, hab
                       </View>
                     </Animated.View>
 
-                    <Text style={tw`text-3xl font-black text-center text-white mb-2`}>Streak Restored!</Text>
-                    <Text style={tw`text-base text-center text-emerald-50 font-medium`}>Your dedication is back on track</Text>
+                    <Text style={tw`text-3xl font-black text-center text-white mb-2`}>{t('habitDetails.streakSaver.success.title')}</Text>
+                    <Text style={tw`text-base text-center text-emerald-50 font-medium`}>{t('habitDetails.streakSaver.success.subtitle')}</Text>
                   </View>
                 </LinearGradient>
 
@@ -182,7 +176,7 @@ export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({ visible, hab
                     <View style={tw`flex-row items-center justify-center mb-3`}>
                       <Flame size={28} color="#059669" fill="#059669" />
                       <Text style={tw`text-4xl font-black text-emerald-900 ml-2`}>{newStreak}</Text>
-                      <Text style={tw`text-lg font-bold text-emerald-700 ml-2`}>days</Text>
+                      <Text style={tw`text-lg font-bold text-emerald-700 ml-2`}>{t('habitDetails.streakSaver.success.days')}</Text>
                     </View>
                     <Text style={tw`text-center text-sm font-semibold text-emerald-800`}>"{habitName}"</Text>
                   </View>
@@ -190,13 +184,13 @@ export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({ visible, hab
                   <View style={tw`bg-amber-50 rounded-xl p-4 border border-amber-200`}>
                     <View style={tw`flex-row items-start`}>
                       <View style={tw`flex-1`}>
-                        <Text style={tw`text-xs font-bold text-amber-900 mb-1`}>Keep Going!</Text>
+                        <Text style={tw`text-xs font-bold text-amber-900 mb-1`}>{t('habitDetails.streakSaver.success.keepGoing')}</Text>
                         <Text style={tw`text-xs text-amber-800 leading-4`}>{randomMessage}</Text>
                       </View>
                     </View>
                   </View>
 
-                  <Text style={tw`text-center text-xs text-stone-400 mt-4`}>Closing in 8 seconds...</Text>
+                  <Text style={tw`text-center text-xs text-stone-400 mt-4`}>{t('habitDetails.streakSaver.success.closingIn', { seconds: countdown })}</Text>
                 </View>
               </>
             ) : (
@@ -214,26 +208,24 @@ export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({ visible, hab
                       <FlaskIcon />
                     </View>
 
-                    <Text style={tw`text-2xl font-black text-center text-orange-900`}>Streak Rescue!</Text>
+                    <Text style={tw`text-2xl font-black text-center text-orange-900`}>{t('habitDetails.streakSaver.title')}</Text>
                   </View>
                 </LinearGradient>
 
                 <View style={tw`px-5 py-4`}>
-                  <Text style={tw`text-sm text-stone-700 text-center leading-5 mb-4`}>
-                    Your <Text style={tw`font-black text-orange-600`}>{previousStreak}-day streak</Text> for <Text style={tw`font-bold`}>"{habitName}"</Text> doesn't have to end!
-                  </Text>
+                  <Text style={tw`text-sm text-stone-700 text-center leading-5 mb-4`}>{t('habitDetails.streakSaver.description', { streak: previousStreak, habitName })}</Text>
 
                   <View style={tw`flex-row gap-2 mb-3`}>
                     <View style={tw`flex-1 bg-orange-50 rounded-xl p-3 items-center border border-orange-200`}>
                       <Flame size={40} color="#EA580C" fill="#EA580C" />
                       <Text style={tw`text-2xl font-black text-orange-900 mt-1`}>{previousStreak}</Text>
-                      <Text style={tw`text-xs font-semibold text-orange-700`}>Days</Text>
+                      <Text style={tw`text-xs font-semibold text-orange-700`}>{t('habitDetails.streakSaver.stats.days')}</Text>
                     </View>
 
                     <View style={tw`flex-1 bg-orange-50 rounded-xl p-3 items-center border border-orange-200`}>
                       <Image source={require('../../../assets/interface/streak-saver.png')} style={{ width: 40, height: 40 }} resizeMode="contain" />
                       <Text style={tw`text-2xl font-black text-orange-900 mt-1`}>{availableSavers}</Text>
-                      <Text style={tw`text-xs font-semibold text-orange-700`}>Left</Text>
+                      <Text style={tw`text-xs font-semibold text-orange-700`}>{t('habitDetails.streakSaver.stats.left')}</Text>
                     </View>
                   </View>
 
@@ -241,7 +233,7 @@ export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({ visible, hab
                     <View style={tw`flex-row items-start`}>
                       <Clock size={16} color="#DC2626" strokeWidth={2.5} style={tw`mr-2 mt-0.5`} />
                       <Text style={tw`text-xs text-red-800 leading-4 flex-1`}>
-                        <Text style={tw`font-bold`}>24h window:</Text> After that, this streak is permanently lost.
+                        <Text style={tw`font-bold`}>{t('habitDetails.streakSaver.warning.title')}</Text> {t('habitDetails.streakSaver.warning.message')}
                       </Text>
                     </View>
                   </View>
@@ -250,7 +242,7 @@ export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({ visible, hab
                     <StreakSaverButton onPress={onUse} loading={loading} disabled={availableSavers < 1} />
 
                     <Pressable onPress={onClose} disabled={loading} style={({ pressed }) => [tw`bg-stone-100 rounded-xl py-3 items-center`, pressed && tw`opacity-70`, loading && tw`opacity-50`]}>
-                      <Text style={tw`text-stone-600 font-semibold text-sm`}>Maybe Later</Text>
+                      <Text style={tw`text-stone-600 font-semibold text-sm`}>{t('habitDetails.streakSaver.buttons.maybeLater')}</Text>
                     </Pressable>
                   </View>
                 </View>
