@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, Switch, Modal, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import * as Notifications from 'expo-notifications';
 import { Bell, X, ChevronRight } from 'lucide-react-native';
@@ -30,6 +31,7 @@ interface HabitWithSchedule {
 }
 
 const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) => {
+  const { t } = useTranslation();
   const { habits, updateHabitNotification } = useHabits();
   const { user } = useAuth();
 
@@ -58,9 +60,6 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
     }
   };
 
-  /**
-   * Load habits and merge with notification schedules from database
-   */
   const loadHabitsWithSchedules = async (showLoading: boolean = true) => {
     if (!user) return;
 
@@ -68,21 +67,17 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
       setIsLoading(true);
     }
     try {
-      // Fetch notification schedules from database
       const { data: schedules, error } = await supabase.from('notification_schedules').select('habit_id, notification_time, enabled').eq('user_id', user.id);
 
       if (error) {
         Logger.error('Error fetching notification schedules:', error);
       }
 
-      // Create a map of habit_id -> schedule for quick lookup
       const scheduleMap = new Map<string, { time: string; enabled: boolean }>();
 
       if (schedules) {
         for (const schedule of schedules) {
-          // notification_time is stored as TIME in UTC (e.g., "14:30:00")
-          // We need to convert it to local time for display
-          const timeStr = schedule.notification_time; // Format: "HH:MM:SS"
+          const timeStr = schedule.notification_time;
           const localTime = convertUTCTimeToLocal(timeStr);
 
           scheduleMap.set(schedule.habit_id, {
@@ -92,7 +87,6 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
         }
       }
 
-      // Merge habits with their schedules
       const habitsWithSchedules: HabitWithSchedule[] = habits.map((habit) => {
         const schedule = scheduleMap.get(habit.id);
 
@@ -116,21 +110,12 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
     }
   };
 
-  /**
-   * Convert UTC time string to local time string
-   * Input: "14:30:00" (UTC)
-   * Output: "15:30" (Local, e.g. UTC+1)
-   */
   const convertUTCTimeToLocal = (utcTimeString: string): string => {
     try {
-      // Parse the UTC time
       const [hours, minutes] = utcTimeString.split(':').map(Number);
-
-      // Create a date object for today in UTC
       const utcDate = new Date();
       utcDate.setUTCHours(hours, minutes, 0, 0);
 
-      // Get the local hours and minutes
       const localHours = utcDate.getHours();
       const localMinutes = utcDate.getMinutes();
 
@@ -167,37 +152,30 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
     if (!selectedHabitId || !user) return;
 
     setShowTimePicker(false);
-
     setIsUpdating(selectedHabitId);
     const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
 
     try {
-      // Update local state optimistically
       setLocalHabits((prev) => prev.map((habit) => (habit.id === selectedHabitId ? { ...habit, notificationTime: timeStr } : habit)));
 
       const habit = localHabits.find((h) => h.id === selectedHabitId);
       if (!habit) return;
 
-      // Update in database via HabitContext
       await updateHabitNotification(selectedHabitId, habit.notificationEnabled, timeStr);
 
-      // If notifications are enabled, schedule via backend
       if (habit.notificationEnabled) {
         const isRegistered = await PushTokenService.isDeviceRegistered(user.id);
         if (!isRegistered) {
           await PushTokenService.registerDevice(user.id);
         }
-
         await NotificationScheduleService.scheduleHabitNotification(selectedHabitId, user.id, `${timeStr}:00`, true);
       }
 
-      // ✅ Don't reload - the optimistic update is enough
       setSelectedHabitId(null);
     } catch (error) {
       Logger.error('Error updating notification time:', error);
-      // ❌ Only reload on error to revert
       await loadHabitsWithSchedules(false);
-      Alert.alert('Error', 'Failed to update notification time. Please try again.');
+      Alert.alert(t('notifications.error'), t('notifications.timeUpdateError'));
     } finally {
       setIsUpdating(null);
     }
@@ -206,12 +184,11 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
   const handleToggleNotification = async (habitId: string, enabled: boolean) => {
     if (!user) return;
 
-    // Check if global notifications are enabled first
     if (!globalEnabled && enabled) {
-      Alert.alert('Enable Global Notifications First', 'Please enable notifications in Settings before managing individual habit notifications.', [
-        { text: 'Cancel', style: 'cancel' },
+      Alert.alert(t('notifications.enableGlobalFirst'), t('notifications.enableGlobalFirstMessage'), [
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Go to Settings',
+          text: t('notifications.goToSettings'),
           onPress: () => onClose(),
         },
       ]);
@@ -221,26 +198,14 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
     setIsUpdating(habitId);
 
     try {
-      // Update local state optimistically
-      setLocalHabits((prev) =>
-        prev.map((habit) =>
-          habit.id === habitId
-            ? {
-                ...habit,
-                notificationEnabled: enabled,
-              }
-            : habit
-        )
-      );
+      setLocalHabits((prev) => prev.map((habit) => (habit.id === habitId ? { ...habit, notificationEnabled: enabled } : habit)));
 
       const habit = localHabits.find((h) => h.id === habitId);
       if (!habit) return;
 
-      // Update in database via HabitContext
       await updateHabitNotification(habitId, enabled, habit.notificationTime);
 
       if (enabled) {
-        // Request permissions
         const { status } = await Notifications.getPermissionsAsync();
         let finalStatus = status;
 
@@ -250,20 +215,18 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
         }
 
         if (finalStatus !== 'granted') {
-          Alert.alert('Permission Required', 'Please enable notifications in your device settings to receive habit reminders.', [
+          Alert.alert(t('notifications.permissionRequired'), t('notifications.permissionRequiredMessage'), [
             {
-              text: 'Cancel',
+              text: t('common.cancel'),
               style: 'cancel',
               onPress: () => {
-                // Revert the state
                 setLocalHabits((prev) => prev.map((h) => (h.id === habitId ? { ...h, notificationEnabled: false } : h)));
               },
             },
             {
-              text: 'Open Settings',
+              text: t('notifications.openSettings'),
               onPress: () => {
                 Notifications.openSettingsAsync();
-                // Revert the state
                 setLocalHabits((prev) => prev.map((h) => (h.id === habitId ? { ...h, notificationEnabled: false } : h)));
               },
             },
@@ -271,7 +234,6 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
           return;
         }
 
-        // Ensure device is registered
         const isRegistered = await PushTokenService.isDeviceRegistered(user.id);
         if (!isRegistered) {
           const registered = await PushTokenService.registerDevice(user.id);
@@ -280,20 +242,16 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
           }
         }
 
-        // Schedule via backend
         await NotificationScheduleService.scheduleHabitNotification(habitId, user.id, `${habit.notificationTime}:00`, true);
-
         Logger.debug('✅ Notification scheduled successfully');
       } else {
-        // Disable notification
         await NotificationScheduleService.toggleNotification(habitId, user.id, false);
         Logger.debug('✅ Notification disabled successfully');
       }
     } catch (error) {
       Logger.error('Error toggling notification:', error);
-      // Revert on error - don't show full-screen loading
       await loadHabitsWithSchedules(false);
-      Alert.alert('Error', 'Failed to update notification. Please try again.');
+      Alert.alert(t('notifications.error'), t('notifications.toggleError'));
     } finally {
       setIsUpdating(null);
     }
@@ -303,51 +261,54 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
 
   if (isLoading) {
     return (
-      <SafeAreaView style={tw`flex-1 bg-stone-50`}>
+      <SafeAreaView style={tw`flex-1 bg-white`}>
         <View style={tw`flex-1 items-center justify-center`}>
-          <ActivityIndicator size="large" color={tw.color('teal-500')} />
+          <ActivityIndicator size="large" color="#52525B" />
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-stone-50`}>
-      {/* Minimalist Header */}
-      <View style={tw`px-6 py-5 bg-sand border-b border-stone-100`}>
+    <SafeAreaView style={tw`flex-1 bg-white`}>
+      {/* Header */}
+      <View style={tw`px-6 py-5 border-b border-zinc-100`}>
         <View style={tw`flex-row items-center justify-between`}>
           <View style={tw`flex-row items-center`}>
-            <Bell size={24} color={tw.color('teal-600')} strokeWidth={2} />
-            <View style={tw`ml-3`}>
-              <Text style={tw`text-2xl font-bold text-stone-800`}>Notifications</Text>
-              <Text style={tw`text-sm text-sand-500 mt-0.5`}>
-                {activeCount} of {localHabits.length} active
+            <View style={tw`w-10 h-10 rounded-xl bg-zinc-100 items-center justify-center mr-3`}>
+              <Bell size={20} color="#52525B" strokeWidth={2.5} />
+            </View>
+            <View>
+              <Text style={tw`text-2xl font-bold text-zinc-800`}>{t('notifications.title')}</Text>
+              <Text style={tw`text-sm text-zinc-500 mt-0.5`}>
+                {t('notifications.activeCount', {
+                  active: activeCount,
+                  total: localHabits.length,
+                })}
               </Text>
             </View>
           </View>
-          <Pressable onPress={onClose} style={({ pressed }) => [tw`p-2 rounded-full`, pressed && tw`bg-sand-100`]}>
-            <X size={24} color={tw.color('stone-600')} strokeWidth={2} />
+          <Pressable onPress={onClose} style={({ pressed }) => [tw`p-2 rounded-full`, pressed && tw`bg-zinc-100`]}>
+            <X size={24} color="#52525B" strokeWidth={2} />
           </Pressable>
         </View>
       </View>
 
       <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-6`} showsVerticalScrollIndicator={false}>
-        {/* Elegant Info Banner */}
-        <View style={tw`mx-6 mt-6 p-4 ${globalEnabled ? 'bg-teal-50 border-teal-100' : 'bg-amber-50 border-amber-100'} rounded-2xl border`}>
-          <Text style={tw`text-sm ${globalEnabled ? 'text-teal-800' : 'text-amber-800'} leading-5`}>
-            {globalEnabled ? "Configure when you'd like to receive gentle reminders for each habit" : 'Enable notifications in Settings first to manage individual habit reminders'}
-          </Text>
+        {/* Info Banner */}
+        <View style={tw`mx-6 mt-6 p-4 ${globalEnabled ? 'bg-zinc-50 border-zinc-200' : 'bg-amber-50 border-amber-200'} rounded-2xl border`}>
+          <Text style={tw`text-sm ${globalEnabled ? 'text-zinc-700' : 'text-amber-800'} leading-5`}>{globalEnabled ? t('notifications.infoBanner') : t('notifications.enableGlobalBanner')}</Text>
         </View>
 
         {/* Habits List */}
         <View style={tw`px-6 mt-6`}>
           {localHabits.length === 0 ? (
             <View style={tw`py-16 items-center`}>
-              <View style={tw`w-20 h-20 rounded-full bg-sand-100 items-center justify-center mb-4`}>
-                <Bell size={32} color={tw.color('sand-400')} strokeWidth={2} />
+              <View style={tw`w-20 h-20 rounded-full bg-zinc-100 items-center justify-center mb-4`}>
+                <Bell size={32} color="#A1A1AA" strokeWidth={2} />
               </View>
-              <Text style={tw`text-stone-800 font-medium mb-2`}>No habits yet</Text>
-              <Text style={tw`text-sm text-sand-500 text-center`}>Create habits to set up reminders</Text>
+              <Text style={tw`text-zinc-800 font-medium mb-2`}>{t('notifications.noHabits')}</Text>
+              <Text style={tw`text-sm text-zinc-500 text-center`}>{t('notifications.noHabitsSubtitle')}</Text>
             </View>
           ) : (
             <View style={tw`gap-3`}>
@@ -357,55 +318,60 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
 
                 return (
                   <Animated.View key={habit.id} entering={FadeIn.delay(index * 50).duration(300)}>
-                    <View style={[tw`bg-sand rounded-2xl p-4 border`, habit.notificationEnabled ? tw`border-teal-100` : tw`border-stone-100`]}>
+                    <View style={[tw`bg-white rounded-2xl p-4 border shadow-sm`, habit.notificationEnabled ? tw`border-zinc-300` : tw`border-zinc-200`]}>
                       {/* Habit Header */}
                       <View style={tw`flex-row items-center justify-between`}>
                         <View style={tw`flex-row items-center flex-1`}>
-                          {/* Habit Icon from category */}
                           <View style={[tw`w-11 h-11 rounded-xl items-center justify-center mr-3`, { backgroundColor: categoryIcon.bgColor }]}>
                             <HabitIcon size={20} color={categoryIcon.color} strokeWidth={2} />
                           </View>
                           <View style={tw`flex-1`}>
-                            <Text style={tw`text-base font-semibold text-stone-800`} numberOfLines={1}>
+                            <Text style={tw`text-base font-semibold text-zinc-800`} numberOfLines={1}>
                               {habit.name}
                             </Text>
                             <View style={tw`flex-row items-center mt-1`}>
-                              <View style={[tw`px-2 py-0.5 rounded-full`, habit.notificationEnabled ? tw`bg-teal-100` : tw`bg-sand-100`]}>
-                                <Text style={[tw`text-xs font-medium`, habit.notificationEnabled ? tw`text-teal-700` : tw`text-gray-600`]}>{habit.notificationEnabled ? 'Active' : 'Inactive'}</Text>
+                              <View style={[tw`px-2 py-0.5 rounded-full`, habit.notificationEnabled ? tw`bg-zinc-200` : tw`bg-zinc-100`]}>
+                                <Text style={[tw`text-xs font-medium`, habit.notificationEnabled ? tw`text-zinc-700` : tw`text-zinc-600`]}>
+                                  {habit.notificationEnabled ? t('notifications.active') : t('notifications.inactive')}
+                                </Text>
                               </View>
-                              {habit.category && <Text style={tw`text-xs text-sand-500 ml-2 capitalize`}>{habit.category.replace('-', ' ')}</Text>}
+                              {habit.category && <Text style={tw`text-xs text-zinc-500 ml-2 capitalize`}>{habit.category.replace('-', ' ')}</Text>}
                             </View>
                           </View>
                         </View>
                         <Switch
                           value={habit.notificationEnabled}
                           onValueChange={(value) => handleToggleNotification(habit.id, value)}
-                          trackColor={{ false: '#e2e8f0', true: '#99f6e4' }}
-                          thumbColor={habit.notificationEnabled ? '#14b8a6' : '#f1f5f9'}
+                          trackColor={{ false: '#E4E4E7', true: '#A1A1AA' }}
+                          thumbColor={habit.notificationEnabled ? '#52525B' : '#FFFFFF'}
                           disabled={isUpdating === habit.id}
                           style={{ transform: [{ scaleX: 0.9 }, { scaleY: 0.9 }] }}
                         />
                       </View>
 
-                      {/* Time Selector with ChevronRight */}
+                      {/* Time Selector */}
                       <Pressable
                         onPress={() => handleTimeChange(habit.id)}
                         disabled={isUpdating === habit.id}
                         style={({ pressed }) => [
                           tw`flex-row items-center justify-between mt-3 py-3 px-4 rounded-xl`,
-                          habit.notificationEnabled ? tw`bg-teal-50/30 border border-teal-100` : tw`bg-stone-50 border border-stone-100`,
+                          habit.notificationEnabled ? tw`bg-zinc-50 border border-zinc-200` : tw`bg-zinc-50 border border-zinc-100`,
                           pressed && tw`opacity-70`,
                           isUpdating === habit.id && tw`opacity-50`,
                         ]}
                       >
-                        <Text style={[tw`text-sm font-medium`, habit.notificationEnabled ? tw`text-teal-800` : tw`text-sand-500`]}>Daily at {formatTime(habit.notificationTime)}</Text>
-                        <ChevronRight size={18} color={habit.notificationEnabled ? tw.color('teal-600') : tw.color('sand-400')} strokeWidth={2} />
+                        <Text style={[tw`text-sm font-medium`, habit.notificationEnabled ? tw`text-zinc-800` : tw`text-zinc-500`]}>
+                          {t('notifications.dailyAt', {
+                            time: formatTime(habit.notificationTime),
+                          })}
+                        </Text>
+                        <ChevronRight size={18} color={habit.notificationEnabled ? '#52525B' : '#A1A1AA'} strokeWidth={2} />
                       </Pressable>
 
                       {/* Loading overlay */}
                       {isUpdating === habit.id && (
-                        <View style={tw`absolute inset-0 rounded-2xl bg-sand/80 items-center justify-center`}>
-                          <ActivityIndicator size="small" color={tw.color('teal-500')} />
+                        <View style={tw`absolute inset-0 rounded-2xl bg-white/80 items-center justify-center`}>
+                          <ActivityIndicator size="small" color="#52525B" />
                         </View>
                       )}
                     </View>
@@ -417,7 +383,7 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
         </View>
       </ScrollView>
 
-      {/* Time Picker Modal - Only show when NOT updating */}
+      {/* Time Picker Modal */}
       {showTimePicker && selectedHabitId && !isUpdating && (
         <Modal
           visible={showTimePicker}

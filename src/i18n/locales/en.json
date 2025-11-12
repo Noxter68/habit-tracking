@@ -249,30 +249,6 @@
     "task_one": "Task",
     "task_other": "Tasks"
   },
-  "notifications": {
-    "title": "Notifications",
-    "enable": "Enable Notifications",
-    "enabled": "Notifications Enabled",
-    "enabledMessage": "You will now receive reminders for your habits with notifications enabled.",
-    "disable": "Disable",
-    "disableTitle": "Disable Notifications?",
-    "disableMessage": "This will cancel all scheduled habit reminders. You can re-enable them anytime.",
-    "settings": "Notification Settings",
-    "time": "Notification Time",
-    "frequency": "Frequency",
-    "customMessage": "Custom Message",
-    "testNotification": "Test Notification",
-    "permissionRequired": "Permission Required",
-    "permissionMessage": "Notifications are disabled in your device settings. Please enable them to receive habit reminders.",
-    "permissionDenied": "Permission Denied",
-    "permissionDeniedMessage": "You need to grant notification permissions to receive habit reminders.",
-    "openSettings": "Open Settings",
-    "toggleError": "Failed to update notification settings. Please try again.",
-    "habitReminder": "Habit Reminder",
-    "dailyChest": "Daily Chest",
-    "streakRisk": "Streak Risk",
-    "achievement": "Achievement Unlocked"
-  },
 
   "settings": {
     "title": "Settings",
@@ -320,7 +296,8 @@
     "reviewTour": "Review Introduction Tour",
     "reviewTourPrompt": "Would you like to see the introduction tour again?",
     "reviewTourConfirm": "Yes, Show Me",
-    "languageChangeInfo": "Changes will take effect immediately"
+    "languageChangeInfo": "The app will update immediately when you select a new language.",
+    "languageChangeError": "Failed to change language. Please try again."
   },
 
   "paywall": {
@@ -1981,5 +1958,43 @@
     "title": "Nuvoria",
     "subtitle": "Loading your habits...",
     "footer": "Preparing your dashboard"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "activeCount": "{{active}} of {{total}} active",
+    "infoBanner": "Configure when you'd like to receive gentle reminders for each habit",
+    "enableGlobalBanner": "Enable notifications in Settings first to manage individual habit reminders",
+    "noHabits": "No habits yet",
+    "noHabitsSubtitle": "Create habits to set up reminders",
+    "active": "Active",
+    "inactive": "Inactive",
+    "dailyAt": "Daily at {{time}}",
+    "enableGlobalFirst": "Enable Global Notifications First",
+    "enableGlobalFirstMessage": "Please enable notifications in Settings before managing individual habit notifications.",
+    "goToSettings": "Go to Settings",
+    "permissionRequired": "Permission Required",
+    "permissionRequiredMessage": "Please enable notifications in your device settings to receive habit reminders.",
+    "openSettings": "Open Settings",
+    "error": "Error",
+    "toggleError": "Failed to update notification. Please try again.",
+    "timeUpdateError": "Failed to update notification time. Please try again.",
+    "enable": "Enable Notifications",
+    "enabled": "Notifications Enabled",
+    "enabledMessage": "You will now receive reminders for your habits with notifications enabled.",
+    "disable": "Disable",
+    "disableTitle": "Disable Notifications?",
+    "disableMessage": "This will cancel all scheduled habit reminders. You can re-enable them anytime.",
+    "settings": "Notification Settings",
+    "time": "Notification Time",
+    "frequency": "Frequency",
+    "customMessage": "Custom Message",
+    "testNotification": "Test Notification",
+    "permissionMessage": "Notifications are disabled in your device settings. Please enable them to receive habit reminders.",
+    "permissionDenied": "Permission Denied",
+    "permissionDeniedMessage": "You need to grant notification permissions to receive habit reminders.",
+    "habitReminder": "Habit Reminder",
+    "dailyChest": "Daily Chest",
+    "streakRisk": "Streak Risk",
+    "achievement": "Achievement Unlocked"
   }
 }

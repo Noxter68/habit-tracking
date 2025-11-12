@@ -266,7 +266,7 @@ function AppNavigator() {
   // RENDER: LOADER
   // ============================================================================
 
-  if (canShowUI) {
+  if (!canShowUI) {
     return <BeautifulLoader />;
   }
 
@@ -455,8 +455,12 @@ export default function App() {
     notificationBadgeService.clearBadge();
 
     const subscription = AppState.addEventListener('change', (nextAppState) => {
-      if (nextAppState === 'active' && RevenueCatService.isInitialized()) {
-        RevenueCatService.getSubscriptionStatus().catch(() => {});
+      if (nextAppState === 'active') {
+        notificationBadgeService.clearAllNotifications();
+
+        if (RevenueCatService.isInitialized()) {
+          RevenueCatService.getSubscriptionStatus().catch(() => {});
+        }
       }
     });
 

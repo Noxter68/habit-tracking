@@ -320,31 +320,6 @@
       "level30": "L'Élevé"
     }
   },
-  "notifications": {
-    "title": "Notifications",
-    "enable": "Activer les notifications",
-    "enabled": "Notifications activées",
-    "enabledMessage": "Vous recevrez désormais des rappels pour vos habitudes avec les notifications activées.",
-    "disable": "Désactiver",
-    "disableTitle": "Désactiver les notifications ?",
-    "disableMessage": "Cela annulera tous les rappels d'habitudes programmés. Vous pouvez les réactiver à tout moment.",
-    "settings": "Paramètres de notification",
-    "time": "Heure de notification",
-    "frequency": "Fréquence",
-    "customMessage": "Message personnalisé",
-    "testNotification": "Tester la notification",
-    "permissionRequired": "Permission requise",
-    "permissionMessage": "Les notifications sont désactivées dans les paramètres de votre appareil. Veuillez les activer pour recevoir des rappels d'habitudes.",
-    "permissionDenied": "Permission refusée",
-    "permissionDeniedMessage": "Vous devez accorder les permissions de notification pour recevoir des rappels d'habitudes.",
-    "openSettings": "Ouvrir les paramètres",
-    "toggleError": "Échec de la mise à jour des paramètres de notification. Veuillez réessayer.",
-    "habitReminder": "Rappel d'habitude",
-    "dailyChest": "Coffre quotidien",
-    "streakRisk": "Risque de série",
-    "achievement": "Accomplissement débloqué"
-  },
-
   "settings": {
     "title": "Paramètres",
     "preferences": "Préférences",
@@ -391,7 +366,8 @@
     "reviewTour": "Revoir le tour d'introduction",
     "reviewTourPrompt": "Souhaitez-vous revoir le tour d'introduction ?",
     "reviewTourConfirm": "Oui, montrez-moi",
-    "languageChangeInfo": "Les changements prendront effet immédiatement"
+    "languageChangeInfo": "L'application se mettra à jour immédiatement lorsque vous sélectionnerez une nouvelle langue.",
+    "languageChangeError": "Échec du changement de langue. Veuillez réessayer."
   },
 
   "paywall": {
@@ -1981,5 +1957,43 @@
     "title": "Nuvoria",
     "subtitle": "Chargement de vos habitudes...",
     "footer": "Préparation de votre tableau de bord"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "activeCount": "{{active}} sur {{total}} actives",
+    "infoBanner": "Configurez quand vous souhaitez recevoir des rappels pour chaque habitude",
+    "enableGlobalBanner": "Activez d'abord les notifications dans les Paramètres pour gérer les rappels individuels",
+    "noHabits": "Aucune habitude",
+    "noHabitsSubtitle": "Créez des habitudes pour configurer des rappels",
+    "active": "Active",
+    "inactive": "Inactive",
+    "dailyAt": "Quotidien à {{time}}",
+    "enableGlobalFirst": "Activer d'abord les notifications globales",
+    "enableGlobalFirstMessage": "Veuillez activer les notifications dans les Paramètres avant de gérer les notifications individuelles.",
+    "goToSettings": "Aller aux Paramètres",
+    "permissionRequired": "Permission requise",
+    "permissionRequiredMessage": "Veuillez activer les notifications dans les paramètres de votre appareil pour recevoir des rappels.",
+    "openSettings": "Ouvrir les paramètres",
+    "error": "Erreur",
+    "toggleError": "Échec de la mise à jour de la notification. Veuillez réessayer.",
+    "timeUpdateError": "Échec de la mise à jour de l'heure. Veuillez réessayer.",
+    "enable": "Activer les notifications",
+    "enabled": "Notifications activées",
+    "enabledMessage": "Vous recevrez désormais des rappels pour vos habitudes avec les notifications activées.",
+    "disable": "Désactiver",
+    "disableTitle": "Désactiver les notifications ?",
+    "disableMessage": "Cela annulera tous les rappels d'habitudes programmés. Vous pouvez les réactiver à tout moment.",
+    "settings": "Paramètres de notification",
+    "time": "Heure de notification",
+    "frequency": "Fréquence",
+    "customMessage": "Message personnalisé",
+    "testNotification": "Tester la notification",
+    "permissionMessage": "Les notifications sont désactivées dans les paramètres de votre appareil. Veuillez les activer pour recevoir des rappels d'habitudes.",
+    "permissionDenied": "Permission refusée",
+    "permissionDeniedMessage": "Vous devez accorder les permissions de notification pour recevoir des rappels d'habitudes.",
+    "habitReminder": "Rappel d'habitude",
+    "dailyChest": "Coffre quotidien",
+    "streakRisk": "Risque de série",
+    "achievement": "Accomplissement débloqué"
   }
 }
