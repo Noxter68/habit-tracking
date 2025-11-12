@@ -2,35 +2,54 @@
 import React, { useEffect } from 'react';
 import { View, Text, ImageBackground, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSpring, withRepeat, withSequence, Easing } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSpring, withRepeat, withSequence, Easing, interpolate, Extrapolation } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
-import tw from '@/lib/tailwind';
 
 const BeautifulLoader: React.FC = () => {
+  const { t } = useTranslation();
+
   // Animations
   const scale = useSharedValue(0.8);
   const opacity = useSharedValue(0);
   const progressWidth = useSharedValue(0);
-  const pulseOpacity = useSharedValue(0.5);
+  const pulseOpacity = useSharedValue(0.4);
+  const glowScale = useSharedValue(0.95);
 
   useEffect(() => {
-    // Fade in initial
-    opacity.value = withTiming(1, { duration: 300 });
+    // Fade in élégant
+    opacity.value = withTiming(1, { duration: 600, easing: Easing.bezier(0.25, 0.1, 0.25, 1) });
 
-    // Bounce doux et continu du logo
-    scale.value = withRepeat(withSequence(withSpring(1, { damping: 15, stiffness: 100 }), withSpring(1.08, { damping: 8, stiffness: 80 }), withSpring(1, { damping: 15, stiffness: 100 })), -1, false);
+    // Bounce subtil du logo
+    scale.value = withRepeat(withSequence(withSpring(1, { damping: 12, stiffness: 90 }), withSpring(1.05, { damping: 10, stiffness: 100 }), withSpring(1, { damping: 12, stiffness: 90 })), -1, false);
 
-    // Progress bar animation
-    progressWidth.value = withRepeat(withSequence(withTiming(0, { duration: 0 }), withTiming(100, { duration: 1500, easing: Easing.bezier(0.65, 0, 0.35, 1) })), -1, false);
+    // Glow effect
+    glowScale.value = withRepeat(
+      withSequence(withTiming(1, { duration: 1500, easing: Easing.bezier(0.4, 0, 0.6, 1) }), withTiming(0.95, { duration: 1500, easing: Easing.bezier(0.4, 0, 0.6, 1) })),
+      -1,
+      true
+    );
 
-    // Pulse du texte
-    pulseOpacity.value = withRepeat(withSequence(withTiming(0.5, { duration: 1000 }), withTiming(1, { duration: 1000 })), -1, true);
+    // Progress bar fluide
+    progressWidth.value = withRepeat(withSequence(withTiming(0, { duration: 0 }), withTiming(100, { duration: 2000, easing: Easing.bezier(0.4, 0, 0.2, 1) })), -1, false);
+
+    // Pulse doux du texte
+    pulseOpacity.value = withRepeat(
+      withSequence(withTiming(0.5, { duration: 1200, easing: Easing.bezier(0.4, 0, 0.6, 1) }), withTiming(1, { duration: 1200, easing: Easing.bezier(0.4, 0, 0.6, 1) })),
+      -1,
+      true
+    );
   }, []);
 
   const logoStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
     opacity: opacity.value,
+  }));
+
+  const glowStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: glowScale.value }],
+    opacity: interpolate(glowScale.value, [0.95, 1], [0.3, 0.6], Extrapolation.CLAMP),
   }));
 
   const textStyle = useAnimatedStyle(() => ({
@@ -42,8 +61,13 @@ const BeautifulLoader: React.FC = () => {
   }));
 
   return (
-    <ImageBackground source={require('../../assets/interface/textures/texture-white.png')} style={styles.container} imageStyle={{ opacity: 0.15 }}>
+    <ImageBackground source={require('../../assets/interface/textures/texture-white.png')} style={styles.container} imageStyle={{ opacity: 0.2 }}>
       <SafeAreaView style={styles.safeArea}>
+        {/* Glow effect derrière le logo */}
+        <Animated.View style={[styles.glowContainer, glowStyle]}>
+          <LinearGradient colors={['rgba(139, 92, 246, 0.4)', 'rgba(99, 102, 241, 0.3)', 'rgba(59, 130, 246, 0.2)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.glow} />
+        </Animated.View>
+
         {/* Logo animé */}
         <Animated.View style={[styles.logoContainer, logoStyle]}>
           <LinearGradient colors={['#8b5cf6', '#6366f1', '#3b82f6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.logoGradient}>
@@ -53,8 +77,8 @@ const BeautifulLoader: React.FC = () => {
 
         {/* Texte principal */}
         <Animated.View style={textStyle}>
-          <Text style={styles.mainText}>Nuvoria</Text>
-          <Text style={styles.subText}>Loading your habits...</Text>
+          <Text style={styles.mainText}>{t('loader.title')}</Text>
+          <Text style={styles.subText}>{t('loader.subtitle')}</Text>
         </Animated.View>
 
         {/* Progress bar */}
@@ -67,7 +91,7 @@ const BeautifulLoader: React.FC = () => {
         </View>
 
         {/* Footer text */}
-        <Text style={styles.footerText}>Preparing your dashboard</Text>
+        <Text style={styles.footerText}>{t('loader.footer')}</Text>
       </SafeAreaView>
     </ImageBackground>
   );
@@ -76,56 +100,67 @@ const BeautifulLoader: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#ffffff',
   },
   safeArea: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  glowContainer: {
+    position: 'absolute',
+    width: 160,
+    height: 160,
+  },
+  glow: {
+    flex: 1,
+    borderRadius: 80,
+  },
   logoContainer: {
-    marginBottom: 32,
+    marginBottom: 20,
+    zIndex: 10,
   },
   logoGradient: {
-    width: 96,
-    height: 96,
-    borderRadius: 24,
+    width: 100,
+    height: 100,
+    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#8b5cf6',
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 12,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 12,
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 15,
   },
   logo: {
-    width: 80,
-    height: 80,
+    width: 84,
+    height: 84,
   },
   mainText: {
-    fontSize: 32,
+    fontSize: 34,
     fontWeight: '900',
-    color: '#1e293b',
-    letterSpacing: -0.5,
-    marginBottom: 8,
+    color: '#0f172a',
+    letterSpacing: -0.8,
+    marginBottom: 6,
     textAlign: 'center',
   },
   subText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '500',
     color: '#64748b',
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
     textAlign: 'center',
   },
   progressContainer: {
-    marginTop: 32,
-    width: 240,
+    marginTop: 40,
+    width: 200,
   },
   progressTrack: {
-    height: 6,
-    backgroundColor: '#e2e8f0',
+    height: 4,
+    backgroundColor: 'rgba(226, 232, 240, 0.5)',
     borderRadius: 999,
     overflow: 'hidden',
   },
@@ -136,10 +171,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   footerText: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#94a3b8',
-    marginTop: 16,
+    marginTop: 20,
     fontWeight: '500',
+    letterSpacing: 0.2,
   },
 });
 

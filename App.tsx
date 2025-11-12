@@ -266,7 +266,7 @@ function AppNavigator() {
   // RENDER: LOADER
   // ============================================================================
 
-  if (!canShowUI) {
+  if (canShowUI) {
     return <BeautifulLoader />;
   }
 

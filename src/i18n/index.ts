@@ -9,6 +9,7 @@ import fr from './locales/fr.json';
 const STORAGE_KEY = 'user-language';
 
 // Plugin custom pour persister la langue
+// src/i18n/index.ts
 const languageDetector = {
   type: 'languageDetector' as const,
   async: true,
@@ -19,9 +20,13 @@ const languageDetector = {
         callback(savedLanguage);
         return;
       }
-      // Fallback sur la langue du device
+
+      // Premier lancement : récupère et sauvegarde la langue du device
       const deviceLanguage = getLocales()[0]?.languageCode || 'en';
-      callback(deviceLanguage);
+      const supportedLanguage = ['en', 'fr'].includes(deviceLanguage) ? deviceLanguage : 'en';
+
+      await AsyncStorage.setItem(STORAGE_KEY, supportedLanguage);
+      callback(supportedLanguage);
     } catch (error) {
       callback('en');
     }
@@ -31,7 +36,7 @@ const languageDetector = {
     try {
       await AsyncStorage.setItem(STORAGE_KEY, language);
     } catch (error) {
-      // Silent fail
+      console.error('Failed to save language:', error);
     }
   },
 };

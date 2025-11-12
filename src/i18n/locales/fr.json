@@ -1976,5 +1976,10 @@
       "ready": "Vous êtes prêt !",
       "readyDesc": "Créons votre première habitude et commençons votre voyage vers l'excellence"
     }
+  },
+  "loader": {
+    "title": "Nuvoria",
+    "subtitle": "Chargement de vos habitudes...",
+    "footer": "Préparation de votre tableau de bord"
   }
 }

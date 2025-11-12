@@ -1976,5 +1976,10 @@
       "ready": "You're Ready!",
       "readyDesc": "Let's create your first habit and start your journey to excellence"
     }
+  },
+  "loader": {
+    "title": "Nuvoria",
+    "subtitle": "Loading your habits...",
+    "footer": "Preparing your dashboard"
   }
 }
