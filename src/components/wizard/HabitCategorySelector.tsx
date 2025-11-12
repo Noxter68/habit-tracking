@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 import { Dumbbell, Heart, Apple, BookOpen, Zap, Brain, Moon, Droplets, CigaretteOff, Scale, ShoppingCart, Smartphone, Clock, Smile, Wine, Bed, Plus } from 'lucide-react-native';
 import tw from '../../lib/tailwind';
 import { HabitType } from '../../types';
@@ -34,6 +35,7 @@ const categoryIcons: Record<string, any> = {
 };
 
 const HabitCategorySelector: React.FC<HabitCategorySelectorProps> = ({ habitType, selected, onSelect, onCreateCustom }) => {
+  const { t } = useTranslation();
   const categories = getCategories(habitType);
 
   return (
@@ -41,8 +43,10 @@ const HabitCategorySelector: React.FC<HabitCategorySelectorProps> = ({ habitType
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`px-8 py-8`}>
         {/* Header */}
         <View style={tw`mb-10`}>
-          <Text style={tw`text-3xl font-bold text-white text-center mb-3`}>Choose Your Focus</Text>
-          <Text style={tw`text-base text-white/80 text-center leading-6 px-2`}>{habitType === 'good' ? 'Select the area you want to improve' : 'What would you like to overcome?'}</Text>
+          <Text style={tw`text-3xl font-bold text-white text-center mb-3`}>{t('wizard.habitCategorySelector.title')}</Text>
+          <Text style={tw`text-base text-white/80 text-center leading-6 px-2`}>
+            {habitType === 'good' ? t('wizard.habitCategorySelector.subtitleGood') : t('wizard.habitCategorySelector.subtitleBad')}
+          </Text>
         </View>
 
         {/* Categories Grid */}
@@ -57,11 +61,20 @@ const HabitCategorySelector: React.FC<HabitCategorySelectorProps> = ({ habitType
                   onPress={() => onSelect(category.id)}
                   style={({ pressed }) => [
                     tw`rounded-2xl p-5 flex-row items-center border-2 ${isSelected ? 'border-white/40' : 'border-white/10'}`,
-                    { backgroundColor: isSelected ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.15)' },
+                    {
+                      backgroundColor: isSelected ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.15)',
+                    },
                     pressed && tw`opacity-80`,
                   ]}
                 >
-                  <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-4`, { backgroundColor: isSelected ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)' }]}>
+                  <View
+                    style={[
+                      tw`w-12 h-12 rounded-xl items-center justify-center mr-4`,
+                      {
+                        backgroundColor: isSelected ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                      },
+                    ]}
+                  >
                     {Icon && <Icon size={24} color="#ffffff" strokeWidth={2} />}
                   </View>
 
@@ -84,7 +97,7 @@ const HabitCategorySelector: React.FC<HabitCategorySelectorProps> = ({ habitType
         {/* Divider */}
         <View style={tw`flex-row items-center my-6`}>
           <View style={tw`flex-1 h-px bg-white/20`} />
-          <Text style={tw`px-4 text-xs text-white/50 font-medium`}>OR</Text>
+          <Text style={tw`px-4 text-xs text-white/50 font-medium`}>{t('common.or').toUpperCase()}</Text>
           <View style={tw`flex-1 h-px bg-white/20`} />
         </View>
 
@@ -98,14 +111,16 @@ const HabitCategorySelector: React.FC<HabitCategorySelectorProps> = ({ habitType
           </View>
 
           <View style={tw`flex-1`}>
-            <Text style={tw`text-base font-semibold text-white mb-0.5`}>Create Custom Habit</Text>
-            <Text style={tw`text-sm text-white/70 leading-5`}>{habitType === 'good' ? 'Build something unique' : 'Define your own goal'}</Text>
+            <Text style={tw`text-base font-semibold text-white mb-0.5`}>{t('wizard.habitCategorySelector.createCustom')}</Text>
+            <Text style={tw`text-sm text-white/70 leading-5`}>
+              {habitType === 'good' ? t('wizard.habitCategorySelector.createCustomDescriptionGood') : t('wizard.habitCategorySelector.createCustomDescriptionBad')}
+            </Text>
           </View>
         </Pressable>
 
         {/* Tip */}
         <View style={tw`mt-8`}>
-          <Text style={tw`text-xs text-white/50 text-center font-light italic leading-5`}>Choose the category that resonates most{'\n'}with your current goals</Text>
+          <Text style={tw`text-xs text-white/50 text-center font-light italic leading-5`}>{t('wizard.habitCategorySelector.tip')}</Text>
         </View>
       </ScrollView>
     </View>

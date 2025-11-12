@@ -1,4 +1,4 @@
-// src/components/dashboard/HabitCard.tsx
+// src/components/habits/HabitCard.tsx
 import React, { useMemo } from 'react';
 import { View, Text, Pressable, ImageBackground, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -6,6 +6,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CheckCircle2, Circle } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import * as Haptics from 'expo-haptics';
 import tw from '@/lib/tailwind';
 import { tierThemes } from '@/utils/tierTheme';
@@ -71,7 +72,6 @@ const isWeekCompleted = (habit: Habit): boolean => {
   const daysSinceCreation = Math.floor((today.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
   const currentWeekStart = Math.floor(daysSinceCreation / 7) * 7;
 
-  // Check all days in current week (7 days from week start)
   for (let i = 0; i < 7; i++) {
     const checkDate = new Date(created);
     checkDate.setDate(created.getDate() + currentWeekStart + i);
@@ -86,27 +86,8 @@ const isWeekCompleted = (habit: Habit): boolean => {
   return false;
 };
 
-/**
- * Format streak display based on frequency
- */
-const formatStreakDisplay = (habit: Habit): string => {
-  const streak = habit.currentStreak;
-
-  switch (habit.frequency) {
-    case 'daily':
-      return streak === 1 ? '1 day' : `${streak} days`;
-    case 'weekly':
-      return streak === 1 ? '1 week' : `${streak} weeks`;
-    case 'monthly':
-      return streak === 1 ? '1 month' : `${streak} months`;
-    case 'custom':
-      return streak === 1 ? '1 day' : `${streak} days`;
-    default:
-      return `${streak}`;
-  }
-};
-
 export const HabitCard: React.FC<HabitCardProps> = ({ habit, completedToday, onPress, index, pausedTasks = {} }) => {
+  const { t } = useTranslation();
   const navigation = useNavigation<NavigationProp>();
 
   // Calculate tier reactively
@@ -119,16 +100,14 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit, completedToday, onP
   const today = getTodayString();
   const todayTasks = habit.dailyTasks?.[today];
 
-  // Weekly habit specific logic
   const isWeekly = habit.frequency === 'weekly';
 
-  // For weekly habits, count ALL tasks completed THIS WEEK (not just today)
+  // For weekly habits, count ALL tasks completed THIS WEEK
   const completedTasks = useMemo(() => {
     if (!isWeekly) {
       return todayTasks?.completedTasks?.length || 0;
     }
 
-    // For weekly: aggregate all completed tasks across the week
     const created = new Date(habit.createdAt);
     const now = new Date();
     const daysSince = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
@@ -163,6 +142,22 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit, completedToday, onP
 
   const isCompleted = isWeekly ? weekCompleted : completedToday;
 
+  // Format streak display
+  const formatStreakDisplay = (): string => {
+    const count = habit.currentStreak;
+
+    switch (habit.frequency) {
+      case 'daily':
+        return t('habits.dayStreak', { count });
+      case 'weekly':
+        return t('habits.weekStreak', { count });
+      case 'monthly':
+        return t('habits.monthStreak', { count });
+      default:
+        return t('habits.dayStreak', { count });
+    }
+  };
+
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
@@ -181,28 +176,30 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit, completedToday, onP
       <Pressable onPress={handlePress}>
         <ImageBackground source={theme.texture} style={tw`rounded-2xl overflow-hidden`} imageStyle={tw`rounded-2xl opacity-70`} resizeMode="cover">
           <LinearGradient colors={[theme.gradient[0] + 'e6', theme.gradient[1] + 'dd', theme.gradient[2] + 'cc']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`p-4`}>
-            {/* Gem Icon - Absolute Position Top Right */}
+            {/* Gem Icon */}
             <View style={tw`absolute top-3 right-3 z-10`}>
               <Image source={getGemIcon(tier.name)} style={tw`w-12 h-12`} resizeMode="contain" />
             </View>
 
-            {/* Header - Title and Type */}
+            {/* Header */}
             <View style={tw`mb-3 pr-14`}>
               <Text numberOfLines={1} style={tw`text-xl font-bold text-white mb-0.5`}>
                 {habit.name}
               </Text>
               <View style={tw`flex-row items-center gap-2`}>
-                <Text style={tw`text-xs text-white/70 font-medium capitalize`}>{habit.type === 'good' ? 'Building' : 'Quitting'}</Text>
+                <Text style={tw`text-xs text-white/70 font-medium capitalize`}>{habit.type === 'good' ? t('habits.building') : t('habits.quitting')}</Text>
                 {isWeekly && (
                   <>
                     <View style={tw`w-1 h-1 rounded-full bg-white/50`} />
-                    <Text style={tw`text-xs text-white/70 font-medium`}>{weekCompleted ? `Resets in ${daysUntilReset}d` : `${daysUntilReset}d left`}</Text>
+                    <Text style={tw`text-xs text-white/70 font-medium`}>
+                      {weekCompleted ? t('habits.resetsIn', { count: daysUntilReset, unit: 'd' }) : t('habits.daysLeft', { count: daysUntilReset })}
+                    </Text>
                   </>
                 )}
                 {!isWeekly && !completedToday && hoursUntilReset > 0 && (
                   <>
                     <View style={tw`w-1 h-1 rounded-full bg-white/50`} />
-                    <Text style={tw`text-xs text-white/70 font-medium`}>Resets in {hoursUntilReset}h</Text>
+                    <Text style={tw`text-xs text-white/70 font-medium`}>{t('habits.resetsIn', { count: hoursUntilReset, unit: 'h' })}</Text>
                   </>
                 )}
               </View>
@@ -210,16 +207,14 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit, completedToday, onP
 
             {/* Progress Section */}
             <View style={tw`mb-3`}>
-              {/* Progress Bar */}
               <View style={tw`h-2.5 bg-white/20 rounded-full overflow-hidden mb-2`}>
                 <View style={[tw`h-full bg-white rounded-full`, { width: `${taskProgress}%` }]} />
               </View>
 
-              {/* Progress Text */}
               <View style={tw`flex-row items-center justify-between`}>
                 <View style={tw`flex-row items-center gap-1.5`}>
                   {isCompleted ? <CheckCircle2 size={14} color="#fff" strokeWidth={2.5} fill="rgba(255,255,255,0.3)" /> : <Circle size={14} color="#fff" strokeWidth={2} />}
-                  <Text style={tw`text-xs font-semibold text-white/90`}>{isWeekly ? 'Weekly Tasks' : "Today's Tasks"}</Text>
+                  <Text style={tw`text-xs font-semibold text-white/90`}>{isWeekly ? t('habits.weeklyTasks') : t('habits.todaysTasks')}</Text>
                 </View>
                 <Text style={tw`text-xs font-bold text-white`}>
                   {completedTasks}/{activeTasks}
@@ -229,13 +224,11 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit, completedToday, onP
 
             {/* Stats Footer */}
             <View style={tw`flex-row items-center justify-between pt-3 border-t border-white/20`}>
-              {/* Streak */}
               <View>
-                <Text style={tw`text-xs text-white/70 font-medium mb-0.5`}>Streak</Text>
-                <Text style={tw`text-lg font-black text-white`}>{formatStreakDisplay(habit)}</Text>
+                <Text style={tw`text-xs text-white/70 font-medium mb-0.5`}>{t('habits.streak')}</Text>
+                <Text style={tw`text-lg font-black text-white`}>{formatStreakDisplay()}</Text>
               </View>
 
-              {/* Tier Badge */}
               <View style={[tw`px-3 py-1.5 rounded-xl border border-white/30`, { backgroundColor: 'rgba(255, 255, 255, 0.15)' }]}>
                 <Text style={tw`text-xs font-black text-white`}>{tier.name}</Text>
               </View>
@@ -244,9 +237,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit, completedToday, onP
             {/* Paused Tasks Notice */}
             {pausedTaskCount > 0 && (
               <View style={tw`mt-3 pt-3 border-t border-white/20`}>
-                <Text style={tw`text-xs text-white/70`}>
-                  {pausedTaskCount} task{pausedTaskCount !== 1 ? 's' : ''} paused
-                </Text>
+                <Text style={tw`text-xs text-white/70`}>{t('habits.tasksPaused', { count: pausedTaskCount })}</Text>
               </View>
             )}
           </LinearGradient>

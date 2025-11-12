@@ -1,16 +1,25 @@
-// Achievement Types with proper typing
+// src/types/achievement.types.ts
+
+// Tier names for display
 export const TIER_NAMES = ['Novice', 'Rising Hero', 'Mastery Awakens', 'Legendary Ascent', 'Epic Mastery', 'Mythic Glory'] as const;
 export type TierName = (typeof TIER_NAMES)[number];
 
+// Tier keys for i18n (camelCase)
+export const TIER_KEYS = ['novice', 'risingHero', 'masteryAwakens', 'legendaryAscent', 'epicMastery', 'mythicGlory'] as const;
+export type TierKey = (typeof TIER_KEYS)[number];
+
+// ✅ Achievement interface with both tier (translated) and tierKey (i18n key)
 export interface Achievement {
-  id: string;
-  title: string;
   level: number;
-  tier: TierName;
+  title: string; // Translated title (from getter)
+  tier: string; // Translated tier name (from getter)
+  tierKey: TierKey; // i18n key for tier (novice, masteryAwakens, etc.)
+  color: string;
   image: any; // React Native image source
   description?: string;
 }
 
+// User achievement from database
 export interface UserAchievement {
   id: string;
   userId: string;
@@ -19,6 +28,7 @@ export interface UserAchievement {
   unlockedAt: Date;
 }
 
+// Backend data structure
 export interface BackendData {
   totalCompletions: number;
   totalXP: number;

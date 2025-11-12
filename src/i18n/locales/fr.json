@@ -1,5 +1,1610 @@
 {
+  "common": {
+    "continue": "Continuer",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "close": "Fermer",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "confirm": "Confirmer",
+    "back": "Retour",
+    "next": "Suivant",
+    "skip": "Passer",
+    "done": "Terminé",
+    "yes": "Oui",
+    "no": "Non",
+    "or": "ou",
+    "days": "jours",
+    "habits": "habitudes",
+    "tasks": "tâches",
+    "streak": "série",
+    "level": "Niveau",
+    "xp": "XP",
+    "premium": "Premium",
+    "ok": "OK",
+    "tier": "Rang"
+  },
+
+  "auth": {
+    "signIn": "Se connecter",
+    "signUp": "S'inscrire",
+    "signOut": "Se déconnecter",
+    "email": "Email",
+    "password": "Mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "createAccount": "Créer un compte",
+    "alreadyHaveAccount": "Vous avez déjà un compte ?",
+    "dontHaveAccount": "Vous n'avez pas de compte ?",
+    "signingOut": "Déconnexion..."
+  },
+
+  "onboarding": {
+    "skip": "Passer",
+    "continue": "Continuer",
+    "letsStart": "C'est parti",
+    "getStarted": "Commencer"
+  },
+
+  "dashboard": {
+    "title": "Tableau de bord",
+    "welcome": "Bienvenue",
+    "goodMorning": "Bonjour",
+    "goodAfternoon": "Bon après-midi",
+    "goodEvening": "Bonsoir",
+    "todaysTasks": "Tâches du jour",
+    "activeHabits": "Habitudes actives",
+    "noHabits": "Aucune habitude",
+    "createFirst": "Créez votre première habitude",
+    "habitLimitReached": "Limite atteinte • Passez premium pour un nombre illimité",
+    "habitCount": "{{count}} sur {{max}} habitudes gratuites",
+    "onHoliday": "En vacances",
+    "allHabitsPaused": "Toutes les habitudes sont en pause",
+    "allHabitsPausedTitle": "Toutes les habitudes en pause",
+    "allHabitsPausedMessage": "Toutes vos habitudes sont actuellement en pause. Elles reprendront automatiquement à la fin de leurs périodes de pause.",
+    "removeHabit": "⚠️ Supprimer l'habitude",
+    "removeHabitConfirm": "Êtes-vous sûr de vouloir arrêter de suivre \"{{name}}\" ?\n\nVous perdrez :\n• Série de {{streak}} jours\n• Toutes les données de progression\n• L'historique des tâches",
+    "holidayModeActive": "Mode Vacances Actif",
+    "habitsPaused": "{{count}} habitude en pause | {{count}} habitudes en pause",
+    "tasksPaused": "{{count}} habitude a des tâches en pause | {{count}} habitudes ont des tâches en pause",
+    "holidayEndError": "Échec de la fin du mode vacances",
+    "getStarted": "Commencer",
+    "startBuilding": "Commencez à construire votre première habitude",
+    "createFirstHabit": "Créez votre première habitude",
+    "startJourney": "Commencez votre parcours pour développer de meilleures habitudes et gagner des succès !",
+    "tapToBegin": "Appuyez pour commencer →",
+    "createNewHabit": "Créer une nouvelle habitude",
+    "greeting": {
+      "morning": "Bonjour",
+      "afternoon": "Bon après-midi",
+      "evening": "Bonsoir"
+    },
+    "header": {
+      "level": "Niveau",
+      "streak": "Série",
+      "streakSubtitle": "jours",
+      "active": "Actives",
+      "activeSubtitle": "Quêtes",
+      "xpTotal": "XP"
+    },
+    "levelProgress": {
+      "title": "Progression de Niveau",
+      "nextLevel": "Niveau {{current}} → {{next}}",
+      "xpRemaining": "{{amount}} XP restants",
+      "currentProgress": "{{current}} / {{required}} XP"
+    },
+    "dailyChallenge": {
+      "title": "Défi Quotidien",
+      "collected": "Récupéré !",
+      "readyToClaim": "Prêt à Récupérer !",
+      "tasksRemaining_one": "{{count}} tâche restante",
+      "tasksRemaining_other": "{{count}} tâches restantes",
+      "dailyTask_one": "{{count}} Tâche Quotidienne",
+      "dailyTask_other": "{{count}} Tâches Quotidiennes",
+      "weeklyTask_one": "{{count}} Tâche Hebdomadaire",
+      "weeklyTask_other": "{{count}} Tâches Hebdomadaires",
+      "weeklyInfo": "Les habitudes hebdomadaires peuvent être complétées à tout moment cette semaine",
+      "debugReset": "🔄 Réinitialiser le Défi (Debug)",
+      "xpReward": "+{{amount}} XP"
+    },
+    "taskBadge": {
+      "legendary": {
+        "title": "Légendaire !",
+        "subtitle": "Maîtrise parfaite atteinte !",
+        "message": "Incroyable ! Vous avez tout terminé aujourd'hui !"
+      },
+      "almostPerfect": {
+        "title": "Presque Parfait !",
+        "subtitle": "Progrès dorés qui brillent !",
+        "message_one": "Plus que {{count}} tâche ! Vous pouvez le faire !",
+        "message_other": "Plus que {{count}} tâches ! Vous pouvez le faire !"
+      },
+      "greatMomentum": {
+        "title": "Super Élan !",
+        "subtitle": "Plus fort à chaque tâche !",
+        "message": "Vous êtes en feu ! Maintenez cette énergie !"
+      },
+      "halfwayThere": {
+        "title": "À Mi-Chemin !",
+        "subtitle": "Construisez votre chemin vers le succès !",
+        "message": "Progrès incroyable ! Vous assurez aujourd'hui !"
+      },
+      "gettingStarted": {
+        "title": "C'est Parti !",
+        "subtitle": "Chaque pas vous rapproche !",
+        "message": "Super début ! Continuez sur cette lancée !"
+      },
+      "readyToShine": {
+        "title": "Prêt à Briller !",
+        "subtitle": "Votre voyage commence maintenant !",
+        "message": "Faisons de cette journée quelque chose d'incroyable ! 🌟"
+      }
+    },
+    "progressStatus": {
+      "perfectDay": {
+        "title": "Journée Parfaite !",
+        "subtitle": "Toutes les habitudes terminées",
+        "message": "Travail exceptionnel ! Maintenez cet élan !"
+      },
+      "almostThere": {
+        "title": "Presque Parfait !",
+        "subtitle": "{{completed}} sur {{total}} terminées",
+        "message": "Super progrès ! Plus qu'un petit peu !"
+      },
+      "goodProgress": {
+        "title": "Bon Progrès",
+        "subtitle": "{{completed}} sur {{total}} terminées",
+        "message": "Vous êtes à mi-chemin ! Continuez à pousser !"
+      },
+      "gettingStarted": {
+        "title": "C'est Parti",
+        "subtitle": "{{completed}} sur {{total}} terminées",
+        "message": "Chaque pas compte ! Continuez !"
+      },
+      "readyToBegin": {
+        "title": "Prêt à Commencer ?",
+        "subtitle": "Commencez par votre première habitude",
+        "message": "Aujourd'hui est un excellent jour pour commencer !"
+      }
+    },
+
+    "streakSaver": {
+      "title": "Sauvegarde de série",
+      "available": "Disponible",
+      "useStreakSaver": "Utiliser une sauvegarde",
+      "restore": "Restaurer {{count}} jour | Restaurer {{count}} jours",
+      "badge": {
+        "outOfStock": "RUPTURE DE STOCK",
+        "refillMessage": "Rechargez vos Sauveurs de Série",
+        "tapToShop": "Touchez pour visiter la boutique",
+        "streakAlert": "ALERTE SÉRIE",
+        "readyToSave": "PRÊT À SAUVER",
+        "needsSaving_one": "{{count}} habitude à sauver !",
+        "needsSaving_other": "{{count}} habitudes à sauver !",
+        "allSafe": "Toutes les séries sont sauves",
+        "available_one": "{{count}} Sauveur de Série disponible",
+        "available_other": "{{count}} Sauveurs de Série disponibles"
+      },
+      "shop": {
+        "title": "Sauveurs de Série",
+        "yourInventory": "Votre inventaire",
+        "monthlyRefill": "Recharge mensuelle",
+        "refillDate": "Prochaine recharge : {{date}}",
+        "premiumOnly": "Les membres Premium reçoivent 3 sauvegardes chaque mois",
+        "notPremium": "Passez à Premium pour obtenir des sauvegardes mensuelles",
+        "upgradeToPremium": "Passer à Premium",
+        "purchaseSuccess": "Achat réussi !",
+        "purchaseFailed": "Achat échoué",
+        "addedToInventory": "Ajouté à votre inventaire",
+        "noPackages": "Aucun forfait disponible",
+        "popular": "POPULAIRE",
+        "buyNow": "ACHETER",
+        "save20": "Économisez 20%",
+        "save40": "Économisez 40%",
+        "savers_one": "{{count}} Sauveur",
+        "savers_other": "{{count}} Sauveurs",
+        "footer": "Restaurez les jours manqués sous 24h 🔥",
+        "loading": "Chargement..."
+      }
+    }
+  },
+  "habits": {
+    "title": "Habitudes",
+    "addHabit": "Ajouter une habitude",
+    "editHabit": "Modifier l'habitude",
+    "habitName": "Nom de l'habitude",
+    "habitType": "Type d'habitude",
+    "category": "Catégorie",
+    "frequency": "Fréquence",
+    "daily": "Quotidienne",
+    "weekly": "Hebdomadaire",
+    "currentStreak": "Actuelle",
+    "bestStreak": "Meilleure",
+    "totalDays": "Total",
+    "tier": "Niveau",
+    "streak": "Série",
+    "buildGoodHabit": "Créer une bonne habitude",
+    "quitBadHabit": "Arrêter une mauvaise habitude",
+    "startPositive": "Commencez quelque chose de positif et transformateur",
+    "breakFree": "Libérez-vous de ce qui vous retient",
+    "selectCategory": "Sélectionner une catégorie",
+    "customHabit": "Habitude personnalisée",
+    "createCustom": "Créer la vôtre",
+    "habitDetails": "Détails de l'habitude",
+    "tasks": "Tâches",
+    "addTask": "Ajouter une tâche",
+    "goal": "Objectif",
+    "notifications": "Notifications",
+    "notificationTime": "Heure de notification",
+    "createHabit": "Créer l'habitude",
+    "creating": "Création...",
+    "keepHabit": "Garder l'habitude",
+    "building": "En construction",
+    "quitting": "Abandon",
+    "resetsIn": "Réinitialise dans {{count}}{{unit}}",
+    "daysLeft": "{{count}}j restants",
+    "weeklyTasks": "Tâches hebdomadaires",
+    "todaysTasks": "Tâches du jour",
+    "tasksPaused": "{{count}} tâche en pause | {{count}} tâches en pause",
+    "dayStreak": "{{count}} jour | {{count}} jours",
+    "weekStreak": "{{count}} semaine | {{count}} semaines",
+    "monthStreak": "{{count}} mois | {{count}} mois",
+    "task": "tâche | tâches"
+  },
+
+  "calendar": {
+    "title": "Calendrier",
+    "today": "Aujourd'hui",
+    "selectDate": "Sélectionner une date",
+    "noHabits": "Aucune habitude à afficher",
+    "createHabit": "Créez une habitude pour commencer",
+    "current": "Actuelle",
+    "best": "Meilleure",
+    "total": "Total",
+    "holiday": "Vacances",
+    "completedToday": "Complété aujourd'hui",
+    "notCompleted": "Non complété",
+    "partiallyCompleted": "Partiellement complété",
+    "monthlyProgress": "Progression mensuelle"
+  },
+
+  "stats": {
+    "title": "Statistiques",
+    "overview": "Aperçu",
+    "totalXP": "XP Total",
+    "totalHabits": "Total d'habitudes",
+    "completionRate": "Taux de complétion",
+    "currentStreak": "Série actuelle",
+    "longestStreak": "Plus longue série",
+    "thisWeek": "Cette semaine",
+    "thisMonth": "Ce mois-ci",
+    "allTime": "Tout le temps",
+    "premium": {
+      "unlockAdvanced": "Débloquer les statistiques avancées",
+      "premiumFeatures": "Les fonctionnalités premium incluent des graphiques détaillés, tendances et analyses",
+      "upgrade": "Passer à Premium"
+    },
+    "period": {
+      "week": "Semaine",
+      "month": "Mois",
+      "fourWeeks": "4 Semaines"
+    },
+    "chartType": {
+      "trend": "Tendance",
+      "heatmap": "Carte de chaleur",
+      "summary": "Résumé"
+    }
+  },
+  "achievements": {
+    "level": "Niveau {{level}}",
+    "tapToClose": "Touchez n'importe où pour fermer",
+    "screenTitle": "Succès",
+    "currentAchievement": "Succès Actuel",
+    "unlocked": "Débloqués",
+    "bestStreak": "Meilleure Série",
+    "totalXP": "XP Total",
+    "next": "Suivant : {{title}}",
+    "perfectDays": "Parfait",
+    "habits": "Habitudes",
+    "streak": "Série",
+    "achievementUnlocked": "Succès Débloqué !",
+    "progressStatus": "État de Progression",
+    "unlockedAt": "Débloqué à {{count}} accomplissements",
+    "requiresCompletions": "Nécessite {{count}} accomplissements au total",
+    "moreNeeded": "{{count}} de plus nécessaires • {{percent}}% complété",
+    "awesome": "Génial !",
+    "keepGoing": "Continue !",
+    "all": "Tous",
+    "lockedBadge": "Verrouillé",
+    "complete": "Terminé",
+    "percentComplete": "{{percent}}% Terminé",
+    "tiers": {
+      "novice": "Novice",
+      "risingHero": "Héros Montant",
+      "masteryAwakens": "Éveil de la Maîtrise",
+      "legendaryAscent": "Ascension Légendaire",
+      "epicMastery": "Maîtrise Épique",
+      "mythicGlory": "Gloire Mythique"
+    },
+    "titles": {
+      "level1": "Le Premier Pas",
+      "level2": "Éclaireur",
+      "level3": "Apprenti de la Discipline",
+      "level4": "Chercheur de Détermination",
+      "level5": "Porteur de la Flamme",
+      "level6": "Écuyer des Habitudes",
+      "level7": "L'Inébranlable",
+      "level8": "Gardien de la Routine",
+      "level9": "Gardien du Chemin",
+      "level10": "Chevalier de la Constance",
+      "level11": "Champion de la Concentration",
+      "level12": "Briseur de Limites",
+      "level13": "L'Inflexible",
+      "level14": "Gardien du Progrès",
+      "level15": "Héros de l'Élan",
+      "level16": "Lame de la Détermination",
+      "level17": "Défenseur de la Discipline",
+      "level18": "La Volonté de Fer",
+      "level19": "Maître de l'Effort",
+      "level20": "Le Vainqueur Doré",
+      "level21": "L'Implacable",
+      "level22": "Tempête des Habitudes",
+      "level23": "Le Phénix Renaissant",
+      "level24": "Champion du Temps",
+      "level25": "Le Conquérant Couronné",
+      "level26": "La Flamme Éternelle",
+      "level27": "Titan de la Constance",
+      "level28": "L'Invincible",
+      "level29": "Légende de l'Effort",
+      "level30": "L'Élevé"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "enable": "Activer les notifications",
+    "enabled": "Notifications activées",
+    "enabledMessage": "Vous recevrez désormais des rappels pour vos habitudes avec les notifications activées.",
+    "disable": "Désactiver",
+    "disableTitle": "Désactiver les notifications ?",
+    "disableMessage": "Cela annulera tous les rappels d'habitudes programmés. Vous pouvez les réactiver à tout moment.",
+    "settings": "Paramètres de notification",
+    "time": "Heure de notification",
+    "frequency": "Fréquence",
+    "customMessage": "Message personnalisé",
+    "testNotification": "Tester la notification",
+    "permissionRequired": "Permission requise",
+    "permissionMessage": "Les notifications sont désactivées dans les paramètres de votre appareil. Veuillez les activer pour recevoir des rappels d'habitudes.",
+    "permissionDenied": "Permission refusée",
+    "permissionDeniedMessage": "Vous devez accorder les permissions de notification pour recevoir des rappels d'habitudes.",
+    "openSettings": "Ouvrir les paramètres",
+    "toggleError": "Échec de la mise à jour des paramètres de notification. Veuillez réessayer.",
+    "habitReminder": "Rappel d'habitude",
+    "dailyChest": "Coffre quotidien",
+    "streakRisk": "Risque de série",
+    "achievement": "Accomplissement débloqué"
+  },
+
   "settings": {
-    "language": "Langage"
+    "title": "Paramètres",
+    "preferences": "Préférences",
+    "language": "Langue",
+    "account": "Compte",
+    "profile": "Profil",
+    "notifications": "Notifications",
+    "notificationsEnabled": "Rappels activés",
+    "notificationsDisabled": "Activer les rappels d'habitudes",
+    "manageNotifications": "Gérer les notifications d'habitudes",
+    "manageNotificationsSubtitle": "Personnaliser les rappels pour chaque habitude",
+    "subscription": "Abonnement",
+    "premium": "Fonctionnalités Premium",
+    "premiumActive": "Premium Actif",
+    "freePlan": "Plan Gratuit",
+    "managePremium": "Gérer l'abonnement",
+    "managePremiumSubtitle": "Annuler ou modifier votre plan",
+    "upgradePremium": "Passer à Premium",
+    "upgradePremiumSubtitle": "Débloquez des habitudes et fonctionnalités illimitées",
+    "upgrade": "Passer à Premium",
+    "holidayMode": "Mode Vacances",
+    "breakMode": "Mode Pause",
+    "holidayUnlimited": "Périodes de vacances illimitées disponibles",
+    "holidayLimited": "Max 14 jours par période • {{periods}} période restante | Max 14 jours par période • {{periods}} périodes restantes",
+    "holidayDaysRemaining": "Se termine aujourd'hui | {{count}} jour restant | {{count}} jours restants",
+    "active": "Actif",
+    "streakSavers": "Sauvegardes de série",
+    "support": "Support",
+    "help": "Aide",
+    "version": "Version",
+    "signOut": "Se déconnecter",
+    "darkMode": "Mode sombre",
+    "about": "À propos",
+    "termsOfService": "Conditions d'utilisation",
+    "privacyPolicy": "Politique de confidentialité",
+    "general": "Général",
+    "developerTools": "Outils développeur",
+    "debug": {
+      "title": "Outils de débogage",
+      "systemDiagnostics": "Diagnostics système",
+      "checkHealth": "Vérifier la santé de l'app & système XP",
+      "dailyChallenge": "Utilitaires de défi quotidien"
+    },
+    "reviewTour": "Revoir le tour d'introduction",
+    "reviewTourPrompt": "Souhaitez-vous revoir le tour d'introduction ?",
+    "reviewTourConfirm": "Oui, montrez-moi",
+    "languageChangeInfo": "Les changements prendront effet immédiatement"
+  },
+
+  "paywall": {
+    "title": "Passer à Premium",
+    "subtitle": "Débloquez votre plein potentiel",
+    "features": {
+      "unlimitedHabits": {
+        "title": "Habitudes illimitées",
+        "description": "Suivez autant d'habitudes que vous le souhaitez"
+      },
+      "unlimitedHoliday": {
+        "title": "Mode Vacances illimité",
+        "description": "Mettez vos habitudes en pause sans perdre votre progression"
+      },
+      "monthlyStreakSavers": {
+        "title": "3 Sauvegardes/Mois",
+        "description": "Restaurez automatiquement les jours manqués"
+      },
+      "yearlyStreakSavers": {
+        "title": "50 Sauvegardes",
+        "description": "Ajoutées instantanément à votre inventaire"
+      }
+    },
+    "plans": {
+      "monthly": "Mensuel",
+      "yearly": "Annuel",
+      "mostPopular": "Le plus populaire",
+      "savePercent": "Économisez {{percent}}%"
+    },
+    "cta": "Commencer Premium",
+    "restore": "Restaurer les achats",
+    "terms": "Annulez à tout moment • Paiement sécurisé",
+    "loading": "Chargement...",
+    "error": "Échec du chargement des options d'abonnement"
+  },
+
+  "holidayMode": {
+    "title": "Mode Vacances",
+    "subtitle": "Mettez vos habitudes en pause sans perdre votre progression",
+    "active": "Vacances actives",
+    "period": "Période",
+    "frozenItems": "Éléments gelés",
+    "daysRemaining": "Jour restant | Jours restants",
+    "returnOn": "Retour le {{date}}",
+    "comeBackStronger": "Revenez plus fort",
+    "motivationalMessage": "Vos séries sont en sécurité. Reposez-vous, rechargez-vous et revenez prêt à continuer votre parcours.",
+    "viewDetails": "Voir les détails",
+    "endEarly": "Terminer plus tôt",
+    "enjoyBreak": "Profitez de votre pause bien méritée",
+    "create": {
+      "title": "Créer une période de vacances",
+      "selectDates": "Sélectionner les dates",
+      "startDate": "Date de début",
+      "endDate": "Date de fin",
+      "duration": "Durée : {{days}} jours",
+      "scope": "Quoi mettre en pause",
+      "scopeOptions": {
+        "all": "Tout",
+        "habits": "Habitudes",
+        "tasks": "Tâches"
+      },
+      "selectHabits": "Sélectionner les habitudes",
+      "selectTasks": "Sélectionner les tâches",
+      "infoAll": "Toutes les habitudes en pause. Séries préservées.",
+      "infoHabits": "Habitudes sélectionnées en pause. Les autres continuent normalement.",
+      "infoTasks": "Tâches sélectionnées en pause. Les autres continuent normalement.",
+      "activate": "Activer le mode vacances",
+      "activating": "Activation..."
+    },
+    "stats": {
+      "premiumAccess": "Accès Premium",
+      "unlimited": "ILLIMITÉ",
+      "createUnlimited": "Créez des périodes de vacances illimitées sans restriction de durée",
+      "periods": "Périodes",
+      "daysUsed": "Jours utilisés",
+      "daysRemaining": "Jours restants",
+      "upgradeTitle": "Besoin de plus de jours ?",
+      "upgradeMessage": "Gratuit : {{free}} jours/an\nPremium : Illimité",
+      "upgrade": "Passer à Premium"
+    }
+  },
+
+  "streakSaver": {
+    "title": "Sauvegarde de série",
+    "available": "Disponible",
+    "useStreakSaver": "Utiliser une sauvegarde",
+    "restore": "Restaurer {{count}} jour | Restaurer {{count}} jours",
+    "shop": {
+      "title": "Boutique de sauvegardes",
+      "yourInventory": "Votre inventaire",
+      "monthlyRefill": "Recharge mensuelle",
+      "refillDate": "Prochaine recharge : {{date}}",
+      "premiumOnly": "Les membres Premium reçoivent 3 sauvegardes chaque mois",
+      "notPremium": "Passez à Premium pour obtenir des sauvegardes mensuelles",
+      "upgradeToPremium": "Passer à Premium"
+    }
+  },
+
+  "diagnostic": {
+    "title": "Diagnostics système",
+    "subtitle": "Vérification complète de la santé",
+    "runDiagnostics": "Lancer les diagnostics",
+    "running": "Diagnostics en cours...",
+    "testResult": "Résultat du test",
+    "success": "Succès",
+    "failed": "Échec",
+    "details": "Détails",
+    "userInfo": "Infos utilisateur",
+    "notLoggedIn": "⚠️ Non connecté",
+    "pleaseLogin": "Veuillez vous connecter pour lancer les diagnostics"
+  },
+
+  "debug": {
+    "title": "Outils de débogage",
+    "warning": "⚠️ Mode Debug Actif",
+    "warningMessage": "Définir IS_DEBUG_MODE sur false avant la production.",
+    "systemDiagnostics": "🏥 Lancer les diagnostics système",
+    "diagnosticsDescription": "Vérification complète du système XP & base de données",
+    "onboarding": "Intégration",
+    "resetOnboarding": "🔄 Réinitialiser le flag d'intégration",
+    "dailyChallenge": "Outils de défi quotidien",
+    "currentUser": "Utilisateur actuel"
+  },
+
+  "errors": {
+    "generic": "Une erreur s'est produite",
+    "networkError": "Erreur réseau. Veuillez vérifier votre connexion.",
+    "authError": "Erreur d'authentification",
+    "permissionDenied": "Permission refusée",
+    "notFound": "Non trouvé",
+    "serverError": "Erreur serveur. Veuillez réessayer plus tard.",
+    "validationError": "Erreur de validation"
+  },
+
+  "success": {
+    "habitCreated": "Habitude créée avec succès",
+    "habitUpdated": "Habitude mise à jour avec succès",
+    "habitDeleted": "Habitude supprimée avec succès",
+    "progressSaved": "Progression enregistrée",
+    "settingsUpdated": "Paramètres mis à jour"
+  },
+  "habitHelpers": {
+    "quotes": {
+      "start": {
+        "text": "Nous sommes ce que nous faisons de manière répétée. L'excellence n'est donc pas un acte, mais une habitude.",
+        "author": "Aristote"
+      },
+      "good": {
+        "text": "Le secret pour avancer est de commencer.",
+        "author": "Mark Twain"
+      },
+      "bad": {
+        "text": "Les chaînes de l'habitude sont trop faibles pour être senties jusqu'à ce qu'elles soient trop fortes pour être brisées.",
+        "author": "Samuel Johnson"
+      },
+      "category": {
+        "text": "Le succès est la somme de petits efforts répétés jour après jour.",
+        "author": "Robert Collier"
+      },
+      "tasks": {
+        "text": "Vous n'avez pas besoin d'être excellent pour commencer, mais vous devez commencer pour devenir excellent.",
+        "author": "Zig Ziglar"
+      },
+      "goal": {
+        "text": "Un objectif sans plan n'est qu'un souhait.",
+        "author": "Antoine de Saint-Exupéry"
+      },
+      "frequency": {
+        "text": "La répétition est la mère de l'apprentissage, le père de l'action.",
+        "author": "Zig Ziglar"
+      },
+      "notification": {
+        "text": "Une once d'action vaut une tonne de théorie.",
+        "author": "Ralph Waldo Emerson"
+      }
+    },
+    "tips": {
+      "habitType": [
+        {
+          "title": "Bien Commencer",
+          "content": "Les recherches montrent que créer des habitudes positives est 2,5 fois plus efficace que d'en éliminer de mauvaises. Commencez par une habitude et maîtrisez-la."
+        },
+        {
+          "title": "La Science",
+          "content": "Votre cerveau forme de nouveaux chemins neuronaux à chaque répétition. Créer de bonnes habitudes forge des chemins positifs plus rapidement que d'en briser de vieux."
+        }
+      ],
+      "category": [
+        {
+          "title": "La Concentration Compte",
+          "content": "Les études montrent que les personnes qui se concentrent sur une catégorie à la fois ont 67% plus de chances de réussir à créer des habitudes durables."
+        },
+        {
+          "title": "L'Effet Cumulé",
+          "content": "Les petites améliorations spécifiques à une catégorie se cumulent avec le temps. Une amélioration quotidienne de 1% mène à des résultats 37 fois meilleurs en un an."
+        }
+      ],
+      "tasks": [
+        {
+          "title": "Restez Simple",
+          "content": "Les habitudes avec 1-3 actions spécifiques ont un taux de réussite 80% plus élevé que les objectifs vagues. La clarté crée l'engagement."
+        },
+        {
+          "title": "Empilez Vos Habitudes",
+          "content": "Liez de nouvelles habitudes à des routines existantes. Cette technique d'empilement d'habitudes augmente l'adhésion de 58%."
+        }
+      ],
+      "goal": [
+        {
+          "title": "La Vérité des 66 Jours",
+          "content": "Une recherche de l'University College London a révélé qu'il faut en moyenne 66 jours pour former une habitude. Donnez-vous du temps."
+        },
+        {
+          "title": "Échéanciers Réalistes",
+          "content": "Les objectifs à court terme (21-30 jours) fonctionnent pour les habitudes simples. Les changements de comportement complexes nécessitent 60-90 jours pour devenir automatiques."
+        }
+      ],
+      "frequency": [
+        {
+          "title": "Victoires Quotidiennes",
+          "content": "Les habitudes quotidiennes ont 2,5 fois plus de chances de perdurer que les hebdomadaires. La constance bat l'intensité à chaque fois."
+        },
+        {
+          "title": "La Récupération Compte",
+          "content": "Pour les habitudes physiques, des jours de repos stratégiques préviennent l'épuisement. Écoutez votre corps tout en maintenant la constance."
+        }
+      ],
+      "notification": [
+        {
+          "title": "Signaux Environnementaux",
+          "content": "Les notifications agissent comme des déclencheurs environnementaux. Les études montrent qu'elles augmentent les taux de complétion des habitudes de 40%."
+        },
+        {
+          "title": "Timing Optimal",
+          "content": "Les rappels matinaux ont des taux de complétion de 65% contre 42% le soir. Choisissez des moments où votre volonté est la plus forte."
+        }
+      ]
+    },
+    "habitTypes": {
+      "good": {
+        "title": "Créer une Bonne Habitude",
+        "subtitle": "Commencez quelque chose de positif et transformateur",
+        "description": "Créez de nouveaux comportements positifs qui correspondent à votre meilleur moi"
+      },
+      "bad": {
+        "title": "Arrêter une Mauvaise Habitude",
+        "subtitle": "Libérez-vous de ce qui vous retient",
+        "description": "Remplacez les schémas indésirables par des alternatives plus saines"
+      }
+    },
+    "categories": {
+      "good": {
+        "fitness": {
+          "label": "Fitness & Exercice",
+          "description": "Développer force et endurance",
+          "habitName": "Parcours Fitness"
+        },
+        "health": {
+          "label": "Santé & Bien-être",
+          "description": "Améliorer le bien-être global",
+          "habitName": "Santé & Bien-être"
+        },
+        "nutrition": {
+          "label": "Nutrition",
+          "description": "Habitudes alimentaires saines",
+          "habitName": "Alimentation Saine"
+        },
+        "learning": {
+          "label": "Apprentissage & Croissance",
+          "description": "Élargir vos connaissances",
+          "habitName": "Apprentissage Quotidien"
+        },
+        "productivity": {
+          "label": "Productivité",
+          "description": "Maximiser votre efficacité",
+          "habitName": "Boost de Productivité"
+        },
+        "mindfulness": {
+          "label": "Pleine Conscience",
+          "description": "Clarté mentale et concentration",
+          "habitName": "Vie Consciente"
+        },
+        "sleep": {
+          "label": "Qualité du Sommeil",
+          "description": "Meilleur repos et récupération",
+          "habitName": "Meilleur Sommeil"
+        },
+        "hydration": {
+          "label": "Hydratation",
+          "description": "Rester bien hydraté",
+          "habitName": "Rester Hydraté"
+        }
+      },
+      "bad": {
+        "smoking": {
+          "label": "Tabagisme",
+          "description": "Arrêter les produits du tabac",
+          "habitName": "Arrêter de Fumer"
+        },
+        "junk-food": {
+          "label": "Malbouffe",
+          "description": "Réduire la consommation de malbouffe",
+          "habitName": "Arrêter la Malbouffe"
+        },
+        "shopping": {
+          "label": "Achats Compulsifs",
+          "description": "Contrôler les habitudes de dépenses",
+          "habitName": "Contrôler les Achats"
+        },
+        "screen-time": {
+          "label": "Temps d'Écran Excessif",
+          "description": "Réduire l'utilisation des appareils",
+          "habitName": "Réduire le Temps d'Écran"
+        },
+        "procrastination": {
+          "label": "Procrastination",
+          "description": "Arrêter de reporter les tâches",
+          "habitName": "Arrêter de Procrastiner"
+        },
+        "negative-thinking": {
+          "label": "Pensées Négatives",
+          "description": "Cultiver la positivité",
+          "habitName": "Arrêter les Pensées Négatives"
+        },
+        "alcohol": {
+          "label": "Alcool",
+          "description": "Réduire la consommation d'alcool",
+          "habitName": "Arrêter l'Alcool"
+        },
+        "oversleeping": {
+          "label": "Grasses Matinées",
+          "description": "Se lever plus tôt",
+          "habitName": "Arrêter de Trop Dormir"
+        }
+      }
+    },
+    "tasks": {
+      "fitness": {
+        "good": {
+          "morning-run": {
+            "name": "Course Matinale",
+            "description": "Faire un jogging ou une course",
+            "duration": "30 min"
+          },
+          "gym-workout": {
+            "name": "Séance de Gym",
+            "description": "Compléter une séance de gym",
+            "duration": "45 min"
+          },
+          "yoga-session": {
+            "name": "Pratique du Yoga",
+            "description": "Compléter une routine de yoga",
+            "duration": "20 min"
+          },
+          "push-ups": {
+            "name": "50 Pompes",
+            "description": "Faire 50 pompes dans la journée",
+            "duration": "10 min"
+          },
+          "walk-10k": {
+            "name": "10 000 Pas",
+            "description": "Marcher 10 000 pas",
+            "duration": "Toute la journée"
+          },
+          "stretching": {
+            "name": "Étirements",
+            "description": "Étirements matin ou soir",
+            "duration": "15 min"
+          }
+        },
+        "bad": {
+          "no-elevator": {
+            "name": "Éviter l'Ascenseur",
+            "description": "Prendre les escaliers",
+            "duration": "Toute la journée"
+          },
+          "no-couch": {
+            "name": "Pas de Canapé",
+            "description": "Limiter le temps assis",
+            "duration": "Toute la journée"
+          },
+          "active-breaks": {
+            "name": "Pauses Actives",
+            "description": "Bouger toutes les heures",
+            "duration": "5 min/heure"
+          }
+        }
+      },
+      "health": {
+        "good": {
+          "meditation": {
+            "name": "Méditation",
+            "description": "Pratique de méditation consciente",
+            "duration": "15 min"
+          },
+          "deep-breathing": {
+            "name": "Respiration Profonde",
+            "description": "5 minutes d'exercices de respiration",
+            "duration": "5 min"
+          },
+          "cold-shower": {
+            "name": "Douche Froide",
+            "description": "Prendre une douche froide",
+            "duration": "5 min"
+          },
+          "vitamins": {
+            "name": "Prendre des Vitamines",
+            "description": "Suppléments vitaminiques quotidiens",
+            "duration": "1 min"
+          },
+          "skincare": {
+            "name": "Routine Beauté",
+            "description": "Soins de la peau matin/soir",
+            "duration": "10 min"
+          },
+          "health-checkup": {
+            "name": "Contrôle Santé",
+            "description": "Surveiller les signes vitaux",
+            "duration": "5 min"
+          }
+        },
+        "bad": {
+          "no-stress": {
+            "name": "Gestion du Stress",
+            "description": "Éviter les situations stressantes",
+            "duration": "Toute la journée"
+          },
+          "no-late-nights": {
+            "name": "Pas de Veillées Tardives",
+            "description": "Dormir avant minuit",
+            "duration": "Soirée"
+          },
+          "no-overwork": {
+            "name": "Éviter le Surmenage",
+            "description": "Prendre des pauses régulières",
+            "duration": "Toute la journée"
+          }
+        }
+      },
+      "nutrition": {
+        "good": {
+          "healthy-breakfast": {
+            "name": "Petit-Déjeuner Sain",
+            "description": "Repas matinal nutritif",
+            "duration": "20 min"
+          },
+          "fruit-serving": {
+            "name": "Manger des Fruits",
+            "description": "2-3 portions de fruits",
+            "duration": "5 min"
+          },
+          "vegetables": {
+            "name": "Manger des Légumes",
+            "description": "5 portions de légumes",
+            "duration": "Repas"
+          },
+          "meal-prep": {
+            "name": "Préparation de Repas",
+            "description": "Préparer des repas sains",
+            "duration": "30 min"
+          },
+          "protein-intake": {
+            "name": "Objectifs Protéines",
+            "description": "Atteindre les objectifs de protéines",
+            "duration": "Repas"
+          },
+          "whole-grains": {
+            "name": "Céréales Complètes",
+            "description": "Choisir des céréales complètes",
+            "duration": "Repas"
+          }
+        },
+        "bad": {
+          "no-fast-food": {
+            "name": "Pas de Fast-Food",
+            "description": "Éviter le fast-food",
+            "duration": "Toute la journée"
+          },
+          "no-sugar": {
+            "name": "Limiter le Sucre",
+            "description": "Réduire l'apport en sucre",
+            "duration": "Toute la journée"
+          },
+          "no-late-snacks": {
+            "name": "Pas de Grignotage Tardif",
+            "description": "Ne pas manger après 20h",
+            "duration": "Soirée"
+          }
+        }
+      },
+      "learning": {
+        "good": {
+          "read-book": {
+            "name": "Lire un Livre",
+            "description": "Lire pour apprendre",
+            "duration": "30 min"
+          },
+          "online-course": {
+            "name": "Cours en Ligne",
+            "description": "Compléter un module de cours",
+            "duration": "45 min"
+          },
+          "practice-skill": {
+            "name": "Pratiquer une Compétence",
+            "description": "Développement de compétences",
+            "duration": "30 min"
+          },
+          "language-study": {
+            "name": "Étude de Langue",
+            "description": "Apprendre une nouvelle langue",
+            "duration": "20 min"
+          },
+          "write-journal": {
+            "name": "Écriture de Journal",
+            "description": "Réfléchir et écrire",
+            "duration": "15 min"
+          },
+          "watch-tutorial": {
+            "name": "Regarder un Tutoriel",
+            "description": "Vidéos éducatives",
+            "duration": "20 min"
+          }
+        },
+        "bad": {
+          "no-distractions": {
+            "name": "Éviter les Distractions",
+            "description": "Se concentrer sur l'apprentissage",
+            "duration": "Temps d'étude"
+          },
+          "no-multitask": {
+            "name": "Pas de Multitâche",
+            "description": "Une tâche à la fois",
+            "duration": "Temps d'étude"
+          },
+          "no-cramming": {
+            "name": "Pas de Bourrage",
+            "description": "Horaire d'étude régulier",
+            "duration": "Quotidien"
+          }
+        }
+      },
+      "productivity": {
+        "good": {
+          "morning-routine": {
+            "name": "Routine Matinale",
+            "description": "Bien commencer la journée",
+            "duration": "30 min"
+          },
+          "time-blocking": {
+            "name": "Blocs de Temps",
+            "description": "Planifier les tâches",
+            "duration": "15 min"
+          },
+          "pomodoro": {
+            "name": "Session Pomodoro",
+            "description": "25 min de travail concentré",
+            "duration": "25 min"
+          },
+          "daily-review": {
+            "name": "Revue Quotidienne",
+            "description": "Réviser les progrès",
+            "duration": "10 min"
+          },
+          "priority-tasks": {
+            "name": "Top 3 Tâches",
+            "description": "Compléter les priorités",
+            "duration": "Variable"
+          },
+          "inbox-zero": {
+            "name": "Inbox Zéro",
+            "description": "Vider tous les emails",
+            "duration": "20 min"
+          }
+        },
+        "bad": {
+          "no-social-media": {
+            "name": "Pas de Réseaux Sociaux",
+            "description": "Pendant les heures de travail",
+            "duration": "Heures de travail"
+          },
+          "no-procrastination": {
+            "name": "Commencer les Tâches",
+            "description": "Ne pas reporter les tâches",
+            "duration": "Toute la journée"
+          },
+          "no-perfectionism": {
+            "name": "Fait > Parfait",
+            "description": "Livrer régulièrement",
+            "duration": "Toute la journée"
+          }
+        }
+      },
+      "mindfulness": {
+        "good": {
+          "meditation": {
+            "name": "Méditation",
+            "description": "Méditation consciente",
+            "duration": "15 min"
+          },
+          "gratitude": {
+            "name": "Pratique de Gratitude",
+            "description": "Lister 3 choses",
+            "duration": "5 min"
+          },
+          "breathing": {
+            "name": "Exercice de Respiration",
+            "description": "Respiration profonde",
+            "duration": "5 min"
+          },
+          "nature-walk": {
+            "name": "Marche dans la Nature",
+            "description": "Marche consciente",
+            "duration": "20 min"
+          },
+          "body-scan": {
+            "name": "Scan Corporel",
+            "description": "Conscience du corps",
+            "duration": "10 min"
+          },
+          "visualization": {
+            "name": "Visualisation",
+            "description": "Imagerie positive",
+            "duration": "10 min"
+          }
+        },
+        "bad": {
+          "no-rushing": {
+            "name": "Ralentir",
+            "description": "Ne pas se précipiter",
+            "duration": "Toute la journée"
+          },
+          "no-negativity": {
+            "name": "Pensée Positive",
+            "description": "Éviter les pensées négatives",
+            "duration": "Toute la journée"
+          },
+          "no-overthinking": {
+            "name": "Arrêter de Sur-Réfléchir",
+            "description": "Être présent",
+            "duration": "Toute la journée"
+          }
+        }
+      },
+      "sleep": {
+        "good": {
+          "bedtime-routine": {
+            "name": "Routine du Coucher",
+            "description": "Rituel de détente",
+            "duration": "30 min"
+          },
+          "sleep-8hrs": {
+            "name": "8 Heures de Sommeil",
+            "description": "Repos complet",
+            "duration": "8 heures"
+          },
+          "wake-same-time": {
+            "name": "Heure de Réveil Constante",
+            "description": "Se réveiller à la même heure",
+            "duration": "Matin"
+          },
+          "bedroom-prep": {
+            "name": "Préparer la Chambre",
+            "description": "Chambre fraîche, sombre, silencieuse",
+            "duration": "10 min"
+          }
+        },
+        "bad": {
+          "no-caffeine-pm": {
+            "name": "Pas de Caféine Tardive",
+            "description": "Éviter la caféine après 14h",
+            "duration": "Après-midi"
+          },
+          "no-naps": {
+            "name": "Pas de Longues Siestes",
+            "description": "Éviter le sommeil diurne",
+            "duration": "Journée"
+          },
+          "no-snooze": {
+            "name": "Pas de Bouton Snooze",
+            "description": "Se lever immédiatement",
+            "duration": "Matin"
+          }
+        }
+      },
+      "hydration": {
+        "good": {
+          "water-morning": {
+            "name": "Eau du Matin",
+            "description": "Verre d'eau au réveil",
+            "duration": "1 min"
+          },
+          "water-8-glasses": {
+            "name": "8 Verres d'Eau",
+            "description": "Boire 8 verres par jour",
+            "duration": "Toute la journée"
+          },
+          "herbal-tea": {
+            "name": "Tisane",
+            "description": "Boire de la tisane",
+            "duration": "10 min"
+          },
+          "water-bottle": {
+            "name": "Bouteille d'Eau",
+            "description": "Garder l'eau accessible",
+            "duration": "Toute la journée"
+          },
+          "infused-water": {
+            "name": "Eau Infusée",
+            "description": "Ajouter des fruits à l'eau",
+            "duration": "5 min"
+          }
+        },
+        "bad": {
+          "no-soda": {
+            "name": "Pas de Soda",
+            "description": "Éviter les boissons sucrées",
+            "duration": "Toute la journée"
+          },
+          "no-alcohol": {
+            "name": "Limiter l'Alcool",
+            "description": "Réduire la consommation d'alcool",
+            "duration": "Toute la journée"
+          },
+          "no-energy-drinks": {
+            "name": "Pas de Boissons Énergisantes",
+            "description": "Éviter les boissons énergisantes",
+            "duration": "Toute la journée"
+          }
+        }
+      },
+      "smoking": {
+        "good": {
+          "breathing-exercises": {
+            "name": "Exercices de Respiration",
+            "description": "Respiration profonde lors des envies",
+            "duration": "5 min"
+          },
+          "chew-gum": {
+            "name": "Mâcher du Chewing-Gum",
+            "description": "Chewing-gum sans sucre en alternative",
+            "duration": "Au besoin"
+          },
+          "stay-hydrated": {
+            "name": "Boire de l'Eau",
+            "description": "Éliminer les toxines",
+            "duration": "Toute la journée"
+          }
+        },
+        "bad": {
+          "no-smoking": {
+            "name": "Pas de Cigarettes",
+            "description": "Suivre les jours sans fumer",
+            "duration": "Toute la journée"
+          },
+          "avoid-triggers": {
+            "name": "Éviter les Déclencheurs",
+            "description": "Éviter les zones fumeurs",
+            "duration": "Toute la journée"
+          },
+          "no-smoke-breaks": {
+            "name": "Pas de Pauses Cigarette",
+            "description": "Faire des promenades à la place",
+            "duration": "Pauses"
+          }
+        }
+      },
+      "junk-food": {
+        "good": {
+          "healthy-snacks": {
+            "name": "Collations Saines",
+            "description": "Préparer des alternatives nutritives",
+            "duration": "10 min"
+          },
+          "meal-planning": {
+            "name": "Planifier les Repas",
+            "description": "Préparer des options saines",
+            "duration": "30 min"
+          },
+          "grocery-smart": {
+            "name": "Courses Intelligentes",
+            "description": "Acheter seulement des aliments complets",
+            "duration": "Hebdomadaire"
+          }
+        },
+        "bad": {
+          "no-junk-food": {
+            "name": "Pas de Malbouffe",
+            "description": "Éviter les aliments transformés",
+            "duration": "Toute la journée"
+          },
+          "no-drive-thru": {
+            "name": "Pas de Drive",
+            "description": "Éviter les fast-foods",
+            "duration": "Toute la journée"
+          },
+          "no-vending-machine": {
+            "name": "Pas de Distributeurs",
+            "description": "Éviter les collations malsaines",
+            "duration": "Toute la journée"
+          }
+        }
+      },
+      "shopping": {
+        "good": {
+          "budget-tracking": {
+            "name": "Suivre le Budget",
+            "description": "Surveiller les dépenses quotidiennes",
+            "duration": "10 min"
+          },
+          "shopping-list": {
+            "name": "Utiliser une Liste",
+            "description": "Acheter seulement ce qui est nécessaire",
+            "duration": "Avant les courses"
+          },
+          "savings-goal": {
+            "name": "Économiser",
+            "description": "Mettre de l'argent de côté",
+            "duration": "Quotidien"
+          }
+        },
+        "bad": {
+          "no-impulse-buy": {
+            "name": "Pas d'Achats Impulsifs",
+            "description": "Attendre 24h avant d'acheter",
+            "duration": "Shopping"
+          },
+          "unsubscribe-emails": {
+            "name": "Se Désabonner des Promos",
+            "description": "Retirer les tentations d'achats",
+            "duration": "Une fois"
+          },
+          "no-browsing": {
+            "name": "Pas de Lèche-Vitrine",
+            "description": "Éviter les boutiques en ligne",
+            "duration": "Toute la journée"
+          }
+        }
+      },
+      "screen-time": {
+        "good": {
+          "read-physical-book": {
+            "name": "Lire des Livres Papier",
+            "description": "Remplacer le temps d'écran par la lecture",
+            "duration": "30 min"
+          },
+          "outdoor-activity": {
+            "name": "Sortir Dehors",
+            "description": "Passer du temps dans la nature",
+            "duration": "30 min"
+          },
+          "face-to-face": {
+            "name": "Temps en Personne",
+            "description": "Rencontrer les gens hors ligne",
+            "duration": "Quotidien"
+          }
+        },
+        "bad": {
+          "no-phone-bed": {
+            "name": "Pas de Téléphone au Lit",
+            "description": "Garder les appareils hors de la chambre",
+            "duration": "Coucher"
+          },
+          "limit-social-media": {
+            "name": "Limiter les Réseaux Sociaux",
+            "description": "Définir des limites de temps",
+            "duration": "30 min max"
+          },
+          "no-binge-watching": {
+            "name": "Pas de Visionnage Excessif",
+            "description": "Limiter le temps de streaming",
+            "duration": "Toute la journée"
+          }
+        }
+      },
+      "procrastination": {
+        "good": {
+          "start-immediately": {
+            "name": "Commencer Immédiatement",
+            "description": "Règle des 2 minutes pour les tâches",
+            "duration": "2 min"
+          },
+          "break-tasks-down": {
+            "name": "Décomposer les Tâches",
+            "description": "Rendre les tâches gérables",
+            "duration": "10 min"
+          },
+          "time-block": {
+            "name": "Blocs de Temps",
+            "description": "Planifier des heures de travail spécifiques",
+            "duration": "Quotidien"
+          }
+        },
+        "bad": {
+          "no-delay": {
+            "name": "Ne Pas Reporter",
+            "description": "Faire maintenant, pas plus tard",
+            "duration": "Toute la journée"
+          },
+          "no-excuses": {
+            "name": "Pas d'Excuses",
+            "description": "Agir quoi qu'il arrive",
+            "duration": "Toute la journée"
+          },
+          "no-distractions": {
+            "name": "Éliminer les Distractions",
+            "description": "Se concentrer sur une tâche",
+            "duration": "Temps de travail"
+          }
+        }
+      },
+      "negative-thinking": {
+        "good": {
+          "positive-affirmations": {
+            "name": "Affirmations Positives",
+            "description": "Pratiquer les affirmations quotidiennes",
+            "duration": "5 min"
+          },
+          "gratitude-journal": {
+            "name": "Journal de Gratitude",
+            "description": "Écrire 3 choses pour lesquelles être reconnaissant",
+            "duration": "10 min"
+          },
+          "reframe-thoughts": {
+            "name": "Recadrer les Pensées",
+            "description": "Trouver des perspectives positives",
+            "duration": "Au besoin"
+          }
+        },
+        "bad": {
+          "no-complaining": {
+            "name": "Ne Pas Se Plaindre",
+            "description": "Éviter les discours négatifs",
+            "duration": "Toute la journée"
+          },
+          "no-self-criticism": {
+            "name": "Pas d'Auto-Critique",
+            "description": "Être bienveillant envers soi-même",
+            "duration": "Toute la journée"
+          },
+          "no-catastrophizing": {
+            "name": "Pas de Catastrophisme",
+            "description": "Arrêter de penser au pire scénario",
+            "duration": "Toute la journée"
+          }
+        }
+      },
+      "alcohol": {
+        "good": {
+          "mocktails": {
+            "name": "Boire des Mocktails",
+            "description": "Profiter de boissons sans alcool",
+            "duration": "Événements sociaux"
+          },
+          "exercise-instead": {
+            "name": "Faire de l'Exercice",
+            "description": "Activité physique en alternative",
+            "duration": "30 min"
+          },
+          "support-group": {
+            "name": "Groupe de Soutien",
+            "description": "Se connecter avec d'autres",
+            "duration": "Hebdomadaire"
+          }
+        },
+        "bad": {
+          "no-alcohol": {
+            "name": "Pas d'Alcool",
+            "description": "Suivre les jours sans alcool",
+            "duration": "Toute la journée"
+          },
+          "avoid-bars": {
+            "name": "Éviter les Bars",
+            "description": "Éviter les lieux de consommation",
+            "duration": "Toute la journée"
+          },
+          "no-home-stocking": {
+            "name": "Pas d'Alcool à la Maison",
+            "description": "Retirer de la maison",
+            "duration": "Permanent"
+          }
+        }
+      },
+      "oversleeping": {
+        "good": {
+          "consistent-bedtime": {
+            "name": "Heure de Coucher Constante",
+            "description": "Dormir à la même heure",
+            "duration": "Soirée"
+          },
+          "morning-routine": {
+            "name": "Routine Matinale",
+            "description": "Activités matinales motivantes",
+            "duration": "30 min"
+          },
+          "sunlight-exposure": {
+            "name": "S'Exposer au Soleil",
+            "description": "Exposition à la lumière matinale",
+            "duration": "15 min"
+          }
+        },
+        "bad": {
+          "no-snooze": {
+            "name": "Pas de Bouton Snooze",
+            "description": "Se lever à la première alarme",
+            "duration": "Matin"
+          },
+          "no-late-sleep": {
+            "name": "Pas de Coucher Tardif",
+            "description": "Dormir avant minuit",
+            "duration": "Soirée"
+          },
+          "alarm-far-away": {
+            "name": "Alarme à Distance",
+            "description": "Se forcer à se lever",
+            "duration": "Coucher"
+          }
+        }
+      }
+    }
+  },
+  "wizard": {
+    "navigation": {
+      "continue": "Continuer",
+      "createHabit": "Créer l'Habitude",
+      "creating": "Création..."
+    },
+    "alerts": {
+      "selectType": {
+        "title": "Veuillez sélectionner",
+        "message": "Choisissez si vous voulez créer ou arrêter une habitude"
+      },
+      "selectCategory": {
+        "title": "Veuillez sélectionner",
+        "message": "Choisissez une catégorie pour votre habitude"
+      },
+      "habitNameRequired": {
+        "title": "Nom d'habitude requis",
+        "message": "Veuillez entrer un nom pour votre habitude"
+      },
+      "iconRequired": {
+        "title": "Icône requise",
+        "message": "Veuillez sélectionner une icône pour votre habitude"
+      },
+      "tasksRequired": {
+        "title": "Tâches requises",
+        "message": "Veuillez créer au moins une tâche pour votre habitude"
+      },
+      "selectTasks": {
+        "title": "Veuillez sélectionner",
+        "message": "Choisissez au moins une tâche à suivre"
+      },
+      "notificationsEnabled": {
+        "title": "Notifications Activées! 🔔",
+        "message": "Vous recevrez des rappels pour rester sur la bonne voie.",
+        "button": "Parfait!"
+      },
+      "notificationsDisabled": {
+        "title": "Notifications Désactivées",
+        "message": "Vous pouvez les activer plus tard dans les Paramètres.",
+        "button": "OK"
+      },
+      "error": {
+        "title": "Erreur",
+        "message": "Échec de la création de l'habitude. Veuillez réessayer."
+      }
+    },
+    "habitTypeSelector": {
+      "title": "Choisissez Votre Parcours",
+      "subtitle": "Construisez-vous quelque chose de nouveau ou vous souhaitez perdre une mauvaise habitude ?",
+      "buildHabit": "Créer une Habitude",
+      "buildHabitDescription": "Créer des routines positives",
+      "breakHabit": "Arrêter une Habitude",
+      "breakHabitDescription": "Lâcher les anciens schémas",
+      "quote": "\"Chaque action que vous entreprenez est un vote pour\nla personne que vous souhaitez devenir\""
+    },
+    "habitCategorySelector": {
+      "title": "Choisissez Votre Focus",
+      "subtitleGood": "Sélectionnez le domaine que vous souhaitez améliorer",
+      "subtitleBad": "Que souhaitez-vous surmonter ?",
+      "createCustom": "Créer une Habitude Personnalisée",
+      "createCustomDescriptionGood": "Construire quelque chose d'unique",
+      "createCustomDescriptionBad": "Définir votre propre objectif",
+      "tip": "Choisissez la catégorie qui résonne le plus\navec vos objectifs actuels"
+    },
+    "customHabitCreator": {
+      "title": "Nommez Votre Habitude",
+      "subtitle": "Rendez-la personnelle et significative",
+      "habitName": "Nom de l'Habitude",
+      "habitNamePlaceholder": "ex: Entraînement Matinal",
+      "characters": "caractères",
+      "chooseIcon": "Choisir une Icône",
+      "preview": "Aperçu",
+      "customHabit": "Habitude Personnalisée",
+      "tipGood": "Choisissez un nom qui vous motive quotidiennement",
+      "tipBad": "Formulez votre habitude positivement"
+    },
+    "customTaskCreator": {
+      "title": "Définissez Vos Tâches",
+      "subtitle": "Créer des actions spécifiques pour\n\"{{habitName}}\"",
+      "tasksDefined": "{{count}} sur {{max}} tâches définies",
+      "taskPlaceholder": "Tâche {{number}}",
+      "addAnotherTask": "Ajouter une Autre Tâche",
+      "tasksPreview": "Aperçu des Tâches",
+      "tip": "Divisez vos objectifs en petites étapes\nLes progrès s'accumulent avec le temps"
+    },
+    "taskSelector": {
+      "title": "Choisissez Vos Tâches",
+      "subtitle": "Sélectionnez jusqu'à {{max}} actions quotidiennes à suivre",
+      "selected": "{{count}} sur {{max}} sélectionnée | {{count}} sur {{max}} sélectionnées",
+      "tip": "Commencez petit et construisez votre élan\nVous pouvez toujours ajouter plus de tâches plus tard"
+    },
+    "goalSetting": {
+      "title": "Définissez Votre Objectif",
+      "subtitle": "Combien de temps souhaitez-vous suivre cette habitude ?",
+      "default61Days": "Défi de 61 Jours",
+      "default61DaysDescription": "Formation d'habitudes basée sur la science",
+      "recommended": "Recommandé",
+      "orChooseCustom": "ou choisir personnalisé",
+      "preset21Days": "21 jours",
+      "preset21Subtitle": "Démarrage rapide",
+      "preset30Days": "30 jours",
+      "preset30Subtitle": "Un mois",
+      "preset66Days": "66 jours",
+      "preset66Subtitle": "Formation d'habitude",
+      "preset90Days": "90 jours",
+      "preset90Subtitle": "Trimestre complet",
+      "customDays": "Ou définir des jours personnalisés :",
+      "customDaysPlaceholder": "ex: 100",
+      "tip": "Les recherches montrent que 66 jours est le temps moyen\npour former une nouvelle habitude automatique"
+    },
+    "frequencySelector": {
+      "title": "Définissez Votre Rythme",
+      "subtitle": "À quelle fréquence pratiquerez-vous cette habitude ?",
+      "daily": "Quotidien",
+      "dailySubtitle": "Chaque jour",
+      "dailyDescription": "Construire la cohérence",
+      "weekly": "Hebdomadaire",
+      "weeklySubtitle": "Une fois par semaine",
+      "weeklyDescription": "Parfait pour la planification",
+      "custom": "Personnalisé",
+      "customSubtitle": "Choisir des jours spécifiques",
+      "customDescription": "Horaire flexible",
+      "selectDays": "Sélectionnez les jours :",
+      "monday": "Lun",
+      "tuesday": "Mar",
+      "wednesday": "Mer",
+      "thursday": "Jeu",
+      "friday": "Ven",
+      "saturday": "Sam",
+      "sunday": "Dim",
+      "tip": "Les habitudes quotidiennes sont 2,5 fois plus susceptibles de tenir\nCommencez petit et construisez votre élan"
+    },
+    "notificationSetup": {
+      "title": "Rappels Quotidiens",
+      "subtitle": "Recevez des coups de pouce doux pour rester sur la bonne voie",
+      "enabled": "Notifications Activées",
+      "enabledDescription": "Rappel quotidien actif",
+      "disabled": "Notifications Désactivées",
+      "disabledDescription": "Pas de rappels",
+      "permissionRequired": "Permission Requise",
+      "permissionMessage": "Veuillez activer les notifications dans les paramètres de votre appareil.",
+      "quickSelect": "Sélection rapide :",
+      "morning": "Matin",
+      "morningTime": "7h00",
+      "noon": "Midi",
+      "noonTime": "12h00",
+      "evening": "Soir",
+      "eveningTime": "18h00",
+      "customTime": "Choisir l'Heure Personnalisée",
+      "remindAt": "Vous serez rappelé à",
+      "tipEnabled": "Choisissez une heure qui s'intègre naturellement dans votre routine",
+      "tipDisabled": "Vous pouvez toujours activer les rappels plus tard dans les paramètres"
+    }
   }
 }

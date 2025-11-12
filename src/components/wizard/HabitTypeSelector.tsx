@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { Heart, Ban } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import tw from '../../lib/tailwind';
 import { HabitType } from '../../types';
 
@@ -11,12 +12,14 @@ interface HabitTypeCardProps {
 }
 
 const HabitTypeSelector: React.FC<HabitTypeCardProps> = ({ selected, onSelect }) => {
+  const { t } = useTranslation();
+
   return (
     <View style={tw`flex-1 justify-center px-8`}>
       {/* Header Section */}
       <View style={tw`mb-16`}>
-        <Text style={tw`text-4xl font-bold text-white text-center mb-4`}>Choose Your Path</Text>
-        <Text style={tw`text-lg text-white/80 text-center leading-7 px-2`}>Are you building something new or{'\n'}letting go of something old?</Text>
+        <Text style={tw`text-3xl font-bold text-white text-center mb-4`}>{t('wizard.habitTypeSelector.title')}</Text>
+        <Text style={tw`text-md text-white/80 text-center leading-7 px-2`}>{t('wizard.habitTypeSelector.subtitle')}</Text>
       </View>
 
       {/* Selection Cards */}
@@ -34,8 +37,8 @@ const HabitTypeSelector: React.FC<HabitTypeCardProps> = ({ selected, onSelect })
           </View>
 
           <View style={tw`flex-1`}>
-            <Text style={tw`text-xl font-semibold text-white mb-1`}>Build a Habit</Text>
-            <Text style={tw`text-sm text-white/70 leading-5`}>Create positive routines</Text>
+            <Text style={tw`text-lg font-semibold text-white mb-1`}>{t('wizard.habitTypeSelector.buildHabit')}</Text>
+            <Text style={tw`text-sm text-white/70 leading-5`}>{t('wizard.habitTypeSelector.buildHabitDescription')}</Text>
           </View>
 
           {selected === 'good' && (
@@ -58,8 +61,8 @@ const HabitTypeSelector: React.FC<HabitTypeCardProps> = ({ selected, onSelect })
           </View>
 
           <View style={tw`flex-1`}>
-            <Text style={tw`text-xl font-semibold text-white mb-1`}>Break a Habit</Text>
-            <Text style={tw`text-sm text-white/70 leading-5`}>Let go of old patterns</Text>
+            <Text style={tw`text-lg font-semibold text-white mb-1`}>{t('wizard.habitTypeSelector.breakHabit')}</Text>
+            <Text style={tw`text-sm text-white/70 leading-5`}>{t('wizard.habitTypeSelector.breakHabitDescription')}</Text>
           </View>
 
           {selected === 'bad' && (
@@ -72,7 +75,7 @@ const HabitTypeSelector: React.FC<HabitTypeCardProps> = ({ selected, onSelect })
 
       {/* Subtle Quote */}
       <View style={tw`mt-16`}>
-        <Text style={tw`text-xs text-white/50 text-center font-light italic leading-5`}>"Every action you take is a vote for{'\n'}the person you wish to become"</Text>
+        <Text style={tw`text-xs text-white/50 text-center font-light italic leading-5`}>{t('wizard.habitTypeSelector.quote')}</Text>
       </View>
     </View>
   );

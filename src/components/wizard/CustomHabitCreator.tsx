@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text, ScrollView, Pressable, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 import {
   BicepsFlexed,
   Trophy,
@@ -60,32 +61,36 @@ const customIcons = [
 ];
 
 const CustomHabitCreator: React.FC<CustomHabitCreatorProps> = ({ habitType, habitName, selectedIcon, onNameChange, onIconSelect }) => {
+  const { t } = useTranslation();
+
   return (
     <KeyboardAvoidingView style={tw`flex-1`} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`px-8 py-8`}>
         {/* Header */}
         <View style={tw`mb-8`}>
-          <Text style={tw`text-3xl font-bold text-white text-center mb-3`}>Name Your Habit</Text>
-          <Text style={tw`text-base text-white/80 text-center leading-6 px-2`}>Make it personal and meaningful</Text>
+          <Text style={tw`text-3xl font-bold text-white text-center mb-3`}>{t('wizard.customHabitCreator.title')}</Text>
+          <Text style={tw`text-base text-white/80 text-center leading-6 px-2`}>{t('wizard.customHabitCreator.subtitle')}</Text>
         </View>
 
         {/* Name Input */}
         <View style={tw`mb-8`}>
-          <Text style={tw`text-sm font-medium text-white/90 mb-3`}>Habit Name</Text>
+          <Text style={tw`text-sm font-medium text-white/90 mb-3`}>{t('wizard.customHabitCreator.habitName')}</Text>
           <TextInput
             value={habitName}
             onChangeText={onNameChange}
-            placeholder="e.g., Morning Workout"
+            placeholder={t('wizard.customHabitCreator.habitNamePlaceholder')}
             placeholderTextColor="rgba(255, 255, 255, 0.3)"
             style={tw`bg-white/15 border-2 border-white/20 rounded-2xl px-5 py-4 text-white text-base`}
             maxLength={50}
           />
-          <Text style={tw`text-xs text-white/50 mt-2`}>{habitName.length}/50 characters</Text>
+          <Text style={tw`text-xs text-white/50 mt-2`}>
+            {habitName.length}/50 {t('wizard.customHabitCreator.characters')}
+          </Text>
         </View>
 
         {/* Icon Selector */}
         <View style={tw`mb-8`}>
-          <Text style={tw`text-sm font-medium text-white/90 mb-3`}>Choose an Icon</Text>
+          <Text style={tw`text-sm font-medium text-white/90 mb-3`}>{t('wizard.customHabitCreator.chooseIcon')}</Text>
           <View style={tw`flex-row flex-wrap gap-3`}>
             {customIcons.map((icon, index) => {
               const Icon = icon.component;
@@ -97,7 +102,9 @@ const CustomHabitCreator: React.FC<CustomHabitCreatorProps> = ({ habitType, habi
                     onPress={() => onIconSelect(icon.id)}
                     style={({ pressed }) => [
                       tw`w-16 h-16 rounded-2xl items-center justify-center border-2 ${isSelected ? 'border-white/40' : 'border-white/10'}`,
-                      { backgroundColor: isSelected ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)' },
+                      {
+                        backgroundColor: isSelected ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                      },
                       pressed && tw`opacity-70`,
                     ]}
                   >
@@ -112,7 +119,7 @@ const CustomHabitCreator: React.FC<CustomHabitCreatorProps> = ({ habitType, habi
         {/* Preview */}
         {habitName.length > 0 && selectedIcon && (
           <Animated.View entering={FadeInDown.duration(300)}>
-            <Text style={tw`text-sm font-medium text-white/90 mb-3`}>Preview</Text>
+            <Text style={tw`text-sm font-medium text-white/90 mb-3`}>{t('wizard.customHabitCreator.preview')}</Text>
             <View style={tw`bg-white/15 border-2 border-white/20 rounded-2xl p-5 flex-row items-center`}>
               <View style={tw`w-14 h-14 rounded-xl bg-white/20 items-center justify-center mr-4`}>
                 {(() => {
@@ -124,7 +131,7 @@ const CustomHabitCreator: React.FC<CustomHabitCreatorProps> = ({ habitType, habi
               </View>
               <View style={tw`flex-1`}>
                 <Text style={tw`text-lg font-semibold text-white mb-1`}>{habitName}</Text>
-                <Text style={tw`text-sm text-white/70`}>Custom Habit</Text>
+                <Text style={tw`text-sm text-white/70`}>{t('wizard.customHabitCreator.customHabit')}</Text>
               </View>
             </View>
           </Animated.View>
@@ -132,7 +139,7 @@ const CustomHabitCreator: React.FC<CustomHabitCreatorProps> = ({ habitType, habi
 
         {/* Tip */}
         <View style={tw`mt-10`}>
-          <Text style={tw`text-xs text-white/50 text-center font-light italic leading-5`}>{habitType === 'good' ? 'Choose a name that motivates you daily' : 'Frame your habit positively'}</Text>
+          <Text style={tw`text-xs text-white/50 text-center font-light italic leading-5`}>{habitType === 'good' ? t('wizard.customHabitCreator.tipGood') : t('wizard.customHabitCreator.tipBad')}</Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

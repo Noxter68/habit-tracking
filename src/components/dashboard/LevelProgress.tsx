@@ -3,6 +3,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 
 interface LevelProgressProps {
   currentLevel: number;
@@ -14,6 +15,7 @@ interface LevelProgressProps {
 }
 
 const LevelProgress: React.FC<LevelProgressProps> = ({ currentLevel, currentLevelXP, xpForNextLevel, levelProgress, tierTheme, textColor = 'rgba(255, 255, 255, 0.95)' }) => {
+  const { t } = useTranslation();
   const progressPercent = Math.min(levelProgress, 100);
   const xpRemaining = xpForNextLevel - currentLevelXP;
 
@@ -28,7 +30,6 @@ const LevelProgress: React.FC<LevelProgressProps> = ({ currentLevel, currentLeve
           borderColor: 'rgba(255, 255, 255, 0.2)',
         }}
       >
-        {/* Header */}
         <View
           style={{
             flexDirection: 'row',
@@ -49,7 +50,7 @@ const LevelProgress: React.FC<LevelProgressProps> = ({ currentLevel, currentLeve
                 marginBottom: 2,
               }}
             >
-              Level Progress
+              {t('dashboard.levelProgress.title')}
             </Text>
             <Text
               style={{
@@ -61,7 +62,7 @@ const LevelProgress: React.FC<LevelProgressProps> = ({ currentLevel, currentLeve
                 textShadowRadius: 2,
               }}
             >
-              Level {currentLevel} → {currentLevel + 1}
+              {t('dashboard.levelProgress.nextLevel', { current: currentLevel, next: currentLevel + 1 })}
             </Text>
           </View>
 
@@ -90,7 +91,6 @@ const LevelProgress: React.FC<LevelProgressProps> = ({ currentLevel, currentLeve
           </View>
         </View>
 
-        {/* Progress Bar */}
         <View
           style={{
             height: 10,
@@ -118,7 +118,6 @@ const LevelProgress: React.FC<LevelProgressProps> = ({ currentLevel, currentLeve
           />
         </View>
 
-        {/* XP Stats */}
         <View
           style={{
             flexDirection: 'row',
@@ -134,7 +133,10 @@ const LevelProgress: React.FC<LevelProgressProps> = ({ currentLevel, currentLeve
               opacity: 0.85,
             }}
           >
-            {currentLevelXP.toLocaleString()} / {xpForNextLevel.toLocaleString()} XP
+            {t('dashboard.levelProgress.currentProgress', {
+              current: currentLevelXP.toLocaleString(),
+              required: xpForNextLevel.toLocaleString(),
+            })}
           </Text>
 
           <Text
@@ -145,7 +147,7 @@ const LevelProgress: React.FC<LevelProgressProps> = ({ currentLevel, currentLeve
               opacity: 0.75,
             }}
           >
-            {xpRemaining.toLocaleString()} XP to go
+            {t('dashboard.levelProgress.xpRemaining', { amount: xpRemaining.toLocaleString() })}
           </Text>
         </View>
       </View>

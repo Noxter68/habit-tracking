@@ -2,6 +2,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, ImageBackground, Image } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 import tw from '@/lib/tailwind';
 
 interface TaskBadgeProps {
@@ -10,99 +11,108 @@ interface TaskBadgeProps {
 }
 
 interface ThemeConfig {
-  title: string;
-  subtitle: string;
+  titleKey: string;
+  subtitleKey: string;
+  messageKey: string;
   gemImage: any;
   texture: any;
   gradient: string[];
   textColor: string;
-  message: string;
 }
 
 export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total }) => {
-  // Calcul du taux de complétion
+  const { t } = useTranslation();
+
   const completionRate = useMemo(() => {
     return total > 0 ? Math.round((completed / total) * 100) : 0;
   }, [completed, total]);
 
-  // Thème dynamique basé sur le pourcentage (6 paliers)
   const theme = useMemo((): ThemeConfig => {
     // 100% - Obsidian (Mythique)
     if (completionRate === 100) {
       return {
-        title: 'Legendary!',
-        subtitle: 'Perfect mastery achieved!',
+        titleKey: 'dashboard.taskBadge.legendary.title',
+        subtitleKey: 'dashboard.taskBadge.legendary.subtitle',
+        messageKey: 'dashboard.taskBadge.legendary.message',
         gemImage: require('../../assets/interface/gems/obsidian-gem.png'),
         texture: require('../../assets/interface/progressBar/obsidian-texture.png'),
         gradient: ['#1a1625', '#2d1b3d', '#4c1d95'],
         textColor: '#FFFFFF',
-        message: "Incredible! You've completed everything today!",
       };
     }
 
     // 80-99% - Topaz (Or)
     if (completionRate >= 80) {
       return {
-        title: 'Almost Perfect!',
-        subtitle: 'Golden progress shining through!',
+        titleKey: 'dashboard.taskBadge.almostPerfect.title',
+        subtitleKey: 'dashboard.taskBadge.almostPerfect.subtitle',
+        messageKey: 'dashboard.taskBadge.almostPerfect.message',
         gemImage: require('../../assets/interface/gems/topaz-gem.png'),
         texture: require('../../assets/interface/progressBar/topaz-texture.png'),
         gradient: ['#fbbf24', '#f59e0b', '#d97706'],
         textColor: '#FFFFFF',
-        message: `Just ${total - completed} more ${total - completed === 1 ? 'task' : 'tasks'}! You've got this!`,
       };
     }
 
     // 60-79% - Jade (Vert)
     if (completionRate >= 60) {
       return {
-        title: 'Great Momentum!',
-        subtitle: 'Growing stronger every task!',
+        titleKey: 'dashboard.taskBadge.greatMomentum.title',
+        subtitleKey: 'dashboard.taskBadge.greatMomentum.subtitle',
+        messageKey: 'dashboard.taskBadge.greatMomentum.message',
         gemImage: require('../../assets/interface/gems/jade-gem.png'),
         texture: require('../../assets/interface/progressBar/jade-texture.png'),
         gradient: ['#10b981', '#059669', '#047857'],
         textColor: '#FFFFFF',
-        message: "You're on fire! Keep that energy flowing!",
       };
     }
 
     // 40-59% - Amethyst (Violet)
     if (completionRate >= 40) {
       return {
-        title: 'Halfway There!',
-        subtitle: 'Building your path to success!',
+        titleKey: 'dashboard.taskBadge.halfwayThere.title',
+        subtitleKey: 'dashboard.taskBadge.halfwayThere.subtitle',
+        messageKey: 'dashboard.taskBadge.halfwayThere.message',
         gemImage: require('../../assets/interface/gems/amethyst-gem.png'),
         texture: require('../../assets/interface/progressBar/amethyst-texture.png'),
         gradient: ['#8b5cf6', '#7c3aed', '#6d28d9'],
         textColor: '#FFFFFF',
-        message: "Amazing progress! You're crushing it today!",
       };
     }
 
     // 20-39% - Ruby (Rouge)
     if (completionRate >= 20) {
       return {
-        title: 'Getting Started!',
-        subtitle: 'Every step brings you closer!',
+        titleKey: 'dashboard.taskBadge.gettingStarted.title',
+        subtitleKey: 'dashboard.taskBadge.gettingStarted.subtitle',
+        messageKey: 'dashboard.taskBadge.gettingStarted.message',
         gemImage: require('../../assets/interface/gems/ruby-gem.png'),
         texture: require('../../assets/interface/progressBar/ruby-texture.png'),
         gradient: ['#ef4444', '#dc2626', '#b91c1c'],
         textColor: '#FFFFFF',
-        message: 'Great start! Keep the momentum building!',
       };
     }
 
     // 0-19% - Crystal (Bleu)
     return {
-      title: 'Ready to Shine!',
-      subtitle: 'Your journey begins now!',
+      titleKey: 'dashboard.taskBadge.readyToShine.title',
+      subtitleKey: 'dashboard.taskBadge.readyToShine.subtitle',
+      messageKey: 'dashboard.taskBadge.readyToShine.message',
       gemImage: require('../../assets/interface/gems/crystal-gem.png'),
       texture: require('../../assets/interface/progressBar/crystal.png'),
       gradient: ['#60a5fa', '#3b82f6', '#2563eb'],
       textColor: '#FFFFFF',
-      message: "Let's make today incredible! 🌟",
     };
   }, [completionRate, total, completed]);
+
+  // Get the translated message with count for almostPerfect case
+  const getMessage = () => {
+    if (completionRate >= 80 && completionRate < 100) {
+      const remaining = total - completed;
+      return t(theme.messageKey, { count: remaining });
+    }
+    return t(theme.messageKey);
+  };
 
   return (
     <Animated.View entering={FadeIn.duration(600)} style={tw`mb-5`}>
@@ -118,12 +128,9 @@ export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total }) => {
           },
         ]}
       >
-        {/* Background avec texture uniquement */}
         <ImageBackground source={theme.texture} style={tw`w-full`} imageStyle={{ opacity: 1 }} resizeMode="cover">
           <View style={[tw`px-5 py-2`, { backgroundColor: `${theme.gradient[1]}80` }]}>
-            {/* Header avec Gemme */}
             <View style={tw`flex-row items-center justify-between mb-2`}>
-              {/* Textes à gauche */}
               <View style={tw`flex-1 mr-4`}>
                 <Text
                   style={[
@@ -136,7 +143,7 @@ export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total }) => {
                     },
                   ]}
                 >
-                  {theme.title}
+                  {t(theme.titleKey)}
                 </Text>
                 <Text
                   style={[
@@ -150,11 +157,10 @@ export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total }) => {
                     },
                   ]}
                 >
-                  {theme.subtitle}
+                  {t(theme.subtitleKey)}
                 </Text>
               </View>
 
-              {/* Gemme à droite */}
               <Image
                 source={theme.gemImage}
                 style={{
@@ -166,9 +172,7 @@ export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total }) => {
               />
             </View>
 
-            {/* Stats Counter - Inline & Clean */}
             <View style={tw`flex-row items-center justify-between`}>
-              {/* Task count */}
               <View style={tw`flex-row items-baseline gap-1.5`}>
                 <Text
                   style={[
@@ -196,7 +200,6 @@ export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total }) => {
                 </Text>
               </View>
 
-              {/* Percentage - No background */}
               <Text
                 style={[
                   tw`text-2xl font-black`,

@@ -1,5 +1,6 @@
 // src/utils/habitHelpers.ts
 import { HabitType, Task } from '../types';
+import i18n from '../i18n';
 import {
   User,
   Dumbbell,
@@ -93,111 +94,256 @@ import {
 } from 'lucide-react-native';
 
 // ============================================================================
-// QUOTES DATABASE
+// TASK ICON MAPPING (STATIC - Ne change pas selon la langue)
 // ============================================================================
-export const quotes = {
-  start: {
-    text: 'We are what we repeatedly do. Excellence, then, is not an act, but a habit.',
-    author: 'Aristotle',
+const taskIcons: Record<string, Record<string, Record<string, any>>> = {
+  fitness: {
+    good: {
+      'morning-run': User,
+      'gym-workout': Dumbbell,
+      'yoga-session': Flower2,
+      'push-ups': Activity,
+      'walk-10k': Footprints,
+      stretching: Move,
+    },
+    bad: {
+      'no-elevator': ArrowUpCircle,
+      'no-couch': Armchair,
+      'active-breaks': Timer,
+    },
   },
-  good: {
-    text: 'The secret of getting ahead is getting started.',
-    author: 'Mark Twain',
+  health: {
+    good: {
+      meditation: Stars,
+      'deep-breathing': Wind,
+      'cold-shower': Droplet,
+      vitamins: Pill,
+      skincare: Sparkle,
+      'health-checkup': Stethoscope,
+    },
+    bad: {
+      'no-stress': Smile,
+      'no-late-nights': Moon,
+      'no-overwork': Pause,
+    },
   },
-  bad: {
-    text: 'The chains of habit are too weak to be felt until they are too strong to be broken.',
-    author: 'Samuel Johnson',
+  nutrition: {
+    good: {
+      'healthy-breakfast': Sun,
+      'fruit-serving': Apple,
+      vegetables: Salad,
+      'meal-prep': ChefHat,
+      'protein-intake': Egg,
+      'whole-grains': Wheat,
+    },
+    bad: {
+      'no-fast-food': CircleSlash,
+      'no-sugar': Candy,
+      'no-late-snacks': Ban,
+    },
   },
-  category: {
-    text: 'Success is the sum of small efforts repeated day in and day out.',
-    author: 'Robert Collier',
+  learning: {
+    good: {
+      'read-book': BookOpen,
+      'online-course': GraduationCap,
+      'practice-skill': Target,
+      'language-study': Languages,
+      'write-journal': PenTool,
+      'watch-tutorial': Video,
+    },
+    bad: {
+      'no-distractions': Focus,
+      'no-multitask': Brain,
+      'no-cramming': CalendarCheck,
+    },
   },
-  tasks: {
-    text: "You don't have to be great to start, but you have to start to be great.",
-    author: 'Zig Ziglar',
+  productivity: {
+    good: {
+      'morning-routine': Sun,
+      'time-blocking': CalendarDays,
+      pomodoro: Clock,
+      'daily-review': BarChart3,
+      'priority-tasks': Star,
+      'inbox-zero': Mail,
+    },
+    bad: {
+      'no-social-media': PhoneOff,
+      'no-procrastination': Play,
+      'no-perfectionism': CheckCheck,
+    },
   },
-  goal: {
-    text: 'A goal without a plan is just a wish.',
-    author: 'Antoine de Saint-Exupéry',
+  mindfulness: {
+    good: {
+      meditation: Stars,
+      gratitude: Heart,
+      breathing: Wind,
+      'nature-walk': Trees,
+      'body-scan': ScanFace,
+      visualization: Eye,
+    },
+    bad: {
+      'no-rushing': Turtle,
+      'no-negativity': CloudSun,
+      'no-overthinking': Brain,
+    },
   },
-  frequency: {
-    text: 'Repetition is the mother of learning, the father of action.',
-    author: 'Zig Ziglar',
+  sleep: {
+    good: {
+      'bedtime-routine': BedDouble,
+      'sleep-8hrs': Moon,
+      'wake-same-time': AlarmClock,
+      'bedroom-prep': Home,
+    },
+    bad: {
+      'no-caffeine-pm': Coffee,
+      'no-naps': BedSingle,
+      'no-snooze': Clock3,
+    },
   },
-  notification: {
-    text: 'An ounce of action is worth a ton of theory.',
-    author: 'Ralph Waldo Emerson',
+  hydration: {
+    good: {
+      'water-morning': Droplets,
+      'water-8-glasses': Droplets,
+      'herbal-tea': Coffee,
+      'water-bottle': Droplet,
+      'infused-water': Apple,
+    },
+    bad: {
+      'no-soda': Wine,
+      'no-alcohol': BeerOff,
+      'no-energy-drinks': Zap,
+    },
+  },
+  smoking: {
+    good: {
+      'breathing-exercises': Wind,
+      'chew-gum': Candy,
+      'stay-hydrated': Droplets,
+    },
+    bad: {
+      'no-smoking': CigaretteOff,
+      'avoid-triggers': AlertTriangle,
+      'no-smoke-breaks': Footprints,
+    },
+  },
+  'junk-food': {
+    good: {
+      'healthy-snacks': Carrot,
+      'meal-planning': ClipboardList,
+      'grocery-smart': ShoppingBasket,
+    },
+    bad: {
+      'no-junk-food': Ban,
+      'no-drive-thru': Car,
+      'no-vending-machine': XCircle,
+    },
+  },
+  shopping: {
+    good: {
+      'budget-tracking': Wallet,
+      'shopping-list': ListChecks,
+      'savings-goal': PiggyBank,
+    },
+    bad: {
+      'no-impulse-buy': Clock,
+      'unsubscribe-emails': MailX,
+      'no-browsing': ShoppingBag,
+    },
+  },
+  'screen-time': {
+    good: {
+      'read-physical-book': Book,
+      'outdoor-activity': Trees,
+      'face-to-face': Users,
+    },
+    bad: {
+      'no-phone-bed': Smartphone,
+      'limit-social-media': Smartphone,
+      'no-binge-watching': Tv,
+    },
+  },
+  procrastination: {
+    good: {
+      'start-immediately': Zap,
+      'break-tasks-down': ListTree,
+      'time-block': Calendar,
+    },
+    bad: {
+      'no-delay': AlertCircle,
+      'no-excuses': ShieldCheck,
+      'no-distractions': Focus,
+    },
+  },
+  'negative-thinking': {
+    good: {
+      'positive-affirmations': Stars,
+      'gratitude-journal': NotebookPen,
+      'reframe-thoughts': RefreshCw,
+    },
+    bad: {
+      'no-complaining': MessageCircleOff,
+      'no-self-criticism': HeartHandshake,
+      'no-catastrophizing': ShieldAlert,
+    },
+  },
+  alcohol: {
+    good: {
+      mocktails: Martini,
+      'exercise-instead': Activity,
+      'support-group': Users,
+    },
+    bad: {
+      'no-alcohol': BeerOff,
+      'avoid-bars': Store,
+      'no-home-stocking': Home,
+    },
+  },
+  oversleeping: {
+    good: {
+      'consistent-bedtime': MoonStar,
+      'morning-routine': Sun,
+      'sunlight-exposure': Sun,
+    },
+    bad: {
+      'no-snooze': Clock3,
+      'no-late-sleep': BedDouble,
+      'alarm-far-away': Bell,
+    },
   },
 };
 
 // ============================================================================
-// PROFESSIONAL TIPS DATABASE
+// QUOTES DATABASE - NOW DYNAMIC
 // ============================================================================
-export const tips = {
-  habitType: [
-    {
-      title: 'Starting Strong',
-      content: 'Research shows that building positive habits is 2.5x more effective than breaking bad ones. Start with one habit and master it.',
-    },
-    {
-      title: 'The Science',
-      content: 'Your brain forms new neural pathways with each repetition. Building good habits creates positive pathways faster than breaking old ones.',
-    },
-  ],
-  category: [
-    {
-      title: 'Focus Matters',
-      content: 'Studies show that people who focus on one category at a time are 67% more likely to succeed in building lasting habits.',
-    },
-    {
-      title: 'Compound Effect',
-      content: 'Small, category-specific improvements compound over time. A 1% daily improvement leads to 37x better results in a year.',
-    },
-  ],
-  tasks: [
-    {
-      title: 'Keep It Simple',
-      content: 'Habits with 1-3 specific actions have an 80% higher success rate than vague goals. Clarity creates commitment.',
-    },
-    {
-      title: 'Stack Your Habits',
-      content: "Link new habits to existing routines. This 'habit stacking' technique increases adherence by 58%.",
-    },
-  ],
-  goal: [
-    {
-      title: 'The 66-Day Truth',
-      content: 'Research from University College London found it takes an average of 66 days to form a habit. Give yourself time.',
-    },
-    {
-      title: 'Realistic Timelines',
-      content: 'Short-term goals (21-30 days) work for simple habits. Complex behavior changes need 60-90 days to become automatic.',
-    },
-  ],
-  frequency: [
-    {
-      title: 'Daily Wins',
-      content: 'Daily habits are 2.5x more likely to stick than weekly ones. Consistency beats intensity every time.',
-    },
-    {
-      title: 'Recovery Matters',
-      content: 'For physical habits, strategic rest days prevent burnout. Listen to your body while maintaining consistency.',
-    },
-  ],
-  notification: [
-    {
-      title: 'Environmental Cues',
-      content: 'Notifications act as environmental triggers. Studies show they increase habit completion rates by 40%.',
-    },
-    {
-      title: 'Optimal Timing',
-      content: 'Morning reminders have 65% completion rates vs 42% for evening. Choose times when your willpower is strongest.',
-    },
-  ],
-};
+export const getQuotes = () => ({
+  start: i18n.t('habitHelpers.quotes.start', { returnObjects: true }),
+  good: i18n.t('habitHelpers.quotes.good', { returnObjects: true }),
+  bad: i18n.t('habitHelpers.quotes.bad', { returnObjects: true }),
+  category: i18n.t('habitHelpers.quotes.category', { returnObjects: true }),
+  tasks: i18n.t('habitHelpers.quotes.tasks', { returnObjects: true }),
+  goal: i18n.t('habitHelpers.quotes.goal', { returnObjects: true }),
+  frequency: i18n.t('habitHelpers.quotes.frequency', { returnObjects: true }),
+  notification: i18n.t('habitHelpers.quotes.notification', { returnObjects: true }),
+});
+
+export const quotes = getQuotes();
 
 // ============================================================================
-// HABIT TYPE DATA
+// PROFESSIONAL TIPS DATABASE - NOW DYNAMIC
+// ============================================================================
+export const getTips = () => ({
+  habitType: i18n.t('habitHelpers.tips.habitType', { returnObjects: true }),
+  category: i18n.t('habitHelpers.tips.category', { returnObjects: true }),
+  tasks: i18n.t('habitHelpers.tips.tasks', { returnObjects: true }),
+  goal: i18n.t('habitHelpers.tips.goal', { returnObjects: true }),
+  frequency: i18n.t('habitHelpers.tips.frequency', { returnObjects: true }),
+  notification: i18n.t('habitHelpers.tips.notification', { returnObjects: true }),
+});
+
+export const tips = getTips();
+
+// ============================================================================
+// HABIT TYPE DATA - NOW DYNAMIC
 // ============================================================================
 export interface HabitTypeData {
   id: HabitType;
@@ -207,25 +353,27 @@ export interface HabitTypeData {
   gradient: [string, string];
 }
 
-export const habitTypes: HabitTypeData[] = [
+export const getHabitTypes = (): HabitTypeData[] => [
   {
     id: 'good',
-    title: 'Build a Good Habit',
-    subtitle: 'Start something positive and transformative',
-    description: 'Create new positive behaviors that align with your best self',
+    title: i18n.t('habitHelpers.habitTypes.good.title'),
+    subtitle: i18n.t('habitHelpers.habitTypes.good.subtitle'),
+    description: i18n.t('habitHelpers.habitTypes.good.description'),
     gradient: ['#10b981', '#059669'],
   },
   {
     id: 'bad',
-    title: 'Quit a Bad Habit',
-    subtitle: 'Break free from what holds you back',
-    description: 'Replace unwanted patterns with healthier alternatives',
+    title: i18n.t('habitHelpers.habitTypes.bad.title'),
+    subtitle: i18n.t('habitHelpers.habitTypes.bad.subtitle'),
+    description: i18n.t('habitHelpers.habitTypes.bad.description'),
     gradient: ['#ef4444', '#dc2626'],
   },
 ];
 
+export const habitTypes = getHabitTypes();
+
 // ============================================================================
-// CATEGORY DATA
+// CATEGORY DATA - NOW DYNAMIC
 // ============================================================================
 export interface CategoryData {
   id: string;
@@ -234,277 +382,77 @@ export interface CategoryData {
   color: string;
 }
 
-export const goodCategories: CategoryData[] = [
-  { id: 'fitness', label: 'Fitness & Exercise', description: 'Build strength and endurance', color: '#ef4444' },
-  { id: 'health', label: 'Health & Wellness', description: 'Improve overall wellbeing', color: '#ec4899' },
-  { id: 'nutrition', label: 'Nutrition', description: 'Healthy eating habits', color: '#10b981' },
-  { id: 'learning', label: 'Learning & Growth', description: 'Expand your knowledge', color: '#8b5cf6' },
-  { id: 'productivity', label: 'Productivity', description: 'Maximize your efficiency', color: '#f59e0b' },
-  { id: 'mindfulness', label: 'Mindfulness', description: 'Mental clarity and focus', color: '#06b6d4' },
-  { id: 'sleep', label: 'Sleep Quality', description: 'Better rest and recovery', color: '#6366f1' },
-  { id: 'hydration', label: 'Hydration', description: 'Stay properly hydrated', color: '#3b82f6' },
-];
+const categoryColors = {
+  fitness: '#ef4444',
+  health: '#ec4899',
+  nutrition: '#10b981',
+  learning: '#8b5cf6',
+  productivity: '#f59e0b',
+  mindfulness: '#06b6d4',
+  sleep: '#6366f1',
+  hydration: '#3b82f6',
+  smoking: '#dc2626',
+  'junk-food': '#ea580c',
+  shopping: '#f59e0b',
+  'screen-time': '#8b5cf6',
+  procrastination: '#06b6d4',
+  'negative-thinking': '#ec4899',
+  alcohol: '#7c3aed',
+  oversleeping: '#6366f1',
+};
 
-export const badCategories: CategoryData[] = [
-  { id: 'smoking', label: 'Smoking', description: 'Quit tobacco products', color: '#dc2626' },
-  { id: 'junk-food', label: 'Unhealthy Eating', description: 'Reduce junk food intake', color: '#ea580c' },
-  { id: 'shopping', label: 'Impulse Shopping', description: 'Control spending habits', color: '#f59e0b' },
-  { id: 'screen-time', label: 'Excessive Screen Time', description: 'Reduce device usage', color: '#8b5cf6' },
-  { id: 'procrastination', label: 'Procrastination', description: 'Stop delaying tasks', color: '#06b6d4' },
-  { id: 'negative-thinking', label: 'Negative Thinking', description: 'Cultivate positivity', color: '#ec4899' },
-  { id: 'alcohol', label: 'Alcohol', description: 'Reduce alcohol consumption', color: '#7c3aed' },
-  { id: 'oversleeping', label: 'Oversleeping', description: 'Wake up earlier', color: '#6366f1' },
-];
+export const getGoodCategories = (): CategoryData[] => {
+  const categories = ['fitness', 'health', 'nutrition', 'learning', 'productivity', 'mindfulness', 'sleep', 'hydration'];
+
+  return categories.map((id) => ({
+    id,
+    label: i18n.t(`habitHelpers.categories.good.${id}.label`),
+    description: i18n.t(`habitHelpers.categories.good.${id}.description`),
+    color: categoryColors[id as keyof typeof categoryColors],
+  }));
+};
+
+export const getBadCategories = (): CategoryData[] => {
+  const categories = ['smoking', 'junk-food', 'shopping', 'screen-time', 'procrastination', 'negative-thinking', 'alcohol', 'oversleeping'];
+
+  return categories.map((id) => ({
+    id,
+    label: i18n.t(`habitHelpers.categories.bad.${id}.label`),
+    description: i18n.t(`habitHelpers.categories.bad.${id}.description`),
+    color: categoryColors[id as keyof typeof categoryColors],
+  }));
+};
+
+export const goodCategories = getGoodCategories();
+export const badCategories = getBadCategories();
 
 export const getCategories = (type: HabitType): CategoryData[] => {
-  return type === 'good' ? goodCategories : badCategories;
+  return type === 'good' ? getGoodCategories() : getBadCategories();
 };
 
 // ============================================================================
-// HABIT NAMES
+// HABIT NAMES - NOW DYNAMIC
 // ============================================================================
 export const getCategoryName = (category: string, type: HabitType): string => {
-  const names: Record<string, { good: string; bad: string }> = {
-    fitness: { good: 'Fitness Journey', bad: 'Quit Sedentary Lifestyle' },
-    health: { good: 'Health & Wellness', bad: 'Break Unhealthy Habits' },
-    nutrition: { good: 'Healthy Eating', bad: 'Stop Junk Food' },
-    learning: { good: 'Daily Learning', bad: 'Stop Procrastinating' },
-    productivity: { good: 'Productivity Boost', bad: 'Beat Procrastination' },
-    mindfulness: { good: 'Mindful Living', bad: 'Stop Negative Thinking' },
-    sleep: { good: 'Better Sleep', bad: 'Fix Sleep Schedule' },
-    hydration: { good: 'Stay Hydrated', bad: 'Quit Sugary Drinks' },
-    smoking: { good: 'Fresh Air Life', bad: 'Quit Smoking' },
-    'junk-food': { good: 'Clean Eating', bad: 'Stop Junk Food' },
-    shopping: { good: 'Smart Spending', bad: 'Control Shopping' },
-    'screen-time': { good: 'Digital Balance', bad: 'Reduce Screen Time' },
-    procrastination: { good: 'Get Things Done', bad: 'Stop Procrastinating' },
-    'negative-thinking': { good: 'Positive Mindset', bad: 'Stop Negative Thoughts' },
-    alcohol: { good: 'Sober Living', bad: 'Quit Drinking' },
-    oversleeping: { good: 'Morning Routine', bad: 'Stop Oversleeping' },
-  };
-
-  return names[category]?.[type] || `${type === 'good' ? 'Build' : 'Quit'} ${category}`;
+  return i18n.t(`habitHelpers.categories.${type}.${category}.habitName`);
 };
 
 // ============================================================================
-// TASKS DATABASE WITH LUCIDE ICONS
+// TASKS DATABASE WITH ICONS - NOW DYNAMIC + STATIC ICONS
 // ============================================================================
 export const getTasksForCategory = (category: string, type: HabitType): Task[] => {
-  const taskLibrary: Record<string, { good: Task[]; bad: Task[] }> = {
-    fitness: {
-      good: [
-        { id: 'morning-run', name: 'Morning Run', description: 'Go for a run or jog', icon: User, duration: '30 min' },
-        { id: 'gym-workout', name: 'Gym Workout', description: 'Complete gym session', icon: Dumbbell, duration: '45 min' },
-        { id: 'yoga-session', name: 'Yoga Practice', description: 'Complete yoga routine', icon: Flower2, duration: '20 min' },
-        { id: 'push-ups', name: '50 Push-ups', description: 'Do 50 push-ups throughout the day', icon: Activity, duration: '10 min' },
-        { id: 'walk-10k', name: '10,000 Steps', description: 'Walk 10,000 steps', icon: Footprints, duration: 'Throughout day' },
-        { id: 'stretching', name: 'Stretching', description: 'Morning or evening stretches', icon: Move, duration: '15 min' },
-      ],
-      bad: [
-        { id: 'no-elevator', name: 'Skip Elevator', description: 'Take stairs instead', icon: ArrowUpCircle, duration: 'All day' },
-        { id: 'no-couch', name: 'No Couch Potato', description: 'Limit sitting time', icon: Armchair, duration: 'All day' },
-        { id: 'active-breaks', name: 'Active Breaks', description: 'Move every hour', icon: Timer, duration: '5 min/hour' },
-      ],
-    },
-    health: {
-      good: [
-        { id: 'meditation', name: 'Meditation', description: 'Mindful meditation practice', icon: Stars, duration: '15 min' },
-        { id: 'deep-breathing', name: 'Deep Breathing', description: '5 minutes of breathing exercises', icon: Wind, duration: '5 min' },
-        { id: 'cold-shower', name: 'Cold Shower', description: 'Take a cold shower', icon: Droplet, duration: '5 min' },
-        { id: 'vitamins', name: 'Take Vitamins', description: 'Daily vitamin supplements', icon: Pill, duration: '1 min' },
-        { id: 'skincare', name: 'Skincare Routine', description: 'Morning/evening skincare', icon: Sparkle, duration: '10 min' },
-        { id: 'health-checkup', name: 'Health Check', description: 'Monitor vital signs', icon: Stethoscope, duration: '5 min' },
-      ],
-      bad: [
-        { id: 'no-stress', name: 'Stress Management', description: 'Avoid stressful situations', icon: Smile, duration: 'All day' },
-        { id: 'no-late-nights', name: 'No Late Nights', description: 'Sleep before midnight', icon: Moon, duration: 'Evening' },
-        { id: 'no-overwork', name: 'Avoid Overworking', description: 'Take regular breaks', icon: Pause, duration: 'All day' },
-      ],
-    },
-    nutrition: {
-      good: [
-        { id: 'healthy-breakfast', name: 'Healthy Breakfast', description: 'Nutritious morning meal', icon: Sun, duration: '20 min' },
-        { id: 'fruit-serving', name: 'Eat Fruits', description: '2-3 servings of fruit', icon: Apple, duration: '5 min' },
-        { id: 'vegetables', name: 'Eat Vegetables', description: '5 servings of vegetables', icon: Salad, duration: 'Meals' },
-        { id: 'meal-prep', name: 'Meal Prep', description: 'Prepare healthy meals', icon: ChefHat, duration: '30 min' },
-        { id: 'protein-intake', name: 'Protein Goals', description: 'Meet protein targets', icon: Egg, duration: 'Meals' },
-        { id: 'whole-grains', name: 'Whole Grains', description: 'Choose whole grains', icon: Wheat, duration: 'Meals' },
-      ],
-      bad: [
-        { id: 'no-fast-food', name: 'No Fast Food', description: 'Avoid fast food', icon: CircleSlash, duration: 'All day' },
-        { id: 'no-sugar', name: 'Limit Sugar', description: 'Reduce sugar intake', icon: Candy, duration: 'All day' },
-        { id: 'no-late-snacks', name: 'No Late Snacking', description: 'No eating after 8pm', icon: Ban, duration: 'Evening' },
-      ],
-    },
-    learning: {
-      good: [
-        { id: 'read-book', name: 'Read Book', description: 'Read for knowledge', icon: BookOpen, duration: '30 min' },
-        { id: 'online-course', name: 'Online Course', description: 'Complete course module', icon: GraduationCap, duration: '45 min' },
-        { id: 'practice-skill', name: 'Practice Skill', description: 'Skill development', icon: Target, duration: '30 min' },
-        { id: 'language-study', name: 'Language Study', description: 'Learn new language', icon: Languages, duration: '20 min' },
-        { id: 'write-journal', name: 'Journal Writing', description: 'Reflect and write', icon: PenTool, duration: '15 min' },
-        { id: 'watch-tutorial', name: 'Watch Tutorial', description: 'Educational videos', icon: Video, duration: '20 min' },
-      ],
-      bad: [
-        { id: 'no-distractions', name: 'Avoid Distractions', description: 'Focus on learning', icon: Focus, duration: 'Study time' },
-        { id: 'no-multitask', name: 'No Multitasking', description: 'One task at a time', icon: Brain, duration: 'Study time' },
-        { id: 'no-cramming', name: 'No Cramming', description: 'Regular study schedule', icon: CalendarCheck, duration: 'Daily' },
-      ],
-    },
-    productivity: {
-      good: [
-        { id: 'morning-routine', name: 'Morning Routine', description: 'Start day right', icon: Sun, duration: '30 min' },
-        { id: 'time-blocking', name: 'Time Blocking', description: 'Schedule tasks', icon: CalendarDays, duration: '15 min' },
-        { id: 'pomodoro', name: 'Pomodoro Session', description: '25min focused work', icon: Clock, duration: '25 min' },
-        { id: 'daily-review', name: 'Daily Review', description: 'Review progress', icon: BarChart3, duration: '10 min' },
-        { id: 'priority-tasks', name: 'Top 3 Tasks', description: 'Complete priorities', icon: Star, duration: 'Variable' },
-        { id: 'inbox-zero', name: 'Inbox Zero', description: 'Clear all emails', icon: Mail, duration: '20 min' },
-      ],
-      bad: [
-        { id: 'no-social-media', name: 'No Social Media', description: 'During work hours', icon: PhoneOff, duration: 'Work hours' },
-        { id: 'no-procrastination', name: 'Start Tasks', description: "Don't delay tasks", icon: Play, duration: 'All day' },
-        { id: 'no-perfectionism', name: 'Done > Perfect', description: 'Ship work regularly', icon: CheckCheck, duration: 'All day' },
-      ],
-    },
-    mindfulness: {
-      good: [
-        { id: 'meditation', name: 'Meditation', description: 'Mindful meditation', icon: Stars, duration: '15 min' },
-        { id: 'gratitude', name: 'Gratitude Practice', description: 'List 3 things', icon: Heart, duration: '5 min' },
-        { id: 'breathing', name: 'Breathing Exercise', description: 'Deep breathing', icon: Wind, duration: '5 min' },
-        { id: 'nature-walk', name: 'Nature Walk', description: 'Mindful walking', icon: Trees, duration: '20 min' },
-        { id: 'body-scan', name: 'Body Scan', description: 'Body awareness', icon: ScanFace, duration: '10 min' },
-        { id: 'visualization', name: 'Visualization', description: 'Positive imagery', icon: Eye, duration: '10 min' },
-      ],
-      bad: [
-        { id: 'no-rushing', name: 'Slow Down', description: "Don't rush tasks", icon: Turtle, duration: 'All day' },
-        { id: 'no-negativity', name: 'Positive Thinking', description: 'Avoid negative thoughts', icon: CloudSun, duration: 'All day' },
-        { id: 'no-overthinking', name: 'Stop Overthinking', description: 'Be present', icon: Brain, duration: 'All day' },
-      ],
-    },
-    sleep: {
-      good: [
-        { id: 'bedtime-routine', name: 'Bedtime Routine', description: 'Wind down ritual', icon: BedDouble, duration: '30 min' },
-        { id: 'sleep-8hrs', name: '8 Hours Sleep', description: 'Get full rest', icon: Moon, duration: '8 hours' },
-        { id: 'wake-same-time', name: 'Consistent Wake Time', description: 'Wake at same time', icon: AlarmClock, duration: 'Morning' },
-        { id: 'bedroom-prep', name: 'Prepare Bedroom', description: 'Cool, dark, quiet room', icon: Home, duration: '10 min' },
-      ],
-      bad: [
-        { id: 'no-caffeine-pm', name: 'No Late Caffeine', description: 'Avoid caffeine after 2pm', icon: Coffee, duration: 'Afternoon' },
-        { id: 'no-naps', name: 'No Long Naps', description: 'Avoid daytime sleeping', icon: BedSingle, duration: 'Daytime' },
-        { id: 'no-snooze', name: 'No Snooze Button', description: 'Get up immediately', icon: Clock3, duration: 'Morning' },
-      ],
-    },
-    hydration: {
-      good: [
-        { id: 'water-morning', name: 'Morning Water', description: 'Glass of water upon waking', icon: Droplets, duration: '1 min' },
-        { id: 'water-8-glasses', name: '8 Glasses Water', description: 'Drink 8 glasses daily', icon: Droplets, duration: 'All day' },
-        { id: 'herbal-tea', name: 'Herbal Tea', description: 'Drink herbal tea', icon: Coffee, duration: '10 min' },
-        { id: 'water-bottle', name: 'Carry Water Bottle', description: 'Keep water accessible', icon: Droplet, duration: 'All day' },
-        { id: 'infused-water', name: 'Infused Water', description: 'Add fruits to water', icon: Apple, duration: '5 min' },
-      ],
-      bad: [
-        { id: 'no-soda', name: 'No Soda', description: 'Avoid sugary drinks', icon: Wine, duration: 'All day' },
-        { id: 'no-alcohol', name: 'Limit Alcohol', description: 'Reduce alcohol intake', icon: BeerOff, duration: 'All day' },
-        { id: 'no-energy-drinks', name: 'No Energy Drinks', description: 'Avoid energy drinks', icon: Zap, duration: 'All day' },
-      ],
-    },
-    smoking: {
-      good: [
-        { id: 'breathing-exercises', name: 'Breathing Exercises', description: 'Deep breathing when cravings hit', icon: Wind, duration: '5 min' },
-        { id: 'chew-gum', name: 'Chew Gum', description: 'Sugar-free gum as alternative', icon: Candy, duration: 'As needed' },
-        { id: 'stay-hydrated', name: 'Drink Water', description: 'Flush out toxins', icon: Droplets, duration: 'All day' },
-      ],
-      bad: [
-        { id: 'no-smoking', name: 'No Cigarettes', description: 'Track smoke-free days', icon: CigaretteOff, duration: 'All day' },
-        { id: 'avoid-triggers', name: 'Avoid Triggers', description: 'Skip smoking areas', icon: AlertTriangle, duration: 'All day' },
-        { id: 'no-smoke-breaks', name: 'No Smoke Breaks', description: 'Take walks instead', icon: Footprints, duration: 'Breaks' },
-      ],
-    },
-    'junk-food': {
-      good: [
-        { id: 'healthy-snacks', name: 'Healthy Snacks', description: 'Prepare nutritious alternatives', icon: Carrot, duration: '10 min' },
-        { id: 'meal-planning', name: 'Plan Meals', description: 'Prep healthy options', icon: ClipboardList, duration: '30 min' },
-        { id: 'grocery-smart', name: 'Smart Shopping', description: 'Buy whole foods only', icon: ShoppingBasket, duration: 'Weekly' },
-      ],
-      bad: [
-        { id: 'no-junk-food', name: 'No Junk Food', description: 'Avoid processed foods', icon: Ban, duration: 'All day' },
-        { id: 'no-drive-thru', name: 'No Drive-Thrus', description: 'Skip fast food restaurants', icon: Car, duration: 'All day' },
-        { id: 'no-vending-machine', name: 'No Vending Machines', description: 'Avoid unhealthy snacks', icon: XCircle, duration: 'All day' },
-      ],
-    },
-    shopping: {
-      good: [
-        { id: 'budget-tracking', name: 'Track Budget', description: 'Monitor spending daily', icon: Wallet, duration: '10 min' },
-        { id: 'shopping-list', name: 'Use Shopping List', description: 'Only buy what you need', icon: ListChecks, duration: 'Before shopping' },
-        { id: 'savings-goal', name: 'Save Money', description: 'Put aside savings', icon: PiggyBank, duration: 'Daily' },
-      ],
-      bad: [
-        { id: 'no-impulse-buy', name: 'No Impulse Buying', description: 'Wait 24 hours before purchasing', icon: Clock, duration: 'Shopping' },
-        { id: 'unsubscribe-emails', name: 'Unsubscribe Deals', description: 'Remove shopping temptations', icon: MailX, duration: 'One-time' },
-        { id: 'no-browsing', name: 'No Window Shopping', description: 'Avoid online stores', icon: ShoppingBag, duration: 'All day' },
-      ],
-    },
-    'screen-time': {
-      good: [
-        { id: 'read-physical-book', name: 'Read Physical Books', description: 'Replace screen time with reading', icon: Book, duration: '30 min' },
-        { id: 'outdoor-activity', name: 'Go Outside', description: 'Spend time in nature', icon: Trees, duration: '30 min' },
-        { id: 'face-to-face', name: 'In-Person Time', description: 'Meet people offline', icon: Users, duration: 'Daily' },
-      ],
-      bad: [
-        { id: 'no-phone-bed', name: 'No Phone in Bed', description: 'Keep devices out of bedroom', icon: Smartphone, duration: 'Bedtime' },
-        { id: 'limit-social-media', name: 'Limit Social Media', description: 'Set app time limits', icon: Smartphone, duration: '30 min max' },
-        { id: 'no-binge-watching', name: 'No Binge Watching', description: 'Limit streaming time', icon: Tv, duration: 'All day' },
-      ],
-    },
-    procrastination: {
-      good: [
-        { id: 'start-immediately', name: 'Start Immediately', description: '2-minute rule for tasks', icon: Zap, duration: '2 min' },
-        { id: 'break-tasks-down', name: 'Break Down Tasks', description: 'Make tasks manageable', icon: ListTree, duration: '10 min' },
-        { id: 'time-block', name: 'Time Blocking', description: 'Schedule specific work times', icon: Calendar, duration: 'Daily' },
-      ],
-      bad: [
-        { id: 'no-delay', name: 'No Delaying', description: 'Do it now, not later', icon: AlertCircle, duration: 'All day' },
-        { id: 'no-excuses', name: 'No Excuses', description: 'Take action regardless', icon: ShieldCheck, duration: 'All day' },
-        { id: 'no-distractions', name: 'Eliminate Distractions', description: 'Focus on one task', icon: Focus, duration: 'Work time' },
-      ],
-    },
-    'negative-thinking': {
-      good: [
-        { id: 'positive-affirmations', name: 'Positive Affirmations', description: 'Practice daily affirmations', icon: Stars, duration: '5 min' },
-        { id: 'gratitude-journal', name: 'Gratitude Journal', description: 'Write 3 grateful things', icon: NotebookPen, duration: '10 min' },
-        { id: 'reframe-thoughts', name: 'Reframe Thoughts', description: 'Find positive perspectives', icon: RefreshCw, duration: 'As needed' },
-      ],
-      bad: [
-        { id: 'no-complaining', name: 'No Complaining', description: 'Avoid negative talk', icon: MessageCircleOff, duration: 'All day' },
-        { id: 'no-self-criticism', name: 'No Self-Criticism', description: 'Be kind to yourself', icon: HeartHandshake, duration: 'All day' },
-        { id: 'no-catastrophizing', name: 'No Catastrophizing', description: 'Stop worst-case thinking', icon: ShieldAlert, duration: 'All day' },
-      ],
-    },
-    alcohol: {
-      good: [
-        { id: 'mocktails', name: 'Drink Mocktails', description: 'Enjoy non-alcoholic drinks', icon: Martini, duration: 'Social events' },
-        { id: 'exercise-instead', name: 'Exercise', description: 'Physical activity as alternative', icon: Activity, duration: '30 min' },
-        { id: 'support-group', name: 'Support Group', description: 'Connect with others', icon: Users, duration: 'Weekly' },
-      ],
-      bad: [
-        { id: 'no-alcohol', name: 'No Alcohol', description: 'Track alcohol-free days', icon: BeerOff, duration: 'All day' },
-        { id: 'avoid-bars', name: 'Avoid Bars', description: 'Skip drinking venues', icon: Store, duration: 'All day' },
-        { id: 'no-home-stocking', name: 'No Alcohol at Home', description: 'Remove from house', icon: Home, duration: 'Ongoing' },
-      ],
-    },
-    oversleeping: {
-      good: [
-        { id: 'consistent-bedtime', name: 'Consistent Bedtime', description: 'Sleep at same time', icon: MoonStar, duration: 'Evening' },
-        { id: 'morning-routine', name: 'Morning Routine', description: 'Exciting morning activities', icon: Sun, duration: '30 min' },
-        { id: 'sunlight-exposure', name: 'Get Sunlight', description: 'Expose to morning light', icon: Sun, duration: '15 min' },
-      ],
-      bad: [
-        { id: 'no-snooze', name: 'No Snooze Button', description: 'Get up with first alarm', icon: Clock3, duration: 'Morning' },
-        { id: 'no-late-sleep', name: 'No Late Sleep', description: 'Sleep before midnight', icon: BedDouble, duration: 'Evening' },
-        { id: 'alarm-far-away', name: 'Alarm Across Room', description: 'Force yourself to get up', icon: Bell, duration: 'Bedtime' },
-      ],
-    },
-  };
+  const taskKeys = i18n.t(`habitHelpers.tasks.${category}.${type}`, { returnObjects: true }) as Record<string, any>;
 
-  return taskLibrary[category]?.[type] || [];
+  if (!taskKeys || typeof taskKeys !== 'object') {
+    return [];
+  }
+
+  return Object.entries(taskKeys).map(([id, data]: [string, any]) => ({
+    id,
+    name: data.name,
+    description: data.description,
+    duration: data.duration,
+    // IMPORTANT: On récupère l'icône depuis le mapping statique
+    icon: taskIcons[category]?.[type]?.[id] || Activity,
+  }));
 };

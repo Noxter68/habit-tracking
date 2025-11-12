@@ -4,6 +4,7 @@ import { View, Text, Pressable, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CheckCircle2 } from 'lucide-react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withSequence, withRepeat, Easing, runOnJS, cancelAnimation } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 import { XPService } from '../../services/xpService';
 import { supabase } from '../../lib/supabase';
 import { getTodayString } from '@/utils/dateHelpers';
@@ -32,10 +33,8 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
   const [isCollected, setIsCollected] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showXPBadge, setShowXPBadge] = useState(false);
+  const { t } = useTranslation();
 
-  // ============================================================================
-  // CALCULATE STATS FROM HABITS
-  // ============================================================================
   const stats = useMemo(() => {
     const today = getTodayString();
 
@@ -70,9 +69,6 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
   const totalTasksToday = stats.dailyTasksTotal + stats.weeklyTasksTotal;
   const completionPercentage = totalTasksToday > 0 ? Math.min(100, Math.round((stats.dailyTasksCompleted / totalTasksToday) * 100)) : 0;
 
-  // ============================================================================
-  // ANIMATION VALUES
-  // ============================================================================
   const scale = useSharedValue(1);
   const cardTranslateY = useSharedValue(0);
   const badgeTranslateY = useSharedValue(0);
@@ -92,9 +88,6 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
     opacity: badgeOpacity.value,
   }));
 
-  // ============================================================================
-  // THEME
-  // ============================================================================
   const defaultTheme = {
     gradient: ['#9333EA', '#7C3AED'],
     accent: '#9333EA',
@@ -105,14 +98,8 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
   const accentColor = theme.accent;
   const progressColor = `${accentColor}E6`;
 
-  // ============================================================================
-  // EFFECTS
-  // ============================================================================
-
-  // Breathing animation - Infinite smooth loop
   useEffect(() => {
     if (canClaimChallenge && !isCollected) {
-      // Animation infinie avec loop() - pas de jump
       const animate = () => {
         'worklet';
         breatheScale.value = withRepeat(
@@ -121,7 +108,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
             easing: Easing.inOut(Easing.ease),
           }),
           -1,
-          true // reverse automatique, pas de jump
+          true
         );
       };
       animate();
@@ -135,14 +122,9 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
     };
   }, [canClaimChallenge, isCollected]);
 
-  // Check collection status on mount
   useEffect(() => {
     checkCollectionStatus();
   }, [userId]);
-
-  // ============================================================================
-  // HANDLERS
-  // ============================================================================
 
   const checkCollectionStatus = async () => {
     try {
@@ -235,17 +217,12 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
     }
   };
 
-  // ============================================================================
-  // RENDER HELPERS
-  // ============================================================================
-
   const getProgressText = () => {
-    if (isCollected) return 'Collected!';
-    if (canClaimChallenge) return 'Ready to Claim!';
+    if (isCollected) return t('dashboard.dailyChallenge.collected');
+    if (canClaimChallenge) return t('dashboard.dailyChallenge.readyToClaim');
 
     const remaining = stats.dailyTasksTotal - stats.dailyTasksCompleted;
-    if (remaining === 1) return '1 daily task to go';
-    return `${remaining} daily tasks to go`;
+    return t('dashboard.dailyChallenge.tasksRemaining', { count: remaining });
   };
 
   const renderTaskBadges = () => {
@@ -274,7 +251,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
               textShadowRadius: 3,
             }}
           >
-            {stats.dailyTasksTotal} {stats.dailyTasksTotal === 1 ? 'Daily Task' : 'Daily Tasks'}
+            {t('dashboard.dailyChallenge.dailyTask', { count: stats.dailyTasksTotal })}
           </Text>
         </View>
       );
@@ -303,7 +280,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
               textShadowRadius: 3,
             }}
           >
-            {stats.weeklyTasksTotal} {stats.weeklyTasksTotal === 1 ? 'Weekly Task' : 'Weekly Tasks'}
+            {t('dashboard.dailyChallenge.weeklyTask', { count: stats.weeklyTasksTotal })}
           </Text>
         </View>
       );
@@ -314,29 +291,21 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
 
   const getInfoMessage = () => {
     if (isCollected || stats.hasOnlyDaily) return null;
-    if (stats.hasWeekly) return 'Weekly habits can be completed anytime this week';
+    if (stats.hasWeekly) return t('dashboard.dailyChallenge.weeklyInfo');
     return null;
   };
 
   const infoMessage = getInfoMessage();
 
-  // ============================================================================
-  // RENDER
-  // ============================================================================
-
   return (
     <View>
       <View style={{ position: 'relative' }}>
-        {/* Floating XP Badge */}
         {showXPBadge && (
           <Animated.View style={badgeAnimatedStyle}>
             <FloatingXP show={showXPBadge} amount={20} accentColor={accentColor} texture={tierTheme?.texture} onComplete={hideBadge} />
           </Animated.View>
         )}
 
-        {/* Glow effect - REMOVED */}
-
-        {/* Colored Shadow Container */}
         <View
           style={{
             shadowColor: accentColor,
@@ -347,7 +316,6 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
             borderRadius: 16,
           }}
         >
-          {/* Main Card */}
           <Pressable onPress={handleCollect} disabled={!canClaimChallenge || isCollected || isAnimating}>
             <Animated.View style={[animatedButtonStyle, cardAnimatedStyle]}>
               <View
@@ -360,7 +328,6 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
                   borderColor: canClaimChallenge && !isCollected ? `${accentColor}66` : 'rgba(255, 255, 255, 0.2)',
                 }}
               >
-                {/* Header */}
                 <View
                   style={{
                     flexDirection: 'row',
@@ -370,7 +337,6 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
                   }}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    {/* Icon */}
                     <View style={{ width: 38, height: 38 }}>
                       {isCollected ? (
                         <View
@@ -423,7 +389,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
                           textShadowRadius: 3,
                         }}
                       >
-                        Daily Challenge
+                        {t('dashboard.dailyChallenge.title')}
                       </Text>
                       <Text
                         style={{
@@ -440,7 +406,6 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
                     </View>
                   </View>
 
-                  {/* XP Reward Badge */}
                   <View
                     style={{
                       backgroundColor: 'rgba(255, 255, 255, 0.3)',
@@ -461,12 +426,11 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
                         textShadowRadius: 3,
                       }}
                     >
-                      {isCollected ? '✓' : '+20 XP'}
+                      {isCollected ? '✓' : t('dashboard.dailyChallenge.xpReward', { amount: 20 })}
                     </Text>
                   </View>
                 </View>
 
-                {/* Progress Bar */}
                 {!isCollected && (
                   <View
                     style={{
@@ -496,7 +460,6 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
                   </View>
                 )}
 
-                {/* Task Badges */}
                 <View
                   style={{
                     flexDirection: 'row',
@@ -512,7 +475,6 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
           </Pressable>
         </View>
 
-        {/* Debug Reset Button */}
         {Config.debug.showTestButtons && isCollected && (
           <Pressable
             onPress={handleDebugReset}
@@ -531,13 +493,12 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
                 fontWeight: '700',
               }}
             >
-              🔄 Reset Challenge (Debug)
+              {t('dashboard.dailyChallenge.debugReset')}
             </Text>
           </Pressable>
         )}
       </View>
 
-      {/* Info Message */}
       {infoMessage && !isCollected && (
         <View style={{ marginTop: 8, paddingHorizontal: 4 }}>
           <Text

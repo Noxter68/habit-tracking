@@ -3,28 +3,32 @@ import { View, Text, ImageBackground, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, FadeIn, FadeOut } from 'react-native-reanimated';
 import { ChevronDown, ChevronUp } from 'lucide-react-native';
-import { Achievement, TierName, UserAchievement } from '../../types/achievement.types';
+import { useTranslation } from 'react-i18next';
+import { Achievement, TierKey, UserAchievement } from '../../types/achievement.types';
 import { AchievementCard } from './AchievementCard';
 import { getAchievementTierTheme } from '../../utils/tierTheme';
 
 interface TierSectionProps {
-  tierName: TierName;
+  tierName: string;
+  tierKey: TierKey;
   tierIndex: number;
   achievements: Achievement[];
   userAchievements: UserAchievement[];
   isAchievementUnlocked: (achievement: Achievement) => boolean;
   onAchievementPress: (achievement: Achievement) => void;
   isExpanded: boolean;
-  onToggle: (tierName: TierName) => void;
+  onToggle: () => void;
 }
 
-export const TierSection: React.FC<TierSectionProps> = ({ tierName, tierIndex, achievements, userAchievements, isAchievementUnlocked, onAchievementPress, isExpanded, onToggle }) => {
+export const TierSection: React.FC<TierSectionProps> = ({ tierName, tierKey, tierIndex, achievements, userAchievements, isAchievementUnlocked, onAchievementPress, isExpanded, onToggle }) => {
+  const { t } = useTranslation();
+
   const tierUnlockedCount = achievements.filter((a) => isAchievementUnlocked(a)).length;
   const tierTotalCount = achievements.length;
   const progress = tierTotalCount > 0 ? (tierUnlockedCount / tierTotalCount) * 100 : 0;
   const isCompleted = tierUnlockedCount === tierTotalCount;
 
-  const tierTheme = getAchievementTierTheme(tierName as any);
+  const tierTheme = getAchievementTierTheme(tierKey);
   const tierGradient = tierTheme.gradient;
   const tierTexture = tierTheme.texture;
 
@@ -36,7 +40,7 @@ export const TierSection: React.FC<TierSectionProps> = ({ tierName, tierIndex, a
   return (
     <Animated.View entering={FadeInDown.delay(tierIndex * 100).springify()} style={{ marginBottom: 24 }}>
       <Pressable
-        onPress={() => onToggle(tierName)}
+        onPress={onToggle}
         style={({ pressed }) => ({
           marginHorizontal: 8,
           marginBottom: isExpanded ? 12 : 0,
@@ -82,7 +86,7 @@ export const TierSection: React.FC<TierSectionProps> = ({ tierName, tierIndex, a
                         color: textColors.primary,
                       }}
                     >
-                      COMPLETE
+                      {t('achievements.complete').toUpperCase()}
                     </Text>
                   </View>
                 )}
@@ -131,7 +135,7 @@ export const TierSection: React.FC<TierSectionProps> = ({ tierName, tierIndex, a
                   textAlign: 'right',
                 }}
               >
-                {Math.round(progress)}% Complete
+                {t('achievements.percentComplete', { percent: Math.round(progress) })}
               </Text>
             )}
           </ImageBackground>
@@ -155,7 +159,7 @@ export const TierSection: React.FC<TierSectionProps> = ({ tierName, tierIndex, a
 
             return (
               <View
-                key={`${achievement.id}=${achievement.title}`}
+                key={`${achievement.level}-${achievement.tierKey}`}
                 style={{
                   width: '50%',
                   paddingHorizontal: 4,

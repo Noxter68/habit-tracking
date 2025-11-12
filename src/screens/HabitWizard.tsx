@@ -4,6 +4,7 @@ import { View, Text, Pressable, ScrollView, Alert, ImageBackground, StyleSheet }
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft } from 'lucide-react-native';
 import tw from '../lib/tailwind';
 import { Habit, HabitType } from '../types';
@@ -28,6 +29,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'HabitWizard
 
 const HabitWizard: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const { t } = useTranslation();
   const { addHabit } = useHabits();
   const { user } = useAuth();
   const [step, setStep] = useState(1);
@@ -82,24 +84,24 @@ const HabitWizard: React.FC = () => {
 
   const handleNext = useCallback(async () => {
     if (step === 1 && !habitData.type) {
-      Alert.alert('Please select', 'Choose whether you want to build or quit a habit');
+      Alert.alert(t('wizard.alerts.selectType.title'), t('wizard.alerts.selectType.message'));
       return;
     }
 
     if (step === 2) {
       if (!isCustomHabit && !habitData.category) {
-        Alert.alert('Please select', 'Choose a category for your habit');
+        Alert.alert(t('wizard.alerts.selectCategory.title'), t('wizard.alerts.selectCategory.message'));
         return;
       }
     }
 
     if (step === 3 && isCustomHabit) {
       if (customHabitName.trim().length === 0) {
-        Alert.alert('Habit name required', 'Please enter a name for your habit');
+        Alert.alert(t('wizard.alerts.habitNameRequired.title'), t('wizard.alerts.habitNameRequired.message'));
         return;
       }
       if (!customHabitIcon) {
-        Alert.alert('Icon required', 'Please select an icon for your habit');
+        Alert.alert(t('wizard.alerts.iconRequired.title'), t('wizard.alerts.iconRequired.message'));
         return;
       }
       setStep(4);
@@ -109,7 +111,7 @@ const HabitWizard: React.FC = () => {
     if (step === 4 && isCustomHabit) {
       const validTasks = customTasks.filter((t) => t.trim() !== '');
       if (validTasks.length === 0) {
-        Alert.alert('Tasks required', 'Please create at least one task for your habit');
+        Alert.alert(t('wizard.alerts.tasksRequired.title'), t('wizard.alerts.tasksRequired.message'));
         return;
       }
       setHabitData((prev) => ({ ...prev, tasks: validTasks }));
@@ -119,7 +121,7 @@ const HabitWizard: React.FC = () => {
 
     if (step === 3 && !isCustomHabit) {
       if (!habitData.tasks || habitData.tasks.length === 0) {
-        Alert.alert('Please select', 'Choose at least one task to track');
+        Alert.alert(t('wizard.alerts.selectTasks.title'), t('wizard.alerts.selectTasks.message'));
         return;
       }
     }
@@ -130,7 +132,7 @@ const HabitWizard: React.FC = () => {
     }
 
     setStep(step + 1);
-  }, [step, habitData, isCustomHabit, customHabitName, customHabitIcon, customTasks, isLastStep]);
+  }, [step, habitData, isCustomHabit, customHabitName, customHabitIcon, customTasks, isLastStep, t]);
 
   const createHabit = async () => {
     setIsCreating(true);
@@ -169,11 +171,11 @@ const HabitWizard: React.FC = () => {
         if (isFirstHabit && permissionRequested) {
           if (permissionGranted) {
             if (habitData.notifications) {
-              Alert.alert('Notifications Enabled! 🔔', "You'll receive reminders to help you stay on track.", [{ text: 'Great!' }]);
+              Alert.alert(t('wizard.alerts.notificationsEnabled.title'), t('wizard.alerts.notificationsEnabled.message'), [{ text: t('wizard.alerts.notificationsEnabled.button') }]);
             }
           } else {
             newHabit.notifications = false;
-            Alert.alert('Notifications Disabled', 'You can enable them later in Settings.', [{ text: 'OK' }]);
+            Alert.alert(t('wizard.alerts.notificationsDisabled.title'), t('wizard.alerts.notificationsDisabled.message'), [{ text: t('wizard.alerts.notificationsDisabled.button') }]);
           }
         }
       }
@@ -182,7 +184,7 @@ const HabitWizard: React.FC = () => {
       navigation.replace('MainTabs');
     } catch (error) {
       setIsCreating(false);
-      Alert.alert('Error', 'Failed to create habit. Please try again.');
+      Alert.alert(t('wizard.alerts.error.title'), t('wizard.alerts.error.message'));
       Logger.error('Error creating habit:', error);
     }
   };
@@ -330,7 +332,9 @@ const HabitWizard: React.FC = () => {
 
             {/* Continue Button */}
             <Pressable onPress={handleNext} disabled={isCreating} style={({ pressed }) => [tw`bg-white rounded-full py-4 px-8`, pressed && tw`opacity-80`, isCreating && tw`opacity-50`]}>
-              <Text style={tw`text-purple-600 text-lg font-bold text-center`}>{isCreating ? 'Creating...' : isLastStep ? 'Create Habit' : 'Continue'}</Text>
+              <Text style={tw`text-purple-600 text-lg font-bold text-center`}>
+                {isCreating ? t('wizard.navigation.creating') : isLastStep ? t('wizard.navigation.createHabit') : t('wizard.navigation.continue')}
+              </Text>
             </Pressable>
           </View>
         </View>

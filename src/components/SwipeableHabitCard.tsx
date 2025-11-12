@@ -1,15 +1,13 @@
 // src/components/SwipeableHabitCard.tsx
-// ✅ WITH HAPTIC FEEDBACK
-
 import React, { useRef } from 'react';
 import { View, Alert, Animated as RNAnimated, Dimensions } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import { Trash2 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 import tw from '../lib/tailwind';
 
 import { Habit } from '../types';
-
 import { HapticFeedback } from '@/utils/haptics';
 import { getTodayString } from '@/utils/dateHelpers';
 import { HabitCard } from './habits/HabitCard';
@@ -28,6 +26,7 @@ interface SwipeableHabitCardProps {
 }
 
 const SwipeableHabitCard: React.FC<SwipeableHabitCardProps> = ({ habit, onDelete, onToggleDay, onToggleTask, onPress, index = 0, pausedTasks = {} }) => {
+  const { t } = useTranslation();
   const translateX = useRef(new RNAnimated.Value(0)).current;
   const today = getTodayString();
   const todayTasks = habit.dailyTasks?.[today];
@@ -40,16 +39,20 @@ const SwipeableHabitCard: React.FC<SwipeableHabitCardProps> = ({ habit, onDelete
       const { translationX: translation } = event.nativeEvent;
 
       if (translation < SWIPE_THRESHOLD) {
-        // ✅ Medium haptic for delete action
         HapticFeedback.medium();
 
-        // Show delete confirmation with gamified messaging
+        // Détermine le type de streak (day/week)
+        const streakUnit = habit.frequency === 'weekly' ? 'week' : 'day';
+
         Alert.alert(
-          '⚠️ Remove Habit',
-          `Are you sure you want to stop tracking "${habit.name}"?\n\nYou'll lose:\n• ${habit.currentStreak} ${habit.frequency === 'weekly' ? 'week' : 'day'} streak\n• Progress towards achievements`,
+          t('dashboard.removeHabit'),
+          t('dashboard.removeHabitConfirm', {
+            name: habit.name,
+            streak: habit.currentStreak,
+          }),
           [
             {
-              text: 'Keep Habit',
+              text: t('habits.keepHabit'),
               onPress: () => {
                 HapticFeedback.light();
                 RNAnimated.spring(translateX, {
@@ -62,7 +65,7 @@ const SwipeableHabitCard: React.FC<SwipeableHabitCardProps> = ({ habit, onDelete
               style: 'cancel',
             },
             {
-              text: 'Remove',
+              text: t('common.delete'),
               onPress: () => {
                 HapticFeedback.medium();
                 RNAnimated.timing(translateX, {
@@ -79,7 +82,6 @@ const SwipeableHabitCard: React.FC<SwipeableHabitCardProps> = ({ habit, onDelete
           { cancelable: true }
         );
       } else {
-        // Snap back
         RNAnimated.spring(translateX, {
           toValue: 0,
           useNativeDriver: true,
@@ -96,7 +98,6 @@ const SwipeableHabitCard: React.FC<SwipeableHabitCardProps> = ({ habit, onDelete
     extrapolate: 'clamp',
   });
 
-  // ✅ Create wrapped onPress with haptic
   const handlePress = onPress
     ? () => {
         HapticFeedback.light();

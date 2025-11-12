@@ -50,6 +50,7 @@ import { RevenueCatService } from '@/services/RevenueCatService';
 import { NotificationService } from '@/services/notificationService';
 import { HapticFeedback } from '@/utils/haptics';
 import notificationBadgeService from '@/services/notificationBadgeService';
+import LanguageSelectorScreen from '@/components/settings/LanguageSelector';
 
 // Type Definitions
 export type RootStackParamList = {
@@ -296,6 +297,15 @@ function AppNavigator() {
         <Stack.Screen name="Paywall" component={PaywallScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="HolidayMode" component={HolidayModeScreen} options={{ headerShown: false, presentation: 'card', animation: 'slide_from_right' }} />
         <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
+        <Stack.Screen
+          name="LanguageSelector"
+          component={LanguageSelectorScreen}
+          options={{
+            headerShown: false,
+            animation: 'slide_from_right',
+            presentation: 'card',
+          }}
+        />
 
         {Config.debug.showDebugScreen && (
           <>

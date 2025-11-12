@@ -2,10 +2,11 @@
 import React from 'react';
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react-native';
 import tw from '../../lib/tailwind';
 import { HabitType } from '../../types';
-import { getTasksForCategory } from '@/utils/habitHelpers';
+import { useHabitHelpers } from '@/hooks/useHabitHelper';
 
 interface TaskSelectorProps {
   category: string;
@@ -15,6 +16,10 @@ interface TaskSelectorProps {
 }
 
 const TaskSelector: React.FC<TaskSelectorProps> = ({ category, habitType, selectedTasks, onSelectTasks }) => {
+  const { t } = useTranslation();
+  const { getTasksForCategory } = useHabitHelpers();
+
+  // Récupère les tâches avec les textes traduits ET les icônes
   const availableTasks = getTasksForCategory(category, habitType);
   const maxTasks = 3;
 
@@ -33,12 +38,15 @@ const TaskSelector: React.FC<TaskSelectorProps> = ({ category, habitType, select
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`px-8 py-8`}>
         {/* Header */}
         <View style={tw`mb-10`}>
-          <Text style={tw`text-3xl font-bold text-white text-center mb-3`}>Choose Your Tasks</Text>
-          <Text style={tw`text-base text-white/80 text-center leading-6 px-2`}>Select up to {maxTasks} daily actions to track</Text>
+          <Text style={tw`text-3xl font-bold text-white text-center mb-3`}>{t('wizard.taskSelector.title')}</Text>
+          <Text style={tw`text-base text-white/80 text-center leading-6 px-2`}>{t('wizard.taskSelector.subtitle', { max: maxTasks })}</Text>
 
           {selectedTasks.length > 0 && (
             <Text style={tw`text-sm text-white/60 text-center mt-2`}>
-              {selectedTasks.length} of {maxTasks} selected
+              {t('wizard.taskSelector.selected', {
+                count: selectedTasks.length,
+                max: maxTasks,
+              })}
             </Text>
           )}
         </View>
@@ -47,7 +55,7 @@ const TaskSelector: React.FC<TaskSelectorProps> = ({ category, habitType, select
         <View style={tw`gap-3`}>
           {availableTasks.map((task, index) => {
             const isSelected = selectedTasks.includes(task.id);
-            const Icon = task.icon;
+            const IconComponent = task.icon;
 
             return (
               <Animated.View key={task.id} entering={FadeInDown.delay(index * 30).duration(300)}>
@@ -56,13 +64,22 @@ const TaskSelector: React.FC<TaskSelectorProps> = ({ category, habitType, select
                   disabled={!isSelected && selectedTasks.length >= maxTasks}
                   style={({ pressed }) => [
                     tw`rounded-2xl p-5 flex-row items-center border-2 ${isSelected ? 'border-emerald-400/60' : 'border-white/10'}`,
-                    { backgroundColor: isSelected ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.15)' },
+                    {
+                      backgroundColor: isSelected ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.15)',
+                    },
                     !isSelected && selectedTasks.length >= maxTasks && tw`opacity-40`,
                     pressed && tw`opacity-80`,
                   ]}
                 >
-                  <View style={[tw`w-12 h-12 rounded-xl items-center justify-center mr-4`, { backgroundColor: isSelected ? 'rgba(16, 185, 129, 0.25)' : 'rgba(255, 255, 255, 0.1)' }]}>
-                    <Icon size={24} color="#ffffff" strokeWidth={2} />
+                  <View
+                    style={[
+                      tw`w-12 h-12 rounded-xl items-center justify-center mr-4`,
+                      {
+                        backgroundColor: isSelected ? 'rgba(16, 185, 129, 0.25)' : 'rgba(255, 255, 255, 0.1)',
+                      },
+                    ]}
+                  >
+                    {IconComponent && <IconComponent size={24} color="#ffffff" strokeWidth={2} />}
                   </View>
 
                   <View style={tw`flex-1 mr-3`}>
@@ -82,7 +99,7 @@ const TaskSelector: React.FC<TaskSelectorProps> = ({ category, habitType, select
 
         {/* Tip */}
         <View style={tw`mt-8`}>
-          <Text style={tw`text-xs text-white/50 text-center font-light italic leading-5`}>Start small and build momentum{'\n'}You can always add more tasks later</Text>
+          <Text style={tw`text-xs text-white/50 text-center font-light italic leading-5`}>{t('wizard.taskSelector.tip')}</Text>
         </View>
       </ScrollView>
     </View>

@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text, ScrollView, Pressable, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 import { Plus, X, CheckCircle2 } from 'lucide-react-native';
 import tw from '../../lib/tailwind';
 import { HabitType } from '../../types';
@@ -14,6 +15,7 @@ interface CustomTaskCreatorProps {
 }
 
 const CustomTaskCreator: React.FC<CustomTaskCreatorProps> = ({ habitType, habitName, tasks, onTasksChange }) => {
+  const { t } = useTranslation();
   const maxTasks = 3;
 
   const addTask = () => {
@@ -41,15 +43,15 @@ const CustomTaskCreator: React.FC<CustomTaskCreatorProps> = ({ habitType, habitN
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`px-8 py-8`} keyboardShouldPersistTaps="always">
         {/* Header */}
         <View style={tw`mb-8`}>
-          <Text style={tw`text-3xl font-bold text-white text-center mb-3`}>Define Your Tasks</Text>
-          <Text style={tw`text-base text-white/80 text-center leading-6 px-2`}>
-            Create specific actions for{'\n'}
-            <Text style={tw`font-semibold`}>"{habitName}"</Text>
-          </Text>
+          <Text style={tw`text-3xl font-bold text-white text-center mb-3`}>{t('wizard.customTaskCreator.title')}</Text>
+          <Text style={tw`text-base text-white/80 text-center leading-6 px-2`}>{t('wizard.customTaskCreator.subtitle', { habitName })}</Text>
 
           <View style={tw`mt-4 bg-white/10 rounded-xl px-4 py-2 self-center`}>
             <Text style={tw`text-sm text-white/90`}>
-              {completedTasks} of {maxTasks} tasks defined
+              {t('wizard.customTaskCreator.tasksDefined', {
+                count: completedTasks,
+                max: maxTasks,
+              })}
             </Text>
           </View>
         </View>
@@ -64,7 +66,9 @@ const CustomTaskCreator: React.FC<CustomTaskCreatorProps> = ({ habitType, habitN
                   <TextInput
                     value={task}
                     onChangeText={(value) => updateTask(index, value)}
-                    placeholder={`Task ${index + 1}`}
+                    placeholder={t('wizard.customTaskCreator.taskPlaceholder', {
+                      number: index + 1,
+                    })}
                     placeholderTextColor="rgba(255, 255, 255, 0.3)"
                     style={tw`flex-1 text-white text-base`}
                     maxLength={60}
@@ -88,7 +92,7 @@ const CustomTaskCreator: React.FC<CustomTaskCreatorProps> = ({ habitType, habitN
         {tasks.length < maxTasks && (
           <Pressable onPress={addTask} style={({ pressed }) => [tw`bg-white/15 border-2 border-white/20 rounded-2xl py-4 flex-row items-center justify-center mb-6`, pressed && tw`opacity-70`]}>
             <Plus size={20} color="#ffffff" strokeWidth={2} style={tw`mr-2`} />
-            <Text style={tw`text-white font-semibold`}>Add Another Task</Text>
+            <Text style={tw`text-white font-semibold`}>{t('wizard.customTaskCreator.addAnotherTask')}</Text>
           </Pressable>
         )}
 
@@ -98,7 +102,7 @@ const CustomTaskCreator: React.FC<CustomTaskCreatorProps> = ({ habitType, habitN
             <View style={tw`bg-emerald-500/20 border-2 border-emerald-400/30 rounded-2xl p-5`}>
               <View style={tw`flex-row items-center mb-3`}>
                 <CheckCircle2 size={20} color="#10b981" strokeWidth={2} style={tw`mr-2`} />
-                <Text style={tw`text-white font-semibold`}>Tasks Preview</Text>
+                <Text style={tw`text-white font-semibold`}>{t('wizard.customTaskCreator.tasksPreview')}</Text>
               </View>
               {tasks
                 .filter((t) => t.trim() !== '')
@@ -114,7 +118,7 @@ const CustomTaskCreator: React.FC<CustomTaskCreatorProps> = ({ habitType, habitN
 
         {/* Tip */}
         <View style={tw`mt-8`}>
-          <Text style={tw`text-xs text-white/50 text-center font-light italic leading-5`}>Break down your goals into small steps{'\n'}Progress compounds over time</Text>
+          <Text style={tw`text-xs text-white/50 text-center font-light italic leading-5`}>{t('wizard.customTaskCreator.tip')}</Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

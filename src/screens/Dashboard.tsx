@@ -8,6 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Lock, Plus, Zap, PauseCircle } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import tw from '../lib/tailwind';
 
 // Components
@@ -25,7 +26,7 @@ import { useStats } from '../context/StatsContext';
 import { useLevelUp } from '@/context/LevelUpContext';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { HolidayModeService } from '@/services/holidayModeService';
-import { getAchievementByLevel } from '@/utils/achievements';
+import { getAchievementByLevel, getAchievementTitle } from '@/utils/achievements';
 import { HapticFeedback } from '@/utils/haptics';
 import Logger from '@/utils/logger';
 import { HolidayPeriod } from '@/types/holiday.types';
@@ -33,12 +34,14 @@ import { StreakSaverService } from '@/services/StreakSaverService';
 import { getTodayString } from '@/utils/dateHelpers';
 import TaskBadge from '@/components/TasksBadge';
 import AddHabitButton from '@/components/dashboard/AddHabitButton';
+import i18n from '@/i18n';
 
 // ============================================================================
 // Main Component
 // ============================================================================
 
 const Dashboard: React.FC = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const { user } = useAuth();
   const { habits, loading: habitsLoading, toggleHabitDay, toggleTask, deleteHabit, refreshHabits } = useHabits();
@@ -65,19 +68,37 @@ const Dashboard: React.FC = () => {
   const lastLoadTime = useRef<number>(0);
   const MIN_RELOAD_INTERVAL = 1000; // 1 second
 
+  useEffect(() => {
+    console.log('🌍 Current language:', i18n.language);
+    console.log('🔑 Available languages:', Object.keys(i18n.options.resources || {}));
+
+    // Test direct
+    const testTitle = i18n.t('achievements.titles.level1');
+    console.log('📝 Direct i18n.t test:', testTitle);
+
+    // Test avec le hook
+    const testTitle2 = t('achievements.titles.level1');
+    console.log('📝 Hook t() test:', testTitle2);
+
+    // Test si la clé existe
+    const exists = i18n.exists('achievements.titles.level1');
+    console.log('✅ Key exists?', exists);
+
+    // Afficher toute la structure achievements
+    const allAchievements = i18n.t('achievements', { returnObjects: true });
+    console.log('📦 All achievements data:', JSON.stringify(allAchievements, null, 2));
+  }, []);
+
   // ============================================================================
   // LOADING STATE MANAGEMENT
   // ============================================================================
 
-  // Track if we have the minimum required data to render
   const hasMinimumData = useMemo(() => {
     return !habitsLoading && !statsLoading && !holidayLoading && stats !== null && habits !== undefined;
   }, [habitsLoading, statsLoading, holidayLoading, stats, habits]);
 
-  // Once we have data, keep initial load false
   useEffect(() => {
     if (hasMinimumData && isInitialLoad) {
-      // Small delay to ensure everything is rendered
       setTimeout(() => {
         setIsInitialLoad(false);
       }, 100);
@@ -104,21 +125,18 @@ const Dashboard: React.FC = () => {
         return;
       }
 
-      // Case 1: All habits frozen
       if (holiday.appliesToAll) {
         setFrozenHabits(new Set(habits.map((h) => h.id)));
         setFrozenTasksMap(new Map());
         return;
       }
 
-      // Case 2: Specific habits frozen
       if (holiday.frozenHabits?.length) {
         setFrozenHabits(new Set(holiday.frozenHabits));
       } else {
         setFrozenHabits(new Set());
       }
 
-      // Case 3: Specific tasks frozen
       if (holiday.frozenTasks?.length) {
         const tasksMap = new Map<string, Record<string, { pausedUntil: string }>>();
 
@@ -155,7 +173,6 @@ const Dashboard: React.FC = () => {
 
     HapticFeedback.medium();
 
-    // Optimistic update
     setFrozenHabits(new Set());
     setFrozenTasksMap(new Map());
     setActiveHoliday(null);
@@ -167,12 +184,12 @@ const Dashboard: React.FC = () => {
         await refreshHabits();
       } else {
         await loadHolidayModeData();
-        Alert.alert('Error', result.error || 'Failed to end holiday mode');
+        Alert.alert(t('common.error'), result.error || t('dashboard.holidayEndError'));
       }
     } catch (error) {
       Logger.error('Error ending holiday:', error);
       await loadHolidayModeData();
-      Alert.alert('Error', 'Failed to end holiday mode');
+      Alert.alert(t('common.error'), t('dashboard.holidayEndError'));
     }
   };
 
@@ -209,7 +226,6 @@ const Dashboard: React.FC = () => {
   const handleCreateHabit = async () => {
     HapticFeedback.light();
 
-    // If habit limit reached, open paywall instead
     if (isHabitLimitReached) {
       navigation.navigate('Paywall', { source: 'habit_limit' });
       return;
@@ -223,7 +239,6 @@ const Dashboard: React.FC = () => {
 
   const handleDeleteHabit = async (habitId: string) => {
     await deleteHabit(habitId);
-    // Refresh subscription context to update habit count
     await refreshSubscription();
   };
 
@@ -246,7 +261,6 @@ const Dashboard: React.FC = () => {
     toggleHabitDay(habitId, date);
   };
 
-  // Debug: Test level up
   const handleTestLevelUp = () => {
     HapticFeedback.light();
     const newLevel = testLevel + 1;
@@ -256,7 +270,6 @@ const Dashboard: React.FC = () => {
   };
 
   const handleStatsRefresh = useCallback(async () => {
-    // Force refresh stats from backend
     await refreshStats(true);
   }, [refreshStats]);
 
@@ -278,59 +291,12 @@ const Dashboard: React.FC = () => {
     return { completed, total };
   }, [habits]);
 
-  const completionRate = realTimeTasksStats.total > 0 ? Math.round((realTimeTasksStats.completed / realTimeTasksStats.total) * 100) : 0;
-
-  // ✅ Titres dynamiques basés sur l'accomplissement
-  const getAccomplishmentTitle = () => {
-    const rate = completionRate;
-
-    if (rate === 100) return { title: 'Perfect Day!', emoji: '🎉', subtitle: 'All tasks completed!' };
-    if (rate >= 75) return { title: 'Almost There!', emoji: '🔥', subtitle: "You're crushing it today" };
-    if (rate >= 50) return { title: 'Building Momentum', emoji: '💪', subtitle: 'Keep the streak going' };
-    return { title: 'Just Getting Started', emoji: '🌱', subtitle: 'Every step counts' };
-  };
-
-  // ✅ Couleurs dynamiques selon l'accomplissement
-  const getProgressColors = () => {
-    if (completionRate === 100) {
-      return {
-        primary: '#10b981', // green-500
-        light: '#ecfdf5', // green-50
-        border: '#86efac', // green-300
-        badge: '#10b981',
-      };
-    }
-    if (completionRate >= 75) {
-      return {
-        primary: '#f59e0b', // amber-500
-        light: '#fffbeb', // amber-50
-        border: '#fcd34d', // amber-300
-        badge: '#f59e0b',
-      };
-    }
-    if (completionRate >= 50) {
-      return {
-        primary: '#3b82f6', // blue-500
-        light: '#eff6ff', // blue-50
-        border: '#93c5fd', // blue-300
-        badge: '#3b82f6',
-      };
-    }
-    return {
-      primary: '#64748b', // slate-500
-      light: '#f8fafc', // slate-50
-      border: '#cbd5e1', // slate-300
-      badge: '#64748b',
-    };
-  };
-
   const handleStreakSaverPress = async () => {
     if (!user) return;
 
     HapticFeedback.light();
 
     try {
-      // Récupère les habitudes sauvables
       const saveableHabits = await StreakSaverService.getSaveableHabits(user.id);
 
       if (saveableHabits.length === 0) {
@@ -338,7 +304,6 @@ const Dashboard: React.FC = () => {
         return;
       }
 
-      // Si une seule habitude, navigue directement vers elle
       if (saveableHabits.length === 1) {
         const habit = saveableHabits[0];
         Logger.debug('🎯 Navigating to habit:', habit.habitId);
@@ -347,7 +312,6 @@ const Dashboard: React.FC = () => {
           pausedTasks: frozenTasksMap.get(habit.habitId) || {},
         });
       } else {
-        // Si plusieurs habitudes, navigue vers la première (ou tu peux créer un modal de sélection)
         const firstHabit = saveableHabits[0];
         Logger.debug('🎯 Multiple saveable habits, navigating to first:', firstHabit.habitId);
         navigation.navigate('HabitDetails', {
@@ -373,7 +337,7 @@ const Dashboard: React.FC = () => {
 
         const now = Date.now();
         if (now - lastLoadTime.current < MIN_RELOAD_INTERVAL) {
-          return; // Skip if loaded recently
+          return;
         }
 
         lastLoadTime.current = now;
@@ -390,7 +354,6 @@ const Dashboard: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      // Refresh le badge quand on revient sur le Dashboard
       setStreakSaverRefreshTrigger((prev) => prev + 1);
     }, [])
   );
@@ -431,7 +394,7 @@ const Dashboard: React.FC = () => {
 
           {/* Header with stats & progress */}
           <DashboardHeader
-            userTitle={stats?.title ?? 'Novice'}
+            userTitle={stats?.currentAchievement ? getAchievementTitle(stats.level) : t('achievements.tiers.novice')}
             userLevel={stats?.level ?? 1}
             totalStreak={stats?.totalStreak ?? 0}
             activeHabits={stats?.activeHabits ?? 0}
@@ -446,7 +409,7 @@ const Dashboard: React.FC = () => {
             habits={habits}
           />
 
-          {/* Streak Saver Badge (only when not on full holiday) */}
+          {/* Streak Saver Badge */}
           {!showPartialPauseMode && !hasTasksPaused && !showFullHolidayMode && (
             <>
               <StreakSaverBadge
@@ -455,7 +418,7 @@ const Dashboard: React.FC = () => {
                   HapticFeedback.light();
                   setShowShop(true);
                 }}
-                refreshTrigger={streakSaverRefreshTrigger} // ✅ Passe le trigger
+                refreshTrigger={streakSaverRefreshTrigger}
               />
               <StreakSaverShopModal
                 visible={showShop}
@@ -465,7 +428,7 @@ const Dashboard: React.FC = () => {
                 }}
                 onPurchaseSuccess={() => {
                   setShowShop(false);
-                  setStreakSaverRefreshTrigger((prev) => prev + 1); // ✅ Trigger refresh après achat
+                  setStreakSaverRefreshTrigger((prev) => prev + 1);
                 }}
               />
             </>
@@ -484,11 +447,11 @@ const Dashboard: React.FC = () => {
                   <PauseCircle size={18} color="#2563EB" strokeWidth={2.5} />
                 </View>
                 <View style={tw`flex-1`}>
-                  <Text style={tw`text-sm font-bold text-blue-700`}>Holiday Mode Active</Text>
+                  <Text style={tw`text-sm font-bold text-blue-700`}>{t('dashboard.holidayModeActive')}</Text>
                   <Text style={tw`text-xs text-blue-600 mt-0.5`}>
-                    {pausedHabitsCount > 0 && `${pausedHabitsCount} ${pausedHabitsCount === 1 ? 'habit' : 'habits'} paused`}
+                    {pausedHabitsCount > 0 && t('dashboard.habitsPaused', { count: pausedHabitsCount })}
                     {pausedHabitsCount > 0 && hasTasksPaused && ' • '}
-                    {hasTasksPaused && `${frozenTasksMap.size} ${frozenTasksMap.size === 1 ? 'habit has' : 'habits have'} paused tasks`}
+                    {hasTasksPaused && t('dashboard.tasksPaused', { count: frozenTasksMap.size })}
                   </Text>
                 </View>
               </LinearGradient>
@@ -512,12 +475,10 @@ const Dashboard: React.FC = () => {
                 {isHabitLimitReached ? (
                   <>
                     <Lock size={14} color="#EA580C" strokeWidth={2.5} style={tw`mr-2`} />
-                    <Text style={tw`text-xs font-bold text-orange-700 tracking-wide flex-shrink`}>Habit limit reached • Upgrade for unlimited</Text>
+                    <Text style={tw`text-xs font-bold text-orange-700 tracking-wide flex-shrink`}>{t('dashboard.habitLimitReached')}</Text>
                   </>
                 ) : (
-                  <Text style={tw`text-xs font-bold text-blue-700 tracking-wide`}>
-                    {habitCount} of {maxHabits} free habits
-                  </Text>
+                  <Text style={tw`text-xs font-bold text-blue-700 tracking-wide`}>{t('dashboard.habitCount', { count: habitCount, max: maxHabits })}</Text>
                 )}
               </View>
             )}
@@ -525,22 +486,21 @@ const Dashboard: React.FC = () => {
             {/* Section Header */}
             {!showFullHolidayMode && activeHabits.length > 0 ? (
               <View style={tw`mb-4`}>
-                {/* Header with Dynamic Title */}
                 <AddHabitButton onPress={handleCreateHabit} />
                 <TaskBadge completed={realTimeTasksStats.completed} total={realTimeTasksStats.total} onAddPress={handleCreateHabit} showAddButton={habits.length > 0} />
               </View>
             ) : showFullHolidayMode ? (
               <View style={tw`flex-row items-center justify-between mb-4`}>
                 <View>
-                  <Text style={tw`text-xl font-bold text-stone-700`}>On Holiday</Text>
-                  <Text style={tw`text-sm text-stone-500 mt-0.5`}>All habits are paused</Text>
+                  <Text style={tw`text-xl font-bold text-stone-700`}>{t('dashboard.onHoliday')}</Text>
+                  <Text style={tw`text-sm text-stone-500 mt-0.5`}>{t('dashboard.allHabitsPaused')}</Text>
                 </View>
               </View>
             ) : (
               <View style={tw`flex-row items-center justify-between mb-4`}>
                 <View>
-                  <Text style={tw`text-xl font-bold text-stone-700`}>Get Started</Text>
-                  <Text style={tw`text-sm text-stone-500 mt-0.5`}>Start building your first habit</Text>
+                  <Text style={tw`text-xl font-bold text-stone-700`}>{t('dashboard.getStarted')}</Text>
+                  <Text style={tw`text-sm text-stone-500 mt-0.5`}>{t('dashboard.startBuilding')}</Text>
                 </View>
               </View>
             )}
@@ -556,8 +516,8 @@ const Dashboard: React.FC = () => {
                       <View style={tw`w-20 h-20 bg-blue-100 rounded-2xl items-center justify-center mb-5`}>
                         <PauseCircle size={40} color="#2563EB" strokeWidth={2} />
                       </View>
-                      <Text style={tw`text-2xl font-bold text-blue-800 mb-2`}>All Habits Paused</Text>
-                      <Text style={tw`text-sm text-blue-600 text-center px-4`}>All your habits are currently paused. They'll automatically resume when their pause periods end.</Text>
+                      <Text style={tw`text-2xl font-bold text-blue-800 mb-2`}>{t('dashboard.allHabitsPausedTitle')}</Text>
+                      <Text style={tw`text-sm text-blue-600 text-center px-4`}>{t('dashboard.allHabitsPausedMessage')}</Text>
                     </View>
                   </LinearGradient>
                 </View>
@@ -588,11 +548,11 @@ const Dashboard: React.FC = () => {
                       </LinearGradient>
                     </View>
 
-                    <Text style={tw`text-lg font-bold text-stone-700 mb-2`}>Create Your First Habit</Text>
-                    <Text style={tw`text-sm text-stone-500 text-center px-4`}>Start your journey to build better habits and earn achievements!</Text>
+                    <Text style={tw`text-lg font-bold text-stone-700 mb-2`}>{t('dashboard.createFirstHabit')}</Text>
+                    <Text style={tw`text-sm text-stone-500 text-center px-4`}>{t('dashboard.startJourney')}</Text>
 
                     <View style={tw`mt-4 px-6 py-2 bg-sand rounded-full border border-stone-300 shadow-sm`}>
-                      <Text style={tw`text-sm font-semibold text-stone-600`}>Tap to Begin →</Text>
+                      <Text style={tw`text-sm font-semibold text-stone-600`}>{t('dashboard.tapToBegin')}</Text>
                     </View>
                   </LinearGradient>
                 </Pressable>

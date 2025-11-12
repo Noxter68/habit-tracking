@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Modal, Pressable, Dimensions } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import tw from '../../lib/tailwind';
 import { Achievement } from '../../types/achievement.types';
 import { AchievementBadge } from './AchievementBadge';
@@ -14,6 +15,8 @@ interface ZoomModalProps {
 }
 
 export const ZoomModal: React.FC<ZoomModalProps> = ({ visible, onClose, currentLevel, currentTitle }) => {
+  const { t } = useTranslation();
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
       <Pressable style={tw`flex-1 bg-slate-900/95 items-center justify-center px-6`} onPress={onClose}>
@@ -35,15 +38,15 @@ export const ZoomModal: React.FC<ZoomModalProps> = ({ visible, onClose, currentL
             {/* Level and Tier Pills */}
             <View style={tw`flex-row gap-2 mt-6 justify-center`}>
               <View style={tw`bg-slate-100 rounded-full px-4 py-2`}>
-                <Text style={tw`text-slate-700 text-sm font-medium`}>Level {currentLevel}</Text>
+                <Text style={tw`text-slate-700 text-sm font-medium`}>{t('achievements.level', { level: currentLevel })}</Text>
               </View>
               <View style={tw`bg-slate-100 rounded-full px-4 py-2`}>
-                <Text style={tw`text-slate-700 text-sm font-medium`}>{currentTitle?.tier || 'Novice'}</Text>
+                <Text style={tw`text-slate-700 text-sm font-medium`}>{currentTitle?.tier || t('achievements.tiers.novice')}</Text>
               </View>
             </View>
 
             {/* Close Hint */}
-            <Text style={tw`text-slate-400 text-xs text-center mt-6`}>Tap anywhere to close</Text>
+            <Text style={tw`text-slate-400 text-xs text-center mt-6`}>{t('achievements.tapToClose')}</Text>
           </Pressable>
         </View>
       </Pressable>

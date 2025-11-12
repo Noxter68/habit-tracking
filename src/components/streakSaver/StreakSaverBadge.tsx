@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable, Image } from 'react-native';
 import Animated, { FadeInRight, useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming, Easing } from 'react-native-reanimated';
 import { ChevronRight, Zap } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import tw from '@/lib/tailwind';
 import { StreakSaverService } from '../../services/StreakSaverService';
 import { useAuth } from '@/context/AuthContext';
@@ -26,6 +27,7 @@ const StreakSaverIcon = () => {
 
 export const StreakSaverBadge: React.FC<StreakSaverBadgeProps> = ({ onPress, onShopPress, refreshTrigger }) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [saveableCount, setSaveableCount] = useState(0);
   const [inventory, setInventory] = useState({ available: 0, totalUsed: 0 });
   const [loading, setLoading] = useState(false);
@@ -77,7 +79,6 @@ export const StreakSaverBadge: React.FC<StreakSaverBadgeProps> = ({ onPress, onS
   const shouldShowShop = inventory.available === 0 && saveableCount > 0;
   const hasStreaksToSave = saveableCount > 0;
 
-  // Don't show if no streaks need saving
   if (saveableCount === 0) {
     return null;
   }
@@ -118,28 +119,24 @@ export const StreakSaverBadge: React.FC<StreakSaverBadgeProps> = ({ onPress, onS
               <>
                 <View style={tw`flex-row items-center mb-1`}>
                   <Zap size={16} color="#EA580C" fill="#EA580C" />
-                  <Text style={tw`text-base font-black text-orange-900 ml-1`}>OUT OF STOCK</Text>
+                  <Text style={tw`text-base font-black text-orange-900 ml-1`}>{t('streakSaver.badge.outOfStock')}</Text>
                 </View>
-                <Text style={tw`text-sm font-semibold text-orange-800`}>Refill your Streak Savers</Text>
+                <Text style={tw`text-sm font-semibold text-orange-800`}>{t('streakSaver.badge.refillMessage')}</Text>
                 <View style={tw`flex-row items-center mt-1`}>
                   <View style={tw`w-2 h-2 rounded-full bg-orange-600 mr-1.5`} />
-                  <Text style={tw`text-xs font-medium text-orange-700`}>Tap to visit shop</Text>
+                  <Text style={tw`text-xs font-medium text-orange-700`}>{t('streakSaver.badge.tapToShop')}</Text>
                 </View>
               </>
             ) : (
               <>
                 <View style={tw`flex-row items-center mb-1`}>
                   <Zap size={16} color="#EA580C" fill="#EA580C" />
-                  <Text style={tw`text-base font-black text-orange-900 ml-1`}>{hasStreaksToSave ? 'STREAK ALERT' : 'READY TO SAVE'}</Text>
+                  <Text style={tw`text-base font-black text-orange-900 ml-1`}>{hasStreaksToSave ? t('streakSaver.badge.streakAlert') : t('streakSaver.badge.readyToSave')}</Text>
                 </View>
-                <Text style={tw`text-sm font-semibold text-orange-800`}>
-                  {hasStreaksToSave ? `${saveableCount} habit${saveableCount > 1 ? 's' : ''} need${saveableCount === 1 ? 's' : ''} saving!` : 'All streaks are safe'}
-                </Text>
+                <Text style={tw`text-sm font-semibold text-orange-800`}>{hasStreaksToSave ? t('streakSaver.badge.needsSaving', { count: saveableCount }) : t('streakSaver.badge.allSafe')}</Text>
                 <View style={tw`flex-row items-center mt-1`}>
                   <View style={tw`w-2 h-2 rounded-full bg-orange-600 mr-1.5`} />
-                  <Text style={tw`text-xs font-medium text-orange-700`}>
-                    {inventory.available} Streak Saver{inventory.available > 1 ? 's' : ''} ready
-                  </Text>
+                  <Text style={tw`text-xs font-medium text-orange-700`}>{t('streakSaver.badge.available', { count: inventory.available })}</Text>
                 </View>
               </>
             )}

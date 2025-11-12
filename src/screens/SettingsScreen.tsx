@@ -21,8 +21,7 @@ import { ChevronRight, Pencil } from 'lucide-react-native';
 import { HolidayPeriod } from '@/types/holiday.types';
 import { supabase } from '@/lib/supabase';
 import EditUsernameModal from '@/components/settings/EditUserModal';
-import { t } from 'i18next';
-import i18n from '@/i18n';
+import { useTranslation } from 'react-i18next';
 
 const APP_ICON = require('../../assets/icon/icon-v2.png');
 
@@ -163,6 +162,7 @@ const Icon: React.FC<IconProps> = ({ name, size = 22, color = '#9333EA' }) => {
 // ============================================================================
 
 const ProfileHeader: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { isPremium } = useSubscription();
   const [showEditModal, setShowEditModal] = useState(false);
@@ -241,11 +241,11 @@ const ProfileHeader: React.FC = () => {
               <View style={tw`mt-1`}>
                 {isPremium ? (
                   <View style={tw`px-2.5 py-1 bg-stone-100 rounded-lg self-start`}>
-                    <Text style={tw`text-stone-700 text-xs font-bold`}>Premium Active</Text>
+                    <Text style={tw`text-stone-700 text-xs font-bold`}>{t('settings.premiumActive')}</Text>
                   </View>
                 ) : (
                   <View style={tw`px-2.5 py-1 bg-gray-100 rounded-lg self-start`}>
-                    <Text style={tw`text-gray-600 text-xs font-bold`}>Free Plan</Text>
+                    <Text style={tw`text-gray-600 text-xs font-bold`}>{t('settings.freePlan')}</Text>
                   </View>
                 )}
               </View>
@@ -322,6 +322,7 @@ const SettingsItem: React.FC<SettingsItemProps> = ({ icon, title, subtitle, trai
 // ============================================================================
 
 const SettingsScreen: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const [notifications, setNotifications] = useState(false);
   const [notificationLoading, setNotificationLoading] = useState(false);
   const [activeHoliday, setActiveHoliday] = useState<HolidayPeriod | null>(null);
@@ -358,10 +359,10 @@ const SettingsScreen: React.FC = () => {
   const handleReviewOnboarding = async () => {
     if (!user) return;
 
-    Alert.alert('Review Onboarding', 'Would you like to see the introduction tour again?', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('settings.reviewTour'), t('settings.reviewTourPrompt'), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Yes, Show Me',
+        text: t('settings.reviewTourConfirm'),
         onPress: async () => {
           await OnboardingService.resetOnboarding(user.id);
           await checkOnboardingStatus();
@@ -396,25 +397,25 @@ const SettingsScreen: React.FC = () => {
           setNotifications(false);
 
           if (result.needsSettings) {
-            Alert.alert('Permission Required', 'Notifications are disabled in your device settings. Please enable them to receive habit reminders.', [
-              { text: 'Cancel', style: 'cancel' },
+            Alert.alert(t('notifications.permissionRequired'), t('notifications.permissionMessage'), [
+              { text: t('common.cancel'), style: 'cancel' },
               {
-                text: 'Open Settings',
+                text: t('notifications.openSettings'),
                 onPress: () => Notifications.openSettingsAsync(),
               },
             ]);
           } else {
-            Alert.alert('Permission Denied', 'You need to grant notification permissions to receive habit reminders.');
+            Alert.alert(t('notifications.permissionDenied'), t('notifications.permissionDeniedMessage'));
           }
         } else {
           setNotifications(true);
-          Alert.alert('Notifications Enabled', 'You will now receive reminders for your habits with notifications enabled.', [{ text: 'OK' }]);
+          Alert.alert(t('notifications.enabled'), t('notifications.enabledMessage'), [{ text: t('common.confirm') }]);
         }
       } else {
-        Alert.alert('Disable Notifications?', 'This will cancel all scheduled habit reminders. You can re-enable them anytime.', [
-          { text: 'Cancel', style: 'cancel' },
+        Alert.alert(t('notifications.disableTitle'), t('notifications.disableMessage'), [
+          { text: t('common.cancel'), style: 'cancel' },
           {
-            text: 'Disable',
+            text: t('notifications.disable'),
             style: 'destructive',
             onPress: async () => {
               await NotificationPreferencesService.disableNotifications(user.id);
@@ -425,7 +426,7 @@ const SettingsScreen: React.FC = () => {
       }
     } catch (error) {
       Logger.error('Error toggling notifications:', error);
-      Alert.alert('Error', 'Failed to update notification settings. Please try again.');
+      Alert.alert(t('common.error'), t('notifications.toggleError'));
       setNotifications(!value);
     } finally {
       setNotificationLoading(false);
@@ -462,23 +463,15 @@ const SettingsScreen: React.FC = () => {
   const getHolidaySubtitle = () => {
     if (!activeHoliday) {
       if (isPremium) {
-        return 'Unlimited holiday periods available';
+        return t('settings.holidayUnlimited');
       } else {
         const periodsLeft = holidayStats?.remainingAllowance ?? 1;
-        const periodText = periodsLeft === 1 ? 'period' : 'periods';
-        return `Max 14 days per period • ${periodsLeft} ${periodText} left`;
+        return t('settings.holidayLimited', { periods: periodsLeft });
       }
     }
 
     const daysRemaining = activeHoliday.daysRemaining || 0;
-
-    if (daysRemaining === 0) {
-      return 'Ending today';
-    } else if (daysRemaining === 1) {
-      return '1 day remaining';
-    } else {
-      return `${daysRemaining} days remaining`;
-    }
+    return t('settings.holidayDaysRemaining', { count: daysRemaining });
   };
 
   return (
@@ -494,27 +487,27 @@ const SettingsScreen: React.FC = () => {
             </View>
 
             <View style={tw`bg-stone-100 px-5 py-2 rounded-2xl mb-3`}>
-              <Text style={tw`text-xs font-bold text-stone-600 tracking-widest`}>PREFERENCES</Text>
+              <Text style={tw`text-xs font-bold text-stone-600 tracking-widest`}>{t('settings.preferences').toUpperCase()}</Text>
             </View>
-            <Text style={tw`text-4xl font-black text-gray-800 text-center`}>Settings</Text>
+            <Text style={tw`text-4xl font-black text-gray-800 text-center`}>{t('settings.title')}</Text>
           </View>
         </Animated.View>
 
         <ProfileHeader />
 
         <View style={tw`px-6`}>
-          <SettingsSection title="Subscription" delay={200} gradient={['#78716C', '#57534E']}>
+          <SettingsSection title={t('settings.subscription')} delay={200} gradient={['#78716C', '#57534E']}>
             <SettingsItem
               icon={isPremium ? 'credit-card' : 'sparkles'}
-              title={isPremium ? 'Manage Subscription' : 'Upgrade to Premium'}
-              subtitle={isPremium ? 'Cancel or change your plan' : 'Unlock unlimited habits & features'}
+              title={isPremium ? t('settings.managePremium') : t('settings.upgradePremium')}
+              subtitle={isPremium ? t('settings.managePremiumSubtitle') : t('settings.upgradePremiumSubtitle')}
               onPress={handleManageSubscription}
               trailing={
                 isPremium ? (
                   <Icon name="chevron-forward" size={20} color="#78716C" />
                 ) : (
                   <View style={tw`px-3 py-1.5 bg-stone-700 rounded-lg`}>
-                    <Text style={tw`text-white text-xs font-bold`}>UPGRADE</Text>
+                    <Text style={tw`text-white text-xs font-bold`}>{t('settings.upgrade').toUpperCase()}</Text>
                   </View>
                 )
               }
@@ -523,10 +516,10 @@ const SettingsScreen: React.FC = () => {
             />
           </SettingsSection>
 
-          <SettingsSection title="Break Mode" delay={200} gradient={['#6366F1', '#4F46E5']}>
+          <SettingsSection title={t('settings.breakMode')} delay={200} gradient={['#6366F1', '#4F46E5']}>
             <SettingsItem
               icon="beach-outline"
-              title="Holiday Mode"
+              title={t('settings.holidayMode')}
               subtitle={getHolidaySubtitle()}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -535,7 +528,7 @@ const SettingsScreen: React.FC = () => {
               trailing={
                 activeHoliday ? (
                   <View style={tw`px-3 py-1.5 bg-indigo-600 rounded-lg`}>
-                    <Text style={tw`text-white text-xs font-bold`}>ACTIVE</Text>
+                    <Text style={tw`text-white text-xs font-bold`}>{t('settings.active').toUpperCase()}</Text>
                   </View>
                 ) : (
                   <Icon name="chevron-forward" size={20} color="#6366F1" />
@@ -546,11 +539,11 @@ const SettingsScreen: React.FC = () => {
             />
           </SettingsSection>
 
-          <SettingsSection title="General" delay={300} gradient={['#9333EA', '#7C3AED']}>
+          <SettingsSection title={t('settings.general')} delay={300} gradient={['#9333EA', '#7C3AED']}>
             <SettingsItem
               icon="notifications-outline"
-              title="Notifications"
-              subtitle={notifications ? 'Reminders enabled' : 'Enable habit reminders'}
+              title={t('settings.notifications')}
+              subtitle={notifications ? t('settings.notificationsEnabled') : t('settings.notificationsDisabled')}
               color="#9333EA"
               trailing={
                 notificationLoading ? (
@@ -571,8 +564,8 @@ const SettingsScreen: React.FC = () => {
             {notifications && (
               <SettingsItem
                 icon="notifications-outline"
-                title="Manage Habit Notifications"
-                subtitle="Customize reminders for each habit"
+                title={t('settings.manageNotifications')}
+                subtitle={t('settings.manageNotificationsSubtitle')}
                 color="#9333EA"
                 trailing={<Icon name="chevron-forward" size={20} color="#9333EA" />}
                 onPress={() => {
@@ -593,11 +586,11 @@ const SettingsScreen: React.FC = () => {
           </SettingsSection>
 
           {Config.debug.showDebugScreen && (
-            <SettingsSection title="Developer Tools" delay={450} gradient={['#F59E0B', '#D97706']}>
+            <SettingsSection title={t('settings.developerTools')} delay={450} gradient={['#F59E0B', '#D97706']}>
               <SettingsItem
                 icon="diagnostic"
-                title="System Diagnostics"
-                subtitle="Check app health & XP system"
+                title={t('settings.debug.systemDiagnostics')}
+                subtitle={t('settings.debug.checkHealth')}
                 color="#F59E0B"
                 trailing={<Icon name="chevron-forward" size={20} color="#F59E0B" />}
                 onPress={() => {
@@ -607,8 +600,8 @@ const SettingsScreen: React.FC = () => {
               />
               <SettingsItem
                 icon="bug"
-                title="Debug Tools"
-                subtitle="Daily challenge utilities"
+                title={t('settings.debug.title')}
+                subtitle={t('settings.debug.dailyChallenge')}
                 color="#F59E0B"
                 trailing={<Icon name="chevron-forward" size={20} color="#F59E0B" />}
                 onPress={() => {
@@ -620,27 +613,19 @@ const SettingsScreen: React.FC = () => {
             </SettingsSection>
           )}
 
-          <SettingsSection title="Support" delay={400} gradient={['#EC4899', '#DB2777']}>
-            <SettingsItem icon="information-circle-outline" title="Version" subtitle="1.0.10" color="#EC4899" />
-            {/* <SettingsItem
-              icon="help-circle-outline"
-              title="Help & Support"
-              color="#EC4899"
-              trailing={<Icon name="chevron-forward" size={20} color="#EC4899" />}
-              onPress={() => Logger.debug('Help pressed')}
-              isLast
-            /> */}
+          <SettingsSection title={t('settings.support')} delay={400} gradient={['#EC4899', '#DB2777']}>
+            <SettingsItem icon="information-circle-outline" title={t('settings.version')} subtitle="1.0.10" color="#EC4899" />
           </SettingsSection>
 
           <View style={tw`mt-6`}>
-            <Text style={tw`text-sm font-bold text-stone-500 uppercase tracking-wider mb-3 px-1`}>Help</Text>
+            <Text style={tw`text-sm font-bold text-stone-500 uppercase tracking-wider mb-3 px-1`}>{t('settings.help')}</Text>
 
             <Pressable onPress={handleReviewOnboarding} style={tw`bg-white rounded-2xl px-4 py-4 flex-row items-center justify-between shadow-md`}>
               <View style={tw`flex-row items-center gap-3`}>
                 <View style={tw`w-10 h-10 rounded-full bg-blue-100 items-center justify-center`}>
                   <Text>📚</Text>
                 </View>
-                <Text style={tw`text-base font-semibold text-stone-800`}>Review Introduction Tour</Text>
+                <Text style={tw`text-base font-semibold text-stone-800`}>{t('settings.reviewTour')}</Text>
               </View>
               <ChevronRight size={20} color="#9CA3AF" />
             </Pressable>
@@ -655,7 +640,7 @@ const SettingsScreen: React.FC = () => {
                   ) : (
                     <>
                       <Icon name="log-out-outline" size={22} color="#FFFFFF" />
-                      <Text style={tw`ml-2.5 text-white font-bold text-base tracking-wide`}>Sign Out</Text>
+                      <Text style={tw`ml-2.5 text-white font-bold text-base tracking-wide`}>{t('auth.signOut')}</Text>
                     </>
                   )}
                 </View>
