@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, ImageBackground, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 import tw from '@/lib/tailwind';
 import { Habit } from '@/types';
 import { HabitProgressionService } from '@/services/habitProgressionService';
@@ -23,6 +24,7 @@ interface CalendarHeaderProps {
 }
 
 const CalendarHeader: React.FC<CalendarHeaderProps> = ({ habit }) => {
+  const { t } = useTranslation();
   const { tier } = HabitProgressionService.calculateTierFromStreak(habit.currentStreak);
   const theme = tierThemes[tier.name];
 
@@ -31,8 +33,8 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({ habit }) => {
       <LinearGradient colors={[theme.gradient[0] + 'e6', theme.gradient[1] + 'dd', theme.gradient[2] + 'cc']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`px-5 pt-6 pb-4`}>
         <View style={tw`flex-row items-center justify-between`}>
           <View>
-            <Text style={tw`text-2xl font-bold text-white mb-1`}>Calendar</Text>
-            <Text style={tw`text-sm text-white/80`}>Track your habit journey</Text>
+            <Text style={tw`text-2xl font-bold text-white mb-1`}>{t('calendar.title')}</Text>
+            <Text style={tw`text-sm text-white/80`}>{t('calendar.trackYourJourney')}</Text>
           </View>
           <Image source={getGemIcon(tier.name)} style={tw`w-16 h-16`} resizeMode="contain" />
         </View>

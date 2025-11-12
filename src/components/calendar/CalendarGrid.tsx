@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { ChevronLeft, ChevronRight, Sun } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import tw from '@/lib/tailwind';
 import { Habit } from '@/types';
 import { HolidayPeriod } from '@/types/holiday.types';
@@ -21,22 +22,38 @@ interface CalendarGridProps {
 }
 
 const CalendarGrid: React.FC<CalendarGridProps> = ({ habit, currentMonth, selectedDate, onSelectDate, onNavigateMonth, activeHoliday = null, allHolidays = [] }) => {
+  const { t, i18n } = useTranslation();
   const { tier } = HabitProgressionService.calculateTierFromStreak(habit.currentStreak);
   const theme = tierThemes[tier.name];
   const days = getDaysInMonth(currentMonth);
-  const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+  // Week days avec traduction
+  const weekDays = [
+    t('calendar.weekDays.short.sunday'),
+    t('calendar.weekDays.short.monday'),
+    t('calendar.weekDays.short.tuesday'),
+    t('calendar.weekDays.short.wednesday'),
+    t('calendar.weekDays.short.thursday'),
+    t('calendar.weekDays.short.friday'),
+    t('calendar.weekDays.short.saturday'),
+  ];
 
   return (
     <View style={tw`bg-sand rounded-2xl p-4 shadow-sm`}>
       {/* Month Navigation */}
       <View style={tw`flex-row items-center justify-between mb-4`}>
-        <Pressable onPress={() => onNavigateMonth('prev')} style={({ pressed }) => [tw`p-2 rounded-lg`, pressed && tw`bg-sand-100`]}>
+        <Pressable onPress={() => onNavigateMonth('prev')} style={({ pressed }) => [tw`p-2 rounded-lg`, pressed && tw`bg-sand-100`]} accessibilityLabel={t('calendar.navigation.previousMonth')}>
           <ChevronLeft size={20} color="#6b7280" />
         </Pressable>
 
-        <Text style={tw`text-lg font-bold text-stone-800`}>{currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</Text>
+        <Text style={tw`text-lg font-bold text-stone-800`}>
+          {currentMonth.toLocaleDateString(i18n.language, {
+            month: 'long',
+            year: 'numeric',
+          })}
+        </Text>
 
-        <Pressable onPress={() => onNavigateMonth('next')} style={({ pressed }) => [tw`p-2 rounded-lg`, pressed && tw`bg-sand-100`]}>
+        <Pressable onPress={() => onNavigateMonth('next')} style={({ pressed }) => [tw`p-2 rounded-lg`, pressed && tw`bg-sand-100`]} accessibilityLabel={t('calendar.navigation.nextMonth')}>
           <ChevronRight size={20} color="#6b7280" />
         </Pressable>
       </View>
@@ -59,10 +76,10 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ habit, currentMonth, select
 
       {/* Legend */}
       <View style={tw`flex-row justify-center items-center gap-3 mt-4 pt-4 border-t border-stone-100 flex-wrap`}>
-        <LegendItem color={theme.accent} label="Complete" />
-        <LegendItem color={theme.accent + '40'} label="Partial" />
-        <LegendItem color="#fee2e2" label="Missed" />
-        <LegendItem color="#fef3c7" label="Holiday" icon={<Sun size={10} color="#f59e0b" />} />
+        <LegendItem color={theme.accent} label={t('calendar.legend.complete')} />
+        <LegendItem color={theme.accent + '40'} label={t('calendar.legend.partial')} />
+        <LegendItem color="#fee2e2" label={t('calendar.legend.missed')} />
+        <LegendItem color="#fef3c7" label={t('calendar.legend.holiday')} icon={<Sun size={10} color="#f59e0b" />} />
       </View>
     </View>
   );
@@ -91,22 +108,21 @@ const CalendarDay: React.FC<{
   const isSelected = isSameDay(date, selectedDate);
   const isCurrentDay = isToday(date);
 
-  // ✅ FIX: Normalize both dates to midnight for accurate comparison
+  // Normalize both dates to midnight for accurate comparison
   const checkDate = new Date(date);
   checkDate.setHours(0, 0, 0, 0);
 
   const creationDate = new Date(habit.createdAt);
   creationDate.setHours(0, 0, 0, 0);
 
-  // Date is "before creation" only if it's strictly before the creation date
-  // This means the creation date itself (Oct 29) will NOT be considered "before"
   const beforeCreation = checkDate.getTime() < creationDate.getTime();
   const isPast = date < new Date() && !isCurrentDay;
   const isMissed = isPast && !isCompleted && !isPartial && !beforeCreation;
 
-  // ✅ NEW: Check if this date is in a holiday period
+  // Check if this date is in a holiday period
   const taskIds = habit.tasks.map((t) => t.id);
   const isHoliday = HolidayModeService.isDateInAnyHoliday(date, allHolidays, habit.id, taskIds);
+
   // Priority order: Holiday > Complete > Partial > Missed > Before Creation
   let backgroundColor = 'transparent';
   let textColor = tw.color('sand-700');
@@ -115,7 +131,7 @@ const CalendarDay: React.FC<{
   if (beforeCreation) {
     textColor = tw.color('gray-300');
   } else if (isHoliday) {
-    // 🏖️ HOLIDAY STATE - TOPAZ THEME
+    // Holiday state - Topaz theme
     backgroundColor = '#fef3c7'; // amber-100
     textColor = '#f59e0b'; // amber-500
     showIcon = true;
@@ -131,7 +147,7 @@ const CalendarDay: React.FC<{
   }
 
   return (
-    <Pressable onPress={() => onSelect(date)} style={({ pressed }) => [tw`w-1/7 h-12 items-center justify-center`, pressed && tw`opacity-70`]}>
+    <Pressable onPress={() => onSelect(date)} style={({ pressed }) => [tw`w-1/7 h-12 items-center justify-center`, pressed && tw`opacity-70`]} disabled={beforeCreation}>
       <View
         style={[
           tw`w-9 h-9 rounded-xl items-center justify-center relative`,
@@ -142,7 +158,7 @@ const CalendarDay: React.FC<{
           isCurrentDay && { borderColor: theme.accent + '60' },
         ]}
       >
-        {/* Holiday Icon - TOPAZ COLOR */}
+        {/* Holiday Icon */}
         {showIcon && (
           <View style={tw`absolute -top-1 -right-1 bg-white rounded-full p-0.5`}>
             <Sun size={10} color="#f59e0b" strokeWidth={2.5} />

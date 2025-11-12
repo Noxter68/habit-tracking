@@ -86,7 +86,7 @@
       "streak": "Série",
       "streakSubtitle": "jours",
       "active": "Actives",
-      "activeSubtitle": "Quêtes",
+      "activeSubtitle": "Habitudes",
       "xpTotal": "XP"
     },
     "levelProgress": {
@@ -252,22 +252,6 @@
     "weekStreak": "{{count}} semaine | {{count}} semaines",
     "monthStreak": "{{count}} mois | {{count}} mois",
     "task": "tâche | tâches"
-  },
-
-  "calendar": {
-    "title": "Calendrier",
-    "today": "Aujourd'hui",
-    "selectDate": "Sélectionner une date",
-    "noHabits": "Aucune habitude à afficher",
-    "createHabit": "Créez une habitude pour commencer",
-    "current": "Actuelle",
-    "best": "Meilleure",
-    "total": "Total",
-    "holiday": "Vacances",
-    "completedToday": "Complété aujourd'hui",
-    "notCompleted": "Non complété",
-    "partiallyCompleted": "Partiellement complété",
-    "monthlyProgress": "Progression mensuelle"
   },
 
   "stats": {
@@ -1605,6 +1589,85 @@
       "remindAt": "Vous serez rappelé à",
       "tipEnabled": "Choisissez une heure qui s'intègre naturellement dans votre routine",
       "tipDisabled": "Vous pouvez toujours activer les rappels plus tard dans les paramètres"
+    }
+  },
+  "calendar": {
+    "title": "Calendrier",
+    "questCalendar": "Calendrier des Quêtes",
+    "today": "Aujourd'hui",
+    "selectDate": "Sélectionner une date",
+    "noHabits": "Aucune habitude à afficher",
+    "createHabit": "Créez une habitude pour commencer",
+    "trackYourJourney": "Suivez votre parcours d'habitudes",
+    "stats": {
+      "current": "Actuel",
+      "streak": "Série",
+      "best": "Meilleur",
+      "month": "Mois",
+      "total": "Total",
+      "tier": "Pourcentage"
+    },
+    "status": {
+      "complete": "Terminé",
+      "partial": "Partiel",
+      "missed": "Manqué",
+      "selected": "Sélectionné",
+      "holiday": "Vacances",
+      "onHoliday": "En Vacances",
+      "streakProtected": "Série Protégée",
+      "holidayPeriod": "Période de Vacances"
+    },
+    "messages": {
+      "completedToday": "Terminé aujourd'hui",
+      "notCompleted": "Non terminé",
+      "partiallyCompleted": "Partiellement terminé",
+      "habitNotCreated": "Habitude pas encore créée",
+      "createdOn": "Créée le",
+      "noTasksDefined": "Aucune tâche définie",
+      "tasksRemaining": "{{count}} tâche restante",
+      "tasksRemaining_plural": "{{count}} tâches restantes",
+      "missed": "Manqué • Demain est une nouvelle opportunité",
+      "tasksReady": "{{count}} tâche prête à démarrer",
+      "tasksReady_plural": "{{count}} tâches prêtes à démarrer",
+      "questComplete": "Quête Terminée !",
+      "keepGoing": "Continue ! {{completed}} sur {{total}} fait",
+      "tomorrowNewDay": "Demain est un nouveau jour !",
+      "yourStreakSafe": "Votre série est protégée !",
+      "trackingPaused": "Suivi en pause. Profitez de votre pause !",
+      "streakPreserved": "La série a été préservée pendant cette période",
+      "tasksCompleted": "Tâches terminées : {{completed}}/{{total}}"
+    },
+    "holiday": {
+      "mode": "Mode Vacances",
+      "active": "Actif",
+      "streakProtected": "Série Protégée",
+      "enjoyBreak": "Profitez de votre pause ! Votre progression est sauvegardée."
+    },
+    "navigation": {
+      "previousMonth": "Mois précédent",
+      "nextMonth": "Mois suivant"
+    },
+    "weekDays": {
+      "short": {
+        "sunday": "D",
+        "monday": "L",
+        "tuesday": "M",
+        "wednesday": "M",
+        "thursday": "J",
+        "friday": "V",
+        "saturday": "S"
+      }
+    },
+    "emptyState": {
+      "title": "Aucune Habitude",
+      "description": "Commencez votre parcours en créant votre première habitude",
+      "button": "Créer Votre Première Habitude"
+    },
+    "legend": {
+      "complete": "Terminé",
+      "partial": "Partiel",
+      "missed": "Manqué",
+      "holiday": "Vacances"
     }
   }
 }

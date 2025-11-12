@@ -84,7 +84,7 @@
       "streak": "Streak",
       "streakSubtitle": "days",
       "active": "Active",
-      "activeSubtitle": "Quests",
+      "activeSubtitle": "Habits",
       "xpTotal": "XP"
     },
     "levelProgress": {
@@ -250,23 +250,6 @@
     "monthStreak": "{{count}} month | {{count}} months",
     "task": "task | tasks"
   },
-
-  "calendar": {
-    "title": "Calendar",
-    "today": "Today",
-    "selectDate": "Select Date",
-    "noHabits": "No habits to display",
-    "createHabit": "Create a habit to get started",
-    "current": "Current",
-    "best": "Best",
-    "total": "Total",
-    "holiday": "Holiday",
-    "completedToday": "Completed today",
-    "notCompleted": "Not completed",
-    "partiallyCompleted": "Partially completed",
-    "monthlyProgress": "Monthly Progress"
-  },
-
   "stats": {
     "title": "Statistics",
     "overview": "Overview",
@@ -1602,6 +1585,85 @@
       "level28": "The Invincible",
       "level29": "Legend of the Grind",
       "level30": "Ascended One"
+    }
+  },
+  "calendar": {
+    "title": "Calendar",
+    "questCalendar": "Quest Calendar",
+    "today": "Today",
+    "selectDate": "Select Date",
+    "noHabits": "No habits to display",
+    "createHabit": "Create a habit to get started",
+    "trackYourJourney": "Track your habit journey",
+    "stats": {
+      "current": "Current",
+      "streak": "Streak",
+      "best": "Best",
+      "month": "Month",
+      "total": "Total",
+      "tier": "Tier"
+    },
+    "status": {
+      "complete": "Complete",
+      "partial": "Partial",
+      "missed": "Missed",
+      "selected": "Selected",
+      "holiday": "Holiday",
+      "onHoliday": "On Holiday",
+      "streakProtected": "Streak Protected",
+      "holidayPeriod": "Holiday Period"
+    },
+    "messages": {
+      "completedToday": "Completed today",
+      "notCompleted": "Not completed",
+      "partiallyCompleted": "Partially completed",
+      "habitNotCreated": "Habit not created yet",
+      "createdOn": "Created on",
+      "noTasksDefined": "No tasks defined",
+      "tasksRemaining": "{{count}} task remaining",
+      "tasksRemaining_plural": "{{count}} tasks remaining",
+      "missed": "Missed • Tomorrow is a new opportunity",
+      "tasksReady": "{{count}} task ready to start",
+      "tasksReady_plural": "{{count}} tasks ready to start",
+      "questComplete": "Quest Complete!",
+      "keepGoing": "Keep Going! {{completed}} of {{total}} done",
+      "tomorrowNewDay": "Tomorrow is a new day!",
+      "yourStreakSafe": "Your streak is safe!",
+      "trackingPaused": "Tracking paused. Enjoy your break!",
+      "streakPreserved": "Streak was preserved during this period",
+      "tasksCompleted": "Tasks completed: {{completed}}/{{total}}"
+    },
+    "holiday": {
+      "mode": "Holiday Mode",
+      "active": "Active",
+      "streakProtected": "Streak Protected",
+      "enjoyBreak": "Enjoy your break! Your progress is safe."
+    },
+    "navigation": {
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month"
+    },
+    "weekDays": {
+      "short": {
+        "sunday": "S",
+        "monday": "M",
+        "tuesday": "T",
+        "wednesday": "W",
+        "thursday": "T",
+        "friday": "F",
+        "saturday": "S"
+      }
+    },
+    "emptyState": {
+      "title": "No Habits Yet",
+      "description": "Start your journey by creating your first habit",
+      "button": "Create Your First Habit"
+    },
+    "legend": {
+      "complete": "Complete",
+      "partial": "Partial",
+      "missed": "Missed",
+      "holiday": "Holiday"
     }
   }
 }
