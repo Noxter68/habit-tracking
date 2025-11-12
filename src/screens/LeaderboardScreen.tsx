@@ -1,9 +1,9 @@
 // src/screens/LeaderboardScreen.tsx
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, Image, StatusBar, RefreshControl, ActivityIndicator, ImageBackground, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
 import { LeaderboardService, LeaderboardEntry } from '@/services/LeaderboardService';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
@@ -27,6 +27,7 @@ const TIER_COLORS = {
 type LeaderboardMode = 'global' | 'weekly';
 
 const LeaderboardScreen = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [mode, setMode] = useState<LeaderboardMode>('global');
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -79,6 +80,7 @@ const LeaderboardScreen = () => {
         <View style={[StyleSheet.absoluteFill, tw`bg-black/50`]} />
         <View style={tw`flex-1 items-center justify-center`}>
           <ActivityIndicator size="large" color="#8b5cf6" />
+          <Text style={tw`text-white/80 mt-4`}>{t('leaderboard.loading')}</Text>
         </View>
       </ImageBackground>
     );
@@ -87,8 +89,6 @@ const LeaderboardScreen = () => {
   return (
     <ImageBackground source={BACKGROUND} style={styles.background} resizeMode="cover">
       <View style={[StyleSheet.absoluteFill, tw`bg-black/50`]} />
-
-      {/* Texture overlay subtile */}
 
       <SafeAreaView style={tw`flex-1`} edges={['top']}>
         <ScrollView
@@ -106,8 +106,8 @@ const LeaderboardScreen = () => {
 
             {/* Title */}
             <View style={tw`items-center mb-8`}>
-              <Text style={tw`text-4xl font-bold text-white text-center mb-2`}>Leaderboard</Text>
-              <Text style={tw`text-base text-white/80 text-center`}>Compete with the best habit trackers</Text>
+              <Text style={tw`text-4xl font-bold text-white text-center mb-2`}>{t('leaderboard.title')}</Text>
+              <Text style={tw`text-base text-white/80 text-center`}>{t('leaderboard.subtitle')}</Text>
             </View>
 
             {/* Mode Toggle */}
@@ -116,13 +116,13 @@ const LeaderboardScreen = () => {
                 onPress={() => setMode('global')}
                 style={({ pressed }) => [tw`flex-1 py-3 rounded-xl items-center`, mode === 'global' ? tw`bg-violet-600` : tw`bg-transparent`, pressed && tw`opacity-80`]}
               >
-                <Text style={tw`text-sm font-bold ${mode === 'global' ? 'text-white' : 'text-white/70'}`}>ALL TIME</Text>
+                <Text style={tw`text-sm font-bold ${mode === 'global' ? 'text-white' : 'text-white/70'}`}>{t('leaderboard.modes.global')}</Text>
               </Pressable>
               <Pressable
                 onPress={() => setMode('weekly')}
                 style={({ pressed }) => [tw`flex-1 py-3 rounded-xl items-center`, mode === 'weekly' ? tw`bg-violet-600` : tw`bg-transparent`, pressed && tw`opacity-80`]}
               >
-                <Text style={tw`text-sm font-bold ${mode === 'weekly' ? 'text-white' : 'text-white/70'}`}>THIS WEEK</Text>
+                <Text style={tw`text-sm font-bold ${mode === 'weekly' ? 'text-white' : 'text-white/70'}`}>{t('leaderboard.modes.weekly')}</Text>
               </Pressable>
             </View>
           </Animated.View>
@@ -131,7 +131,7 @@ const LeaderboardScreen = () => {
           {topThree.length > 0 && (
             <Animated.View entering={FadeInDown.delay(200)} style={tw`mb-8 px-4`}>
               <View style={tw`flex-row items-end justify-center gap-2`}>
-                {/* 2nd Place - Moyenne hauteur */}
+                {/* 2nd Place */}
                 {topThree[1] && (
                   <Animated.View entering={FadeInDown.delay(300).springify()} style={tw`flex-1 items-center`}>
                     <View style={tw`mb-3`}>
@@ -153,16 +153,16 @@ const LeaderboardScreen = () => {
                         <Text style={{ fontSize: 18, fontWeight: '900', color: '#FFFFFF' }}>
                           {mode === 'weekly' ? (topThree[1].weeklyXP || 0).toLocaleString() : topThree[1].total_xp.toLocaleString()}
                         </Text>
-                        <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: '600', marginBottom: 8 }}>XP</Text>
+                        <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: '600', marginBottom: 8 }}>{t('leaderboard.labels.xp')}</Text>
 
                         <Text style={{ fontSize: 18, fontWeight: '900', color: '#FFFFFF' }}>{topThree[1].current_level}</Text>
-                        <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>LVL</Text>
+                        <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>{t('leaderboard.labels.level')}</Text>
                       </View>
                     </View>
                   </Animated.View>
                 )}
 
-                {/* 1st Place - LA PLUS HAUTE */}
+                {/* 1st Place */}
                 {topThree[0] && (
                   <Animated.View entering={FadeInDown.delay(100).springify()} style={tw`flex-1 items-center`}>
                     <View style={tw`mb-3`}>
@@ -193,16 +193,16 @@ const LeaderboardScreen = () => {
                         <Text style={{ fontSize: 18, fontWeight: '900', color: '#FFFFFF' }}>
                           {mode === 'weekly' ? (topThree[0].weeklyXP || 0).toLocaleString() : topThree[0].total_xp.toLocaleString()}
                         </Text>
-                        <Text style={{ fontSize: 11, color: 'rgba(253,224,71,0.8)', fontWeight: '700', marginBottom: 10 }}>XP</Text>
+                        <Text style={{ fontSize: 11, color: 'rgba(253,224,71,0.8)', fontWeight: '700', marginBottom: 10 }}>{t('leaderboard.labels.xp')}</Text>
 
                         <Text style={{ fontSize: 18, fontWeight: '900', color: '#FFFFFF' }}>{topThree[0].current_level}</Text>
-                        <Text style={{ fontSize: 11, color: 'rgba(253,224,71,0.8)', fontWeight: '700' }}>LVL</Text>
+                        <Text style={{ fontSize: 11, color: 'rgba(253,224,71,0.8)', fontWeight: '700' }}>{t('leaderboard.labels.level')}</Text>
                       </View>
                     </View>
                   </Animated.View>
                 )}
 
-                {/* 3rd Place - La plus petite */}
+                {/* 3rd Place */}
                 {topThree[2] && (
                   <Animated.View entering={FadeInDown.delay(400).springify()} style={tw`flex-1 items-center`}>
                     <View style={tw`mb-3`}>
@@ -224,10 +224,10 @@ const LeaderboardScreen = () => {
                         <Text style={{ fontSize: 18, fontWeight: '900', color: '#FFFFFF' }}>
                           {mode === 'weekly' ? (topThree[2].weeklyXP || 0).toLocaleString() : topThree[2].total_xp.toLocaleString()}
                         </Text>
-                        <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: '600', marginBottom: 6 }}>XP</Text>
+                        <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: '600', marginBottom: 6 }}>{t('leaderboard.labels.xp')}</Text>
 
                         <Text style={{ fontSize: 18, fontWeight: '900', color: '#FFFFFF' }}>{topThree[2].current_level}</Text>
-                        <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>LVL</Text>
+                        <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>{t('leaderboard.labels.level')}</Text>
                       </View>
                     </View>
                   </Animated.View>
@@ -241,7 +241,7 @@ const LeaderboardScreen = () => {
             <Animated.View entering={FadeInDown.delay(500)} style={tw`px-6`}>
               <View style={tw`mb-4 flex-row items-center`}>
                 <View style={tw`flex-1 h-px bg-white/20`} />
-                <Text style={tw`text-xs font-bold text-white/50 mx-3 tracking-wider`}>OTHER CHAMPIONS</Text>
+                <Text style={tw`text-xs font-bold text-white/50 mx-3 tracking-wider`}>{t('leaderboard.sections.otherChampions')}</Text>
                 <View style={tw`flex-1 h-px bg-white/20`} />
               </View>
 
@@ -258,7 +258,14 @@ const LeaderboardScreen = () => {
                       ]}
                     >
                       <View style={tw`mr-4`}>
-                        <View style={[tw`w-10 h-10 rounded-xl items-center justify-center`, { backgroundColor: user.isCurrentUser ? '#7c3aed' : 'rgba(255, 255, 255, 0.15)' }]}>
+                        <View
+                          style={[
+                            tw`w-10 h-10 rounded-xl items-center justify-center`,
+                            {
+                              backgroundColor: user.isCurrentUser ? '#7c3aed' : 'rgba(255, 255, 255, 0.15)',
+                            },
+                          ]}
+                        >
                           <Text style={tw`text-white font-black text-sm`}>{user.rank}</Text>
                         </View>
                       </View>
@@ -268,16 +275,18 @@ const LeaderboardScreen = () => {
                           <Text style={tw`text-white font-bold text-sm`}>{user.username}</Text>
                           {user.isCurrentUser && (
                             <View style={tw`bg-violet-600/50 px-2 py-0.5 rounded`}>
-                              <Text style={tw`text-violet-200 text-xs font-black`}>YOU</Text>
+                              <Text style={tw`text-violet-200 text-xs font-black`}>{t('leaderboard.labels.you')}</Text>
                             </View>
                           )}
                         </View>
-                        <Text style={tw`text-white/60 text-xs font-semibold`}>Level {user.current_level}</Text>
+                        <Text style={tw`text-white/60 text-xs font-semibold`}>
+                          {t('leaderboard.labels.level')} {user.current_level}
+                        </Text>
                       </View>
 
                       <View style={tw`items-end`}>
                         <Text style={tw`text-white font-bold text-sm`}>{mode === 'weekly' ? (user.weeklyXP || 0).toLocaleString() : user.total_xp.toLocaleString()}</Text>
-                        <Text style={tw`text-white/50 text-xs font-semibold`}>XP</Text>
+                        <Text style={tw`text-white/50 text-xs font-semibold`}>{t('leaderboard.labels.xp')}</Text>
                       </View>
                     </View>
                   </Animated.View>
@@ -290,15 +299,22 @@ const LeaderboardScreen = () => {
           {currentUser && currentUser.rank > 20 && (
             <Animated.View entering={FadeInUp.delay(700)} style={tw`px-6 mt-6`}>
               <View style={tw`mb-2`}>
-                <Text style={tw`text-xs font-bold text-white/50 text-center tracking-wider`}>YOUR RANK</Text>
+                <Text style={tw`text-xs font-bold text-white/50 text-center tracking-wider`}>{t('leaderboard.sections.yourRank')}</Text>
               </View>
 
               <View style={tw`bg-slate-600/40 border-2 border-slate-500/50 rounded-2xl p-5 flex-row items-center justify-between`}>
                 <View>
-                  <Text style={tw`text-xs font-bold text-white/80 mb-1 tracking-wide`}>YOUR POSITION</Text>
+                  <Text style={tw`text-xs font-bold text-white/80 mb-1 tracking-wide`}>{t('leaderboard.sections.yourPosition')}</Text>
                   <Text style={tw`text-white font-black text-lg mb-1`}>{currentUser.username}</Text>
                   <Text style={tw`text-white/70 text-xs font-semibold`}>
-                    {mode === 'weekly' ? `${(currentUser.weeklyXP || 0).toLocaleString()} XP` : `${currentUser.total_xp.toLocaleString()} XP • Lv.${currentUser.current_level}`}
+                    {mode === 'weekly'
+                      ? t('leaderboard.stats.weeklyXp', {
+                          xp: (currentUser.weeklyXP || 0).toLocaleString(),
+                        })
+                      : t('leaderboard.stats.levelWithXp', {
+                          xp: currentUser.total_xp.toLocaleString(),
+                          level: currentUser.current_level,
+                        })}
                   </Text>
                 </View>
 

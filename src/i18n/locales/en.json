@@ -250,33 +250,6 @@
     "monthStreak": "{{count}} month | {{count}} months",
     "task": "task | tasks"
   },
-  "stats": {
-    "title": "Statistics",
-    "overview": "Overview",
-    "totalXP": "Total XP",
-    "totalHabits": "Total Habits",
-    "completionRate": "Completion Rate",
-    "currentStreak": "Current Streak",
-    "longestStreak": "Longest Streak",
-    "thisWeek": "This Week",
-    "thisMonth": "This Month",
-    "allTime": "All Time",
-    "premium": {
-      "unlockAdvanced": "Unlock Advanced Statistics",
-      "premiumFeatures": "Premium features include detailed charts, trends, and insights",
-      "upgrade": "Upgrade to Premium"
-    },
-    "period": {
-      "week": "Week",
-      "month": "Month",
-      "fourWeeks": "4 Weeks"
-    },
-    "chartType": {
-      "trend": "Trend",
-      "heatmap": "Heatmap",
-      "summary": "Summary"
-    }
-  },
   "notifications": {
     "title": "Notifications",
     "enable": "Enable Notifications",
@@ -1664,6 +1637,109 @@
       "partial": "Partial",
       "missed": "Missed",
       "holiday": "Holiday"
+    }
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "subtitle": "Compete with the best habit trackers",
+
+    "modes": {
+      "global": "ALL TIME",
+      "weekly": "THIS WEEK"
+    },
+
+    "labels": {
+      "xp": "XP",
+      "level": "LVL",
+      "you": "YOU",
+      "rank": "Rank",
+      "position": "Position"
+    },
+
+    "sections": {
+      "otherChampions": "OTHER CHAMPIONS",
+      "yourRank": "YOUR RANK",
+      "yourPosition": "YOUR POSITION"
+    },
+
+    "stats": {
+      "totalXp": "{{xp}} XP",
+      "weeklyXp": "{{xp}} XP",
+      "levelWithXp": "{{xp}} XP • Lv.{{level}}"
+    },
+
+    "loading": "Loading leaderboard...",
+    "noData": "No leaderboard data available"
+  },
+  "stats": {
+    "title": "Statistics",
+    "subtitle": "YOUR PROGRESS",
+    "level": "LEVEL {{level}}",
+    "analytics": "ANALYTICS",
+    "loading": "Loading statistics...",
+
+    "timeRanges": {
+      "week": "7d",
+      "month": "30d",
+      "4weeks": "4w"
+    },
+
+    "viewModes": {
+      "trend": "Trend",
+      "heatmap": "Calendar"
+    },
+
+    "chart": {
+      "completion": "Completion",
+      "tasks": "Tasks",
+      "activeHabits": "Active Habits",
+      "noData": "No data available",
+      "less": "Less",
+      "more": "More"
+    },
+
+    "prediction": {
+      "title": "Success Prediction",
+      "noHabits": "No habits to track yet",
+      "completed": "Completed",
+      "required": "Required",
+      "remaining": "Remaining",
+      "showLess": "Show Less",
+      "viewDetails": "View Details",
+      "predictedCompletion": "Predicted Completion",
+      "safetyMargin": "Safety Margin",
+      "safetyMarginInfo": "Days you can miss and still achieve 70% completion to succeed in your goal.",
+      "canSucceed": "Can Still Succeed?",
+      "yes": "Yes",
+      "challenging": "Challenging",
+      "suggestedPace": "Suggested Pace",
+      "progressTimeline": "Progress Timeline",
+      "day": "Day",
+      "days": "days",
+
+      "status": {
+        "excellent": "Excellent Track",
+        "onTrack": "On Track",
+        "needsFocus": "Needs Focus",
+        "atRisk": "At Risk"
+      },
+
+      "messages": {
+        "excellent": "You're crushing it! Keep shining",
+        "onTrack": "Keep up the momentum",
+        "needsFocus": "A few strong days will help",
+        "atRisk": "Let's get back on track"
+      }
+    },
+
+    "weekDays": {
+      "monday": "M",
+      "tuesday": "T",
+      "wednesday": "W",
+      "thursday": "T",
+      "friday": "F",
+      "saturday": "S",
+      "sunday": "S"
     }
   }
 }

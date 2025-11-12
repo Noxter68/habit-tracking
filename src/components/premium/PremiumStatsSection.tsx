@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { TrendingUp, Calendar, ChevronLeft, ChevronRight, X } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { HapticFeedback } from '@/utils/haptics';
 import { getLocalDateString } from '@/utils/dateHelpers';
 
@@ -16,12 +17,8 @@ interface PremiumStatsSectionProps {
   tierColors?: string[];
 }
 
-const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
-  habits,
-  selectedRange: externalRange,
-  onRangeChange,
-  tierColors = ['#60a5fa', '#3b82f6'], // Default crystal (cyan)
-}) => {
+const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({ habits, selectedRange: externalRange, onRangeChange, tierColors = ['#60a5fa', '#3b82f6'] }) => {
+  const { t, i18n } = useTranslation();
   const [selectedRange, setSelectedRange] = useState<TimeRange>(externalRange || 'week');
   const [viewMode, setViewMode] = useState<ViewMode>('trend');
   const [selectedDataPoint, setSelectedDataPoint] = useState<{
@@ -73,9 +70,13 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
       const value = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
       return {
-        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        fullDate: date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }),
-        dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
+        date: date.toLocaleDateString(i18n.language, { month: 'short', day: 'numeric' }),
+        fullDate: date.toLocaleDateString(i18n.language, {
+          weekday: 'long',
+          month: 'short',
+          day: 'numeric',
+        }),
+        dayName: date.toLocaleDateString(i18n.language, { weekday: 'short' }),
         value,
         habits: activeHabits,
         completedTasks,
@@ -83,7 +84,7 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
         isToday: dateString === todayString,
       };
     });
-  }, [habits, selectedRange]);
+  }, [habits, selectedRange, i18n.language]);
 
   // Generate heatmap data
   const heatmapData = useMemo(() => {
@@ -119,9 +120,16 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
         const value = totalTasks > 0 ? completedTasks / totalTasks : 0;
 
         return {
-          date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-          fullDate: date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }),
-          dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
+          date: date.toLocaleDateString(i18n.language, {
+            month: 'short',
+            day: 'numeric',
+          }),
+          fullDate: date.toLocaleDateString(i18n.language, {
+            weekday: 'long',
+            month: 'short',
+            day: 'numeric',
+          }),
+          dayName: date.toLocaleDateString(i18n.language, { weekday: 'short' }),
           value,
           habits: activeHabits,
           tasks: { completed: completedTasks, total: totalTasks },
@@ -129,7 +137,7 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
         };
       });
     });
-  }, [habits, selectedRange]);
+  }, [habits, selectedRange, i18n.language]);
 
   const maxValue = Math.max(...chartData.map((d) => d.value), 1);
 
@@ -192,6 +200,17 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
       .padStart(2, '0')}`;
   };
 
+  // Week days for heatmap
+  const weekDayLabels = [
+    t('stats.weekDays.monday'),
+    t('stats.weekDays.tuesday'),
+    t('stats.weekDays.wednesday'),
+    t('stats.weekDays.thursday'),
+    t('stats.weekDays.friday'),
+    t('stats.weekDays.saturday'),
+    t('stats.weekDays.sunday'),
+  ];
+
   return (
     <View
       style={{
@@ -213,8 +232,15 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
           backgroundColor: `${tierColors[0]}08`,
         }}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <Text style={{ fontSize: 16, fontWeight: '700', color: '#1F2937' }}>Analytics</Text>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 12,
+          }}
+        >
+          <Text style={{ fontSize: 16, fontWeight: '700', color: '#1F2937' }}>{t('stats.analytics')}</Text>
 
           {/* Time Range */}
           <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -222,7 +248,7 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
               <TouchableOpacity key={range} onPress={() => handleRangeChange(range)} activeOpacity={0.7}>
                 {selectedRange === range ? (
                   <LinearGradient colors={tierColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}>
-                    <Text style={{ fontSize: 12, fontWeight: '600', color: '#FFFFFF' }}>{range === 'week' ? '7d' : '30d'}</Text>
+                    <Text style={{ fontSize: 12, fontWeight: '600', color: '#FFFFFF' }}>{t(`stats.timeRanges.${range}`)}</Text>
                   </LinearGradient>
                 ) : (
                   <View
@@ -233,7 +259,7 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
                       backgroundColor: `${tierColors[0]}15`,
                     }}
                   >
-                    <Text style={{ fontSize: 12, fontWeight: '600', color: tierColors[0] }}>{range === 'week' ? '7d' : '30d'}</Text>
+                    <Text style={{ fontSize: 12, fontWeight: '600', color: tierColors[0] }}>{t(`stats.timeRanges.${range}`)}</Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -242,10 +268,18 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
         </View>
 
         {/* View Mode Toggle */}
-        <View style={{ flexDirection: 'row', gap: 8, backgroundColor: 'rgba(255, 255, 255, 0.6)', borderRadius: 12, padding: 4 }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            gap: 8,
+            backgroundColor: 'rgba(255, 255, 255, 0.6)',
+            borderRadius: 12,
+            padding: 4,
+          }}
+        >
           {[
-            { value: 'trend' as ViewMode, label: 'Trend', icon: TrendingUp },
-            { value: 'heatmap' as ViewMode, label: 'Calendar', icon: Calendar },
+            { value: 'trend' as ViewMode, label: t('stats.viewModes.trend'), icon: TrendingUp },
+            { value: 'heatmap' as ViewMode, label: t('stats.viewModes.heatmap'), icon: Calendar },
           ].map((mode) => {
             const Icon = mode.icon;
             const isActive = viewMode === mode.value;
@@ -266,13 +300,28 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
                     colors={tierColors}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
-                    style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 8, borderRadius: 8 }}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                      paddingVertical: 8,
+                      borderRadius: 8,
+                    }}
                   >
                     <Icon size={14} color="#FFFFFF" />
                     <Text style={{ fontSize: 12, fontWeight: '600', color: '#FFFFFF' }}>{mode.label}</Text>
                   </LinearGradient>
                 ) : (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 8 }}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                      paddingVertical: 8,
+                    }}
+                  >
                     <Icon size={14} color={tierColors[0]} />
                     <Text style={{ fontSize: 12, fontWeight: '600', color: tierColors[0] }}>{mode.label}</Text>
                   </View>
@@ -287,7 +336,14 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
       <View style={{ paddingHorizontal: 20, paddingBottom: 20, paddingTop: 16 }}>
         {/* Navigation */}
         {selectedDataPoint && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 16,
+            }}
+          >
             <TouchableOpacity
               onPress={() => navigateDataPoint('prev')}
               disabled={selectedDataPoint?.index === 0}
@@ -301,7 +357,14 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
               <ChevronLeft size={18} color={tierColors[0]} strokeWidth={2.5} />
             </TouchableOpacity>
 
-            <View style={{ paddingHorizontal: 12, paddingVertical: 4, borderRadius: 8, backgroundColor: `${tierColors[0]}10` }}>
+            <View
+              style={{
+                paddingHorizontal: 12,
+                paddingVertical: 4,
+                borderRadius: 8,
+                backgroundColor: `${tierColors[0]}10`,
+              }}
+            >
               <Text style={{ fontSize: 12, fontWeight: '600', color: tierColors[0] }}>
                 {selectedDataPoint.index + 1} / {viewMode === 'heatmap' ? heatmapData.length * 7 : chartData.length}
               </Text>
@@ -321,16 +384,35 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
             </TouchableOpacity>
           </View>
         )}
+
         {/* Trend Chart */}
         {viewMode === 'trend' && (
           <View style={{ backgroundColor: '#F9FAFB', borderRadius: 16, padding: 16 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 160, marginBottom: 12 }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'flex-end',
+                justifyContent: 'space-between',
+                height: 160,
+                marginBottom: 12,
+              }}
+            >
               {chartData.map((data, index) => {
                 const isSelected = selectedDataPoint?.index === index;
                 const barHeight = data.totalTasks > 0 ? (data.value / maxValue) * 100 : 0;
 
                 return (
-                  <TouchableOpacity key={index} onPress={() => handleBarPress(index)} activeOpacity={0.7} style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', marginHorizontal: 2 }}>
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => handleBarPress(index)}
+                    activeOpacity={0.7}
+                    style={{
+                      flex: 1,
+                      alignItems: 'center',
+                      justifyContent: 'flex-end',
+                      marginHorizontal: 2,
+                    }}
+                  >
                     {isSelected && (
                       <View
                         style={{
@@ -348,13 +430,27 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
                     )}
 
                     {data.totalTasks === 0 ? (
-                      <View style={{ width: '100%', borderTopLeftRadius: 6, borderTopRightRadius: 6, height: '15%', backgroundColor: '#D1D5DB', opacity: 0.4 }} />
+                      <View
+                        style={{
+                          width: '100%',
+                          borderTopLeftRadius: 6,
+                          borderTopRightRadius: 6,
+                          height: '15%',
+                          backgroundColor: '#D1D5DB',
+                          opacity: 0.4,
+                        }}
+                      />
                     ) : (
                       <LinearGradient
                         colors={tierColors}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 0, y: 1 }}
-                        style={{ width: '100%', borderTopLeftRadius: 8, borderTopRightRadius: 8, height: `${Math.max(barHeight, 5)}%` }}
+                        style={{
+                          width: '100%',
+                          borderTopLeftRadius: 8,
+                          borderTopRightRadius: 8,
+                          height: `${Math.max(barHeight, 5)}%`,
+                        }}
                       />
                     )}
                   </TouchableOpacity>
@@ -364,7 +460,13 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
 
             {/* X-axis labels */}
             {selectedRange === 'week' && (
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 4 }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  paddingHorizontal: 4,
+                }}
+              >
                 {chartData.map((data, idx) => (
                   <Text
                     key={idx}
@@ -383,12 +485,13 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
             )}
           </View>
         )}
+
         {/* Heatmap */}
         {viewMode === 'heatmap' && (
           <View style={{ backgroundColor: '#F9FAFB', borderRadius: 16, padding: 16 }}>
             {/* Day labels */}
             <View style={{ flexDirection: 'row', marginBottom: 12, marginLeft: 32 }}>
-              {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, idx) => (
+              {weekDayLabels.map((day, idx) => (
                 <View key={idx} style={{ flex: 1, alignItems: 'center' }}>
                   <Text style={{ fontSize: 11, fontWeight: '600', color: tierColors[0] }}>{day}</Text>
                 </View>
@@ -425,20 +528,41 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
             ))}
 
             {/* Legend */}
-            <View style={{ marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#E5E7EB' }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                <Text style={{ fontSize: 11, color: '#9CA3AF', fontWeight: '500' }}>Less</Text>
+            <View
+              style={{
+                marginTop: 16,
+                paddingTop: 16,
+                borderTopWidth: 1,
+                borderTopColor: '#E5E7EB',
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                }}
+              >
+                <Text style={{ fontSize: 11, color: '#9CA3AF', fontWeight: '500' }}>{t('stats.chart.less')}</Text>
                 {[0.15, 0.35, 0.55, 0.75, 0.95].map((intensity, idx) => (
-                  <View key={idx} style={{ width: 16, height: 16, borderRadius: 4, backgroundColor: getIntensityColor(intensity) }} />
+                  <View
+                    key={idx}
+                    style={{
+                      width: 16,
+                      height: 16,
+                      borderRadius: 4,
+                      backgroundColor: getIntensityColor(intensity),
+                    }}
+                  />
                 ))}
-                <Text style={{ fontSize: 11, color: '#9CA3AF', fontWeight: '500' }}>More</Text>
+                <Text style={{ fontSize: 11, color: '#9CA3AF', fontWeight: '500' }}>{t('stats.chart.more')}</Text>
               </View>
             </View>
           </View>
         )}
-        {/* Detail Card */}
 
-        {/* Detail Card - Minimalist & Professional Design */}
+        {/* Detail Card */}
         {selectedDataPoint && (
           <View
             style={{
@@ -491,7 +615,7 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
               </TouchableOpacity>
             </View>
 
-            {/* Stats Grid - Clean & Spacious */}
+            {/* Stats Grid */}
             <View
               style={{
                 flexDirection: 'row',
@@ -535,7 +659,7 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
                       textTransform: 'uppercase',
                     }}
                   >
-                    Completion
+                    {t('stats.chart.completion')}
                   </Text>
                 </View>
                 <Text
@@ -586,7 +710,7 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
                       textTransform: 'uppercase',
                     }}
                   >
-                    Tasks
+                    {t('stats.chart.tasks')}
                   </Text>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
@@ -614,7 +738,7 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
               </View>
             </View>
 
-            {/* Active Habits - Minimalist List */}
+            {/* Active Habits */}
             {selectedDataPoint.habits.length > 0 && (
               <View
                 style={{
@@ -633,7 +757,7 @@ const PremiumStatsSection: React.FC<PremiumStatsSectionProps> = ({
                     marginBottom: 12,
                   }}
                 >
-                  Active Habits
+                  {t('stats.chart.activeHabits')}
                 </Text>
                 <View style={{ gap: 10 }}>
                   {selectedDataPoint.habits.map((habit, idx) => (

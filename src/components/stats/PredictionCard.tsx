@@ -4,6 +4,7 @@ import { View, Text, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Target, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Info, ChevronLeft, ChevronRight, Zap } from 'lucide-react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 import tw from '@/lib/tailwind';
 import { Habit } from '@/types';
 import { calculatePrediction, getPredictionTheme } from '@/utils/predictionUtils';
@@ -15,6 +16,7 @@ interface PredictionCardProps {
 }
 
 const PredictionCard: React.FC<PredictionCardProps> = ({ habits }) => {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [selectedHabitIndex, setSelectedHabitIndex] = useState(0);
   const [showBufferInfo, setShowBufferInfo] = useState(false);
@@ -34,7 +36,7 @@ const PredictionCard: React.FC<PredictionCardProps> = ({ habits }) => {
           <View style={tw`w-12 h-12 rounded-full bg-stone-50 items-center justify-center mb-3`}>
             <Target size={24} color="#9CA3AF" strokeWidth={1.5} />
           </View>
-          <Text style={tw`text-stone-400 text-sm`}>No habits to track yet</Text>
+          <Text style={tw`text-stone-400 text-sm`}>{t('stats.prediction.noHabits')}</Text>
         </View>
       </View>
     );
@@ -56,7 +58,7 @@ const PredictionCard: React.FC<PredictionCardProps> = ({ habits }) => {
         <View style={tw`px-6 pt-5 pb-4 border-b border-stone-50`}>
           <View style={tw`flex-row items-start justify-between mb-2`}>
             <View style={tw`flex-1`}>
-              <Text style={tw`text-xs text-stone-400 uppercase tracking-wider mb-1`}>Success Prediction</Text>
+              <Text style={tw`text-xs text-stone-400 uppercase tracking-wider mb-1`}>{t('stats.prediction.title')}</Text>
               <Text style={tw`text-base font-semibold text-stone-900`}>{habit.name}</Text>
             </View>
 
@@ -131,31 +133,31 @@ const PredictionCard: React.FC<PredictionCardProps> = ({ habits }) => {
             {/* Status Badge */}
             <View style={tw`flex-row items-center gap-2 px-3 py-1.5 rounded-full bg-stone-50`}>
               <TrendIcon size={12} color={theme.accent} strokeWidth={2} />
-              <Text style={tw`text-xs font-medium text-stone-700`}>{theme.label}</Text>
+              <Text style={tw`text-xs font-medium text-stone-700`}>{t(`stats.prediction.status.${prediction.status}`)}</Text>
             </View>
 
-            <Text style={tw`text-sm text-stone-500 mt-3 text-center max-w-xs`}>{theme.message}</Text>
+            <Text style={tw`text-sm text-stone-500 mt-3 text-center max-w-xs`}>{t(`stats.prediction.messages.${prediction.status}`)}</Text>
           </View>
 
           {/* Stats Grid */}
           <View style={tw`flex-row border border-stone-100 rounded-xl overflow-hidden`}>
             <View style={tw`flex-1 p-4 items-center`}>
               <Text style={tw`text-2xl font-bold text-stone-900`}>{prediction.completedDays}</Text>
-              <Text style={tw`text-xs text-stone-400 mt-1`}>Completed</Text>
+              <Text style={tw`text-xs text-stone-400 mt-1`}>{t('stats.prediction.completed')}</Text>
             </View>
 
             <View style={tw`w-px bg-stone-100`} />
 
             <View style={tw`flex-1 p-4 items-center`}>
               <Text style={tw`text-2xl font-bold text-stone-900`}>{prediction.requiredDays}</Text>
-              <Text style={tw`text-xs text-stone-400 mt-1`}>Required</Text>
+              <Text style={tw`text-xs text-stone-400 mt-1`}>{t('stats.prediction.required')}</Text>
             </View>
 
             <View style={tw`w-px bg-stone-100`} />
 
             <View style={tw`flex-1 p-4 items-center`}>
               <Text style={tw`text-2xl font-bold text-stone-900`}>{prediction.daysRemaining}</Text>
-              <Text style={tw`text-xs text-stone-400 mt-1`}>Remaining</Text>
+              <Text style={tw`text-xs text-stone-400 mt-1`}>{t('stats.prediction.remaining')}</Text>
             </View>
           </View>
 
@@ -167,7 +169,7 @@ const PredictionCard: React.FC<PredictionCardProps> = ({ habits }) => {
             }}
             style={tw`mt-4 py-3 items-center justify-center rounded-lg bg-stone-50 flex-row gap-2`}
           >
-            <Text style={tw`text-sm font-medium text-stone-600`}>{expanded ? 'Show Less' : 'View Details'}</Text>
+            <Text style={tw`text-sm font-medium text-stone-600`}>{expanded ? t('stats.prediction.showLess') : t('stats.prediction.viewDetails')}</Text>
             {expanded ? <ChevronUp size={16} color="#57534E" strokeWidth={2} /> : <ChevronDown size={16} color="#57534E" strokeWidth={2} />}
           </Pressable>
         </View>
@@ -179,7 +181,7 @@ const PredictionCard: React.FC<PredictionCardProps> = ({ habits }) => {
               <View style={tw`gap-3`}>
                 {/* Metrics */}
                 <View style={tw`flex-row justify-between py-3 border-b border-stone-50`}>
-                  <Text style={tw`text-sm text-stone-500`}>Predicted Completion</Text>
+                  <Text style={tw`text-sm text-stone-500`}>{t('stats.prediction.predictedCompletion')}</Text>
                   <Text style={tw`text-sm font-semibold text-stone-900`}>{prediction.predictedCompletion}%</Text>
                 </View>
 
@@ -192,29 +194,31 @@ const PredictionCard: React.FC<PredictionCardProps> = ({ habits }) => {
                     style={tw`flex-row justify-between items-center py-3`}
                   >
                     <View style={tw`flex-row items-center gap-2`}>
-                      <Text style={tw`text-sm text-stone-500`}>Safety Margin</Text>
+                      <Text style={tw`text-sm text-stone-500`}>{t('stats.prediction.safetyMargin')}</Text>
                       <View style={tw`w-4 h-4 rounded-full bg-stone-100 items-center justify-center`}>
                         <Info size={10} color="#78716C" strokeWidth={2} />
                       </View>
                     </View>
                     <Text style={tw`text-sm font-semibold text-stone-900`}>
-                      {prediction.bufferDays} {prediction.bufferDays === 1 ? 'day' : 'days'}
+                      {prediction.bufferDays} {t(`stats.prediction.${prediction.bufferDays === 1 ? 'day' : 'days'}`)}
                     </Text>
                   </Pressable>
 
                   {showBufferInfo && (
                     <Animated.View entering={FadeIn.duration(200)} style={tw`pb-3 px-4`}>
-                      <Text style={tw`text-xs text-stone-400 leading-relaxed`}>Days you can miss and still achieve 70% completion to succeed in your goal.</Text>
+                      <Text style={tw`text-xs text-stone-400 leading-relaxed`}>{t('stats.prediction.safetyMarginInfo')}</Text>
                     </Animated.View>
                   )}
                 </View>
 
                 <View style={tw`flex-row justify-between py-3 border-b border-stone-50`}>
-                  <Text style={tw`text-sm text-stone-500`}>Can Still Succeed?</Text>
-                  <Text style={tw`text-sm font-semibold ${prediction.canStillSucceed ? 'text-green-600' : 'text-red-600'}`}>{prediction.canStillSucceed ? 'Yes' : 'Challenging'}</Text>
+                  <Text style={tw`text-sm text-stone-500`}>{t('stats.prediction.canSucceed')}</Text>
+                  <Text style={tw`text-sm font-semibold ${prediction.canStillSucceed ? 'text-green-600' : 'text-red-600'}`}>
+                    {prediction.canStillSucceed ? t('stats.prediction.yes') : t('stats.prediction.challenging')}
+                  </Text>
                 </View>
 
-                {/* Suggested Pace - Improved Design */}
+                {/* Suggested Pace */}
                 <View style={tw`mt-3 rounded-xl overflow-hidden border-2`} style={{ borderColor: theme.accent }}>
                   <LinearGradient colors={[theme.backgroundGradient[0], '#FFFFFF']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}>
                     <View style={tw`p-5`}>
@@ -223,7 +227,7 @@ const PredictionCard: React.FC<PredictionCardProps> = ({ habits }) => {
                           <Zap size={16} color="#FFFFFF" strokeWidth={2.5} fill="#FFFFFF" />
                         </View>
                         <Text style={tw`text-xs uppercase tracking-wider font-bold`} style={{ color: theme.accent }}>
-                          Suggested Pace
+                          {t('stats.prediction.suggestedPace')}
                         </Text>
                       </View>
                       <Text style={tw`text-base font-semibold text-stone-900 leading-relaxed`}>{prediction.suggestedPace}</Text>
@@ -233,7 +237,7 @@ const PredictionCard: React.FC<PredictionCardProps> = ({ habits }) => {
 
                 {/* Progress Timeline */}
                 <View style={tw`mt-2 p-4 bg-stone-50 rounded-xl`}>
-                  <Text style={tw`text-xs text-stone-400 uppercase tracking-wider mb-3`}>Progress Timeline</Text>
+                  <Text style={tw`text-xs text-stone-400 uppercase tracking-wider mb-3`}>{t('stats.prediction.progressTimeline')}</Text>
 
                   <View style={tw`h-2 bg-white rounded-full overflow-hidden mb-3`}>
                     <View
@@ -248,11 +252,15 @@ const PredictionCard: React.FC<PredictionCardProps> = ({ habits }) => {
                   </View>
 
                   <View style={tw`flex-row justify-between items-center`}>
-                    <Text style={tw`text-xs text-stone-400`}>Day 1</Text>
+                    <Text style={tw`text-xs text-stone-400`}>{t('stats.prediction.day')} 1</Text>
                     <View style={tw`px-2 py-1 rounded-md bg-stone-900`}>
-                      <Text style={tw`text-xs font-medium text-white`}>Day {prediction.daysElapsed}</Text>
+                      <Text style={tw`text-xs font-medium text-white`}>
+                        {t('stats.prediction.day')} {prediction.daysElapsed}
+                      </Text>
                     </View>
-                    <Text style={tw`text-xs text-stone-400`}>Day {prediction.totalDays}</Text>
+                    <Text style={tw`text-xs text-stone-400`}>
+                      {t('stats.prediction.day')} {prediction.totalDays}
+                    </Text>
                   </View>
                 </View>
               </View>

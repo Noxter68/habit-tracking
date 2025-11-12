@@ -253,34 +253,6 @@
     "monthStreak": "{{count}} mois | {{count}} mois",
     "task": "tâche | tâches"
   },
-
-  "stats": {
-    "title": "Statistiques",
-    "overview": "Aperçu",
-    "totalXP": "XP Total",
-    "totalHabits": "Total d'habitudes",
-    "completionRate": "Taux de complétion",
-    "currentStreak": "Série actuelle",
-    "longestStreak": "Plus longue série",
-    "thisWeek": "Cette semaine",
-    "thisMonth": "Ce mois-ci",
-    "allTime": "Tout le temps",
-    "premium": {
-      "unlockAdvanced": "Débloquer les statistiques avancées",
-      "premiumFeatures": "Les fonctionnalités premium incluent des graphiques détaillés, tendances et analyses",
-      "upgrade": "Passer à Premium"
-    },
-    "period": {
-      "week": "Semaine",
-      "month": "Mois",
-      "fourWeeks": "4 Semaines"
-    },
-    "chartType": {
-      "trend": "Tendance",
-      "heatmap": "Carte de chaleur",
-      "summary": "Résumé"
-    }
-  },
   "achievements": {
     "level": "Niveau {{level}}",
     "tapToClose": "Touchez n'importe où pour fermer",
@@ -1668,6 +1640,110 @@
       "partial": "Partiel",
       "missed": "Manqué",
       "holiday": "Vacances"
+    }
+  },
+
+  "leaderboard": {
+    "title": "Classement",
+    "subtitle": "Rivalisez avec les meilleurs",
+
+    "modes": {
+      "global": "TOUT TEMPS",
+      "weekly": "CETTE SEMAINE"
+    },
+
+    "labels": {
+      "xp": "XP",
+      "level": "NIV",
+      "you": "VOUS",
+      "rank": "Rang",
+      "position": "Position"
+    },
+
+    "sections": {
+      "otherChampions": "AUTRES CHAMPIONS",
+      "yourRank": "VOTRE RANG",
+      "yourPosition": "VOTRE POSITION"
+    },
+
+    "stats": {
+      "totalXp": "{{xp}} XP",
+      "weeklyXp": "{{xp}} XP",
+      "levelWithXp": "{{xp}} XP • Niv.{{level}}"
+    },
+
+    "loading": "Chargement du classement...",
+    "noData": "Aucune donnée de classement disponible"
+  },
+  "stats": {
+    "title": "Statistiques",
+    "subtitle": "VOTRE PROGRESSION",
+    "level": "NIVEAU {{level}}",
+    "analytics": "ANALYSES",
+    "loading": "Chargement des statistiques...",
+
+    "timeRanges": {
+      "week": "7j",
+      "month": "30j",
+      "4weeks": "4s"
+    },
+
+    "viewModes": {
+      "trend": "Tendance",
+      "heatmap": "Calendrier"
+    },
+
+    "chart": {
+      "completion": "Réalisation",
+      "tasks": "Tâches",
+      "activeHabits": "Habitudes Actives",
+      "noData": "Aucune donnée disponible",
+      "less": "Moins",
+      "more": "Plus"
+    },
+
+    "prediction": {
+      "title": "Prédiction de Succès",
+      "noHabits": "Aucune habitude à suivre",
+      "completed": "Réalisé",
+      "required": "Requis",
+      "remaining": "Restant",
+      "showLess": "Voir Moins",
+      "viewDetails": "Voir Détails",
+      "predictedCompletion": "Réalisation Prévue",
+      "safetyMargin": "Marge de Sécurité",
+      "safetyMarginInfo": "Jours que vous pouvez manquer tout en atteignant 70% de réalisation pour réussir votre objectif.",
+      "canSucceed": "Peut Encore Réussir ?",
+      "yes": "Oui",
+      "challenging": "Difficile",
+      "suggestedPace": "Rythme Suggéré",
+      "progressTimeline": "Chronologie de Progression",
+      "day": "Jour",
+      "days": "jours",
+
+      "status": {
+        "excellent": "Excellent Parcours",
+        "onTrack": "Sur la Bonne Voie",
+        "needsFocus": "Besoin de Focus",
+        "atRisk": "À Risque"
+      },
+
+      "messages": {
+        "excellent": "Vous êtes exceptionnel ! Continuez à briller",
+        "onTrack": "Gardez cet élan",
+        "needsFocus": "Quelques jours solides vont aider",
+        "atRisk": "Revenons sur la bonne voie"
+      }
+    },
+
+    "weekDays": {
+      "monday": "L",
+      "tuesday": "M",
+      "wednesday": "M",
+      "thursday": "J",
+      "friday": "V",
+      "saturday": "S",
+      "sunday": "D"
     }
   }
 }

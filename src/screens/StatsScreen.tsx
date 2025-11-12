@@ -3,8 +3,10 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, RefreshControl, ImageBackground } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BarChart3 } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import tw from '@/lib/tailwind';
 import { format } from 'date-fns';
+import { enUS, fr } from 'date-fns/locale';
 
 // Import components
 import PremiumStatsSection from '@/components/premium/PremiumStatsSection';
@@ -16,12 +18,16 @@ import { useAuth } from '@/context/AuthContext';
 type TimeRange = 'week' | 'month' | '4weeks';
 
 const StatsScreen: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const { habits, loading: habitsLoading, refreshHabits } = useHabits();
   const { stats, refreshStats } = useStats();
 
   const [refreshing, setRefreshing] = useState(false);
   const [selectedRange, setSelectedRange] = useState<TimeRange>('week');
+
+  // Get date-fns locale
+  const dateLocale = i18n.language === 'fr' ? fr : enUS;
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -34,6 +40,7 @@ const StatsScreen: React.FC = () => {
       <ImageBackground source={require('../../assets/interface/textures/texture-white.png')} style={tw`flex-1`} imageStyle={{ opacity: 0.15 }} resizeMode="repeat">
         <View style={tw`flex-1 bg-transparent items-center justify-center`}>
           <ActivityIndicator size="large" color="#9333EA" />
+          <Text style={tw`text-stone-500 mt-4`}>{t('stats.loading')}</Text>
         </View>
       </ImageBackground>
     );
@@ -58,10 +65,37 @@ const StatsScreen: React.FC = () => {
                   marginBottom: 8,
                 }}
               >
-                <Text style={{ fontSize: 11, fontWeight: '700', color: '#047857', letterSpacing: 2 }}>YOUR PROGRESS</Text>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontWeight: '700',
+                    color: '#047857',
+                    letterSpacing: 2,
+                  }}
+                >
+                  {t('stats.subtitle')}
+                </Text>
               </View>
-              <Text style={{ fontSize: 32, fontWeight: '900', color: '#064e3b', letterSpacing: -1 }}>Statistics</Text>
-              <Text style={{ fontSize: 13, color: '#065f46', marginTop: 4, fontWeight: '600' }}>{format(new Date(), 'EEEE, MMMM d')}</Text>
+              <Text
+                style={{
+                  fontSize: 32,
+                  fontWeight: '900',
+                  color: '#064e3b',
+                  letterSpacing: -1,
+                }}
+              >
+                {t('stats.title')}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 13,
+                  color: '#065f46',
+                  marginTop: 4,
+                  fontWeight: '600',
+                }}
+              >
+                {format(new Date(), 'EEEE, MMMM d', { locale: dateLocale })}
+              </Text>
             </View>
 
             {/* Level Badge - Jade Gradient */}
@@ -80,7 +114,16 @@ const StatsScreen: React.FC = () => {
                   shadowRadius: 8,
                 }}
               >
-                <Text style={{ fontSize: 13, color: '#FFFFFF', fontWeight: '700', letterSpacing: 1 }}>LEVEL {stats?.level || 1}</Text>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: '#FFFFFF',
+                    fontWeight: '700',
+                    letterSpacing: 1,
+                  }}
+                >
+                  {t('stats.level', { level: stats?.level || 1 })}
+                </Text>
               </LinearGradient>
             </View>
           </LinearGradient>
@@ -94,7 +137,16 @@ const StatsScreen: React.FC = () => {
           <View style={{ paddingHorizontal: 24, marginBottom: 16 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <BarChart3 size={18} color="#60a5fa" />
-              <Text style={{ fontSize: 13, fontWeight: '800', color: '#60a5fa', letterSpacing: 1.5 }}>ANALYTICS</Text>
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: '800',
+                  color: '#60a5fa',
+                  letterSpacing: 1.5,
+                }}
+              >
+                {t('stats.analytics')}
+              </Text>
             </View>
           </View>
 
