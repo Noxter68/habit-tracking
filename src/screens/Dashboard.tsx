@@ -2,7 +2,7 @@
 // Main dashboard screen with habit tracking, holiday mode, and streak savers
 
 import React, { useCallback, useRef, useEffect, useState, useMemo } from 'react';
-import { ScrollView, RefreshControl, View, Text, ActivityIndicator, Pressable, Alert, StatusBar, Image, ImageBackground } from 'react-native';
+import { ScrollView, RefreshControl, View, Text, ActivityIndicator, Pressable, Alert, StatusBar, Image, ImageBackground, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInUp } from 'react-native-reanimated';
@@ -35,6 +35,12 @@ import { getTodayString } from '@/utils/dateHelpers';
 import TaskBadge from '@/components/TasksBadge';
 import AddHabitButton from '@/components/dashboard/AddHabitButton';
 import i18n from '@/i18n';
+import { UpdateModal } from '@/components/updateModal';
+import { useVersionCheck } from '@/hooks/useVersionCheck';
+import { versionManager } from '@/utils/versionManager';
+import { getLocales } from 'expo-localization';
+import { getModalTexts, getUpdatesForVersion } from '@/utils/updateContent';
+import { Config } from '@/config';
 
 // ============================================================================
 // Main Component
@@ -59,6 +65,19 @@ const Dashboard: React.FC = () => {
   const [frozenHabits, setFrozenHabits] = useState<Set<string>>(new Set());
   const [frozenTasksMap, setFrozenTasksMap] = useState<Map<string, Record<string, { pausedUntil: string }>>>(new Map());
   const [streakSaverRefreshTrigger, setStreakSaverRefreshTrigger] = useState(0);
+  const { showModal, isChecking, handleClose } = useVersionCheck();
+
+  const locale = getLocales()[0]?.languageCode ?? 'en';
+  const currentVersion = versionManager.getCurrentVersion();
+
+  const updates = useMemo(() => getUpdatesForVersion(currentVersion, locale), [currentVersion, locale]);
+  const modalTexts = useMemo(() => getModalTexts(locale), [locale]);
+
+  // Fonction pour réinitialiser et revoir la modal (utile pour tester)
+  const handleResetVersion = async () => {
+    await versionManager.clearLastSeenVersion();
+    Alert.alert('Version reset! Restart the app to see the modal again.');
+  };
 
   // State: Debug
   const [testLevel, setTestLevel] = useState(1);
@@ -461,7 +480,6 @@ const Dashboard: React.FC = () => {
                 )}
               </View>
             )}
-
             {/* Section Header */}
             {!showFullHolidayMode && activeHabits.length > 0 ? (
               <View style={tw`mb-0`}>
@@ -483,7 +501,6 @@ const Dashboard: React.FC = () => {
                 </View>
               </View>
             )}
-
             {/* Full Holiday Mode Display */}
             {showFullHolidayMode ? (
               activeHoliday ? (
@@ -537,6 +554,13 @@ const Dashboard: React.FC = () => {
                 </Pressable>
               </View>
             )}
+            {/* Bouton pour tester la modal - DEV ONLY */}
+            {Config.debug.enabled && (
+              <TouchableOpacity onPress={handleResetVersion} style={tw`bg-slate-200 px-6 py-3 rounded-xl`}>
+                <Text style={tw`text-slate-700 font-medium`}>Reset Version (Debug Mode)</Text>
+              </TouchableOpacity>
+            )}
+            <UpdateModal visible={showModal} onClose={handleClose} version={currentVersion} updates={updates} texts={modalTexts} />
           </Animated.View>
         </ScrollView>
       </SafeAreaView>

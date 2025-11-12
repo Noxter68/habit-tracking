@@ -22,6 +22,7 @@ import { HolidayPeriod } from '@/types/holiday.types';
 import { supabase } from '@/lib/supabase';
 import EditUsernameModal from '@/components/settings/EditUserModal';
 import { useTranslation } from 'react-i18next';
+import Constants from 'expo-constants';
 
 const APP_ICON = require('../../assets/icon/icon-v2.png');
 const TEXTURE_BG = require('../../assets/interface/textures/texture-white.png');
@@ -598,7 +599,7 @@ const SettingsScreen: React.FC = () => {
             )}
 
             <SettingsSection title={t('settings.support')} delay={400}>
-              <SettingsItem icon="information-circle-outline" title={t('settings.version')} subtitle="1.0.10" />
+              <SettingsItem icon="information-circle-outline" title={t('settings.version')} subtitle={Constants.expoConfig?.version || '1.0.0'} />
             </SettingsSection>
 
             <View style={tw`mt-6`}>
