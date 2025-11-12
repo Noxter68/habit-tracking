@@ -241,14 +241,20 @@
     "building": "Building",
     "quitting": "Quitting",
     "resetsIn": "Resets in {{count}}{{unit}}",
-    "daysLeft": "{{count}}d left",
+    "daysLeft_one": "{{count}} day left",
+    "daysLeft_other": "{{count}} days left",
     "weeklyTasks": "Weekly Tasks",
     "todaysTasks": "Today's Tasks",
-    "tasksPaused": "{{count}} task paused | {{count}} tasks paused",
-    "dayStreak": "{{count}} day | {{count}} days",
-    "weekStreak": "{{count}} week | {{count}} weeks",
-    "monthStreak": "{{count}} month | {{count}} months",
-    "task": "task | tasks"
+    "tasksPaused_one": "{{count}} task paused",
+    "tasksPaused_other": "{{count}} tasks paused",
+    "dayStreak_one": "{{count}} day",
+    "dayStreak_other": "{{count}} days",
+    "weekStreak_one": "{{count}} week",
+    "weekStreak_other": "{{count}} weeks",
+    "monthStreak_one": "{{count}} month",
+    "monthStreak_other": "{{count}} months",
+    "task_one": "task",
+    "task_other": "tasks"
   },
   "notifications": {
     "title": "Notifications",
@@ -356,52 +362,6 @@
     "terms": "Cancel anytime • Secure payment",
     "loading": "Loading...",
     "error": "Failed to load subscription options"
-  },
-
-  "holidayMode": {
-    "title": "Holiday Mode",
-    "subtitle": "Pause habits without losing progress",
-    "active": "Holiday Active",
-    "period": "Period",
-    "frozenItems": "Frozen Items",
-    "daysRemaining": "Day Remaining | Days Remaining",
-    "returnOn": "Return on {{date}}",
-    "comeBackStronger": "Come back stronger",
-    "motivationalMessage": "Your streaks are safe. Rest, recharge, and return ready to continue your journey.",
-    "viewDetails": "View Details",
-    "endEarly": "End Early",
-    "enjoyBreak": "Enjoy your well-deserved break",
-    "create": {
-      "title": "Create Holiday Period",
-      "selectDates": "Select Dates",
-      "startDate": "Start Date",
-      "endDate": "End Date",
-      "duration": "Duration: {{days}} days",
-      "scope": "What to Pause",
-      "scopeOptions": {
-        "all": "All",
-        "habits": "Habits",
-        "tasks": "Tasks"
-      },
-      "selectHabits": "Select Habits",
-      "selectTasks": "Select Tasks",
-      "infoAll": "All habits paused. Streaks preserved.",
-      "infoHabits": "Selected habits paused. Others continue normally.",
-      "infoTasks": "Selected tasks paused. Others continue normally.",
-      "activate": "Activate Holiday Mode",
-      "activating": "Activating..."
-    },
-    "stats": {
-      "premiumAccess": "Premium Access",
-      "unlimited": "UNLIMITED",
-      "createUnlimited": "Create unlimited holiday periods with no duration restrictions",
-      "periods": "Periods",
-      "daysUsed": "Days Used",
-      "daysRemaining": "Days Remaining",
-      "upgradeTitle": "Need More Days?",
-      "upgradeMessage": "Free: {{free}} days/year\nPremium: Unlimited",
-      "upgrade": "Upgrade to Premium"
-    }
   },
 
   "streakSaver": {
@@ -1747,47 +1707,95 @@
       "sunday": "S"
     }
   },
-  "holidayPremium": {
-    "title": "Holiday Mode",
-    "subtitle": "Take a break without losing your progress",
-    "premiumFeature": "Premium Feature",
-    "description": "With Premium, enjoy unlimited Holiday Mode to protect your streaks whenever you need a break.",
+  "holidayMode": {
+    "title": "Mode Vacances",
+    "subtitle": "Mettez en pause sans perdre votre progression",
+    "active": "Vacances Actives",
+    "period": "Période",
+    "frozenItems": "Éléments gelés",
+    "daysLeft": "{{count}}j restant",
+    "endEarly": "Terminer plus tôt",
+    "loadingDates": "Chargement des dates...",
 
-    "benefits": {
-      "title": "Benefits",
-      "unlimited": "Unlimited Holiday Days",
-      "unlimitedDesc": "Use Holiday Mode as much as you need",
-      "protection": "Complete Streak Protection",
-      "protectionDesc": "Your progress stays intact during your break",
-      "flexibility": "Total Flexibility",
-      "flexibilityDesc": "Schedule breaks ahead or activate instantly"
+    "stats": {
+      "premiumAccess": "Accès Premium",
+      "unlimited": "ILLIMITÉ",
+      "createUnlimited": "Créez des périodes de vacances illimitées sans restriction de durée",
+      "periods": "Périodes",
+      "daysPerPeriod": "Jours par période",
+      "yourAllowance": "Votre Allocation",
+      "freePlan": "PLAN GRATUIT",
+      "periodLeft": "Période restante",
+      "daysMax": "Jours max",
+      "upgradeMessage": "Passez à Premium pour des périodes de vacances illimitées"
     },
 
-    "howItWorks": {
-      "title": "How It Works",
-      "step1": "Activate Holiday Mode",
-      "step1Desc": "Choose your start and end dates",
-      "step2": "Take Your Break",
-      "step2Desc": "Your streaks are frozen and protected",
-      "step3": "Return When Ready",
-      "step3Desc": "Pick up right where you left off"
+    "form": {
+      "scheduleBreak": "Planifier une Pause",
+      "totalDuration": "Durée Totale",
+      "day": "jour",
+      "days": "jours",
+      "startDate": "Date de début",
+      "endDate": "Date de fin",
+      "freezeScope": "Portée du Gel",
+      "all": "Tout",
+      "habits": "Habitudes",
+      "tasks": "Tâches",
+      "activate": "Activer le Mode Vacances"
     },
 
-    "comparison": {
-      "title": "Free vs Premium",
-      "free": "Free Plan",
-      "premium": "Premium",
-      "limitedDays": "30 days per year",
-      "unlimitedDays": "Unlimited days",
-      "basicProtection": "Basic protection",
-      "fullProtection": "Full protection",
-      "singlePeriod": "1 period at a time",
-      "multiplePeriods": "Multiple periods"
+    "scope": {
+      "infoAll": "Toutes les habitudes en pause. Séries préservées.",
+      "infoHabits": "Habitudes sélectionnées en pause. Les autres continuent normalement.",
+      "infoTasks": "Tâches sélectionnées en pause. Les autres continuent normalement."
     },
 
-    "cta": {
-      "upgrade": "Upgrade to Premium",
-      "learnMore": "Learn More"
+    "datePicker": {
+      "cancel": "Annuler",
+      "done": "Terminé"
+    },
+
+    "alerts": {
+      "selectionRequired": "Sélection Requise",
+      "selectHabit": "Veuillez sélectionner au moins une habitude à geler",
+      "selectTask": "Veuillez sélectionner au moins une tâche à geler",
+      "invalidDates": "Dates Invalides",
+      "premiumRequired": "Premium Requis",
+      "premiumMessage": "Cette fonctionnalité nécessite un abonnement Premium.",
+      "cannotCreate": "Impossible de Créer",
+      "unableToCreate": "Impossible de créer la période de vacances.",
+      "error": "Erreur",
+      "validationFailed": "Échec de la validation de la période de vacances. Veuillez réessayer.",
+      "activateTitle": "Activer le Mode Vacances ?",
+      "activateMessage": "Tous les {{scope}} seront en pause du {{startDate}} au {{endDate}} ({{duration}} jours).",
+      "activateMessageAll": "habitudes",
+      "activateMessageSelected": "éléments sélectionnés",
+      "freezingHabits": "Gel de {{count}} habitude",
+      "freezingHabitsPlural": "Gel de {{count}} habitudes",
+      "freezingTasks": "Gel de {{count}} tâche sur {{habitCount}} habitude",
+      "freezingTasksPlural": "Gel de {{count}} tâches sur {{habitCount}} habitudes",
+      "cancel": "Annuler",
+      "activate": "Activer",
+      "premiumFeature": "Fonctionnalité Premium",
+      "featureRequiresPremium": "Cette fonctionnalité nécessite Premium.",
+      "upgrade": "Passer à Premium",
+      "createFailed": "Échec de la création",
+      "endEarlyTitle": "Terminer les Vacances ?",
+      "endEarlyMessage": "Vos habitudes reprendront le suivi immédiatement.",
+      "endHoliday": "Terminer les Vacances",
+      "cancelFailed": "Échec de l'annulation"
+    },
+
+    "premium": {
+      "goPremium": "Passer à Premium",
+      "benefits": "Vacances illimitées • Pas de limite de durée • Contrôles avancés"
+    },
+
+    "habitSelection": {
+      "freezingHabits": "Gel de {{count}} habitude | Gel de {{count}} habitudes",
+      "customSelection": "sélection personnalisée",
+      "frozenHabits": "{{count}} habitudes",
+      "frozenTasks": "{{count}} tâches"
     }
   },
   "editUsername": {

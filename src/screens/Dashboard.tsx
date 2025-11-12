@@ -68,27 +68,6 @@ const Dashboard: React.FC = () => {
   const lastLoadTime = useRef<number>(0);
   const MIN_RELOAD_INTERVAL = 1000; // 1 second
 
-  useEffect(() => {
-    console.log('🌍 Current language:', i18n.language);
-    console.log('🔑 Available languages:', Object.keys(i18n.options.resources || {}));
-
-    // Test direct
-    const testTitle = i18n.t('achievements.titles.level1');
-    console.log('📝 Direct i18n.t test:', testTitle);
-
-    // Test avec le hook
-    const testTitle2 = t('achievements.titles.level1');
-    console.log('📝 Hook t() test:', testTitle2);
-
-    // Test si la clé existe
-    const exists = i18n.exists('achievements.titles.level1');
-    console.log('✅ Key exists?', exists);
-
-    // Afficher toute la structure achievements
-    const allAchievements = i18n.t('achievements', { returnObjects: true });
-    console.log('📦 All achievements data:', JSON.stringify(allAchievements, null, 2));
-  }, []);
-
   // ============================================================================
   // LOADING STATE MANAGEMENT
   // ============================================================================
@@ -459,7 +438,7 @@ const Dashboard: React.FC = () => {
           )}
 
           {/* Habits Section */}
-          <Animated.View entering={FadeInUp.delay(200)} style={tw`mt-6`}>
+          <Animated.View entering={FadeInUp.delay(200)} style={tw`mt-8`}>
             {/* Free user habit limit indicator */}
             {!isPremium && habitCount > 0 && (
               <View
@@ -485,9 +464,9 @@ const Dashboard: React.FC = () => {
 
             {/* Section Header */}
             {!showFullHolidayMode && activeHabits.length > 0 ? (
-              <View style={tw`mb-4`}>
-                <AddHabitButton onPress={handleCreateHabit} />
+              <View style={tw`mb-0`}>
                 <TaskBadge completed={realTimeTasksStats.completed} total={realTimeTasksStats.total} onAddPress={handleCreateHabit} showAddButton={habits.length > 0} />
+                <AddHabitButton onPress={handleCreateHabit} />
               </View>
             ) : showFullHolidayMode ? (
               <View style={tw`flex-row items-center justify-between mb-4`}>

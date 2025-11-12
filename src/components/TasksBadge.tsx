@@ -124,6 +124,7 @@ export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total }) => {
             shadowOffset: { width: 0, height: 8 },
             shadowOpacity: 0.3,
             shadowRadius: 16,
+            borderRadius: 16,
             elevation: 8,
           },
         ]}

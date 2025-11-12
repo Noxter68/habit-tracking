@@ -22,11 +22,12 @@ export const AddHabitButton: React.FC<AddHabitButtonProps> = ({ onPress }) => {
           shadowOpacity: 0.05,
           shadowRadius: 6,
           elevation: 2,
+          marginTop: 10,
         },
         pressed && tw`opacity-80`,
       ]}
     >
-      <ImageBackground source={require('../../../assets/interface/textures/texture-grey.png')} style={tw`py-3 px-4`} imageStyle={{ opacity: 0.3 }} resizeMode="cover">
+      <ImageBackground source={require('../../../assets/interface/textures/texture-grey.png')} style={tw`py-3 px-4`} imageStyle={{ opacity: 0.4 }} resizeMode="cover">
         <View style={tw`flex-row items-center justify-center gap-2.5`}>
           <View style={[tw`w-8 h-8 rounded-full items-center justify-center`, { backgroundColor: 'rgba(241, 245, 249, 0.8)' }]}>
             <Plus size={20} color="#64748b" strokeWidth={2.5} />

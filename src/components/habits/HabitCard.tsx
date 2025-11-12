@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import { CheckCircle2, Circle } from 'lucide-react-native';
+import { CheckCircle2, Circle, Flame } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import * as Haptics from 'expo-haptics';
 import tw from '@/lib/tailwind';
@@ -142,19 +142,19 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit, completedToday, onP
 
   const isCompleted = isWeekly ? weekCompleted : completedToday;
 
-  // Format streak display
-  const formatStreakDisplay = (): string => {
+  // Format streak display with separated number and unit
+  const getStreakData = (): { count: number; unit: string } => {
     const count = habit.currentStreak;
 
     switch (habit.frequency) {
       case 'daily':
-        return t('habits.dayStreak', { count });
+        return { count, unit: t('habits.dayStreak', { count }) };
       case 'weekly':
-        return t('habits.weekStreak', { count });
+        return { count, unit: t('habits.weekStreak', { count }) };
       case 'monthly':
-        return t('habits.monthStreak', { count });
+        return { count, unit: t('habits.monthStreak', { count }) };
       default:
-        return t('habits.dayStreak', { count });
+        return { count, unit: t('habits.dayStreak', { count }) };
     }
   };
 
@@ -170,6 +170,8 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit, completedToday, onP
       });
     }
   };
+
+  const streakData = getStreakData();
 
   return (
     <Animated.View entering={FadeIn.delay(index * 50)}>
@@ -225,8 +227,14 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit, completedToday, onP
             {/* Stats Footer */}
             <View style={tw`flex-row items-center justify-between pt-3 border-t border-white/20`}>
               <View>
-                <Text style={tw`text-xs text-white/70 font-medium mb-0.5`}>{t('habits.streak')}</Text>
-                <Text style={tw`text-lg font-black text-white`}>{formatStreakDisplay()}</Text>
+                <Text style={tw`text-xs text-white/70 font-medium mb-1`}>{t('habits.streak')}</Text>
+                <View style={tw`flex-row items-center gap-1.5`}>
+                  <Flame size={22} color="#FFFFFF" strokeWidth={2} fill="rgba(255, 255, 255, 0.2)" />
+                  <View style={tw`flex-row items-baseline gap-1`}>
+                    <Text style={tw`text-2xl font-black text-white`}>{streakData.count}</Text>
+                    <Text style={tw`text-sm font-semibold text-white/80`}>{streakData.unit}</Text>
+                  </View>
+                </View>
               </View>
 
               <View style={[tw`px-3 py-1.5 rounded-xl border border-white/30`, { backgroundColor: 'rgba(255, 255, 255, 0.15)' }]}>
