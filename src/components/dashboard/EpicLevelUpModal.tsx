@@ -404,14 +404,14 @@ const styles = StyleSheet.create({
     textShadowRadius: 10,
   },
   titleContainer: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 10,
     paddingVertical: 10,
     borderRadius: 16,
     marginBottom: 20,
     alignItems: 'center',
   },
   achievementTitle: {
-    fontSize: 18,
+    fontSize: 26,
     fontWeight: '800',
     letterSpacing: 0.5,
     textAlign: 'center',

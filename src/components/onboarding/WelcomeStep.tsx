@@ -4,6 +4,7 @@ import { View, Text } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withDelay, withTiming } from 'react-native-reanimated';
 import { Sparkles, Target, Trophy } from 'lucide-react-native';
 import tw from '../../lib/tailwind';
+import i18n from '../../i18n';
 
 interface ValuePropProps {
   icon: React.ReactNode;
@@ -37,17 +38,15 @@ interface WelcomeStepProps {
 const WelcomeStep: React.FC<WelcomeStepProps> = ({ gradient }) => {
   return (
     <View style={tw`items-center gap-8`}>
-      {/* Title */}
       <View style={tw`items-center gap-3`}>
-        <Text style={tw`text-4xl font-black text-white text-center`}>Welcome to Nuvoria</Text>
-        <Text style={tw`text-lg text-white/80 text-center leading-7 max-w-[320px]`}>Transform your habits into a daily adventure filled with success</Text>
+        <Text style={tw`text-4xl font-black text-white text-center`}>{i18n.t('onboarding.welcome.title')}</Text>
+        <Text style={tw`text-lg text-white/80 text-center leading-7 max-w-[320px]`}>{i18n.t('onboarding.welcome.subtitle')}</Text>
       </View>
 
-      {/* Value Props */}
       <View style={tw`gap-4 mt-4 w-full`}>
-        <ValueProp icon={<Sparkles size={22} color="white" strokeWidth={2} />} text="Build lasting habits" delay={300} />
-        <ValueProp icon={<Target size={22} color="white" strokeWidth={2} />} text="Track your progress visually" delay={450} />
-        <ValueProp icon={<Trophy size={22} color="white" strokeWidth={2} />} text="Unlock achievements & rewards" delay={600} />
+        <ValueProp icon={<Sparkles size={22} color="white" strokeWidth={2} />} text={i18n.t('onboarding.welcome.buildHabits')} delay={300} />
+        <ValueProp icon={<Target size={22} color="white" strokeWidth={2} />} text={i18n.t('onboarding.welcome.trackProgress')} delay={450} />
+        <ValueProp icon={<Trophy size={22} color="white" strokeWidth={2} />} text={i18n.t('onboarding.welcome.unlockAchievements')} delay={600} />
       </View>
     </View>
   );

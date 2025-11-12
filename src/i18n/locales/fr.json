@@ -40,14 +40,6 @@
     "dontHaveAccount": "Vous n'avez pas de compte ?",
     "signingOut": "Déconnexion..."
   },
-
-  "onboarding": {
-    "skip": "Passer",
-    "continue": "Continuer",
-    "letsStart": "C'est parti",
-    "getStarted": "Commencer"
-  },
-
   "dashboard": {
     "title": "Tableau de bord",
     "welcome": "Bienvenue",
@@ -101,10 +93,10 @@
       "readyToClaim": "Prêt à Récupérer !",
       "tasksRemaining_one": "{{count}} tâche restante",
       "tasksRemaining_other": "{{count}} tâches restantes",
-      "dailyTask_one": "{{count}} Tâche Quotidienne",
-      "dailyTask_other": "{{count}} Tâches Quotidiennes",
-      "weeklyTask_one": "{{count}} Tâche Hebdomadaire",
-      "weeklyTask_other": "{{count}} Tâches Hebdomadaires",
+      "dailyTask_one": "{{count}} Tâche / jour",
+      "dailyTask_other": "{{count}} Tâches / jour",
+      "weeklyTask_one": "{{count}} Tâche / semaine",
+      "weeklyTask_other": "{{count}} Tâches / semaines",
       "weeklyInfo": "Les habitudes hebdomadaires peuvent être complétées à tout moment cette semaine",
       "debugReset": "🔄 Réinitialiser le Défi (Debug)",
       "xpReward": "+{{amount}} XP"
@@ -1508,7 +1500,7 @@
       "buildHabit": "Créer une Habitude",
       "buildHabitDescription": "Créer des routines positives",
       "breakHabit": "Arrêter une Habitude",
-      "breakHabitDescription": "Lâcher les anciens schémas",
+      "breakHabitDescription": "Perdre une mauvaise habitude",
       "quote": "\"Chaque action que vous entreprenez est un vote pour\nla personne que vous souhaitez devenir\""
     },
     "habitCategorySelector": {
@@ -1926,6 +1918,63 @@
       "level20": "Guerrier légendaire !",
       "level30": "Accomplissement d'élite !",
       "levelMax": "STATUT MYTHIQUE ATTEINT !"
+    }
+  },
+  "onboarding": {
+    "skip": "Passer",
+    "continue": "Continuer",
+    "back": "Retour",
+    "letsStart": "C'est parti",
+
+    "welcome": {
+      "title": "Bienvenue sur Nuvoria",
+      "subtitle": "Transformez vos habitudes en une aventure quotidienne remplie de succès",
+      "buildHabits": "Construisez des habitudes durables",
+      "trackProgress": "Suivez vos progrès visuellement",
+      "unlockAchievements": "Débloquez des succès et récompenses"
+    },
+
+    "xp": {
+      "title": "Gagnez des XP et montez de niveau",
+      "subtitle": "Complétez des tâches pour gagner des XP. Construisez des séries pour débloquer d'énormes bonus !",
+      "firstTask": "Complétez votre 1ère tâche",
+      "secondTask": "Complétez votre 2ème tâche",
+      "thirdTask": "Complétez votre 3ème tâche",
+      "perfectDay": "Journée parfaite"
+    },
+
+    "tiers": {
+      "title": "Votre interface évolue",
+      "subtitle": "Regardez votre interface se transformer avec de magnifiques thèmes de gemmes au fur et à mesure de votre progression",
+      "crystal": "Cristal",
+      "ruby": "Rubis",
+      "amethyst": "Améthyste",
+      "jade": "Jade",
+      "topaz": "Topaze",
+      "obsidian": "Obsidienne",
+      "days": "{{count}} jours",
+      "daysRange": "{{min}}-{{max}} jours",
+      "daysPlus": "{{count}}+ jours"
+    },
+
+    "savers": {
+      "title": "Ne perdez jamais vos progrès",
+      "subtitle": "Utilisez les Sauveurs de Séries pour restaurer les jours manqués et maintenir votre élan",
+      "protectStreak": "Protégez votre série",
+      "protectDesc": "Utilisez des sauveurs quand vous manquez un jour",
+      "instantRestore": "Restauration instantanée",
+      "instantDesc": "Remettez-vous sur la bonne voie immédiatement",
+      "welcomeGift": "Cadeau de bienvenue",
+      "welcomeGiftDesc": "Vous gagnez 3 Sauveurs de Séries pour commencer"
+    },
+
+    "features": {
+      "title": "Restez sur la bonne voie",
+      "subtitle": "Des rappels intelligents et des pauses flexibles vous gardent constant sans pression",
+      "notifications": "Notifications intelligentes",
+      "holidayMode": "Mode vacances",
+      "ready": "Vous êtes prêt !",
+      "readyDesc": "Créons votre première habitude et commençons votre voyage vers l'excellence"
     }
   }
 }

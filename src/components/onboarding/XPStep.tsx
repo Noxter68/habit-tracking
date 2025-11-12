@@ -1,7 +1,7 @@
-// src/components/onboarding/XPStep.tsx
 import React from 'react';
 import { View, Text } from 'react-native';
 import tw from '../../lib/tailwind';
+import i18n from '../../i18n';
 
 interface XPCardProps {
   title: string;
@@ -47,18 +47,16 @@ interface XPStepProps {
 const XPStep: React.FC<XPStepProps> = ({ gradient }) => {
   return (
     <View style={tw`items-center gap-6`}>
-      {/* Title */}
       <View style={tw`items-center gap-2.5`}>
-        <Text style={tw`text-4xl font-black text-white text-center`}>Earn XP & Level Up</Text>
-        <Text style={tw`text-base text-white/80 text-center leading-6 max-w-[300px]`}>Complete tasks to earn XP. Build streaks to unlock massive bonuses!</Text>
+        <Text style={tw`text-4xl font-black text-white text-center`}>{i18n.t('onboarding.xp.title')}</Text>
+        <Text style={tw`text-base text-white/80 text-center leading-6 max-w-[300px]`}>{i18n.t('onboarding.xp.subtitle')}</Text>
       </View>
 
-      {/* XP Examples */}
       <View style={tw`w-full gap-2.5`}>
-        <XPCard title="Complete your 1st task" xp="+3 XP" color={gradient[0]} />
-        <XPCard title="Complete your 2nd task" xp="+7 XP" color={gradient[1]} />
-        <XPCard title="Complete your 3rd task" xp="+12 XP" color={gradient[2]} />
-        <XPCard title="Perfect day (all tasks done)" xp="+20 XP" color="#fbbf24" special />
+        <XPCard title={i18n.t('onboarding.xp.firstTask')} xp="+3 XP" color={gradient[0]} />
+        <XPCard title={i18n.t('onboarding.xp.secondTask')} xp="+7 XP" color={gradient[1]} />
+        <XPCard title={i18n.t('onboarding.xp.thirdTask')} xp="+12 XP" color={gradient[2]} />
+        <XPCard title={i18n.t('onboarding.xp.perfectDay')} xp="+20 XP" color="#fbbf24" special />
       </View>
     </View>
   );

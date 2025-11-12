@@ -39,13 +39,6 @@
     "dontHaveAccount": "Don't have an account?",
     "signingOut": "Signing out..."
   },
-
-  "onboarding": {
-    "skip": "Skip",
-    "continue": "Continue",
-    "letsStart": "Let's Start",
-    "getStarted": "Get Started"
-  },
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome",
@@ -1925,6 +1918,63 @@
       "level20": "Legendary warrior!",
       "level30": "Elite achiever!",
       "levelMax": "MYTHIC STATUS ACHIEVED!"
+    }
+  },
+  "onboarding": {
+    "skip": "Skip",
+    "continue": "Continue",
+    "back": "Back",
+    "letsStart": "Let's Start",
+
+    "welcome": {
+      "title": "Welcome to Nuvoria",
+      "subtitle": "Transform your habits into a daily adventure filled with success",
+      "buildHabits": "Build lasting habits",
+      "trackProgress": "Track your progress visually",
+      "unlockAchievements": "Unlock achievements & rewards"
+    },
+
+    "xp": {
+      "title": "Earn XP & Level Up",
+      "subtitle": "Complete tasks to earn XP. Build streaks to unlock massive bonuses!",
+      "firstTask": "Complete your 1st task",
+      "secondTask": "Complete your 2nd task",
+      "thirdTask": "Complete your 3rd task",
+      "perfectDay": "Perfect day (all tasks done)"
+    },
+
+    "tiers": {
+      "title": "Your UI Evolves",
+      "subtitle": "Watch your interface transform with beautiful gem themes as you progress",
+      "crystal": "Crystal",
+      "ruby": "Ruby",
+      "amethyst": "Amethyst",
+      "jade": "Jade",
+      "topaz": "Topaz",
+      "obsidian": "Obsidian",
+      "days": "{{count}} days",
+      "daysRange": "{{min}}-{{max}} days",
+      "daysPlus": "{{count}}+ days"
+    },
+
+    "savers": {
+      "title": "Never Lose Progress",
+      "subtitle": "Use Streak Savers to restore missed days and keep your momentum going",
+      "protectStreak": "Protect Your Streak",
+      "protectDesc": "Use savers when you miss a day",
+      "instantRestore": "Instant Restore",
+      "instantDesc": "Get back on track immediately",
+      "welcomeGift": "Welcome Gift",
+      "welcomeGiftDesc": "You earn 3 Streak Savers to get started"
+    },
+
+    "features": {
+      "title": "Stay On Track",
+      "subtitle": "Smart reminders and flexible breaks keep you consistent without pressure",
+      "notifications": "Smart Notifications",
+      "holidayMode": "Holiday Mode",
+      "ready": "You're Ready!",
+      "readyDesc": "Let's create your first habit and start your journey to excellence"
     }
   }
 }

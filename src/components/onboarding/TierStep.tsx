@@ -1,9 +1,9 @@
-// src/components/onboarding/TierStep.tsx
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Check } from 'lucide-react-native';
 import { Image } from 'expo-image';
 import tw from '../../lib/tailwind';
+import i18n from '../../i18n';
 
 interface TierCardProps {
   gemSource: any;
@@ -67,17 +67,31 @@ interface TierStepProps {
 const TierStep: React.FC<TierStepProps> = ({ gradient }) => {
   return (
     <View style={tw`items-center gap-6`}>
-      {/* Title */}
       <View style={tw`items-center gap-2.5`}>
-        <Text style={tw`text-4xl font-black text-white text-center`}>Your UI Evolves</Text>
-        <Text style={tw`text-base text-white/80 text-center leading-6 max-w-[300px]`}>Watch your interface transform with beautiful gem themes as you progress</Text>
+        <Text style={tw`text-4xl font-black text-white text-center`}>{i18n.t('onboarding.tiers.title')}</Text>
+        <Text style={tw`text-base text-white/80 text-center leading-6 max-w-[300px]`}>{i18n.t('onboarding.tiers.subtitle')}</Text>
       </View>
 
-      {/* Tier Progression */}
       <View style={tw`w-full gap-2.5`}>
-        <TierCard gemSource={require('../../../assets/interface/gems/crystal-gem.png')} name="Crystal" streak="0-49 days" color="#60a5fa" />
-        <TierCard gemSource={require('../../../assets/interface/gems/ruby-gem.png')} name="Ruby" streak="50-149 days" color="#ef4444" />
-        <TierCard gemSource={require('../../../assets/interface/gems/amethyst-gem.png')} name="Amethyst" streak="150+ days" color="#8b5cf6" special />
+        <TierCard
+          gemSource={require('../../../assets/interface/gems/crystal-gem.png')}
+          name={i18n.t('onboarding.tiers.crystal')}
+          streak={i18n.t('onboarding.tiers.daysRange', { min: 0, max: 49 })}
+          color="#60a5fa"
+        />
+        <TierCard
+          gemSource={require('../../../assets/interface/gems/ruby-gem.png')}
+          name={i18n.t('onboarding.tiers.ruby')}
+          streak={i18n.t('onboarding.tiers.daysRange', { min: 50, max: 149 })}
+          color="#ef4444"
+        />
+        <TierCard
+          gemSource={require('../../../assets/interface/gems/amethyst-gem.png')}
+          name={i18n.t('onboarding.tiers.amethyst')}
+          streak={i18n.t('onboarding.tiers.daysPlus', { count: 150 })}
+          color="#8b5cf6"
+          special
+        />
       </View>
     </View>
   );

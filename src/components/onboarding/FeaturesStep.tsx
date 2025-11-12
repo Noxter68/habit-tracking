@@ -1,8 +1,8 @@
-// src/components/onboarding/FeaturesStep.tsx
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Bell, Pause, Sparkles } from 'lucide-react-native';
 import tw from '../../lib/tailwind';
+import i18n from '../../i18n';
 
 interface FeatureCardProps {
   icon: React.ReactNode;
@@ -38,17 +38,15 @@ interface FeaturesStepProps {
 const FeaturesStep: React.FC<FeaturesStepProps> = ({ gradient }) => {
   return (
     <View style={tw`items-center gap-6`}>
-      {/* Title */}
       <View style={tw`items-center gap-2.5`}>
-        <Text style={tw`text-4xl font-black text-white text-center`}>Stay On Track</Text>
-        <Text style={tw`text-base text-white/80 text-center leading-6 max-w-[300px]`}>Smart reminders and flexible breaks keep you consistent without pressure</Text>
+        <Text style={tw`text-4xl font-black text-white text-center`}>{i18n.t('onboarding.features.title')}</Text>
+        <Text style={tw`text-base text-white/80 text-center leading-6 max-w-[300px]`}>{i18n.t('onboarding.features.subtitle')}</Text>
       </View>
 
-      {/* Features Grid */}
       <View style={tw`w-full gap-3`}>
         <View style={tw`flex-row gap-3`}>
-          <FeatureCard icon={<Bell size={24} color="white" strokeWidth={2} />} title="Smart Notifications" color="#10b981" />
-          <FeatureCard icon={<Pause size={24} color="white" strokeWidth={2} />} title="Holiday Mode" color="#8b5cf6" />
+          <FeatureCard icon={<Bell size={24} color="white" strokeWidth={2} />} title={i18n.t('onboarding.features.notifications')} color="#10b981" />
+          <FeatureCard icon={<Pause size={24} color="white" strokeWidth={2} />} title={i18n.t('onboarding.features.holidayMode')} color="#8b5cf6" />
         </View>
 
         <View
@@ -66,9 +64,9 @@ const FeaturesStep: React.FC<FeaturesStepProps> = ({ gradient }) => {
         >
           <View style={tw`flex-row items-center gap-2 mb-2`}>
             <Sparkles size={18} color="#fbbf24" strokeWidth={2} />
-            <Text style={tw`text-sm font-bold text-white`}>You're Ready!</Text>
+            <Text style={tw`text-sm font-bold text-white`}>{i18n.t('onboarding.features.ready')}</Text>
           </View>
-          <Text style={tw`text-xs text-white/70 leading-5`}>Let's create your first habit and start your journey to excellence</Text>
+          <Text style={tw`text-xs text-white/70 leading-5`}>{i18n.t('onboarding.features.readyDesc')}</Text>
         </View>
       </View>
     </View>
