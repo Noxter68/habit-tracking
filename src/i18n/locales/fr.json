@@ -27,19 +27,6 @@
     "ok": "OK",
     "tier": "Rang"
   },
-
-  "auth": {
-    "signIn": "Se connecter",
-    "signUp": "S'inscrire",
-    "signOut": "Se déconnecter",
-    "email": "Email",
-    "password": "Mot de passe",
-    "forgotPassword": "Mot de passe oublié ?",
-    "createAccount": "Créer un compte",
-    "alreadyHaveAccount": "Vous avez déjà un compte ?",
-    "dontHaveAccount": "Vous n'avez pas de compte ?",
-    "signingOut": "Déconnexion..."
-  },
   "dashboard": {
     "title": "Tableau de bord",
     "welcome": "Bienvenue",
@@ -1995,5 +1982,55 @@
     "dailyChest": "Coffre quotidien",
     "streakRisk": "Risque de série",
     "achievement": "Accomplissement débloqué"
+  },
+  "auth": {
+    "signIn": "Connexion",
+    "tagline": "La Discipline Transforme Tout",
+    "createAccount": "Créer un Compte",
+    "resetPassword": "Réinitialiser le Mot de Passe",
+    "username": "Nom d'utilisateur",
+    "usernamePlaceholder": "Choisissez un nom d'utilisateur",
+    "email": "Email",
+    "emailPlaceholder": "votre.email@exemple.com",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le Mot de Passe",
+    "hide": "Masquer",
+    "show": "Afficher",
+    "sendResetLink": "Envoyer le Lien",
+    "forgotPassword": "Mot de passe oublié ?",
+    "createAccountLink": "Créer un compte",
+    "signInInstead": "Se connecter",
+    "backToSignIn": "Retour à la connexion",
+    "orContinueWith": "OU CONTINUER AVEC",
+    "continueWithApple": "Continuer avec Apple",
+    "missingInfo": "Informations Manquantes",
+    "fillFields": "Veuillez remplir tous les champs requis",
+    "passwordMismatch": "Mots de Passe Différents",
+    "passwordsDontMatch": "Les mots de passe ne correspondent pas",
+    "weakPassword": "Mot de Passe Faible",
+    "passwordMin6": "Le mot de passe doit contenir au moins 6 caractères"
+  },
+  "resetPassword": {
+    "title": "Nouveau mot de passe",
+    "subtitle": "Choisissez un nouveau mot de passe sécurisé",
+    "newPassword": "Nouveau mot de passe",
+    "newPasswordPlaceholder": "Entrez votre nouveau mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "confirmPasswordPlaceholder": "Confirmez votre mot de passe",
+    "submit": "Modifier le mot de passe",
+    "submitting": "Modification...",
+    "cancel": "Annuler",
+    "errors": {
+      "emptyFields": "Veuillez remplir tous les champs",
+      "passwordMismatch": "Les mots de passe ne correspondent pas",
+      "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères",
+      "sessionExpired": "Session expirée",
+      "sessionExpiredMessage": "Veuillez redemander un lien de réinitialisation."
+    },
+    "success": {
+      "title": "Succès",
+      "message": "Votre mot de passe a été modifié avec succès !",
+      "login": "Se connecter"
+    }
   }
 }

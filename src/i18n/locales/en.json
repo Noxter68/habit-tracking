@@ -26,19 +26,6 @@
     "premium": "Premium",
     "tier": "Tier"
   },
-
-  "auth": {
-    "signIn": "Sign In",
-    "signUp": "Sign Up",
-    "signOut": "Sign Out",
-    "email": "Email",
-    "password": "Password",
-    "forgotPassword": "Forgot Password?",
-    "createAccount": "Create Account",
-    "alreadyHaveAccount": "Already have an account?",
-    "dontHaveAccount": "Don't have an account?",
-    "signingOut": "Signing out..."
-  },
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome",
@@ -1996,5 +1983,55 @@
     "dailyChest": "Daily Chest",
     "streakRisk": "Streak Risk",
     "achievement": "Achievement Unlocked"
+  },
+  "auth": {
+    "tagline": "Consistency Transforms Everything",
+    "signIn": "Sign In",
+    "createAccount": "Create Account",
+    "resetPassword": "Reset Password",
+    "username": "Username",
+    "usernamePlaceholder": "Choose a username",
+    "email": "Email",
+    "emailPlaceholder": "your.email@example.com",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "hide": "Hide",
+    "show": "Show",
+    "sendResetLink": "Send Reset Link",
+    "forgotPassword": "Forgot password?",
+    "createAccountLink": "Create account",
+    "signInInstead": "Sign in instead",
+    "backToSignIn": "Back to sign in",
+    "orContinueWith": "OR CONTINUE WITH",
+    "continueWithApple": "Continue with Apple",
+    "missingInfo": "Missing Information",
+    "fillFields": "Please fill in all required fields",
+    "passwordMismatch": "Password Mismatch",
+    "passwordsDontMatch": "Passwords do not match",
+    "weakPassword": "Weak Password",
+    "passwordMin6": "Password must be at least 6 characters"
+  },
+  "resetPassword": {
+    "title": "New Password",
+    "subtitle": "Choose a secure new password",
+    "newPassword": "New password",
+    "newPasswordPlaceholder": "Enter your new password",
+    "confirmPassword": "Confirm password",
+    "confirmPasswordPlaceholder": "Confirm your password",
+    "submit": "Update password",
+    "submitting": "Updating...",
+    "cancel": "Cancel",
+    "errors": {
+      "emptyFields": "Please fill in all fields",
+      "passwordMismatch": "Passwords do not match",
+      "passwordTooShort": "Password must be at least 6 characters",
+      "sessionExpired": "Session expired",
+      "sessionExpiredMessage": "Please request a new reset link."
+    },
+    "success": {
+      "title": "Success",
+      "message": "Your password has been updated successfully!",
+      "login": "Sign in"
+    }
   }
 }

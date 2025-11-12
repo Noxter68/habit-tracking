@@ -34,6 +34,25 @@ export class LanguageDetectionService {
   }
 
   /**
+   * 🔥 Initialise i18n avec la langue du device (AVANT connexion)
+   * À appeler au démarrage de l'app
+   */
+  static async initializeDefaultLanguage(): Promise<void> {
+    try {
+      const deviceLanguage = this.detectDeviceLanguage();
+
+      Logger.debug(`🌍 Initializing i18n with device language: ${deviceLanguage}`);
+
+      await i18n.changeLanguage(deviceLanguage);
+
+      Logger.debug(`✅ i18n initialized: ${deviceLanguage}`);
+    } catch (error) {
+      Logger.error('Error initializing default language:', error);
+      await i18n.changeLanguage('en');
+    }
+  }
+
+  /**
    * Initialise la langue de l'utilisateur lors de la création du profil
    * Sauvegarde dans la DB et configure i18n
    */
@@ -77,7 +96,7 @@ export class LanguageDetectionService {
 
       const userLanguage = (data?.language as SupportedLanguage) || 'en';
 
-      // Configure i18n
+      // Configure i18n seulement si la langue change
       if (i18n.language !== userLanguage) {
         await i18n.changeLanguage(userLanguage);
         Logger.debug(`🌍 User language loaded: ${userLanguage}`);

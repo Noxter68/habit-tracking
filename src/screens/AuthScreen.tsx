@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
 import Svg, { Path } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
 import tw from 'twrnc';
 
@@ -20,7 +21,7 @@ const CheckIcon = ({ size = 24 }: { size?: number }) => (
 );
 
 // Apple OAuth Button
-const AppleOAuthButton: React.FC<{ onPress: () => void; loading: boolean }> = ({ onPress, loading }) => (
+const AppleOAuthButton: React.FC<{ onPress: () => void; loading: boolean; label: string }> = ({ onPress, loading, label }) => (
   <Pressable
     onPress={onPress}
     disabled={loading}
@@ -37,7 +38,7 @@ const AppleOAuthButton: React.FC<{ onPress: () => void; loading: boolean }> = ({
       <Svg width={20} height={20} viewBox="0 0 24 24" fill="white">
         <Path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
       </Svg>
-      <Text style={tw`text-white font-bold text-base`}>Continue with Apple</Text>
+      <Text style={tw`text-white font-bold text-base`}>{label}</Text>
     </LinearGradient>
   </Pressable>
 );
@@ -76,6 +77,7 @@ const FloatingGemImage: React.FC<{
 
 const AuthScreen: React.FC = () => {
   const { signIn, signUp, signInWithApple, resetPassword, loading } = useAuth();
+  const { t } = useTranslation();
 
   const [mode, setMode] = useState<AuthMode>('signin');
   const [email, setEmail] = useState('');
@@ -117,17 +119,17 @@ const AuthScreen: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!email || (mode !== 'reset' && !password)) {
-      Alert.alert('Missing Information', 'Please fill in all required fields');
+      Alert.alert(t('auth.missingInfo'), t('auth.fillFields'));
       return;
     }
 
     if (mode === 'signup') {
       if (password !== confirmPassword) {
-        Alert.alert('Password Mismatch', 'Passwords do not match');
+        Alert.alert(t('auth.passwordMismatch'), t('auth.passwordsDontMatch'));
         return;
       }
       if (password.length < 6) {
-        Alert.alert('Weak Password', 'Password must be at least 6 characters');
+        Alert.alert(t('auth.weakPassword'), t('auth.passwordMin6'));
         return;
       }
       await signUp(email, password, username);
@@ -209,7 +211,7 @@ const AuthScreen: React.FC = () => {
                       },
                     ]}
                   >
-                    Consistency Transforms Everything
+                    {t('auth.tagline')}
                   </Text>
                 </View>
               </Animated.View>
@@ -221,14 +223,16 @@ const AuthScreen: React.FC = () => {
                     {/* Mode Badge */}
                     <View style={tw`items-center mb-4`}>
                       <LinearGradient colors={obsidianGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`px-4 py-1.5 rounded-full`}>
-                        <Text style={tw`text-white text-xs font-black uppercase tracking-widest`}>{mode === 'signin' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Reset Password'}</Text>
+                        <Text style={tw`text-white text-xs font-black uppercase tracking-widest`}>
+                          {mode === 'signin' ? t('auth.signIn') : mode === 'signup' ? t('auth.createAccount') : t('auth.resetPassword')}
+                        </Text>
                       </LinearGradient>
                     </View>
 
                     {/* Username (signup only) */}
                     {mode === 'signup' && (
                       <View style={tw`mb-3`}>
-                        <Text style={[tw`text-xs font-extrabold mb-1.5 uppercase tracking-wider`, { color: '#1a1625' }]}>Username</Text>
+                        <Text style={[tw`text-xs font-extrabold mb-1.5 uppercase tracking-wider`, { color: '#1a1625' }]}>{t('auth.username')}</Text>
                         <View
                           style={[
                             tw`rounded-2xl border-2 flex-row items-center px-4`,
@@ -241,7 +245,7 @@ const AuthScreen: React.FC = () => {
                           <TextInput
                             ref={usernameRef}
                             style={[tw`flex-1 py-3 text-base font-medium`, { color: '#1a1625' }]}
-                            placeholder="Choose a username"
+                            placeholder={t('auth.usernamePlaceholder')}
                             placeholderTextColor="rgba(26, 22, 37, 0.4)"
                             value={username}
                             onChangeText={setUsername}
@@ -257,7 +261,7 @@ const AuthScreen: React.FC = () => {
 
                     {/* Email */}
                     <View style={tw`mb-3`}>
-                      <Text style={[tw`text-xs font-extrabold mb-1.5 uppercase tracking-wider`, { color: '#1a1625' }]}>Email</Text>
+                      <Text style={[tw`text-xs font-extrabold mb-1.5 uppercase tracking-wider`, { color: '#1a1625' }]}>{t('auth.email')}</Text>
                       <View
                         style={[
                           tw`rounded-2xl border-2 flex-row items-center px-4`,
@@ -270,7 +274,7 @@ const AuthScreen: React.FC = () => {
                         <TextInput
                           ref={emailRef}
                           style={[tw`flex-1 py-3 text-base font-medium`, { color: '#1a1625' }]}
-                          placeholder="your.email@example.com"
+                          placeholder={t('auth.emailPlaceholder')}
                           placeholderTextColor="rgba(26, 22, 37, 0.4)"
                           value={email}
                           onChangeText={setEmail}
@@ -288,7 +292,7 @@ const AuthScreen: React.FC = () => {
                     {/* Password */}
                     {mode !== 'reset' && (
                       <View style={tw`mb-3`}>
-                        <Text style={[tw`text-xs font-extrabold mb-1.5 uppercase tracking-wider`, { color: '#1a1625' }]}>Password</Text>
+                        <Text style={[tw`text-xs font-extrabold mb-1.5 uppercase tracking-wider`, { color: '#1a1625' }]}>{t('auth.password')}</Text>
                         <View
                           style={[
                             tw`rounded-2xl border-2 flex-row items-center px-4`,
@@ -319,7 +323,7 @@ const AuthScreen: React.FC = () => {
                             }}
                           />
                           <Pressable onPress={() => setShowPassword(!showPassword)}>
-                            <Text style={[tw`text-xs font-bold`, { color: '#4338ca' }]}>{showPassword ? 'Hide' : 'Show'}</Text>
+                            <Text style={[tw`text-xs font-bold`, { color: '#4338ca' }]}>{showPassword ? t('auth.hide') : t('auth.show')}</Text>
                           </Pressable>
                         </View>
 
@@ -350,7 +354,7 @@ const AuthScreen: React.FC = () => {
                     {/* Confirm Password */}
                     {mode === 'signup' && (
                       <View style={tw`mb-3`}>
-                        <Text style={[tw`text-xs font-extrabold mb-1.5 uppercase tracking-wider`, { color: '#1a1625' }]}>Confirm Password</Text>
+                        <Text style={[tw`text-xs font-extrabold mb-1.5 uppercase tracking-wider`, { color: '#1a1625' }]}>{t('auth.confirmPassword')}</Text>
                         <View
                           style={[
                             tw`rounded-2xl border-2 flex-row items-center px-4`,
@@ -389,7 +393,9 @@ const AuthScreen: React.FC = () => {
                         {loading ? (
                           <ActivityIndicator color="white" />
                         ) : (
-                          <Text style={tw`text-white font-black text-base tracking-wide`}>{mode === 'signin' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Send Reset Link'}</Text>
+                          <Text style={tw`text-white font-black text-base tracking-wide`}>
+                            {mode === 'signin' ? t('auth.signIn') : mode === 'signup' ? t('auth.createAccount') : t('auth.sendResetLink')}
+                          </Text>
                         )}
                       </LinearGradient>
                     </Pressable>
@@ -399,13 +405,15 @@ const AuthScreen: React.FC = () => {
                       {mode === 'signin' && (
                         <>
                           <Pressable onPress={() => switchMode('reset')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                            <Text style={[tw`text-xs font-bold`, { color: '#2d1b3d' }]}>Forgot password?</Text>
+                            <Text style={[tw`text-xs font-bold`, { color: '#2d1b3d' }]}>{t('auth.forgotPassword')}</Text>
                           </Pressable>
                           <Text style={[tw`font-bold`, { color: 'rgba(26, 22, 37, 0.3)' }]}>•</Text>
                         </>
                       )}
                       <Pressable onPress={() => switchMode(mode === 'signin' ? 'signup' : 'signin')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                        <Text style={[tw`text-xs font-bold`, { color: '#2d1b3d' }]}>{mode === 'signin' ? 'Create account' : mode === 'reset' ? 'Back to sign in' : 'Sign in instead'}</Text>
+                        <Text style={[tw`text-xs font-bold`, { color: '#2d1b3d' }]}>
+                          {mode === 'signin' ? t('auth.createAccountLink') : mode === 'reset' ? t('auth.backToSignIn') : t('auth.signInInstead')}
+                        </Text>
                       </Pressable>
                     </View>
                   </LinearGradient>
@@ -417,11 +425,11 @@ const AuthScreen: React.FC = () => {
                 <Animated.View entering={FadeInUp.delay(400).duration(800)} style={tw`mt-4 mb-4`}>
                   <View style={tw`flex-row items-center mb-4`}>
                     <View style={[tw`flex-1`, { height: 1, backgroundColor: 'rgba(26, 22, 37, 0.15)' }]} />
-                    <Text style={[tw`mx-4 text-xs font-black tracking-widest`, { color: '#2d1b3d' }]}>OR CONTINUE WITH</Text>
+                    <Text style={[tw`mx-4 text-xs font-black tracking-widest`, { color: '#2d1b3d' }]}>{t('auth.orContinueWith')}</Text>
                     <View style={[tw`flex-1`, { height: 1, backgroundColor: 'rgba(26, 22, 37, 0.15)' }]} />
                   </View>
 
-                  <AppleOAuthButton onPress={signInWithApple} loading={loading} />
+                  <AppleOAuthButton onPress={signInWithApple} loading={loading} label={t('auth.continueWithApple')} />
                 </Animated.View>
               )}
             </ScrollView>

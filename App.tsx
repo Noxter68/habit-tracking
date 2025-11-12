@@ -11,6 +11,7 @@ import * as Notifications from 'expo-notifications';
 import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
 import { diagnoseRevenueCatSetup } from './src/utils/RevenueCatDiagnostic';
 import { DEBUG_MODE } from '@env';
+import * as Linking from 'expo-linking';
 
 // Screens
 import AuthScreen from './src/screens/AuthScreen';
@@ -51,6 +52,8 @@ import { NotificationService } from '@/services/notificationService';
 import { HapticFeedback } from '@/utils/haptics';
 import notificationBadgeService from '@/services/notificationBadgeService';
 import LanguageSelectorScreen from '@/components/settings/LanguageSelector';
+import { LanguageDetectionService } from '@/services/languageDetectionService';
+import ResetPasswordScreen from '@/screens/ResetPasswordScreen';
 
 // Type Definitions
 export type RootStackParamList = {
@@ -66,6 +69,7 @@ export type RootStackParamList = {
   NotificationManager: undefined;
   HolidayMode: undefined;
   Onboarding: undefined;
+  ResetPassword: undefined;
 };
 
 export type TabParamList = {
@@ -297,6 +301,7 @@ function AppNavigator() {
         <Stack.Screen name="Paywall" component={PaywallScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="HolidayMode" component={HolidayModeScreen} options={{ headerShown: false, presentation: 'card', animation: 'slide_from_right' }} />
         <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} options={{ headerShown: false }} />
         <Stack.Screen
           name="LanguageSelector"
           component={LanguageSelectorScreen}
@@ -421,6 +426,27 @@ function usePerformanceMonitoring() {
   }, []);
 }
 
+const prefix = Linking.createURL('/');
+
+const linking = {
+  prefixes: [prefix, 'nuvoria://'],
+  config: {
+    screens: {
+      Auth: 'auth',
+      ResetPassword: 'reset-password', // ✅ Important !
+      MainTabs: {
+        screens: {
+          Dashboard: 'dashboard',
+          Calendar: 'calendar',
+          Leaderboard: 'leaderboard',
+          Stats: 'stats',
+          Settings: 'settings',
+        },
+      },
+    },
+  },
+};
+
 // ============================================
 // Main App Component
 // ============================================
@@ -467,6 +493,10 @@ export default function App() {
     return () => subscription.remove();
   }, []);
 
+  useEffect(() => {
+    LanguageDetectionService.initializeDefaultLanguage();
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
@@ -476,7 +506,7 @@ export default function App() {
               <HabitProvider>
                 <AchievementProvider>
                   <LevelUpProvider>
-                    <NavigationContainer>
+                    <NavigationContainer linking={linking} fallback={<BeautifulLoader />}>
                       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
                       <AppNavigator />
                     </NavigationContainer>
