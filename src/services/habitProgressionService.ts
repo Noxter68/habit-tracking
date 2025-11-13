@@ -56,7 +56,7 @@ export class HabitProgressionService {
     {
       name: 'Crystal',
       minDays: 0,
-      maxDays: 49,
+      maxDays: 19,
       multiplier: 1.0,
       color: '#60a5fa',
       icon: '💎',
@@ -64,8 +64,8 @@ export class HabitProgressionService {
     },
     {
       name: 'Ruby',
-      minDays: 50,
-      maxDays: 149,
+      minDays: 20,
+      maxDays: 59,
       multiplier: 1.2,
       color: '#ef4444',
       icon: '❤️',
@@ -73,7 +73,7 @@ export class HabitProgressionService {
     },
     {
       name: 'Amethyst',
-      minDays: 150,
+      minDays: 60,
       multiplier: 1.5,
       color: '#8b5cf6',
       icon: '🔮',

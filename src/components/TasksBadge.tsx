@@ -115,7 +115,7 @@ export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total }) => {
   };
 
   return (
-    <Animated.View entering={FadeIn.duration(600)} style={tw`mb-5`}>
+    <Animated.View entering={FadeIn.duration(600)} style={tw``}>
       <View
         style={[
           tw`rounded-3xl overflow-hidden`,

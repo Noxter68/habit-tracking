@@ -389,7 +389,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <ImageBackground source={require('../../assets/interface/textures/texture-white.png')} style={tw`flex-1`} imageStyle={{ opacity: 0.2 }} resizeMode="repeat">
-      <SafeAreaView style={tw`flex-1 bg-transparent `} edges={['top']}>
+      <SafeAreaView style={tw`flex-1 bg-transparent mt-4 `} edges={['top']}>
         <StatusBar barStyle="dark-content" />
 
         <ScrollView
@@ -490,7 +490,7 @@ const Dashboard: React.FC = () => {
           )}
 
           {/* Habits Section */}
-          <Animated.View entering={FadeInUp.delay(200)} style={tw`mt-8`}>
+          <Animated.View entering={FadeInUp.delay(200)} style={tw`mt-2`}>
             {/* Free user habit limit indicator */}
             {!isPremium && habitCount > 0 && (
               <View
@@ -515,7 +515,7 @@ const Dashboard: React.FC = () => {
             )}
             {/* Section Header */}
             {!showFullHolidayMode && activeHabits.length > 0 ? (
-              <View style={tw`mb-0`}>
+              <View style={tw`mt-4`}>
                 <TaskBadge completed={realTimeTasksStats.completed} total={realTimeTasksStats.total} onAddPress={handleCreateHabit} showAddButton={habits.length > 0} />
                 <AddHabitButton onPress={handleCreateHabit} />
               </View>
@@ -553,7 +553,7 @@ const Dashboard: React.FC = () => {
               )
             ) : activeHabits.length > 0 ? (
               /* Active Habits List */
-              <View style={tw`gap-3`}>
+              <View style={tw`gap-3 mt-4`}>
                 {activeHabits.map((habit, index) => (
                   <SwipeableHabitCard
                     key={habit.id}

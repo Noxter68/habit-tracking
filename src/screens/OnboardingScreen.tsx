@@ -123,40 +123,46 @@ const OnboardingScreen: React.FC = () => {
       <StatusBar barStyle="light-content" />
 
       <SafeAreaView style={tw`flex-1`}>
-        {/* Skip Button */}
-        <View style={tw`flex-row justify-end px-6 pt-1`}>
-          <Pressable
-            onPress={handleSkip}
-            style={({ pressed }) => [
-              tw`px-5 py-2.5 rounded-full`,
-              {
-                backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                opacity: pressed ? 0.7 : 1,
-              },
-            ]}
-          >
-            <Text style={tw`text-sm font-semibold text-white/90`}>{i18n.t('onboarding.skip')}</Text>
-          </Pressable>
-        </View>
+        {/* Header - Skip button and Progress dots on same line */}
+        <View style={tw`px-6 pt-1`}>
+          <View style={tw`flex-row justify-between items-center`}>
+            {/* Empty spacer for symmetry */}
+            <View style={tw`w-20`} />
 
-        {/* Progress Indicators */}
-        <View style={tw`mt-3 flex-row justify-center gap-2 px-5`}>
-          {STEPS.map((_, index) => (
-            <View
-              key={index}
-              style={[
-                tw`h-2 rounded-full`,
+            {/* Progress Indicators - Centered */}
+            <View style={tw`flex-row gap-2`}>
+              {STEPS.map((_, index) => (
+                <View
+                  key={index}
+                  style={[
+                    tw`h-2 rounded-full`,
+                    {
+                      width: index === currentStep ? 24 : 8,
+                      backgroundColor: index === currentStep ? 'white' : 'rgba(255, 255, 255, 0.3)',
+                    },
+                  ]}
+                />
+              ))}
+            </View>
+
+            {/* Skip Button */}
+            <Pressable
+              onPress={handleSkip}
+              style={({ pressed }) => [
+                tw`px-5 py-2.5 rounded-full`,
                 {
-                  width: index === currentStep ? 24 : 8,
-                  backgroundColor: index === currentStep ? 'white' : 'rgba(255, 255, 255, 0.3)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                  opacity: pressed ? 0.7 : 1,
                 },
               ]}
-            />
-          ))}
+            >
+              <Text style={tw`text-sm font-semibold text-white/90`}>{i18n.t('onboarding.skip')}</Text>
+            </Pressable>
+          </View>
         </View>
 
         {/* Gem */}
-        <Animated.View key={`gem-${currentStep}`} style={tw`items-center mt-6 mb-4`}>
+        <Animated.View key={`gem-${currentStep}`} style={tw`items-center mt-4 mb-3`}>
           <View
             style={[
               tw`w-36 h-36 rounded-full items-center justify-center`,
@@ -175,12 +181,12 @@ const OnboardingScreen: React.FC = () => {
         </Animated.View>
 
         {/* Main Content */}
-        <Animated.View style={[animatedContentStyle, tw`flex-1 justify-center px-8 pb-6`]}>
+        <Animated.View style={[animatedContentStyle, tw`flex-1 justify-center px-8`]}>
           <StepComponent gradient={step.gradient} />
         </Animated.View>
 
         {/* Bottom Navigation */}
-        <View style={tw`px-8 pb-8`}>
+        <View style={tw`px-8 pb-8 pt-8`}>
           {currentStep === 0 ? (
             <Pressable
               onPress={handleNext}

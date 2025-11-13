@@ -76,19 +76,19 @@ const TierStep: React.FC<TierStepProps> = ({ gradient }) => {
         <TierCard
           gemSource={require('../../../assets/interface/gems/crystal-gem.png')}
           name={i18n.t('onboarding.tiers.crystal')}
-          streak={i18n.t('onboarding.tiers.daysRange', { min: 0, max: 49 })}
+          streak={i18n.t('onboarding.tiers.daysRange', { min: 0, max: 19 })}
           color="#60a5fa"
         />
         <TierCard
           gemSource={require('../../../assets/interface/gems/ruby-gem.png')}
           name={i18n.t('onboarding.tiers.ruby')}
-          streak={i18n.t('onboarding.tiers.daysRange', { min: 50, max: 149 })}
+          streak={i18n.t('onboarding.tiers.daysRange', { min: 20, max: 59 })}
           color="#ef4444"
         />
         <TierCard
           gemSource={require('../../../assets/interface/gems/amethyst-gem.png')}
           name={i18n.t('onboarding.tiers.amethyst')}
-          streak={i18n.t('onboarding.tiers.daysPlus', { count: 150 })}
+          streak={i18n.t('onboarding.tiers.daysPlus', { count: 60 })}
           color="#8b5cf6"
           special
         />
