@@ -41,6 +41,7 @@ import { versionManager } from '@/utils/versionManager';
 import { getLocales } from 'expo-localization';
 import { getModalTexts, getUpdatesForVersion } from '@/utils/updateContent';
 import { Config } from '@/config';
+import { runPushTokenDiagnostic } from '@/utils/pushTokenDiagnostic';
 
 // ============================================================================
 // Main Component
@@ -54,6 +55,19 @@ const Dashboard: React.FC = () => {
   const { stats, loading: statsLoading, refreshStats } = useStats();
   const { triggerLevelUp } = useLevelUp();
   const { checkHabitLimit, habitCount, maxHabits, isPremium, refreshSubscription } = useSubscription();
+
+  // ============================================================================
+  // Diagnostic Push_Token Notification
+  // ============================================================================
+
+  // useEffect(() => {
+  //   if (user?.id) {
+  //     // Lance le diagnostic (en dev seulement)
+  //     if (__DEV__) {
+  //       runPushTokenDiagnostic(user.id);
+  //     }
+  //   }
+  // }, [user]);
 
   // State: Loading & UI
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -418,27 +432,21 @@ const Dashboard: React.FC = () => {
             habits={habits}
           />
 
-          <>
-            <StreakSaverBadge
-              onPress={handleStreakSaverPress}
-              onShopPress={() => {
-                HapticFeedback.light();
-                setShowShop(true);
-              }}
-              refreshTrigger={streakSaverRefreshTrigger}
-            />
-            <StreakSaverShopModal
-              visible={showShop}
-              onClose={() => {
-                HapticFeedback.light();
-                setShowShop(false);
-              }}
-              onPurchaseSuccess={() => {
-                setShowShop(false);
-                setStreakSaverRefreshTrigger((prev) => prev + 1);
-              }}
-            />
-          </>
+          {Config.debug.enabled && (
+            <>
+              <StreakSaverShopModal
+                visible={showShop}
+                onClose={() => {
+                  HapticFeedback.light();
+                  setShowShop(false);
+                }}
+                onPurchaseSuccess={() => {
+                  setShowShop(false);
+                  setStreakSaverRefreshTrigger((prev) => prev + 1);
+                }}
+              />
+            </>
+          )}
 
           {/* Streak Saver Badge */}
           {!showPartialPauseMode && !hasTasksPaused && !showFullHolidayMode && (
