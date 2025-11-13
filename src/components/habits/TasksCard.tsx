@@ -1,4 +1,6 @@
 // src/components/habits/TasksCard.tsx
+// Fixed version for weekly habits
+
 import React from 'react';
 import { View, Text, Pressable, ImageBackground } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -30,6 +32,7 @@ interface TasksCardProps {
   isLoading?: boolean;
   loadingTaskId?: string | null;
   frequency?: 'daily' | 'weekly' | 'monthly' | 'custom';
+  isWeekCompleted?: boolean; // NEW: Flag pour savoir si la semaine est complète
 }
 
 const TaskItem: React.FC<{
@@ -42,7 +45,8 @@ const TaskItem: React.FC<{
   pausedUntil?: string;
   disabled?: boolean;
   isProcessing?: boolean;
-}> = ({ task, isCompleted, theme, onPress, index, isPaused, pausedUntil, disabled, isProcessing }) => {
+  isWeekLocked?: boolean; // NEW: Flag pour bloquer après completion hebdo
+}> = ({ task, isCompleted, theme, onPress, index, isPaused, pausedUntil, disabled, isProcessing, isWeekLocked }) => {
   const scale = useSharedValue(1);
   const rotation = useSharedValue(0);
   const spinnerRotation = useSharedValue(0);
@@ -57,13 +61,13 @@ const TaskItem: React.FC<{
   }, [isProcessing]);
 
   const handlePressIn = () => {
-    if (isPaused || isCompleted || disabled) return;
+    if (isPaused || isCompleted || disabled || isWeekLocked) return;
     scale.value = withSpring(0.97, { damping: 15, stiffness: 600 });
     rotation.value = withSpring(-0.5, { damping: 15, stiffness: 600 });
   };
 
   const handlePressOut = () => {
-    if (isPaused || isCompleted || disabled) return;
+    if (isPaused || isCompleted || disabled || isWeekLocked) return;
     scale.value = withSpring(1, { damping: 15, stiffness: 600 });
     rotation.value = withSpring(0, { damping: 15, stiffness: 600 });
   };
@@ -94,19 +98,22 @@ const TaskItem: React.FC<{
     });
   };
 
+  // Détermine si la tâche doit être affichée comme "complétée"
+  const showAsCompleted = isCompleted || isWeekLocked;
+
   return (
     <AnimatedPressable
       onPress={onPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      disabled={isCompleted || isPaused || disabled}
+      disabled={showAsCompleted || isPaused || disabled}
       entering={FadeInDown.delay(index * 50).springify()}
       style={[
         tw`flex-row items-center p-4 rounded-2xl mb-2.5 border shadow-sm`,
         animatedStyle,
-        isPaused ? tw`bg-stone-50` : isCompleted ? tw`bg-stone-50` : tw`bg-white`,
+        isPaused ? tw`bg-stone-50` : showAsCompleted ? tw`bg-stone-50` : tw`bg-white`,
         {
-          borderColor: isPaused ? '#d6d3d1' : isCompleted ? theme.accent + '30' : '#e7e5e4',
+          borderColor: isPaused ? '#d6d3d1' : showAsCompleted ? theme.accent + '30' : '#e7e5e4',
         },
       ]}
     >
@@ -118,7 +125,7 @@ const TaskItem: React.FC<{
           </Animated.View>
         ) : isPaused ? (
           <PauseCircle size={24} color="#9ca3af" strokeWidth={2.5} />
-        ) : isCompleted ? (
+        ) : showAsCompleted ? (
           <CheckCircle2 size={24} color={theme.accent} strokeWidth={2.5} fill={theme.accent + '20'} />
         ) : (
           <Circle size={24} color="#d6d3d1" strokeWidth={2} />
@@ -128,21 +135,29 @@ const TaskItem: React.FC<{
       {/* Task Content */}
       <View style={tw`flex-1 min-w-0 mr-3`}>
         {/* Task Name */}
-        <Text style={[tw`text-sm font-semibold mb-0.5`, isPaused ? tw`text-stone-400` : isCompleted ? tw`text-stone-400 line-through` : tw`text-stone-800`]} numberOfLines={1}>
+        <Text style={[tw`text-sm font-semibold mb-0.5`, isPaused ? tw`text-stone-400` : showAsCompleted ? tw`text-stone-400 line-through` : tw`text-stone-800`]} numberOfLines={1}>
           {task.name}
         </Text>
+
         {/* Task Description */}
         {task.description && (
           <Text style={[tw`text-xs mt-0.5`, isPaused ? tw`text-stone-400` : tw`text-stone-500`]} numberOfLines={1}>
             {task.description}
           </Text>
         )}
+
         {/* Paused Info */}
-        {isPaused && pausedUntil && <Text style={tw`text-xs text-stone-400 mt-1`}>{t('habitDetails.tasks.pausedUntil', { date: formatPausedDate(pausedUntil) })}</Text>}
+        {isPaused && pausedUntil && (
+          <Text style={tw`text-xs text-stone-400 mt-1`}>
+            {t('habitDetails.tasks.pausedUntil', {
+              date: formatPausedDate(pausedUntil),
+            })}
+          </Text>
+        )}
       </View>
 
       {/* Duration Badge (on the right) */}
-      {!isPaused && task.duration && !isCompleted && (
+      {!isPaused && task.duration && !showAsCompleted && (
         <View style={[tw`flex-row items-center gap-1.5 px-3 py-1.5 rounded-xl shrink-0`, { backgroundColor: theme.accent + '10' }]}>
           <Clock size={13} color={theme.accent} />
           <Text style={[tw`text-xs font-semibold`, { color: theme.accent }]}>{task.duration}</Text>
@@ -152,7 +167,19 @@ const TaskItem: React.FC<{
   );
 };
 
-export const TasksCard: React.FC<TasksCardProps> = ({ tasks, todayTasks, habitId, today, onToggleTask, tier, pausedTasks = {}, isLoading = false, loadingTaskId = null, frequency = 'daily' }) => {
+export const TasksCard: React.FC<TasksCardProps> = ({
+  tasks,
+  todayTasks,
+  habitId,
+  today,
+  onToggleTask,
+  tier,
+  pausedTasks = {},
+  isLoading = false,
+  loadingTaskId = null,
+  frequency = 'daily',
+  isWeekCompleted = false, // NEW
+}) => {
   const theme = tierThemes[tier];
   const completedTasksToday = todayTasks.completedTasks?.length || 0;
   const totalTasks = tasks?.length || 0;
@@ -178,7 +205,7 @@ export const TasksCard: React.FC<TasksCardProps> = ({ tasks, todayTasks, habitId
         damping: 35,
         stiffness: 120,
         mass: 1,
-        overshootClamping: true, // ✅ Empêche le dépassement
+        overshootClamping: true,
       });
       prevProgress.current = taskProgress;
     }
@@ -233,11 +260,9 @@ export const TasksCard: React.FC<TasksCardProps> = ({ tasks, todayTasks, habitId
 
       {/* Task List */}
       {tasks.map((task, idx) => {
-        // ✅ Handle both task objects and strings safely
         const taskId = typeof task === 'string' ? task : task?.id || `task-${idx}`;
         const taskName = typeof task === 'string' ? task : task?.name || task;
 
-        // Create a proper task object
         const taskObject =
           typeof task === 'object' && task.name
             ? task
@@ -253,6 +278,9 @@ export const TasksCard: React.FC<TasksCardProps> = ({ tasks, todayTasks, habitId
         const pausedInfo = pausedTasks[taskId];
         const isProcessing = isLoading && loadingTaskId === taskId;
 
+        // 🔧 NEW: Pour les habitudes hebdomadaires, bloquer si la semaine est complète
+        const isWeekLocked = frequency === 'weekly' && isWeekCompleted;
+
         return (
           <TaskItem
             key={`task-${taskId}-${idx}`}
@@ -265,6 +293,7 @@ export const TasksCard: React.FC<TasksCardProps> = ({ tasks, todayTasks, habitId
             pausedUntil={pausedInfo?.pausedUntil}
             disabled={isLoading}
             isProcessing={isProcessing}
+            isWeekLocked={isWeekLocked} // NEW
           />
         );
       })}

@@ -505,7 +505,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
             style={{
               fontSize: 11,
               fontWeight: '500',
-              color: '#94a3b8',
+              color: '#FFFFFF',
               textAlign: 'center',
               lineHeight: 15,
             }}

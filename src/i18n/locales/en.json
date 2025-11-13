@@ -146,45 +146,6 @@
         "subtitle": "Start with your first habit",
         "message": "Today is a great day to start!"
       }
-    },
-    "streakSaver": {
-      "title": "Streak Saver",
-      "available": "Available",
-      "useStreakSaver": "Use a Streak Saver",
-      "restore": "Restore {{count}} day | Restore {{count}} days",
-      "badge": {
-        "outOfStock": "OUT OF STOCK",
-        "refillMessage": "Refill your Streak Savers",
-        "tapToShop": "Tap to visit shop",
-        "streakAlert": "STREAK ALERT",
-        "readyToSave": "READY TO SAVE",
-        "needsSaving_one": "{{count}} habit needs saving!",
-        "needsSaving_other": "{{count}} habits need saving!",
-        "allSafe": "All streaks are safe",
-        "available_one": "{{count}} Streak Saver ready",
-        "available_other": "{{count}} Streak Savers ready"
-      },
-      "shop": {
-        "title": "Streak Savers",
-        "yourInventory": "Your Inventory",
-        "monthlyRefill": "Monthly Refill",
-        "refillDate": "Next refill: {{date}}",
-        "premiumOnly": "Premium members receive 3 Streak Savers each month",
-        "notPremium": "Upgrade to Premium to get monthly Streak Savers",
-        "upgradeToPremium": "Upgrade to Premium",
-        "purchaseSuccess": "Purchase Successful!",
-        "purchaseFailed": "Purchase Failed",
-        "addedToInventory": "Added to your inventory",
-        "noPackages": "No packages available",
-        "popular": "POPULAR",
-        "buyNow": "BUY NOW",
-        "save20": "Save 20%",
-        "save40": "Save 40%",
-        "savers_one": "{{count}} Saver",
-        "savers_other": "{{count}} Savers",
-        "footer": "Restore missed days within 24h 🔥",
-        "loading": "Loading..."
-      }
     }
   },
   "habits": {
@@ -320,53 +281,6 @@
     "loading": "Loading...",
     "error": "Failed to load subscription options"
   },
-
-  "streakSaver": {
-    "title": "Streak Rescue!",
-    "description": "Your {{streak}}-day streak for \"{{habitName}}\" doesn't have to end!",
-    "stats": {
-      "days": "Days",
-      "left": "Left"
-    },
-    "warning": {
-      "title": "24h window:",
-      "message": "After that, this streak is permanently lost."
-    },
-    "buttons": {
-      "use": "USE STREAK SAVER",
-      "maybeLater": "Maybe Later",
-      "restoring": "Restoring..."
-    },
-    "success": {
-      "title": "Streak Restored!",
-      "subtitle": "Your dedication is back on track",
-      "days": "days",
-      "keepGoing": "Keep Going!",
-      "closingIn": "Closing in {{seconds}} seconds..."
-    },
-    "motivational": [
-      "Consistency is the key to mastery!",
-      "Every day counts towards your goal!",
-      "Your dedication is inspiring!",
-      "Small steps lead to big changes!",
-      "You're building an incredible habit!"
-    ],
-    "shop": {
-      "title": "Streak Savers",
-      "loading": "Loading packages...",
-      "noPackages": "No packages available",
-      "savers": "{{count}} Savers",
-      "popular": "POPULAR",
-      "save20": "Save 20%",
-      "save40": "Save 40%",
-      "buyNow": "BUY NOW",
-      "footer": "One-time purchases · Protect your progress",
-      "purchaseSuccess": "Purchase Successful!",
-      "purchaseFailed": "Purchase Failed",
-      "addedToInventory": "Streak Savers added to your inventory"
-    }
-  },
-
   "diagnostic": {
     "title": "System Diagnostics",
     "subtitle": "Complete health check",
@@ -1840,7 +1754,8 @@
       "completed": "{{completed}}/{{total}}",
       "pausedUntil": "Paused {{date}}",
       "pausedToday": "until today",
-      "pausedTomorrow": "until tomorrow"
+      "pausedTomorrow": "until tomorrow",
+      "weekCompleted": "Task completed !"
     },
 
     "milestones": {
@@ -1848,7 +1763,9 @@
       "achieved": "Achieved! +{{xp}} XP",
       "missed": "Missed",
       "daysAway_one": "{{count}} day away",
-      "daysAway_other": "{{count}} days away"
+      "daysAway_other": "{{count}} days away",
+      "currentTier": "Current Tier",
+      "nextMilestone": "Next Milestone"
     },
 
     "milestoneZoomModal": {
@@ -1867,6 +1784,37 @@
       "xpBonus": "{{multiplier}}x XP",
       "tapToContinue": "Tap anywhere to continue",
       "closingIn": "Closing in {{seconds}} seconds..."
+    },
+    "streakSaver": {
+      "title": "Streak Rescue!",
+      "description": "Your {{streak}}-day streak for \"{{habitName}}\" doesn't have to end!",
+      "stats": {
+        "days": "Days",
+        "left": "Left"
+      },
+      "warning": {
+        "title": "24h window:",
+        "message": "After that, this streak is permanently lost."
+      },
+      "buttons": {
+        "use": "USE STREAK SAVER",
+        "maybeLater": "Maybe Later",
+        "restoring": "Restoring..."
+      },
+      "success": {
+        "title": "Streak Restored!",
+        "subtitle": "Your dedication is back on track",
+        "days": "days",
+        "keepGoing": "Keep Going!",
+        "closingIn": "Closing in {{seconds}} seconds..."
+      },
+      "motivational": [
+        "Consistency is the key to mastery!",
+        "Every day counts towards your goal!",
+        "Your dedication is inspiring!",
+        "Small steps lead to big changes!",
+        "You're building an incredible habit!"
+      ]
     }
   },
   "levelUp": {
@@ -1987,6 +1935,7 @@
   "auth": {
     "tagline": "Consistency Transforms Everything",
     "signIn": "Sign In",
+    "signOut": "Sign Out",
     "createAccount": "Create Account",
     "resetPassword": "Reset Password",
     "username": "Username",
@@ -2032,6 +1981,71 @@
       "title": "Success",
       "message": "Your password has been updated successfully!",
       "login": "Sign in"
+    }
+  },
+  "streakSaver": {
+    "title": "Streak Rescue!",
+    "description": "Your {{streak}}-day streak for \"{{habitName}}\" doesn't have to end!",
+    "stats": {
+      "days": "Days",
+      "left": "Left"
+    },
+    "warning": {
+      "title": "24h window:",
+      "message": "After that, this streak is permanently lost."
+    },
+    "badge": {
+      "outOfStock": "OUT OF STOCK",
+      "refillMessage": "Refill your Streak Savers",
+      "tapToShop": "Tap to visit shop",
+      "streakAlert": "STREAK ALERT",
+      "readyToSave": "READY TO SAVE",
+      "needsSaving_one": "{{count}} habit needs saving!",
+      "needsSaving_other": "{{count}} habits need saving!",
+      "allSafe": "All streaks are safe",
+      "available_one": "{{count}} Streak Saver ready",
+      "available_other": "{{count}} Streak Savers ready"
+    },
+    "buttons": {
+      "use": "USE STREAK SAVER",
+      "maybeLater": "Maybe Later",
+      "restoring": "Restoring..."
+    },
+    "success": {
+      "title": "Streak Restored!",
+      "subtitle": "Your dedication is back on track",
+      "days": "days",
+      "keepGoing": "Keep Going!",
+      "closingIn": "Closing in {{seconds}} seconds..."
+    },
+    "motivational": [
+      "Consistency is the key to mastery!",
+      "Every day counts towards your goal!",
+      "Your dedication is inspiring!",
+      "Small steps lead to big changes!",
+      "You're building an incredible habit!"
+    ],
+    "shop": {
+      "title": "Streak Savers",
+      "yourInventory": "Your Inventory",
+      "monthlyRefill": "Monthly Refill",
+      "refillDate": "Next refill: {{date}}",
+      "premiumOnly": "Premium members receive 3 Streak Savers each month",
+      "notPremium": "Upgrade to Premium to get monthly Streak Savers",
+      "upgradeToPremium": "Upgrade to Premium",
+      "purchaseSuccess": "Purchase Successful!",
+      "purchaseFailed": "Purchase Failed",
+      "addedToInventory": "Added to your inventory",
+      "noPackages": "No packages available",
+      "popular": "POPULAR",
+      "buyNow": "BUY NOW",
+      "save20": "Save 20%",
+      "save40": "Save 40%",
+      "savers_one": "{{count}} Saver",
+      "savers_other": "{{count}} Savers",
+      "footer": "Restore missed days within 24h 🔥",
+      "loading": "Loading...",
+      "savers": "{{count}} Savers"
     }
   }
 }

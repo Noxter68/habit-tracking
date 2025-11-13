@@ -73,7 +73,7 @@ const MilestonesCard: React.FC<MilestonesCardProps> = ({ milestones, currentStre
             />
           </View>
           <Text style={[tw`text-sm font-bold uppercase tracking-wide`, unlockedMilestones.length > 0 ? tw`text-amber-700` : tw`text-stone-400`]}>
-            {unlockedMilestones.length > 0 ? 'Current Tier' : 'Next Milestone'}
+            {unlockedMilestones.length > 0 ? t('habitDetails.milestones.currentTier') : t('habitDetails.milestones.nextMilestone')}
           </Text>
           <Text style={[tw`text-lg font-black mt-1`, unlockedMilestones.length > 0 ? tw`text-stone-800` : tw`text-stone-400`]}>
             {unlockedMilestones.length > 0

@@ -111,18 +111,18 @@ const LeaderboardScreen = () => {
             </View>
 
             {/* Mode Toggle */}
-            <View style={tw`bg-white/15 rounded-2xl p-1 flex-row border-2 border-white/20`}>
+            <View style={tw`bg-white/15 rounded-xl p-1 flex-row border-2 border-white/20`}>
               <Pressable
                 onPress={() => setMode('global')}
-                style={({ pressed }) => [tw`flex-1 py-3 rounded-xl items-center`, mode === 'global' ? tw`bg-violet-600` : tw`bg-transparent`, pressed && tw`opacity-80`]}
+                style={({ pressed }) => [tw`flex-1 py-2 rounded-xl items-center`, mode === 'global' ? tw`bg-violet-600` : tw`bg-transparent`, pressed && tw`opacity-80`]}
               >
-                <Text style={tw`text-sm font-bold ${mode === 'global' ? 'text-white' : 'text-white/70'}`}>{t('leaderboard.modes.global')}</Text>
+                <Text style={tw`text-xs font-bold ${mode === 'global' ? 'text-white' : 'text-white/70'}`}>{t('leaderboard.modes.global')}</Text>
               </Pressable>
               <Pressable
                 onPress={() => setMode('weekly')}
-                style={({ pressed }) => [tw`flex-1 py-3 rounded-xl items-center`, mode === 'weekly' ? tw`bg-violet-600` : tw`bg-transparent`, pressed && tw`opacity-80`]}
+                style={({ pressed }) => [tw`flex-1 py-2 rounded-xl items-center`, mode === 'weekly' ? tw`bg-violet-600` : tw`bg-transparent`, pressed && tw`opacity-80`]}
               >
-                <Text style={tw`text-sm font-bold ${mode === 'weekly' ? 'text-white' : 'text-white/70'}`}>{t('leaderboard.modes.weekly')}</Text>
+                <Text style={tw`text-xs font-bold ${mode === 'weekly' ? 'text-white' : 'text-white/70'}`}>{t('leaderboard.modes.weekly')}</Text>
               </Pressable>
             </View>
           </Animated.View>

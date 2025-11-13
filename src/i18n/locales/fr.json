@@ -147,46 +147,6 @@
         "subtitle": "Commencez par votre première habitude",
         "message": "Aujourd'hui est un excellent jour pour commencer !"
       }
-    },
-
-    "streakSaver": {
-      "title": "Sauvegarde de série",
-      "available": "Disponible",
-      "useStreakSaver": "Utiliser une sauvegarde",
-      "restore": "Restaurer {{count}} jour | Restaurer {{count}} jours",
-      "badge": {
-        "outOfStock": "RUPTURE DE STOCK",
-        "refillMessage": "Rechargez vos Sauveurs de Série",
-        "tapToShop": "Touchez pour visiter la boutique",
-        "streakAlert": "ALERTE SÉRIE",
-        "readyToSave": "PRÊT À SAUVER",
-        "needsSaving_one": "{{count}} habitude à sauver !",
-        "needsSaving_other": "{{count}} habitudes à sauver !",
-        "allSafe": "Toutes les séries sont sauves",
-        "available_one": "{{count}} Sauveur de Série disponible",
-        "available_other": "{{count}} Sauveurs de Série disponibles"
-      },
-      "shop": {
-        "title": "Sauveurs de Série",
-        "yourInventory": "Votre inventaire",
-        "monthlyRefill": "Recharge mensuelle",
-        "refillDate": "Prochaine recharge : {{date}}",
-        "premiumOnly": "Les membres Premium reçoivent 3 sauvegardes chaque mois",
-        "notPremium": "Passez à Premium pour obtenir des sauvegardes mensuelles",
-        "upgradeToPremium": "Passer à Premium",
-        "purchaseSuccess": "Achat réussi !",
-        "purchaseFailed": "Achat échoué",
-        "addedToInventory": "Ajouté à votre inventaire",
-        "noPackages": "Aucun forfait disponible",
-        "popular": "POPULAIRE",
-        "buyNow": "ACHETER",
-        "save20": "Économisez 20%",
-        "save40": "Économisez 40%",
-        "savers_one": "{{count}} Sauveur",
-        "savers_other": "{{count}} Sauveurs",
-        "footer": "Restaurez les jours manqués sous 24h 🔥",
-        "loading": "Chargement..."
-      }
     }
   },
   "habits": {
@@ -436,53 +396,6 @@
       "upgrade": "Passer à Premium"
     }
   },
-
-  "streakSaver": {
-    "title": "Sauvegarde de Série !",
-    "description": "Votre série de {{streak}} jours pour \"{{habitName}}\" ne doit pas se terminer !",
-    "stats": {
-      "days": "Jours",
-      "left": "Restant"
-    },
-    "warning": {
-      "title": "Fenêtre de 24h :",
-      "message": "Après cela, cette série sera définitivement perdue."
-    },
-    "buttons": {
-      "use": "UTILISER SAUVEGARDE",
-      "maybeLater": "Plus Tard",
-      "restoring": "Restauration..."
-    },
-    "success": {
-      "title": "Série Restaurée !",
-      "subtitle": "Votre dévouement est de retour sur les rails",
-      "days": "jours",
-      "keepGoing": "Continuez !",
-      "closingIn": "Fermeture dans {{seconds}} secondes..."
-    },
-    "motivational": [
-      "La régularité est la clé de la maîtrise !",
-      "Chaque jour compte vers votre objectif !",
-      "Votre dévouement est inspirant !",
-      "Les petits pas mènent à de grands changements !",
-      "Vous construisez une habitude incroyable !"
-    ],
-    "shop": {
-      "title": "Sauvegardes de Série",
-      "loading": "Chargement des forfaits...",
-      "noPackages": "Aucun forfait disponible",
-      "savers": "{{count}} Sauvegardes",
-      "popular": "POPULAIRE",
-      "save20": "Économisez 20%",
-      "save40": "Économisez 40%",
-      "buyNow": "ACHETER",
-      "footer": "Achats uniques · Protégez votre progression",
-      "purchaseSuccess": "Achat Réussi !",
-      "purchaseFailed": "Échec de l'Achat",
-      "addedToInventory": "Sauvegardes de série ajoutées à votre inventaire"
-    }
-  },
-
   "diagnostic": {
     "title": "Diagnostics système",
     "subtitle": "Vérification complète de la santé",
@@ -1840,11 +1753,16 @@
       "completed": "{{completed}}/{{total}}",
       "pausedUntil": "En pause {{date}}",
       "pausedToday": "jusqu'à aujourd'hui",
-      "pausedTomorrow": "jusqu'à demain"
+      "pausedTomorrow": "jusqu'à demain",
+      "weekCompleted": "Tâche complétée !",
+      "currentTier": "Current Tier",
+      "nextMilestone": "Next Milestone"
     },
 
     "milestones": {
       "title": "Paliers",
+      "currentTier": "Palier Actuel",
+      "nextMilestone": "Prochain Palier",
       "achieved": "Atteint ! +{{xp}} XP",
       "missed": "Manqué",
       "daysAway_one": "Dans {{count}} jour",
@@ -1866,6 +1784,37 @@
       "xpBonus": "{{multiplier}}x XP",
       "tapToContinue": "Appuyez n'importe où pour continuer",
       "closingIn": "Fermeture dans {{seconds}} secondes..."
+    },
+    "streakSaver": {
+      "title": "Sauvetage de Série !",
+      "description": "Votre série de {{streak}} jours pour \"{{habitName}}\" n'a pas à se terminer !",
+      "stats": {
+        "days": "Jours",
+        "left": "Restants"
+      },
+      "warning": {
+        "title": "Fenêtre de 24h :",
+        "message": "Après cela, cette série sera définitivement perdue."
+      },
+      "buttons": {
+        "use": "UTILISER UN SAUVETAGE",
+        "maybeLater": "Plus Tard",
+        "restoring": "Restauration..."
+      },
+      "success": {
+        "title": "Série Restaurée !",
+        "subtitle": "Votre engagement est de retour sur les rails",
+        "days": "jours",
+        "keepGoing": "Continuez !",
+        "closingIn": "Fermeture dans {{seconds}} secondes..."
+      },
+      "motivational": [
+        "La constance est la clé de la maîtrise !",
+        "Chaque jour compte pour votre objectif !",
+        "Votre dévouement est inspirant !",
+        "Les petits pas mènent à de grands changements !",
+        "Vous construisez une habitude incroyable !"
+      ]
     }
   },
   "levelUp": {
@@ -1985,6 +1934,7 @@
   },
   "auth": {
     "signIn": "Connexion",
+    "logout": "Déconnexion",
     "tagline": "La Discipline Transforme Tout",
     "createAccount": "Créer un Compte",
     "resetPassword": "Réinitialiser le Mot de Passe",
@@ -2031,6 +1981,72 @@
       "title": "Succès",
       "message": "Votre mot de passe a été modifié avec succès !",
       "login": "Se connecter"
+    }
+  },
+
+  "streakSaver": {
+    "title": "Sauvegarde de Série !",
+    "description": "Votre série de {{streak}} jours pour \"{{habitName}}\" ne doit pas se terminer !",
+    "stats": {
+      "days": "Jours",
+      "left": "Restant"
+    },
+    "warning": {
+      "title": "Fenêtre de 24h :",
+      "message": "Après cela, cette série sera définitivement perdue."
+    },
+    "badge": {
+      "outOfStock": "RUPTURE DE STOCK",
+      "refillMessage": "Rechargez vos Sauveurs de Série",
+      "tapToShop": "Touchez pour visiter la boutique",
+      "streakAlert": "ALERTE SÉRIE",
+      "readyToSave": "PRÊT À SAUVER",
+      "needsSaving_one": "{{count}} habitude à sauver !",
+      "needsSaving_other": "{{count}} habitudes à sauver !",
+      "allSafe": "Toutes les séries sont sauves",
+      "available_one": "{{count}} Sauveur de Série disponible",
+      "available_other": "{{count}} Sauveurs de Série disponibles"
+    },
+    "buttons": {
+      "use": "UTILISER SAUVEGARDE",
+      "maybeLater": "Plus Tard",
+      "restoring": "Restauration..."
+    },
+    "success": {
+      "title": "Série Restaurée !",
+      "subtitle": "Votre dévouement est de retour sur les rails",
+      "days": "jours",
+      "keepGoing": "Continuez !",
+      "closingIn": "Fermeture dans {{seconds}} secondes..."
+    },
+    "motivational": [
+      "La régularité est la clé de la maîtrise !",
+      "Chaque jour compte vers votre objectif !",
+      "Votre dévouement est inspirant !",
+      "Les petits pas mènent à de grands changements !",
+      "Vous construisez une habitude incroyable !"
+    ],
+    "shop": {
+      "title": "Sauveurs de Série",
+      "yourInventory": "Votre inventaire",
+      "monthlyRefill": "Recharge mensuelle",
+      "refillDate": "Prochaine recharge : {{date}}",
+      "premiumOnly": "Les membres Premium reçoivent 3 sauvegardes chaque mois",
+      "notPremium": "Passez à Premium pour obtenir des sauvegardes mensuelles",
+      "upgradeToPremium": "Passer à Premium",
+      "purchaseSuccess": "Achat réussi !",
+      "purchaseFailed": "Achat échoué",
+      "addedToInventory": "Ajouté à votre inventaire",
+      "noPackages": "Aucun forfait disponible",
+      "popular": "POPULAIRE",
+      "buyNow": "ACHETER",
+      "save20": "Économisez 20%",
+      "save40": "Économisez 40%",
+      "savers_one": "{{count}} Sauveur",
+      "savers_other": "{{count}} Sauveurs",
+      "footer": "Restaurez les jours manqués sous 24h",
+      "loading": "Chargement...",
+      "savers": "{{count}} Sauvegardes"
     }
   }
 }

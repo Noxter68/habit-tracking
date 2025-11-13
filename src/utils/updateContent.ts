@@ -67,19 +67,15 @@ const updates_1_0_12_fr: UpdateItem[] = [
 const updates_1_1_0_en: UpdateItem[] = [
   {
     title: 'Update Modal System',
-    description: 'Implemented a version tracking system that automatically displays update notes when users install a new version.',
+    description: 'Implemented a version tracking system that automatically displays update notes when installing a new version.',
   },
   {
     title: 'Multilingual Support',
-    description: 'Update notes are now available in both English and French, automatically adapting to your device language.',
+    description: 'Nuvoria is now available in English and French, automatically adapting to your device language.',
   },
   {
     title: 'Enhanced User Experience',
-    description: 'Added elegant modal design with app logo and smooth animations for a more professional feel.',
-  },
-  {
-    title: 'Developer Tools',
-    description: 'Debug mode now includes version reset functionality for easier testing and development.',
+    description: 'Bug fixes and improved app stability.',
   },
 ];
 
@@ -91,15 +87,15 @@ const updates_1_1_0_fr: UpdateItem[] = [
   },
   {
     title: 'Support multilingue',
-    description: "Les notes de mise à jour sont maintenant disponibles en anglais et en français, s'adaptant automatiquement à la langue de votre appareil.",
+    description: "Nuvoria est maintenant disponibles en anglais et en français, s'adaptant automatiquement à la langue de votre appareil.",
   },
   {
     title: 'Expérience utilisateur améliorée',
-    description: "Ajout d'un design de modal élégant avec le logo de l'application et des animations fluides pour un rendu plus professionnel.",
+    description: "Amélioration de bugs et stabilité de l'application",
   },
   {
-    title: 'Outils de développement',
-    description: 'Le mode debug inclut maintenant une fonctionnalité de réinitialisation de version pour faciliter les tests et le développement.',
+    title: 'Réglage a un nouveau look plus sobre !',
+    description: 'Armonisation de la page Réglage',
   },
 ];
 
@@ -119,8 +115,8 @@ export const getUpdatesForVersion = (version: string, locale: string = 'en'): Up
   const updatesMap: Record<string, UpdateItem[]> = {
     updates_1_0_12_en: updates_1_0_12_en,
     updates_1_0_12_fr: updates_1_0_12_fr,
-    updates_1_0_13_en: updates_1_1_0_en,
-    updates_1_0_13_fr: updates_1_1_0_fr,
+    updates_1_1_0_en: updates_1_1_0_en,
+    updates_1_1_0_fr: updates_1_1_0_fr,
   };
 
   return updatesMap[key] || updatesMap[`updates_${version.replace(/\./g, '_')}_en`] || [];

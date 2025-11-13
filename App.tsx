@@ -447,29 +447,57 @@ const linking = {
   },
 };
 
-// ============================================
-// Main App Component
-// ============================================
+// ============================================================================
+// Composant séparé pour la logique de langue (à l'intérieur d'AuthProvider)
+// ============================================================================
+function LanguageInitializer() {
+  const { user } = useAuth(); // ✅ Maintenant c'est OK car dans AuthProvider
 
+  useEffect(() => {
+    const initializeLanguage = async () => {
+      try {
+        if (user?.id) {
+          // ✅ Utilisateur connecté → charge SA langue depuis la DB
+          Logger.debug('🌍 Loading user language from database');
+          await LanguageDetectionService.loadUserLanguage(user.id);
+        } else {
+          // ✅ Pas connecté → utilise la langue du téléphone
+          Logger.debug('🌍 Loading device language (no user connected)');
+          await LanguageDetectionService.initializeDefaultLanguage();
+        }
+      } catch (error) {
+        Logger.error('Error initializing language:', error);
+      }
+    };
+
+    initializeLanguage();
+  }, [user?.id]);
+
+  return null; // Ce composant ne rend rien
+}
+
+// ============================================================================
+// Composant principal App
+// ============================================================================
 export default function App() {
   useNotificationSetup();
   usePerformanceMonitoring();
 
+  // ============================================================================
+  // 🛒 REVENUECAT & APP STATE
+  // ============================================================================
   useEffect(() => {
     const initRevenueCat = async () => {
       try {
         const isExpoGo = typeof expo !== 'undefined' && expo?.modules?.ExpoGo;
         if (isExpoGo) {
-          Logger.warn('⚠️  Running in Expo Go - RevenueCat will NOT work!');
+          Logger.warn('⚠️ Running in Expo Go - RevenueCat will NOT work!');
           return;
         }
 
         if (Config.debug.enabled) {
           diagnoseRevenueCatSetup();
         }
-
-        // ❌ RETIRE ÇA - Ne pas initialiser ici !
-        // await RevenueCatService.initialize();
 
         Logger.debug('✅ [App] RevenueCat will initialize with user context');
       } catch (error) {
@@ -493,14 +521,13 @@ export default function App() {
     return () => subscription.remove();
   }, []);
 
-  useEffect(() => {
-    LanguageDetectionService.initializeDefaultLanguage();
-  }, []);
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <AuthProvider>
+          {/* ✅ LanguageInitializer DANS AuthProvider */}
+          <LanguageInitializer />
+
           <SubscriptionProvider>
             <StatsProvider>
               <HabitProvider>

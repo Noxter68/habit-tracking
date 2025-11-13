@@ -1,12 +1,14 @@
 // src/components/streakSaver/StreakSaverModal.tsx
+// Version avec gradient violet Amethyst
+
 import React, { useEffect, useState } from 'react';
 import { View, Text, Modal, Pressable, ActivityIndicator, Image } from 'react-native';
-import Animated, { FadeIn, FadeInDown, FadeOut, useSharedValue, useAnimatedStyle, withRepeat, withSequence, withSpring, withTiming, Easing, ZoomIn } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown, FadeOut, useSharedValue, useAnimatedStyle, withRepeat, withSequence, withSpring, withTiming, Easing, ZoomIn, interpolate } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import { Flame, X, Clock, Sparkles } from 'lucide-react-native';
-import tw from '@/lib/tailwind';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
+import { LinearGradient } from 'expo-linear-gradient';
+import tw from '@/lib/tailwind';
 
 interface StreakSaverModalProps {
   visible: boolean;
@@ -20,57 +22,76 @@ interface StreakSaverModalProps {
   onClose: () => void;
 }
 
-const FlaskIcon = () => {
-  const bounce = useSharedValue(1);
+// ============================================================================
+// Animated Icon Component
+// ============================================================================
+const StreakSaverIcon = () => {
+  const breathe = useSharedValue(0);
   const rotate = useSharedValue(0);
 
   useEffect(() => {
-    bounce.value = withRepeat(withSequence(withSpring(1.08, { damping: 3, stiffness: 80 }), withSpring(1, { damping: 3, stiffness: 80 })), -1, false);
+    // Breathing animation - smooth infinite
+    breathe.value = withRepeat(withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.ease) }), -1, true);
 
+    // Gentle rotation
     rotate.value = withRepeat(
       withSequence(
-        withTiming(-3, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
-        withTiming(3, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
-        withTiming(0, { duration: 1200, easing: Easing.inOut(Easing.ease) })
+        withTiming(-5, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
+        withTiming(5, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
+        withTiming(0, { duration: 1500, easing: Easing.inOut(Easing.ease) })
       ),
       -1,
       false
     );
   }, []);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: bounce.value }, { rotate: `${rotate.value}deg` }],
-  }));
+  const animatedStyle = useAnimatedStyle(() => {
+    const scale = interpolate(breathe.value, [0, 1], [1, 1.1]);
+    return {
+      transform: [{ scale }, { rotate: `${rotate.value}deg` }],
+    };
+  });
 
   return (
     <Animated.View style={animatedStyle}>
       <View style={tw`relative`}>
-        <View style={tw`absolute inset-0 bg-orange-400 rounded-full opacity-30 blur-xl scale-110`} />
-        <View style={tw`w-20 h-20 rounded-full bg-white items-center justify-center shadow-2xl`}>
+        {/* Glow effect */}
+        <View style={tw`absolute inset-0 bg-purple-300 rounded-full opacity-30 blur-xl scale-110`} />
+
+        {/* Icon container */}
+        <View style={tw`w-20 h-20 rounded-2xl bg-white items-center justify-center shadow-2xl`}>
           <Image source={require('../../../assets/interface/streak-saver.png')} style={{ width: 48, height: 48 }} resizeMode="contain" />
         </View>
+
+        {/* Sparkle indicator */}
         <View style={tw`absolute -top-1 -right-1`}>
-          <Text style={{ fontSize: 16 }}>✨</Text>
+          <Sparkles size={18} color="#8B5CF6" fill="#8B5CF6" />
         </View>
       </View>
     </Animated.View>
   );
 };
 
+// ============================================================================
+// Action Button Component
+// ============================================================================
 const StreakSaverButton = ({ onPress, loading, disabled }: any) => {
   const { t } = useTranslation();
-  const buttonBounce = useSharedValue(1);
+  const breathe = useSharedValue(0);
   const scale = useSharedValue(1);
 
   useEffect(() => {
     if (!loading && !disabled) {
-      buttonBounce.value = withRepeat(withSequence(withSpring(1.03, { damping: 4 }), withSpring(1, { damping: 4 })), -1, false);
+      breathe.value = withRepeat(withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.ease) }), -1, true);
     }
   }, [loading, disabled]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: buttonBounce.value * scale.value }],
-  }));
+  const animatedStyle = useAnimatedStyle(() => {
+    const buttonScale = interpolate(breathe.value, [0, 1], [1, 1.03]);
+    return {
+      transform: [{ scale: buttonScale * scale.value }],
+    };
+  });
 
   const handlePressIn = () => {
     scale.value = withSpring(0.95);
@@ -84,7 +105,7 @@ const StreakSaverButton = ({ onPress, loading, disabled }: any) => {
     <Animated.View style={animatedStyle}>
       <Pressable onPress={onPress} onPressIn={handlePressIn} onPressOut={handlePressOut} disabled={loading || disabled} style={tw`overflow-hidden rounded-2xl shadow-xl`}>
         <LinearGradient
-          colors={['#C2410C', '#EA580C', '#F97316']}
+          colors={['#8B5CF6', '#7C3AED', '#6D28D9']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[tw`py-4 px-6 items-center justify-center`, (loading || disabled) && tw`opacity-60`]}
@@ -103,6 +124,9 @@ const StreakSaverButton = ({ onPress, loading, disabled }: any) => {
   );
 };
 
+// ============================================================================
+// Main Modal Component
+// ============================================================================
 export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({ visible, habitName, previousStreak, availableSavers, loading = false, success = false, newStreak = 0, onUse, onClose }) => {
   const { t } = useTranslation();
   const glowPulse = useSharedValue(0);
@@ -114,7 +138,7 @@ export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({ visible, hab
     }
   }, [visible]);
 
-  // Auto-close after 8 seconds on success with countdown
+  // Auto-close countdown on success
   useEffect(() => {
     if (success) {
       setCountdown(8);
@@ -143,7 +167,9 @@ export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({ visible, hab
     opacity: glowPulse.value * 0.5,
   }));
 
-  const motivationalMessages = t('habitDetails.streakSaver.motivational', { returnObjects: true }) as string[];
+  const motivationalMessages = t('habitDetails.streakSaver.motivational', {
+    returnObjects: true,
+  }) as string[];
   const randomMessage = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
 
   return (
@@ -154,31 +180,42 @@ export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({ visible, hab
 
           <Animated.View entering={FadeInDown.duration(400).springify()} style={tw`bg-white rounded-3xl overflow-hidden w-full max-w-md shadow-2xl`}>
             {success ? (
-              // SUCCESS VIEW
+              // ============================================================
+              // SUCCESS VIEW - Purple Design
+              // ============================================================
               <>
-                <LinearGradient colors={['#10b981', '#059669', '#047857']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`relative`}>
+                <LinearGradient colors={['#f3e8ff', '#e9d5ff', '#ddd6fe']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`relative`}>
                   <View style={tw`px-5 pt-8 pb-6`}>
                     <Animated.View entering={ZoomIn.duration(600).springify()} style={tw`items-center mb-3`}>
                       <View style={tw`relative`}>
-                        <View style={tw`w-20 h-20 rounded-full bg-white items-center justify-center shadow-2xl`}>
-                          <Sparkles size={40} color="#10b981" fill="#10b981" strokeWidth={2} />
+                        {/* Glow effect */}
+                        <View style={tw`absolute inset-0 bg-purple-300 rounded-full opacity-30 blur-xl scale-110`} />
+
+                        {/* Icon container */}
+                        <View style={tw`w-20 h-20 rounded-2xl bg-white items-center justify-center shadow-2xl`}>
+                          <Image source={require('../../../assets/interface/streak-saver.png')} style={{ width: 48, height: 48 }} resizeMode="contain" />
+                        </View>
+
+                        {/* Success sparkle indicator */}
+                        <View style={tw`absolute -top-1 -right-1 bg-green-500 rounded-full p-1.5 border-2 border-white`}>
+                          <Sparkles size={14} color="white" fill="white" />
                         </View>
                       </View>
                     </Animated.View>
 
-                    <Text style={tw`text-3xl font-black text-center text-white mb-2`}>{t('habitDetails.streakSaver.success.title')}</Text>
-                    <Text style={tw`text-base text-center text-emerald-50 font-medium`}>{t('habitDetails.streakSaver.success.subtitle')}</Text>
+                    <Text style={tw`text-3xl font-black text-center text-purple-900 mb-2`}>{t('habitDetails.streakSaver.success.title')}</Text>
+                    <Text style={tw`text-base text-center text-purple-700 font-medium`}>{t('habitDetails.streakSaver.success.subtitle')}</Text>
                   </View>
                 </LinearGradient>
 
                 <View style={tw`px-5 py-6`}>
-                  <View style={tw`bg-emerald-50 rounded-2xl p-4 mb-4 border-2 border-emerald-200`}>
+                  <View style={tw`bg-purple-50 rounded-2xl p-4 mb-4 border-2 border-purple-200`}>
                     <View style={tw`flex-row items-center justify-center mb-3`}>
-                      <Flame size={28} color="#059669" fill="#059669" />
-                      <Text style={tw`text-4xl font-black text-emerald-900 ml-2`}>{newStreak}</Text>
-                      <Text style={tw`text-lg font-bold text-emerald-700 ml-2`}>{t('habitDetails.streakSaver.success.days')}</Text>
+                      <Flame size={28} color="#8B5CF6" fill="#8B5CF6" />
+                      <Text style={tw`text-4xl font-black text-purple-900 ml-2`}>{newStreak}</Text>
+                      <Text style={tw`text-lg font-bold text-purple-700 ml-2`}>{t('habitDetails.streakSaver.success.days')}</Text>
                     </View>
-                    <Text style={tw`text-center text-sm font-semibold text-emerald-800`}>"{habitName}"</Text>
+                    <Text style={tw`text-center text-sm font-semibold text-purple-800`}>"{habitName}"</Text>
                   </View>
 
                   <View style={tw`bg-amber-50 rounded-xl p-4 border border-amber-200`}>
@@ -194,10 +231,12 @@ export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({ visible, hab
                 </View>
               </>
             ) : (
-              // ORIGINAL SAVE VIEW
+              // ============================================================
+              // SAVE VIEW - Purple Design
+              // ============================================================
               <>
-                <LinearGradient colors={['#FEF3C7', '#FED7AA', '#FDBA74']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`relative`}>
-                  <Animated.View style={[tw`absolute inset-0 bg-orange-300`, glowStyle]} />
+                <LinearGradient colors={['#f3e8ff', '#e9d5ff', '#ddd6fe']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`relative`}>
+                  <Animated.View style={[tw`absolute inset-0 bg-purple-300`, glowStyle]} />
 
                   <View style={tw`px-5 pt-6 pb-4`}>
                     <Pressable onPress={onClose} disabled={loading} style={tw`absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/90 items-center justify-center shadow`}>
@@ -205,30 +244,37 @@ export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({ visible, hab
                     </Pressable>
 
                     <View style={tw`items-center mb-2`}>
-                      <FlaskIcon />
+                      <StreakSaverIcon />
                     </View>
 
-                    <Text style={tw`text-2xl font-black text-center text-orange-900`}>{t('habitDetails.streakSaver.title')}</Text>
+                    <Text style={tw`text-2xl font-black text-center text-purple-900`}>{t('habitDetails.streakSaver.title')}</Text>
                   </View>
                 </LinearGradient>
 
                 <View style={tw`px-5 py-4`}>
-                  <Text style={tw`text-sm text-stone-700 text-center leading-5 mb-4`}>{t('habitDetails.streakSaver.description', { streak: previousStreak, habitName })}</Text>
+                  <Text style={tw`text-sm text-stone-700 text-center leading-5 mb-4`}>
+                    {t('habitDetails.streakSaver.description', {
+                      streak: previousStreak,
+                      habitName,
+                    })}
+                  </Text>
 
+                  {/* Stats Cards */}
                   <View style={tw`flex-row gap-2 mb-3`}>
-                    <View style={tw`flex-1 bg-orange-50 rounded-xl p-3 items-center border border-orange-200`}>
-                      <Flame size={40} color="#EA580C" fill="#EA580C" />
-                      <Text style={tw`text-2xl font-black text-orange-900 mt-1`}>{previousStreak}</Text>
-                      <Text style={tw`text-xs font-semibold text-orange-700`}>{t('habitDetails.streakSaver.stats.days')}</Text>
+                    <View style={tw`flex-1 bg-purple-50 rounded-xl p-3 items-center border border-purple-200`}>
+                      <Flame size={40} color="#8B5CF6" fill="#8B5CF6" />
+                      <Text style={tw`text-2xl font-black text-purple-900 mt-1`}>{previousStreak}</Text>
+                      <Text style={tw`text-xs font-semibold text-purple-700`}>{t('habitDetails.streakSaver.stats.days')}</Text>
                     </View>
 
-                    <View style={tw`flex-1 bg-orange-50 rounded-xl p-3 items-center border border-orange-200`}>
+                    <View style={tw`flex-1 bg-purple-50 rounded-xl p-3 items-center border border-purple-200`}>
                       <Image source={require('../../../assets/interface/streak-saver.png')} style={{ width: 40, height: 40 }} resizeMode="contain" />
-                      <Text style={tw`text-2xl font-black text-orange-900 mt-1`}>{availableSavers}</Text>
-                      <Text style={tw`text-xs font-semibold text-orange-700`}>{t('habitDetails.streakSaver.stats.left')}</Text>
+                      <Text style={tw`text-2xl font-black text-purple-900 mt-1`}>{availableSavers}</Text>
+                      <Text style={tw`text-xs font-semibold text-purple-700`}>{t('habitDetails.streakSaver.stats.left')}</Text>
                     </View>
                   </View>
 
+                  {/* Warning Card */}
                   <View style={tw`bg-red-50 border border-red-200 rounded-xl p-3 mb-4`}>
                     <View style={tw`flex-row items-start`}>
                       <Clock size={16} color="#DC2626" strokeWidth={2.5} style={tw`mr-2 mt-0.5`} />
@@ -238,6 +284,7 @@ export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({ visible, hab
                     </View>
                   </View>
 
+                  {/* Action Buttons */}
                   <View style={tw`gap-2`}>
                     <StreakSaverButton onPress={onUse} loading={loading} disabled={availableSavers < 1} />
 
