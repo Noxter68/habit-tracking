@@ -289,49 +289,49 @@ const Dashboard: React.FC = () => {
     return { completed, total };
   }, [habits]);
 
-  // const handleStreakSaverPress = async () => {
-  //   if (!user) return;
-
-  //   HapticFeedback.light();
-
-  //   try {
-  //     const saveableHabits = await StreakSaverService.getSaveableHabits(user.id);
-
-  //     if (saveableHabits.length === 0) {
-  //       Logger.debug('No saveable habits found');
-  //       // return;
-  //     }
-
-  //     if (saveableHabits.length === 1) {
-  //       const habit = saveableHabits[0];
-  //       Logger.debug('🎯 Navigating to habit:', habit.habitId);
-  //       navigation.navigate('HabitDetails', {
-  //         habitId: habit.habitId,
-  //         pausedTasks: frozenTasksMap.get(habit.habitId) || {},
-  //       });
-  //     } else {
-  //       const firstHabit = saveableHabits[0];
-  //       Logger.debug('🎯 Multiple saveable habits, navigating to first:', firstHabit.habitId);
-  //       navigation.navigate('HabitDetails', {
-  //         habitId: firstHabit.habitId,
-  //         pausedTasks: frozenTasksMap.get(firstHabit.habitId) || {},
-  //       });
-  //     }
-  //   } catch (error) {
-  //     Logger.error('Error handling streak saver press:', error);
-  //   }
-  // };
-
   const handleStreakSaverPress = async () => {
     if (!user) return;
 
-    // Au lieu de naviguer, force l'ouverture de la modal
-    navigation.navigate('HabitDetails', {
-      habitId: habits[0]?.id, // Premier habit
-      pausedTasks: {},
-      forceStreakSaver: true, // Flag custom
-    });
+    HapticFeedback.light();
+
+    try {
+      const saveableHabits = await StreakSaverService.getSaveableHabits(user.id);
+
+      if (saveableHabits.length === 0) {
+        Logger.debug('No saveable habits found');
+        // return;
+      }
+
+      if (saveableHabits.length === 1) {
+        const habit = saveableHabits[0];
+        Logger.debug('🎯 Navigating to habit:', habit.habitId);
+        navigation.navigate('HabitDetails', {
+          habitId: habit.habitId,
+          pausedTasks: frozenTasksMap.get(habit.habitId) || {},
+        });
+      } else {
+        const firstHabit = saveableHabits[0];
+        Logger.debug('🎯 Multiple saveable habits, navigating to first:', firstHabit.habitId);
+        navigation.navigate('HabitDetails', {
+          habitId: firstHabit.habitId,
+          pausedTasks: frozenTasksMap.get(firstHabit.habitId) || {},
+        });
+      }
+    } catch (error) {
+      Logger.error('Error handling streak saver press:', error);
+    }
   };
+
+  // const handleStreakSaverPress = async () => {
+  //   if (!user) return;
+
+  //   // Au lieu de naviguer, force l'ouverture de la modal
+  //   navigation.navigate('HabitDetails', {
+  //     habitId: habits[0]?.id, // Premier habit
+  //     pausedTasks: {},
+  //     forceStreakSaver: true, // Flag custom
+  //   });
+  // };
 
   // ============================================================================
   // Effects
@@ -441,7 +441,7 @@ const Dashboard: React.FC = () => {
           </>
 
           {/* Streak Saver Badge */}
-          {/* {!showPartialPauseMode && !hasTasksPaused && !showFullHolidayMode && (
+          {!showPartialPauseMode && !hasTasksPaused && !showFullHolidayMode && (
             <>
               <StreakSaverBadge
                 onPress={handleStreakSaverPress}
@@ -463,7 +463,7 @@ const Dashboard: React.FC = () => {
                 }}
               />
             </>
-          )} */}
+          )}
 
           {/* Partial Holiday Mode Banner */}
           {(showPartialPauseMode || hasTasksPaused) && !showFullHolidayMode && (
