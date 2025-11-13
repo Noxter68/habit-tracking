@@ -1,8 +1,10 @@
 // src/components/habits/MilestoneZoomModal.tsx
 import React from 'react';
 import { View, Text, Modal, Pressable, Dimensions, Image } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import tw from '@/lib/tailwind';
 import { HabitMilestone } from '@/services/habitProgressionService';
+import { getTranslatedMilestone } from '@/i18n/milestoneTranslations';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -34,7 +36,12 @@ interface MilestoneZoomModalProps {
 }
 
 export const MilestoneZoomModal: React.FC<MilestoneZoomModalProps> = ({ visible, onClose, milestone, milestoneIndex, isUnlocked }) => {
+  const { t, i18n } = useTranslation();
+
   if (!milestone) return null;
+
+  // Get translated milestone
+  const translatedMilestone = getTranslatedMilestone(milestone.title, i18n.language as 'en' | 'fr');
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
@@ -43,24 +50,24 @@ export const MilestoneZoomModal: React.FC<MilestoneZoomModalProps> = ({ visible,
           <Pressable style={tw`bg-slate-50 rounded-3xl p-8 shadow-2xl`} onPress={(e) => e.stopPropagation()}>
             {/* Large milestone icon - elevated above card */}
             <View style={tw`items-center -mt-20 mb-6`}>
-              <View style={[tw`rounded-3xl p-6 shadow-xl items-center justify-center`, isUnlocked ? tw`bg-slate-50` : tw`bg-slate-200`]}>
-                <Image source={tierIcons[milestoneIndex as keyof typeof tierIcons]} style={[tw`w-32 h-32`, !isUnlocked && tw`opacity-30`]} resizeMode="contain" />
+              <View style={[tw`rounded-3xl shadow-xl items-center justify-center`, isUnlocked ? tw`bg-slate-50` : tw`bg-slate-200`]}>
+                <Image source={tierIcons[milestoneIndex as keyof typeof tierIcons]} style={[tw`w-60 h-60`, !isUnlocked && tw`opacity-30`]} resizeMode="contain" />
               </View>
             </View>
 
             {/* Milestone title */}
-            <Text style={tw`text-slate-900 text-2xl font-semibold text-center leading-tight`}>{milestone.title}</Text>
+            <Text style={tw`text-slate-900 text-2xl font-semibold text-center leading-tight`}>{translatedMilestone.title}</Text>
 
             {/* Milestone description */}
-            <Text style={tw`text-slate-600 text-sm text-center mt-3 leading-relaxed`}>{milestone.description}</Text>
+            <Text style={tw`text-slate-600 text-sm text-center mt-3 leading-relaxed`}>{translatedMilestone.description}</Text>
 
             {/* Info badges */}
             <View style={tw`flex-row gap-2 mt-6 justify-center`}>
               <View style={tw`bg-slate-100 rounded-full px-4 py-2`}>
-                <Text style={tw`text-slate-700 text-sm font-medium`}>Day {milestone.days}</Text>
+                <Text style={tw`text-slate-700 text-sm font-medium`}>{t('habitDetails.milestoneZoomModal.day', { count: milestone.days })}</Text>
               </View>
               <View style={tw`bg-slate-100 rounded-full px-4 py-2`}>
-                <Text style={tw`text-slate-700 text-sm font-medium`}>+{milestone.xpReward} XP</Text>
+                <Text style={tw`text-slate-700 text-sm font-medium`}>{t('habitDetails.milestoneZoomModal.xpReward', { xp: milestone.xpReward })}</Text>
               </View>
               {milestone.badge && (
                 <View style={tw`bg-slate-100 rounded-full px-4 py-2`}>
@@ -73,17 +80,17 @@ export const MilestoneZoomModal: React.FC<MilestoneZoomModalProps> = ({ visible,
             <View style={tw`mt-6 items-center`}>
               {isUnlocked ? (
                 <View style={tw`bg-emerald-50 rounded-full px-4 py-2`}>
-                  <Text style={tw`text-emerald-700 text-sm font-semibold`}>✓ Achieved</Text>
+                  <Text style={tw`text-emerald-700 text-sm font-semibold`}>{t('habitDetails.milestoneZoomModal.achieved')}</Text>
                 </View>
               ) : (
                 <View style={tw`bg-slate-100 rounded-xl px-4 py-2`}>
-                  <Text style={tw`text-slate-600 text-sm text-center`}>Locked · Requires {milestone.days} day streak</Text>
+                  <Text style={tw`text-slate-600 text-sm text-center`}>{t('habitDetails.milestoneZoomModal.locked', { days: milestone.days })}</Text>
                 </View>
               )}
             </View>
 
             {/* Close Hint */}
-            <Text style={tw`text-slate-400 text-xs text-center mt-6`}>Tap anywhere to close</Text>
+            <Text style={tw`text-slate-400 text-xs text-center mt-6`}>{t('habitDetails.milestoneZoomModal.tapToClose')}</Text>
           </Pressable>
         </View>
       </Pressable>

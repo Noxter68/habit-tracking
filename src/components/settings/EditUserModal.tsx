@@ -1,10 +1,11 @@
-// src/components/EditUsernameModal.tsx
+// src/components/settings/EditUsernameModal.tsx
 import React, { useState } from 'react';
 import { View, Text, TextInput, Modal, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { BlurView } from 'expo-blur';
 import tw from 'twrnc';
 import { supabase } from '@/lib/supabase';
 import Logger from '@/utils/logger';
+import { useTranslation } from 'react-i18next';
 
 interface EditUsernameModalProps {
   visible: boolean;
@@ -15,6 +16,7 @@ interface EditUsernameModalProps {
 }
 
 const EditUsernameModal: React.FC<EditUsernameModalProps> = ({ visible, currentUsername, userId, onClose, onSuccess }) => {
+  const { t } = useTranslation();
   const [username, setUsername] = useState(currentUsername);
   const [loading, setLoading] = useState(false);
 
@@ -41,24 +43,24 @@ const EditUsernameModal: React.FC<EditUsernameModalProps> = ({ visible, currentU
     const trimmedUsername = username.trim();
 
     if (!trimmedUsername) {
-      Alert.alert('Invalid Username', 'Username cannot be empty');
+      Alert.alert(t('editUsername.errors.emptyTitle'), t('editUsername.errors.emptyMessage'));
       return;
     }
 
     if (trimmedUsername.length < 3) {
-      Alert.alert('Invalid Username', 'Username must be at least 3 characters');
+      Alert.alert(t('editUsername.errors.tooShortTitle'), t('editUsername.errors.tooShortMessage'));
       return;
     }
 
     if (trimmedUsername.length > 20) {
-      Alert.alert('Invalid Username', 'Username must be less than 20 characters');
+      Alert.alert(t('editUsername.errors.tooLongTitle'), t('editUsername.errors.tooLongMessage'));
       return;
     }
 
     // Validation des caractères (alphanumérique + underscore uniquement)
     const usernameRegex = /^[a-zA-Z0-9_]+$/;
     if (!usernameRegex.test(trimmedUsername)) {
-      Alert.alert('Invalid Username', 'Username can only contain letters, numbers, and underscores');
+      Alert.alert(t('editUsername.errors.invalidCharsTitle'), t('editUsername.errors.invalidCharsMessage'));
       return;
     }
 
@@ -74,7 +76,7 @@ const EditUsernameModal: React.FC<EditUsernameModalProps> = ({ visible, currentU
       const isAvailable = await checkUsernameAvailability(trimmedUsername);
 
       if (!isAvailable) {
-        Alert.alert('Username Taken', 'This username is already in use. Please choose another one.');
+        Alert.alert(t('editUsername.errors.takenTitle'), t('editUsername.errors.takenMessage'));
         return;
       }
 
@@ -97,9 +99,9 @@ const EditUsernameModal: React.FC<EditUsernameModalProps> = ({ visible, currentU
 
       // Message d'erreur plus user-friendly
       if (error.code === '23505') {
-        Alert.alert('Username Taken', 'This username is already in use. Please choose another one.');
+        Alert.alert(t('editUsername.errors.takenTitle'), t('editUsername.errors.takenMessage'));
       } else {
-        Alert.alert('Update Failed', error.message || 'Unable to update username');
+        Alert.alert(t('editUsername.errors.updateFailedTitle'), error.message || t('editUsername.errors.updateFailedMessage'));
       }
     } finally {
       setLoading(false);
@@ -113,34 +115,34 @@ const EditUsernameModal: React.FC<EditUsernameModalProps> = ({ visible, currentU
 
         <View style={tw`bg-white rounded-3xl p-6 w-full max-w-sm shadow-xl`}>
           {/* Header */}
-          <Text style={tw`text-2xl font-bold text-gray-800 mb-2`}>Edit Username</Text>
-          <Text style={tw`text-gray-500 text-sm mb-6`}>Choose a unique username (3-20 characters, letters, numbers, and underscores only)</Text>
+          <Text style={tw`text-2xl font-bold text-zinc-800 mb-2`}>{t('editUsername.title')}</Text>
+          <Text style={tw`text-zinc-500 text-sm mb-6`}>{t('editUsername.subtitle')}</Text>
 
           {/* Input */}
           <View style={tw`mb-6`}>
-            <Text style={tw`text-xs font-bold text-gray-600 uppercase tracking-wide mb-2`}>Username</Text>
+            <Text style={tw`text-xs font-bold text-zinc-600 uppercase tracking-wide mb-2`}>{t('editUsername.inputLabel')}</Text>
             <TextInput
-              style={tw`bg-gray-50 rounded-2xl px-4 py-3.5 text-base text-gray-800 font-medium border-2 border-gray-200`}
+              style={tw`bg-zinc-50 rounded-2xl px-4 py-3.5 text-base text-zinc-800 font-medium border-2 border-zinc-200`}
               value={username}
               onChangeText={setUsername}
-              placeholder="Enter username"
-              placeholderTextColor="#9CA3AF"
+              placeholder={t('editUsername.placeholder')}
+              placeholderTextColor="#A1A1AA"
               autoCapitalize="none"
               autoCorrect={false}
               maxLength={20}
               editable={!loading}
             />
-            <Text style={tw`text-xs text-gray-400 mt-1.5`}>{username.trim().length}/20 characters</Text>
+            <Text style={tw`text-xs text-zinc-400 mt-1.5`}>{t('editUsername.characterCount', { count: username.trim().length })}</Text>
           </View>
 
           {/* Actions */}
           <View style={tw`flex-row gap-3`}>
-            <TouchableOpacity onPress={onClose} disabled={loading} style={tw`flex-1 bg-gray-100 rounded-2xl py-3.5 items-center`}>
-              <Text style={tw`text-gray-700 font-bold text-base`}>Cancel</Text>
+            <TouchableOpacity onPress={onClose} disabled={loading} style={tw`flex-1 bg-zinc-100 rounded-2xl py-3.5 items-center`}>
+              <Text style={tw`text-zinc-700 font-bold text-base`}>{t('common.cancel')}</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={handleSave} disabled={loading} style={tw`flex-1 bg-indigo-600 rounded-2xl py-3.5 items-center ${loading ? 'opacity-50' : ''}`}>
-              {loading ? <ActivityIndicator color="white" /> : <Text style={tw`text-white font-bold text-base`}>Save</Text>}
+            <TouchableOpacity onPress={handleSave} disabled={loading} style={tw`flex-1 bg-zinc-700 rounded-2xl py-3.5 items-center ${loading ? 'opacity-50' : ''}`}>
+              {loading ? <ActivityIndicator color="white" /> : <Text style={tw`text-white font-bold text-base`}>{t('common.save')}</Text>}
             </TouchableOpacity>
           </View>
         </View>

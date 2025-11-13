@@ -1,6 +1,6 @@
 // src/screens/SettingsScreen.tsx
 import React, { JSX, useCallback, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Switch, SafeAreaView, StatusBar, ActivityIndicator, Linking, Alert, Pressable, Image } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Switch, SafeAreaView, StatusBar, ActivityIndicator, Linking, Alert, Pressable, Image, ImageBackground } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import * as Notifications from 'expo-notifications';
@@ -17,12 +17,15 @@ import { NotificationPreferencesService } from '@/services/notificationPreferenc
 import { Config } from '@/config';
 import Logger from '@/utils/logger';
 import { OnboardingService } from '@/services/onboardingService';
-import { ChevronRight, Pencil } from 'lucide-react-native';
+import { ChevronRight, Pencil, GraduationCap } from 'lucide-react-native';
 import { HolidayPeriod } from '@/types/holiday.types';
 import { supabase } from '@/lib/supabase';
 import EditUsernameModal from '@/components/settings/EditUserModal';
+import { useTranslation } from 'react-i18next';
+import Constants from 'expo-constants';
 
 const APP_ICON = require('../../assets/icon/icon-v2.png');
+const TEXTURE_BG = require('../../assets/interface/textures/texture-white.png');
 
 // ============================================================================
 // Types
@@ -55,7 +58,6 @@ interface SettingsSectionProps {
   title: string;
   children: React.ReactNode;
   delay?: number;
-  gradient: [string, string];
 }
 
 interface SettingsItemProps {
@@ -65,14 +67,13 @@ interface SettingsItemProps {
   trailing?: React.ReactNode;
   onPress?: () => void;
   isLast?: boolean;
-  color: string;
 }
 
 // ============================================================================
 // Icon Components
 // ============================================================================
 
-const Icon: React.FC<IconProps> = ({ name, size = 22, color = '#9333EA' }) => {
+const Icon: React.FC<IconProps> = ({ name, size = 22, color = '#52525B' }) => {
   const icons: Record<IconName, JSX.Element> = {
     'notifications-outline': (
       <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -161,6 +162,7 @@ const Icon: React.FC<IconProps> = ({ name, size = 22, color = '#9333EA' }) => {
 // ============================================================================
 
 const ProfileHeader: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { isPremium } = useSubscription();
   const [showEditModal, setShowEditModal] = useState(false);
@@ -202,48 +204,42 @@ const ProfileHeader: React.FC = () => {
   return (
     <>
       <Animated.View entering={FadeInDown.delay(100).duration(600).springify()} style={tw`mx-6 mb-6`}>
-        <View style={tw`bg-white rounded-3xl p-6 shadow-lg`}>
-          {/* Edit Button - Positioned top right */}
+        <View style={tw`bg-white/90 rounded-3xl p-6 shadow-lg`}>
           <TouchableOpacity
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               setShowEditModal(true);
             }}
-            style={tw`absolute top-4 right-4 bg-gray-100 rounded-full p-2 z-10`}
+            style={tw`absolute top-4 right-4 bg-zinc-100 rounded-full p-2 z-10`}
           >
-            <Pencil size={18} color="#6B7280" strokeWidth={2.5} />
+            <Pencil size={18} color="#52525B" strokeWidth={2.5} />
           </TouchableOpacity>
 
           <View style={tw`flex-row items-center pr-10`}>
-            <LinearGradient
-              colors={isPremium ? ['#78716C', '#57534E'] : ['#9CA3AF', '#6B7280']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={tw`w-16 h-16 rounded-2xl items-center justify-center`}
-            >
+            <View style={[tw`w-16 h-16 rounded-2xl items-center justify-center`, { backgroundColor: isPremium ? '#52525B' : '#A1A1AA' }]}>
               <Text style={tw`text-white text-2xl font-extrabold`}>{getInitials()}</Text>
-            </LinearGradient>
+            </View>
 
             <View style={tw`flex-1 ml-4`}>
               <View style={tw`flex-row items-center mb-1`}>
-                <Text style={tw`text-gray-800 font-bold text-lg`}>{getDisplayName()}</Text>
+                <Text style={tw`text-zinc-800 font-bold text-lg`}>{getDisplayName()}</Text>
                 {isPremium && (
                   <View style={tw`ml-2`}>
-                    <Icon name="crown" size={18} color="#D4AF37" />
+                    <Icon name="crown" size={18} color="#52525B" />
                   </View>
                 )}
               </View>
 
-              <Text style={tw`text-gray-500 text-sm mb-1`}>{user?.email || 'user@example.com'}</Text>
+              <Text style={tw`text-zinc-500 text-xs mb-1`}>{user?.email || 'user@example.com'}</Text>
 
               <View style={tw`mt-1`}>
                 {isPremium ? (
-                  <View style={tw`px-2.5 py-1 bg-stone-100 rounded-lg self-start`}>
-                    <Text style={tw`text-stone-700 text-xs font-bold`}>Premium Active</Text>
+                  <View style={tw`px-2.5 py-1 bg-zinc-200 rounded-lg self-start`}>
+                    <Text style={tw`text-zinc-700 text-xs font-bold`}>{t('settings.premiumActive')}</Text>
                   </View>
                 ) : (
-                  <View style={tw`px-2.5 py-1 bg-gray-100 rounded-lg self-start`}>
-                    <Text style={tw`text-gray-600 text-xs font-bold`}>Free Plan</Text>
+                  <View style={tw`px-2.5 py-1 bg-zinc-100 rounded-lg self-start`}>
+                    <Text style={tw`text-zinc-600 text-xs font-bold`}>{t('settings.freePlan')}</Text>
                   </View>
                 )}
               </View>
@@ -252,7 +248,6 @@ const ProfileHeader: React.FC = () => {
         </View>
       </Animated.View>
 
-      {/* Edit Username Modal */}
       <EditUsernameModal visible={showEditModal} currentUsername={currentUsername} userId={user?.id || ''} onClose={() => setShowEditModal(false)} onSuccess={handleUsernameUpdate} />
     </>
   );
@@ -262,15 +257,15 @@ const ProfileHeader: React.FC = () => {
 // Settings Section Component
 // ============================================================================
 
-const SettingsSection: React.FC<SettingsSectionProps> = ({ title, children, delay = 0, gradient }) => {
+const SettingsSection: React.FC<SettingsSectionProps> = ({ title, children, delay = 0 }) => {
   return (
     <Animated.View entering={FadeInDown.delay(delay).duration(600).springify()} style={tw`mb-6`}>
       <View style={tw`flex-row items-center gap-2 mb-3 ml-1`}>
-        <LinearGradient colors={gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`w-0.75 h-3 rounded-sm`} />
-        <Text style={[tw`text-xs font-extrabold uppercase tracking-widest`, { color: gradient[0] }]}>{title}</Text>
+        <View style={tw`w-0.75 h-3 rounded-sm bg-zinc-400`} />
+        <Text style={tw`text-xs font-extrabold uppercase tracking-widest text-zinc-500`}>{title}</Text>
       </View>
 
-      <View style={tw`bg-white rounded-2xl overflow-hidden shadow-md`}>
+      <View style={tw`bg-white/90 rounded-2xl overflow-hidden shadow-md`}>
         {React.Children.map(children, (child, index) => {
           if (React.isValidElement<SettingsItemProps>(child)) {
             return React.cloneElement(child, {
@@ -288,16 +283,16 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({ title, children, dela
 // Settings Item Component
 // ============================================================================
 
-const SettingsItem: React.FC<SettingsItemProps> = ({ icon, title, subtitle, trailing, onPress, isLast = false, color }) => {
+const SettingsItem: React.FC<SettingsItemProps> = ({ icon, title, subtitle, trailing, onPress, isLast = false }) => {
   const content = (
-    <View style={[tw`flex-row items-center py-4 px-4`, !isLast && tw`border-b border-gray-100`]}>
-      <View style={[tw`w-10 h-10 rounded-xl items-center justify-center mr-3.5`, { backgroundColor: `${color}15` }]}>
-        <Icon name={icon} size={22} color={color} />
+    <View style={[tw`flex-row items-center py-4 px-4`, !isLast && tw`border-b border-zinc-100`]}>
+      <View style={tw`w-10 h-10 rounded-xl items-center justify-center mr-3.5 bg-zinc-100`}>
+        <Icon name={icon} size={22} color="#52525B" />
       </View>
 
       <View style={tw`flex-1`}>
-        <Text style={tw`text-gray-800 font-semibold text-base`}>{title}</Text>
-        {subtitle && <Text style={tw`text-gray-500 text-sm mt-0.5`}>{subtitle}</Text>}
+        <Text style={tw`text-zinc-800 font-semibold text-base`}>{title}</Text>
+        {subtitle && <Text style={tw`text-zinc-500 text-sm mt-0.5`}>{subtitle}</Text>}
       </View>
 
       {trailing && <View style={tw`ml-3`}>{trailing}</View>}
@@ -320,11 +315,11 @@ const SettingsItem: React.FC<SettingsItemProps> = ({ icon, title, subtitle, trai
 // ============================================================================
 
 const SettingsScreen: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const [notifications, setNotifications] = useState(false);
   const [notificationLoading, setNotificationLoading] = useState(false);
   const [activeHoliday, setActiveHoliday] = useState<HolidayPeriod | null>(null);
   const [holidayStats, setHolidayStats] = useState<any>(null);
-
   const [signingOut, setSigningOut] = useState(false);
 
   const { signOut, loading, user, checkOnboardingStatus } = useAuth();
@@ -356,10 +351,10 @@ const SettingsScreen: React.FC = () => {
   const handleReviewOnboarding = async () => {
     if (!user) return;
 
-    Alert.alert('Review Onboarding', 'Would you like to see the introduction tour again?', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('settings.reviewTour'), t('settings.reviewTourPrompt'), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Yes, Show Me',
+        text: t('settings.reviewTourConfirm'),
         onPress: async () => {
           await OnboardingService.resetOnboarding(user.id);
           await checkOnboardingStatus();
@@ -394,25 +389,25 @@ const SettingsScreen: React.FC = () => {
           setNotifications(false);
 
           if (result.needsSettings) {
-            Alert.alert('Permission Required', 'Notifications are disabled in your device settings. Please enable them to receive habit reminders.', [
-              { text: 'Cancel', style: 'cancel' },
+            Alert.alert(t('notifications.permissionRequired'), t('notifications.permissionMessage'), [
+              { text: t('common.cancel'), style: 'cancel' },
               {
-                text: 'Open Settings',
+                text: t('notifications.openSettings'),
                 onPress: () => Notifications.openSettingsAsync(),
               },
             ]);
           } else {
-            Alert.alert('Permission Denied', 'You need to grant notification permissions to receive habit reminders.');
+            Alert.alert(t('notifications.permissionDenied'), t('notifications.permissionDeniedMessage'));
           }
         } else {
           setNotifications(true);
-          Alert.alert('Notifications Enabled', 'You will now receive reminders for your habits with notifications enabled.', [{ text: 'OK' }]);
+          Alert.alert(t('notifications.enabled'), t('notifications.enabledMessage'), [{ text: t('common.confirm') }]);
         }
       } else {
-        Alert.alert('Disable Notifications?', 'This will cancel all scheduled habit reminders. You can re-enable them anytime.', [
-          { text: 'Cancel', style: 'cancel' },
+        Alert.alert(t('notifications.disableTitle'), t('notifications.disableMessage'), [
+          { text: t('common.cancel'), style: 'cancel' },
           {
-            text: 'Disable',
+            text: t('notifications.disable'),
             style: 'destructive',
             onPress: async () => {
               await NotificationPreferencesService.disableNotifications(user.id);
@@ -423,7 +418,7 @@ const SettingsScreen: React.FC = () => {
       }
     } catch (error) {
       Logger.error('Error toggling notifications:', error);
-      Alert.alert('Error', 'Failed to update notification settings. Please try again.');
+      Alert.alert(t('common.error'), t('notifications.toggleError'));
       setNotifications(!value);
     } finally {
       setNotificationLoading(false);
@@ -460,210 +455,187 @@ const SettingsScreen: React.FC = () => {
   const getHolidaySubtitle = () => {
     if (!activeHoliday) {
       if (isPremium) {
-        return 'Unlimited holiday periods available';
+        return t('settings.holidayUnlimited');
       } else {
         const periodsLeft = holidayStats?.remainingAllowance ?? 1;
-        const periodText = periodsLeft === 1 ? 'period' : 'periods';
-        return `Max 14 days per period • ${periodsLeft} ${periodText} left`;
+        return t('settings.holidayLimited', { periods: periodsLeft });
       }
     }
 
     const daysRemaining = activeHoliday.daysRemaining || 0;
-
-    if (daysRemaining === 0) {
-      return 'Ending today';
-    } else if (daysRemaining === 1) {
-      return '1 day remaining';
-    } else {
-      return `${daysRemaining} days remaining`;
-    }
+    return t('settings.holidayDaysRemaining', { count: daysRemaining });
   };
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-[#FAF9F7]`}>
-      <StatusBar barStyle="dark-content" />
+    <ImageBackground source={TEXTURE_BG} style={tw`flex-1`} resizeMode="repeat" imageStyle={{ opacity: 0.15 }}>
+      <SafeAreaView style={tw`flex-1`}>
+        <StatusBar barStyle="dark-content" />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`pb-24`}>
-        <Animated.View entering={FadeInDown.duration(600).springify()} style={tw`px-6 pt-15 pb-8`}>
-          <View style={tw`items-center`}>
-            {/* Icône de l'app */}
-            <View style={tw`mb-4`}>
-              <Image source={APP_ICON} style={{ width: 120, height: 120, borderRadius: 20 }} resizeMode="contain" />
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`pb-24`}>
+          <Animated.View entering={FadeInDown.duration(600).springify()} style={tw`px-6 pt-15 pb-8`}>
+            <View style={tw`items-center`}>
+              <View style={tw`mb-4`}>
+                <Image source={APP_ICON} style={{ width: 120, height: 120, borderRadius: 20 }} resizeMode="contain" />
+              </View>
+
+              <View style={tw`bg-zinc-200 px-5 py-2 rounded-2xl mb-3`}>
+                <Text style={tw`text-xs font-bold text-zinc-600 tracking-widest`}>{t('settings.preferences').toUpperCase()}</Text>
+              </View>
+              <Text style={tw`text-4xl font-black text-zinc-800 text-center`}>{t('settings.title')}</Text>
             </View>
+          </Animated.View>
 
-            <View style={tw`bg-stone-100 px-5 py-2 rounded-2xl mb-3`}>
-              <Text style={tw`text-xs font-bold text-stone-600 tracking-widest`}>PREFERENCES</Text>
-            </View>
-            <Text style={tw`text-4xl font-black text-gray-800 text-center`}>Settings</Text>
-          </View>
-        </Animated.View>
+          <ProfileHeader />
 
-        <ProfileHeader />
-
-        <View style={tw`px-6`}>
-          <SettingsSection title="Subscription" delay={200} gradient={['#78716C', '#57534E']}>
-            <SettingsItem
-              icon={isPremium ? 'credit-card' : 'sparkles'}
-              title={isPremium ? 'Manage Subscription' : 'Upgrade to Premium'}
-              subtitle={isPremium ? 'Cancel or change your plan' : 'Unlock unlimited habits & features'}
-              onPress={handleManageSubscription}
-              trailing={
-                isPremium ? (
-                  <Icon name="chevron-forward" size={20} color="#78716C" />
-                ) : (
-                  <View style={tw`px-3 py-1.5 bg-stone-700 rounded-lg`}>
-                    <Text style={tw`text-white text-xs font-bold`}>UPGRADE</Text>
-                  </View>
-                )
-              }
-              color="#78716C"
-              isLast
-            />
-          </SettingsSection>
-
-          <SettingsSection title="Break Mode" delay={200} gradient={['#6366F1', '#4F46E5']}>
-            <SettingsItem
-              icon="beach-outline"
-              title="Holiday Mode"
-              subtitle={getHolidaySubtitle()}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                navigation.navigate('HolidayMode');
-              }}
-              trailing={
-                activeHoliday ? (
-                  <View style={tw`px-3 py-1.5 bg-indigo-600 rounded-lg`}>
-                    <Text style={tw`text-white text-xs font-bold`}>ACTIVE</Text>
-                  </View>
-                ) : (
-                  <Icon name="chevron-forward" size={20} color="#6366F1" />
-                )
-              }
-              color="#6366F1"
-              isLast
-            />
-          </SettingsSection>
-
-          <SettingsSection title="General" delay={300} gradient={['#9333EA', '#7C3AED']}>
-            <SettingsItem
-              icon="notifications-outline"
-              title="Notifications"
-              subtitle={notifications ? 'Reminders enabled' : 'Enable habit reminders'}
-              color="#9333EA"
-              trailing={
-                notificationLoading ? (
-                  <ActivityIndicator size="small" color="#9333EA" />
-                ) : (
-                  <Switch
-                    value={notifications}
-                    onValueChange={handleNotificationToggle}
-                    trackColor={{ false: '#E5E7EB', true: '#C084FC' }}
-                    thumbColor={notifications ? '#9333EA' : '#FFFFFF'}
-                    ios_backgroundColor="#E5E7EB"
-                    disabled={notificationLoading}
-                  />
-                )
-              }
-            />
-
-            {notifications && (
+          <View style={tw`px-6`}>
+            <SettingsSection title={t('settings.subscription')} delay={200}>
               <SettingsItem
-                icon="notifications-outline"
-                title="Manage Habit Notifications"
-                subtitle="Customize reminders for each habit"
-                color="#9333EA"
-                trailing={<Icon name="chevron-forward" size={20} color="#9333EA" />}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  navigation.navigate('NotificationManager');
-                }}
-              />
-            )}
-
-            <SettingsItem
-              icon="language-outline"
-              title="Language"
-              subtitle="English"
-              color="#9333EA"
-              trailing={<Icon name="chevron-forward" size={20} color="#9333EA" />}
-              onPress={() => Logger.debug('Language pressed')}
-              isLast
-            />
-          </SettingsSection>
-
-          {Config.debug.showDebugScreen && (
-            <SettingsSection title="Developer Tools" delay={450} gradient={['#F59E0B', '#D97706']}>
-              <SettingsItem
-                icon="diagnostic"
-                title="System Diagnostics"
-                subtitle="Check app health & XP system"
-                color="#F59E0B"
-                trailing={<Icon name="chevron-forward" size={20} color="#F59E0B" />}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  navigation.navigate('Diagnostic');
-                }}
-              />
-              <SettingsItem
-                icon="bug"
-                title="Debug Tools"
-                subtitle="Daily challenge utilities"
-                color="#F59E0B"
-                trailing={<Icon name="chevron-forward" size={20} color="#F59E0B" />}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  navigation.navigate('Debug');
-                }}
+                icon={isPremium ? 'credit-card' : 'sparkles'}
+                title={isPremium ? t('settings.managePremium') : t('settings.upgradePremium')}
+                subtitle={isPremium ? t('settings.managePremiumSubtitle') : t('settings.upgradePremiumSubtitle')}
+                onPress={handleManageSubscription}
+                trailing={
+                  isPremium ? (
+                    <Icon name="chevron-forward" size={20} color="#52525B" />
+                  ) : (
+                    <View style={tw`px-3 py-1.5 bg-zinc-700 rounded-lg`}>
+                      <Text style={tw`text-white text-xs font-bold`}>{t('settings.upgrade').toUpperCase()}</Text>
+                    </View>
+                  )
+                }
                 isLast
               />
             </SettingsSection>
-          )}
 
-          <SettingsSection title="Support" delay={400} gradient={['#EC4899', '#DB2777']}>
-            <SettingsItem icon="information-circle-outline" title="Version" subtitle="1.0.10" color="#EC4899" />
-            {/* <SettingsItem
-              icon="help-circle-outline"
-              title="Help & Support"
-              color="#EC4899"
-              trailing={<Icon name="chevron-forward" size={20} color="#EC4899" />}
-              onPress={() => Logger.debug('Help pressed')}
-              isLast
-            /> */}
-          </SettingsSection>
-
-          <View style={tw`mt-6`}>
-            <Text style={tw`text-sm font-bold text-stone-500 uppercase tracking-wider mb-3 px-1`}>Help</Text>
-
-            <Pressable onPress={handleReviewOnboarding} style={tw`bg-white rounded-2xl px-4 py-4 flex-row items-center justify-between shadow-md`}>
-              <View style={tw`flex-row items-center gap-3`}>
-                <View style={tw`w-10 h-10 rounded-full bg-blue-100 items-center justify-center`}>
-                  <Text>📚</Text>
-                </View>
-                <Text style={tw`text-base font-semibold text-stone-800`}>Review Introduction Tour</Text>
-              </View>
-              <ChevronRight size={20} color="#9CA3AF" />
-            </Pressable>
-          </View>
-
-          <Animated.View entering={FadeInDown.delay(500).duration(600).springify()} style={tw`mt-8 mb-6`}>
-            <TouchableOpacity activeOpacity={0.8} disabled={signingOut} onPress={handleSignOut}>
-              <LinearGradient colors={['#DC2626', '#B91C1C']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[tw`rounded-2xl p-4.5 shadow-lg`, { opacity: signingOut ? 0.6 : 1 }]}>
-                <View style={tw`flex-row items-center justify-center`}>
-                  {signingOut ? (
-                    <ActivityIndicator color="#FFFFFF" size="small" />
+            <SettingsSection title={t('settings.breakMode')} delay={200}>
+              <SettingsItem
+                icon="beach-outline"
+                title={t('settings.holidayMode')}
+                subtitle={getHolidaySubtitle()}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  navigation.navigate('HolidayMode');
+                }}
+                trailing={
+                  activeHoliday ? (
+                    <View style={tw`px-3 py-1.5 bg-zinc-700 rounded-lg`}>
+                      <Text style={tw`text-white text-xs font-bold`}>{t('settings.active').toUpperCase()}</Text>
+                    </View>
                   ) : (
-                    <>
-                      <Icon name="log-out-outline" size={22} color="#FFFFFF" />
-                      <Text style={tw`ml-2.5 text-white font-bold text-base tracking-wide`}>Sign Out</Text>
-                    </>
-                  )}
+                    <Icon name="chevron-forward" size={20} color="#52525B" />
+                  )
+                }
+                isLast
+              />
+            </SettingsSection>
+
+            <SettingsSection title={t('settings.general')} delay={300}>
+              <SettingsItem
+                icon="notifications-outline"
+                title={t('settings.notifications')}
+                subtitle={notifications ? t('settings.notificationsEnabled') : t('settings.notificationsDisabled')}
+                trailing={
+                  notificationLoading ? (
+                    <ActivityIndicator size="small" color="#52525B" />
+                  ) : (
+                    <Switch
+                      value={notifications}
+                      onValueChange={handleNotificationToggle}
+                      trackColor={{ false: '#E4E4E7', true: '#A1A1AA' }}
+                      thumbColor={notifications ? '#52525B' : '#FFFFFF'}
+                      ios_backgroundColor="#E4E4E7"
+                      disabled={notificationLoading}
+                    />
+                  )
+                }
+              />
+
+              {notifications && (
+                <SettingsItem
+                  icon="notifications-outline"
+                  title={t('settings.manageNotifications')}
+                  subtitle={t('settings.manageNotificationsSubtitle')}
+                  trailing={<Icon name="chevron-forward" size={20} color="#52525B" />}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    navigation.navigate('NotificationManager');
+                  }}
+                />
+              )}
+
+              <SettingsItem
+                icon="language-outline"
+                title={t('settings.language')}
+                subtitle={i18n.language === 'fr' ? 'Français' : 'English'}
+                trailing={<Icon name="chevron-forward" size={20} color="#52525B" />}
+                onPress={() => navigation.navigate('LanguageSelector')}
+              />
+            </SettingsSection>
+
+            {Config.debug.showDebugScreen && (
+              <SettingsSection title={t('settings.developerTools')} delay={450}>
+                <SettingsItem
+                  icon="diagnostic"
+                  title={t('settings.debug.systemDiagnostics')}
+                  subtitle={t('settings.debug.checkHealth')}
+                  trailing={<Icon name="chevron-forward" size={20} color="#52525B" />}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    navigation.navigate('Diagnostic');
+                  }}
+                />
+                <SettingsItem
+                  icon="bug"
+                  title={t('settings.debug.title')}
+                  subtitle={t('settings.debug.dailyChallenge')}
+                  trailing={<Icon name="chevron-forward" size={20} color="#52525B" />}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    navigation.navigate('Debug');
+                  }}
+                  isLast
+                />
+              </SettingsSection>
+            )}
+
+            <SettingsSection title={t('settings.support')} delay={400}>
+              <SettingsItem icon="information-circle-outline" title={t('settings.version')} subtitle={Constants.expoConfig?.version || '1.0.0'} />
+            </SettingsSection>
+
+            <View style={tw`mt-6`}>
+              <Text style={tw`text-sm font-bold text-zinc-500 uppercase tracking-wider mb-3 px-1`}>{t('settings.help')}</Text>
+
+              <Pressable onPress={handleReviewOnboarding} style={tw`bg-white/90 rounded-2xl px-4 py-4 flex-row items-center justify-between shadow-md`}>
+                <View style={tw`flex-row items-center gap-3`}>
+                  <View style={tw`w-10 h-10 rounded-xl bg-zinc-100 items-center justify-center`}>
+                    <GraduationCap size={20} color="#52525B" strokeWidth={2.5} />
+                  </View>
+                  <Text style={tw`text-base font-semibold text-zinc-800`}>{t('settings.reviewTour')}</Text>
                 </View>
-              </LinearGradient>
-            </TouchableOpacity>
-          </Animated.View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+                <ChevronRight size={20} color="#A1A1AA" />
+              </Pressable>
+            </View>
+
+            <Animated.View entering={FadeInDown.delay(500).duration(600).springify()} style={tw`mt-8 mb-6`}>
+              <TouchableOpacity activeOpacity={0.8} disabled={signingOut} onPress={handleSignOut}>
+                <LinearGradient colors={['#DC2626', '#B91C1C']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[tw`rounded-2xl p-4.5 shadow-lg`, { opacity: signingOut ? 0.6 : 1 }]}>
+                  <View style={tw`flex-row items-center justify-center`}>
+                    {signingOut ? (
+                      <ActivityIndicator color="#FFFFFF" size="small" />
+                    ) : (
+                      <>
+                        <Icon name="log-out-outline" size={22} color="#FFFFFF" />
+                        <Text style={tw`ml-2.5 text-white font-bold text-base tracking-wide`}>{t('auth.signOut')}</Text>
+                      </>
+                    )}
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 };
 

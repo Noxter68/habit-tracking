@@ -4,6 +4,7 @@ import { View, Text, ImageBackground } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 
 // Components
 import AchievementBadge from './AchievementBadge';
@@ -17,10 +18,10 @@ import { achievementTitles } from '../../utils/achievements';
 import { useAuth } from '../../context/AuthContext';
 import { useStats } from '@/context/StatsContext';
 import { getAchievementTierTheme } from '@/utils/tierTheme';
-import type { AchievementTierName } from '@/utils/tierTheme';
 import { HapticFeedback } from '@/utils/haptics';
 import { getTodayString } from '@/utils/dateHelpers';
 import { Habit } from '@/types';
+import { TierKey } from '@/types/achievement.types';
 
 interface DashboardHeaderProps {
   userTitle: string;
@@ -59,19 +60,16 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const navigation = useNavigation();
   const { user, username } = useAuth();
   const { refreshStats } = useStats();
+  const { t, i18n } = useTranslation();
 
-  // ✅ Memoize greeting to prevent recalculation
-  const greeting = useMemo(() => getGreeting(), []);
+  const greeting = useMemo(() => getGreeting(), [i18n.language]);
 
-  // Optimistic update state
   const [optimisticXP, setOptimisticXP] = React.useState(currentLevelXP);
   const [optimisticTotalXP, setOptimisticTotalXP] = React.useState(totalXP);
 
   const isOptimisticUpdate = React.useRef(false);
 
-  // Update optimistic state when props change
   React.useEffect(() => {
-    // Don't overwrite during optimistic updates
     if (isOptimisticUpdate.current) {
       return;
     }
@@ -80,21 +78,16 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     setOptimisticTotalXP(totalXP);
   }, [currentLevelXP, totalXP]);
 
-  // ✅ Memoize tier calculation
-  const currentTier = useMemo((): AchievementTierName => {
+  // ✅ FIX: Use tierKey instead of tier for theme lookup
+  const currentTierKey = useMemo((): TierKey => {
     const title = achievementTitles.find((t) => userLevel >= t.level && userLevel < (achievementTitles.find((next) => next.level > t.level)?.level || Infinity));
-    return (title?.tier as AchievementTierName) || 'Novice';
+    return (title?.tierKey as TierKey) || 'novice';
   }, [userLevel]);
 
-  // ✅ Memoize tier theme
-  const tierTheme = useMemo(() => getAchievementTierTheme(currentTier), [currentTier]);
-
-  // ✅ Memoize isObsidian check
+  const tierTheme = useMemo(() => getAchievementTierTheme(currentTierKey), [currentTierKey]);
   const isObsidian = useMemo(() => tierTheme.gemName === 'Obsidian', [tierTheme.gemName]);
 
-  // ✅ Memoize text colors
   const textColors = useMemo(() => {
-    // Lighter gems need darker text for contrast
     if (['Crystal', 'Topaz'].includes(tierTheme.gemName)) {
       return {
         primary: '#FFFFFF',
@@ -107,7 +100,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       };
     }
 
-    // Darker gems need lighter text
     return {
       primary: '#FFFFFF',
       secondary: 'rgba(255, 255, 255, 0.95)',
@@ -119,13 +111,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     };
   }, [tierTheme.gemName]);
 
-  // ✅ Stabilize callbacks with useCallback
   const handleAchievementPress = useCallback(() => {
     navigation.navigate('Achievements' as never);
   }, [navigation]);
 
   const handleXPCollect = async (amount: number) => {
-    // ✅ Mark that we're doing an optimistic update
     isOptimisticUpdate.current = true;
 
     setOptimisticXP((prev) => prev + amount);
@@ -135,13 +125,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       onXPCollected(amount);
     }
 
-    // ✅ After backend updates, allow real data to come through
     setTimeout(async () => {
       if (onStatsRefresh) {
         onStatsRefresh();
       }
 
-      // Re-enable updates after refresh completes
       setTimeout(() => {
         isOptimisticUpdate.current = false;
       }, 500);
@@ -155,10 +143,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     }
   }, [refreshStats, onStatsRefresh]);
 
-  // ✅ Memoize next title
   const nextTitle = useMemo(() => achievementTitles.find((title) => title.level > userLevel), [userLevel]);
 
-  // ✅ Memoize display calculations
   const { displayXP, displayProgress } = useMemo(() => {
     const xpToShow = optimisticXP > xpForNextLevel ? optimisticXP % xpForNextLevel : optimisticXP;
     const progressPercent = xpForNextLevel > 0 ? (xpToShow / xpForNextLevel) * 100 : 0;
@@ -168,8 +154,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       displayProgress: progressPercent,
     };
   }, [optimisticXP, xpForNextLevel]);
-
-  // Dans Dashboard.tsx ou DashboardHeader.tsx
 
   const calculateTaskStats = (habits: Habit[]) => {
     const today = getTodayString();
@@ -186,17 +170,14 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       const todayData = habit.dailyTasks?.[today];
       const completedCount = todayData?.completedTasks?.length || 0;
 
-      // Compter TOUTES les tâches
       totalTasks += taskCount;
       completedTasks += completedCount;
 
-      // Compter seulement les tâches DAILY
       if (habit.frequency === 'daily') {
         dailyTasksTotal += taskCount;
         dailyTasksCompleted += completedCount;
       }
 
-      // Détecter weekly/monthly
       if (habit.frequency === 'weekly') hasWeekly = true;
       if (habit.frequency === 'monthly') hasMonthly = true;
     });
@@ -211,10 +192,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     };
   };
 
-  // Utilisation
   const taskStats = calculateTaskStats(habits);
 
-  // ✅ Memoize GradientContainer component
   const GradientContainer = useMemo(() => {
     return ({ children }: { children: React.ReactNode }) => {
       const textureSource = tierTheme.texture;
@@ -237,7 +216,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         >
           {textureSource ? (
             <ImageBackground source={textureSource} resizeMode="cover" imageStyle={{ opacity: 0.2 }}>
-              {/* Epic purple glow overlay for Obsidian */}
               {isObsidian && (
                 <View
                   style={{
@@ -250,7 +228,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                   }}
                 />
               )}
-              {/* Dark overlay for depth */}
               <View
                 style={{
                   position: 'absolute',
@@ -265,7 +242,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             </ImageBackground>
           ) : (
             <View>
-              {/* Fallback: No texture, just dark overlay */}
               <View
                 style={{
                   position: 'absolute',
@@ -288,9 +264,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     <Animated.View entering={FadeIn} style={{ position: 'relative', marginBottom: 4 }}>
       <GradientContainer>
         <View style={{ padding: 16, paddingBottom: 0 }}>
-          {/* Greeting and Level Section */}
           <View style={{ marginBottom: 16 }}>
-            {/* Greeting with username */}
             <Text
               style={{
                 fontSize: 11,
@@ -316,7 +290,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               }}
             >
               <View style={{ flex: 1, paddingRight: 75 }}>
-                {/* Title */}
                 <Text
                   style={{
                     fontSize: 26,
@@ -339,7 +312,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                     marginTop: 8,
                   }}
                 >
-                  {/* Level Badge - Consistent white style */}
                   <View
                     style={{
                       backgroundColor: 'rgba(255, 255, 255, 0.3)',
@@ -361,11 +333,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                         textShadowRadius: 3,
                       }}
                     >
-                      LEVEL {userLevel}
+                      {t('dashboard.header.level').toUpperCase()} {userLevel}
                     </Text>
                   </View>
 
-                  {/* Total XP Display - Consistent white style */}
                   <View
                     style={{
                       backgroundColor: 'rgba(255, 255, 255, 0.3)',
@@ -386,13 +357,12 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                         textShadowRadius: 3,
                       }}
                     >
-                      {optimisticTotalXP.toLocaleString()} XP
+                      {optimisticTotalXP.toLocaleString()} {t('dashboard.header.xpTotal')}
                     </Text>
                   </View>
                 </View>
               </View>
 
-              {/* Achievement Badge */}
               <View
                 style={{
                   position: 'absolute',
@@ -414,7 +384,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             </View>
           </View>
 
-          {/* Level Progress Bar - Only show if level < 30 */}
           {userLevel < 30 && (
             <View style={{ marginBottom: 16 }}>
               <LevelProgress
@@ -428,13 +397,27 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             </View>
           )}
 
-          {/* Stats Grid */}
           <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
-            <StatsCard label="Streak" value={totalStreak} image="streak" subtitle="days" isStreak={true} streakValue={totalStreak} tierTheme={tierTheme} textColor={textColors.secondary} />
-            <StatsCard label="Active" value={activeHabits} image="active" subtitle="Quests" tierTheme={tierTheme} textColor={textColors.secondary} />
+            <StatsCard
+              label={t('dashboard.header.streak')}
+              value={totalStreak}
+              image="streak"
+              subtitle={t('dashboard.header.streakSubtitle')}
+              isStreak={true}
+              streakValue={totalStreak}
+              tierTheme={tierTheme}
+              textColor={textColors.secondary}
+            />
+            <StatsCard
+              label={t('dashboard.header.active')}
+              value={activeHabits}
+              image="active"
+              subtitle={t('dashboard.header.activeSubtitle')}
+              tierTheme={tierTheme}
+              textColor={textColors.secondary}
+            />
           </View>
 
-          {/* Daily Challenge */}
           {user?.id && (
             <View style={{ marginBottom: 12 }}>
               <DailyChallenge

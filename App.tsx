@@ -11,6 +11,7 @@ import * as Notifications from 'expo-notifications';
 import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
 import { diagnoseRevenueCatSetup } from './src/utils/RevenueCatDiagnostic';
 import { DEBUG_MODE } from '@env';
+import * as Linking from 'expo-linking';
 
 // Screens
 import AuthScreen from './src/screens/AuthScreen';
@@ -50,6 +51,9 @@ import { RevenueCatService } from '@/services/RevenueCatService';
 import { NotificationService } from '@/services/notificationService';
 import { HapticFeedback } from '@/utils/haptics';
 import notificationBadgeService from '@/services/notificationBadgeService';
+import LanguageSelectorScreen from '@/components/settings/LanguageSelector';
+import { LanguageDetectionService } from '@/services/languageDetectionService';
+import ResetPasswordScreen from '@/screens/ResetPasswordScreen';
 
 // Type Definitions
 export type RootStackParamList = {
@@ -65,6 +69,7 @@ export type RootStackParamList = {
   NotificationManager: undefined;
   HolidayMode: undefined;
   Onboarding: undefined;
+  ResetPassword: undefined;
 };
 
 export type TabParamList = {
@@ -296,6 +301,16 @@ function AppNavigator() {
         <Stack.Screen name="Paywall" component={PaywallScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="HolidayMode" component={HolidayModeScreen} options={{ headerShown: false, presentation: 'card', animation: 'slide_from_right' }} />
         <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} options={{ headerShown: false }} />
+        <Stack.Screen
+          name="LanguageSelector"
+          component={LanguageSelectorScreen}
+          options={{
+            headerShown: false,
+            animation: 'slide_from_right',
+            presentation: 'card',
+          }}
+        />
 
         {Config.debug.showDebugScreen && (
           <>
@@ -411,29 +426,78 @@ function usePerformanceMonitoring() {
   }, []);
 }
 
-// ============================================
-// Main App Component
-// ============================================
+const prefix = Linking.createURL('/');
 
+const linking = {
+  prefixes: [prefix, 'nuvoria://'],
+  config: {
+    screens: {
+      Auth: 'auth',
+      ResetPassword: 'reset-password', // ✅ Important !
+      MainTabs: {
+        screens: {
+          Dashboard: 'dashboard',
+          Calendar: 'calendar',
+          Leaderboard: 'leaderboard',
+          Stats: 'stats',
+          Settings: 'settings',
+        },
+      },
+    },
+  },
+};
+
+// ============================================================================
+// Composant séparé pour la logique de langue (à l'intérieur d'AuthProvider)
+// ============================================================================
+function LanguageInitializer() {
+  const { user } = useAuth(); // ✅ Maintenant c'est OK car dans AuthProvider
+
+  useEffect(() => {
+    const initializeLanguage = async () => {
+      try {
+        if (user?.id) {
+          // ✅ Utilisateur connecté → charge SA langue depuis la DB
+          Logger.debug('🌍 Loading user language from database');
+          await LanguageDetectionService.loadUserLanguage(user.id);
+        } else {
+          // ✅ Pas connecté → utilise la langue du téléphone
+          Logger.debug('🌍 Loading device language (no user connected)');
+          await LanguageDetectionService.initializeDefaultLanguage();
+        }
+      } catch (error) {
+        Logger.error('Error initializing language:', error);
+      }
+    };
+
+    initializeLanguage();
+  }, [user?.id]);
+
+  return null; // Ce composant ne rend rien
+}
+
+// ============================================================================
+// Composant principal App
+// ============================================================================
 export default function App() {
   useNotificationSetup();
   usePerformanceMonitoring();
 
+  // ============================================================================
+  // 🛒 REVENUECAT & APP STATE
+  // ============================================================================
   useEffect(() => {
     const initRevenueCat = async () => {
       try {
         const isExpoGo = typeof expo !== 'undefined' && expo?.modules?.ExpoGo;
         if (isExpoGo) {
-          Logger.warn('⚠️  Running in Expo Go - RevenueCat will NOT work!');
+          Logger.warn('⚠️ Running in Expo Go - RevenueCat will NOT work!');
           return;
         }
 
         if (Config.debug.enabled) {
           diagnoseRevenueCatSetup();
         }
-
-        // ❌ RETIRE ÇA - Ne pas initialiser ici !
-        // await RevenueCatService.initialize();
 
         Logger.debug('✅ [App] RevenueCat will initialize with user context');
       } catch (error) {
@@ -445,8 +509,12 @@ export default function App() {
     notificationBadgeService.clearBadge();
 
     const subscription = AppState.addEventListener('change', (nextAppState) => {
-      if (nextAppState === 'active' && RevenueCatService.isInitialized()) {
-        RevenueCatService.getSubscriptionStatus().catch(() => {});
+      if (nextAppState === 'active') {
+        notificationBadgeService.clearAllNotifications();
+
+        if (RevenueCatService.isInitialized()) {
+          RevenueCatService.getSubscriptionStatus().catch(() => {});
+        }
       }
     });
 
@@ -457,12 +525,15 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <AuthProvider>
+          {/* ✅ LanguageInitializer DANS AuthProvider */}
+          <LanguageInitializer />
+
           <SubscriptionProvider>
             <StatsProvider>
               <HabitProvider>
                 <AchievementProvider>
                   <LevelUpProvider>
-                    <NavigationContainer>
+                    <NavigationContainer linking={linking} fallback={<BeautifulLoader />}>
                       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
                       <AppNavigator />
                     </NavigationContainer>

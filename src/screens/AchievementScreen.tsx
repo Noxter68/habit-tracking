@@ -1,10 +1,11 @@
 // src/screens/AchievementScreen.tsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ScrollView, Pressable, ActivityIndicator, RefreshControl, View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 import tw from '../lib/tailwind';
 
 // Contexts
@@ -12,7 +13,7 @@ import { useAchievements } from '../context/AchievementContext';
 import { useStats } from '../context/StatsContext';
 
 // Types
-import { Achievement, FilterType, TIER_NAMES, TierName } from '../types/achievement.types';
+import { Achievement, FilterType, TIER_KEYS, TierKey } from '../types/achievement.types';
 
 // Components
 import { CurrentLevelHero } from '../components/achievements/CurrentLevelHero';
@@ -22,13 +23,14 @@ import { AchievementDetailModal } from '../components/achievements/AchievementDe
 import { ZoomModal } from '../components/achievements/ZoomModal';
 
 // Utils
-import { achievementTitles } from '../utils/achievements';
+import { achievementTitles, getAchievementByLevel, getTierNameFromKey } from '../utils/achievements';
 import { getXPForNextLevel } from '@/utils/xpCalculations';
 import { getAchievementTierTheme } from '../utils/tierTheme';
 import { HapticFeedback } from '../utils/haptics';
 import Logger from '@/utils/logger';
 
 const AchievementsScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
 
   const { stats, refreshStats, loading: statsLoading } = useStats();
@@ -37,17 +39,20 @@ const AchievementsScreen: React.FC = () => {
   const currentLevel = stats?.level || 1;
   const totalXP = stats?.totalXP || 0;
   const levelProgress = stats?.levelProgress || 0;
-  const currentTitle = stats?.currentAchievement;
-  const nextTitle = achievementTitles.find((title) => title.level > currentLevel);
 
-  const currentTierTheme = currentTitle ? getAchievementTierTheme(currentTitle.tier as any) : getAchievementTierTheme('Novice');
+  // ✅ Use getAchievementByLevel to get translated achievements
+  const currentTitle = useMemo(() => getAchievementByLevel(currentLevel), [currentLevel]);
+  const nextTitle = useMemo(() => getAchievementByLevel(currentLevel + 1), [currentLevel]);
+
+  // ✅ Use tierKey for theme lookup
+  const currentTierTheme = currentTitle ? getAchievementTierTheme(currentTitle.tierKey) : getAchievementTierTheme('novice');
 
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showZoomModal, setShowZoomModal] = useState(false);
   const [filter, setFilter] = useState<FilterType>('all');
   const [refreshing, setRefreshing] = useState(false);
-  const [expandedTier, setExpandedTier] = useState<TierName | null>(null);
+  const [expandedTier, setExpandedTier] = useState<TierKey | null>(null);
 
   const scrollViewRef = useRef<ScrollView>(null);
   const tierRefs = useRef<{ [key: string]: View | null }>({});
@@ -134,17 +139,16 @@ const AchievementsScreen: React.FC = () => {
 
   const unlockedCount = achievementTitles.filter((a) => isAchievementUnlocked(a)).length;
   const totalCount = achievementTitles.length;
-  const completionPercent = Math.round((unlockedCount / totalCount) * 100);
 
-  const handleTierToggle = (tierName: TierName) => {
+  const handleTierToggle = (tierKey: TierKey) => {
     HapticFeedback.light();
-    const newExpandedState = expandedTier === tierName ? null : tierName;
+    const newExpandedState = expandedTier === tierKey ? null : tierKey;
     setExpandedTier(newExpandedState);
 
     // Scroll to tier when opening
-    if (newExpandedState && tierRefs.current[tierName]) {
+    if (newExpandedState && tierRefs.current[tierKey]) {
       setTimeout(() => {
-        tierRefs.current[tierName]?.measureLayout(
+        tierRefs.current[tierKey]?.measureLayout(
           scrollViewRef.current as any,
           (x, y) => {
             scrollViewRef.current?.scrollTo({
@@ -164,7 +168,7 @@ const AchievementsScreen: React.FC = () => {
     return (
       <SafeAreaView style={tw`flex-1 bg-sand-50 items-center justify-center`}>
         <ActivityIndicator size="large" color={currentTierTheme.accent} />
-        <Text style={tw`text-sand-700 mt-3`}>Loading achievements...</Text>
+        <Text style={tw`text-sand-700 mt-3`}>{t('common.loading')}</Text>
       </SafeAreaView>
     );
   }
@@ -181,33 +185,32 @@ const AchievementsScreen: React.FC = () => {
             </Pressable>
 
             <View style={tw`flex-1 items-center`}>
-              <Text style={tw`text-base font-bold text-white`}>Achievements</Text>
-              <Text style={tw`text-xs font-medium text-white/60 mt-0.5`}>{currentTierTheme.gemName} Tier</Text>
+              <Text style={tw`text-base font-bold text-white`}>{t('achievements.screenTitle')}</Text>
+              <Text style={tw`text-xs font-medium text-white/60 mt-0.5`}>
+                {currentTierTheme.gemName} {t('common.tier')}
+              </Text>
             </View>
 
             <View style={tw`w-10`} />
           </View>
 
-          {/* Stats Grid - More spacious and minimal */}
+          {/* Stats Grid */}
           <View style={tw`flex-row gap-3`}>
-            {/* Unlocked Progress */}
             <View style={[tw`flex-1 rounded-xl p-3`, { backgroundColor: 'rgba(255, 255, 255, 0.12)' }]}>
-              <Text style={tw`text-xs font-semibold text-white/60 mb-1`}>Unlocked</Text>
+              <Text style={tw`text-xs font-semibold text-white/60 mb-1`}>{t('achievements.unlocked')}</Text>
               <View style={tw`flex-row items-baseline gap-1`}>
                 <Text style={tw`text-2xl font-bold text-white`}>{unlockedCount}</Text>
                 <Text style={tw`text-sm font-semibold text-white/50`}>/{totalCount}</Text>
               </View>
             </View>
 
-            {/* Current Streak */}
             <View style={[tw`flex-1 rounded-xl p-3`, { backgroundColor: 'rgba(255, 255, 255, 0.12)' }]}>
-              <Text style={tw`text-xs font-semibold text-white/60 mb-1`}>Best Streak</Text>
+              <Text style={tw`text-xs font-semibold text-white/60 mb-1`}>{t('achievements.bestStreak')}</Text>
               <Text style={tw`text-2xl font-bold text-white`}>{streak}</Text>
             </View>
 
-            {/* Total XP */}
             <View style={[tw`flex-1 rounded-xl p-3`, { backgroundColor: 'rgba(255, 255, 255, 0.12)' }]}>
-              <Text style={tw`text-xs font-semibold text-white/60 mb-1`}>Total XP</Text>
+              <Text style={tw`text-xs font-semibold text-white/60 mb-1`}>{t('achievements.totalXP')}</Text>
               <Text style={tw`text-2xl font-bold text-white`} adjustsFontSizeToFit numberOfLines={1}>
                 {totalXP > 999 ? `${(totalXP / 1000).toFixed(1)}k` : totalXP}
               </Text>
@@ -222,7 +225,7 @@ const AchievementsScreen: React.FC = () => {
         contentContainerStyle={{ paddingBottom: 20 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[currentTierTheme.accent]} tintColor={currentTierTheme.accent} />}
       >
-        <View style={tw`px-4 pt-4`}>
+        <View style={tw`px-4 pt-4 mb-4`}>
           <CurrentLevelHero
             currentLevel={currentLevel}
             currentTitle={currentTitle}
@@ -239,21 +242,26 @@ const AchievementsScreen: React.FC = () => {
         <FilterTabs filter={filter} setFilter={handleFilterChange} unlockedCount={unlockedCount} totalCount={totalCount} />
 
         <View style={tw`px-2.5`}>
-          {TIER_NAMES.map((tierName, tierIndex) => {
-            const tierAchievements = filteredAchievements.filter((a) => a.tier === tierName);
+          {/* ✅ FIX: Loop through TIER_KEYS and filter by tierKey */}
+          {TIER_KEYS.map((tierKey, tierIndex) => {
+            const tierAchievements = filteredAchievements.filter((a) => a.tierKey === tierKey);
             if (tierAchievements.length === 0) return null;
 
+            // Get translated tier name for display
+            const tierDisplayName = getTierNameFromKey(tierKey);
+
             return (
-              <View key={tierName} ref={(ref) => (tierRefs.current[tierName] = ref)} collapsable={false}>
+              <View key={tierKey} ref={(ref) => (tierRefs.current[tierKey] = ref)} collapsable={false}>
                 <TierSection
-                  tierName={tierName}
+                  tierName={tierDisplayName}
+                  tierKey={tierKey}
                   tierIndex={tierIndex}
                   achievements={tierAchievements}
                   userAchievements={achievements}
                   isAchievementUnlocked={isAchievementUnlocked}
                   onAchievementPress={handleAchievementPress}
-                  isExpanded={expandedTier === tierName}
-                  onToggle={handleTierToggle}
+                  isExpanded={expandedTier === tierKey}
+                  onToggle={() => handleTierToggle(tierKey)}
                 />
               </View>
             );

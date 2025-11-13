@@ -1,46 +1,48 @@
 // src/components/modals/EpicLevelUpModal.tsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Modal, Pressable, Dimensions, StyleSheet, ImageBackground } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withDelay, withTiming, withSpring, interpolate, Easing, runOnJS, withRepeat } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { Audio } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 import { AchievementBadge } from '../achievements/AchievementBadge';
 import { useLevelUp } from '../../context/LevelUpContext';
 import { getAchievementTierTheme } from '@/utils/tierTheme';
-import type { AchievementTierName } from '@/utils/tierTheme';
+import type { TierKey } from '@/types/achievement.types';
 import Logger from '@/utils/logger';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-const ENERGY_PARTICLES = 120;
+// Réduit à 40 particules pour de meilleures performances
+const ENERGY_PARTICLES = 40;
 
-// Energy Particle with Electric Movement
-const EnergyParticle: React.FC<{ index: number; isActive: boolean; tierColor: string }> = ({ index, isActive, tierColor }) => {
+// Energy Particle - Version optimisée
+const EnergyParticle: React.FC<{ index: number; isActive: boolean; tierColor: string }> = React.memo(({ index, isActive, tierColor }) => {
   const progress = useSharedValue(0);
   const flicker = useSharedValue(1);
 
-  const angle = Math.random() * 360;
+  const angle = (index / ENERGY_PARTICLES) * 360 + Math.random() * 20; // Distribution plus uniforme
   const radian = (angle * Math.PI) / 180;
-  const distance = 80 + Math.random() * 100; // Closer to card
+  const distance = 80 + Math.random() * 80;
 
   const startX = SCREEN_WIDTH / 2 + Math.cos(radian) * 40;
   const startY = SCREEN_HEIGHT / 2 + Math.sin(radian) * 40;
   const endX = SCREEN_WIDTH / 2 + Math.cos(radian) * distance;
   const endY = SCREEN_HEIGHT / 2 + Math.sin(radian) * distance;
 
-  const particleSize = 4 + Math.random() * 6;
-  const delay = Math.random() * 400;
-  const duration = 800 + Math.random() * 600;
+  const particleSize = 3 + Math.random() * 4; // Particules légèrement plus petites
+  const delay = Math.random() * 300;
+  const duration = 700 + Math.random() * 400;
 
   useEffect(() => {
     if (isActive) {
-      progress.value = withDelay(300 + delay, withTiming(1, { duration, easing: Easing.out(Easing.quad) }));
+      progress.value = withDelay(200 + delay, withTiming(1, { duration, easing: Easing.out(Easing.quad) }));
 
-      // Electric flicker effect
-      flicker.value = withDelay(300 + delay, withRepeat(withSequence(withTiming(1.5, { duration: 100 }), withTiming(0.8, { duration: 100 }), withTiming(1.2, { duration: 100 })), -1, true));
+      // Flicker simplifié
+      flicker.value = withDelay(200 + delay, withRepeat(withSequence(withTiming(1.3, { duration: 150 }), withTiming(0.9, { duration: 150 })), -1, true));
     }
-  }, [isActive, delay, duration]);
+  }, [isActive]);
 
   const particleStyle = useAnimatedStyle(() => ({
     position: 'absolute',
@@ -50,56 +52,54 @@ const EnergyParticle: React.FC<{ index: number; isActive: boolean; tierColor: st
     height: particleSize,
     borderRadius: particleSize / 2,
     backgroundColor: tierColor,
-    opacity: interpolate(progress.value, [0, 0.1, 0.8, 1], [0, 1, 1, 0]) * flicker.value,
-    shadowColor: tierColor,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9,
-    shadowRadius: 8,
+    opacity: interpolate(progress.value, [0, 0.2, 0.8, 1], [0, 1, 1, 0]) * flicker.value,
   }));
 
   return <Animated.View style={particleStyle} />;
-};
+});
 
-// Shockwave Ring
-const ShockwaveRing: React.FC<{ index: number; isActive: boolean; tierColor: string }> = ({ index, isActive, tierColor }) => {
+// Shockwave Ring - Version optimisée
+const ShockwaveRing: React.FC<{ index: number; isActive: boolean; tierColor: string }> = React.memo(({ index, isActive, tierColor }) => {
   const scale = useSharedValue(0);
   const opacity = useSharedValue(0);
 
   useEffect(() => {
     if (isActive) {
-      const delay = index * 200;
+      const delay = index * 150;
 
-      scale.value = withDelay(delay, withTiming(3, { duration: 1200, easing: Easing.out(Easing.cubic) }));
+      scale.value = withDelay(delay, withTiming(2.5, { duration: 1000, easing: Easing.out(Easing.cubic) }));
 
-      opacity.value = withDelay(delay, withSequence(withTiming(0.6, { duration: 200 }), withTiming(0, { duration: 1000 })));
+      opacity.value = withDelay(delay, withSequence(withTiming(0.5, { duration: 150 }), withTiming(0, { duration: 850 })));
     }
-  }, [isActive, index]);
+  }, [isActive]);
 
   const ringStyle = useAnimatedStyle(() => ({
     position: 'absolute',
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    borderWidth: 3,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    borderWidth: 2,
     borderColor: tierColor,
     transform: [{ scale: scale.value }],
     opacity: opacity.value,
   }));
 
   return <Animated.View style={ringStyle} />;
-};
+});
 
 // Main Component
 export const EpicLevelUpModal: React.FC = () => {
+  const { t } = useTranslation();
   const { showLevelUpModal, levelUpData, closeLevelUpModal } = useLevelUp();
+  const [countdown, setCountdown] = useState(8);
 
   // Animation values
   const cardOpacity = useSharedValue(0);
   const cardScale = useSharedValue(0.5);
   const shake = useSharedValue(0);
-  const levelBounce = useSharedValue(1); // Changed to scale for breathing effect
+  const levelBounce = useSharedValue(0);
 
-  const tierTheme = levelUpData?.achievement?.tier ? getAchievementTierTheme(levelUpData.achievement.tier as AchievementTierName) : getAchievementTierTheme('Novice');
+  const tierTheme = levelUpData?.achievement?.tierKey ? getAchievementTierTheme(levelUpData.achievement.tierKey as TierKey) : getAchievementTierTheme('novice');
 
   const playLevelUpSound = async () => {
     try {
@@ -123,6 +123,15 @@ export const EpicLevelUpModal: React.FC = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
+  const getMotivationalMessage = (level: number): string => {
+    if (level <= 5) return t('levelUp.motivational.level5');
+    if (level <= 10) return t('levelUp.motivational.level10');
+    if (level <= 15) return t('levelUp.motivational.level15');
+    if (level <= 20) return t('levelUp.motivational.level20');
+    if (level <= 30) return t('levelUp.motivational.level30');
+    return t('levelUp.motivational.levelMax');
+  };
+
   useEffect(() => {
     if (showLevelUpModal && levelUpData) {
       // Reset all animations to initial state
@@ -130,6 +139,7 @@ export const EpicLevelUpModal: React.FC = () => {
       cardScale.value = 0.5;
       shake.value = 0;
       levelBounce.value = 0;
+      setCountdown(8);
 
       runOnJS(triggerHaptic)();
       runOnJS(playLevelUpSound)();
@@ -151,21 +161,13 @@ export const EpicLevelUpModal: React.FC = () => {
         mass: 0.8,
       });
 
-      // Level bounce - starts immediately, continuous throughout animation
+      // Level bounce - Jump rapide et continu
       levelBounce.value = withRepeat(
         withSequence(
-          withSpring(-25, {
-            damping: 8,
-            stiffness: 200,
-            mass: 1,
-          }),
-          withSpring(0, {
-            damping: 10,
-            stiffness: 150,
-            mass: 1,
-          })
+          withTiming(-20, { duration: 300, easing: Easing.out(Easing.quad) }), // Monte rapidement
+          withTiming(0, { duration: 300, easing: Easing.in(Easing.quad) }) // Redescend rapidement
         ),
-        -1, // Infinite repeat
+        -1,
         false
       );
 
@@ -173,14 +175,25 @@ export const EpicLevelUpModal: React.FC = () => {
       setTimeout(() => runOnJS(triggerLightHaptic)(), 600);
       setTimeout(() => runOnJS(triggerLightHaptic)(), 800);
 
-      // Close after 4 seconds
+      // Countdown interval
+      const interval = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      // Auto-close after 8 seconds
       const timer = setTimeout(() => {
         handleClose();
-      }, 4000);
+      }, 8000);
 
       return () => {
         clearTimeout(timer);
-        // Reset on unmount
+        clearInterval(interval);
         levelBounce.value = 0;
       };
     }
@@ -189,7 +202,7 @@ export const EpicLevelUpModal: React.FC = () => {
   const handleClose = () => {
     cardOpacity.value = withTiming(0, { duration: 300 });
     cardScale.value = withTiming(0.8, { duration: 300 });
-    levelBounce.value = 0; // Stop bounce animation
+    levelBounce.value = 0;
     setTimeout(() => closeLevelUpModal(), 300);
   };
 
@@ -213,7 +226,7 @@ export const EpicLevelUpModal: React.FC = () => {
       <View style={StyleSheet.absoluteFillObject}>
         <View style={styles.backdrop} />
 
-        {/* Electric Field Effects */}
+        {/* Electric Field Effects - Optimisé */}
         <View style={styles.effectsContainer} pointerEvents="none">
           {/* Shockwave rings */}
           <View style={styles.shockwaveContainer}>
@@ -222,7 +235,7 @@ export const EpicLevelUpModal: React.FC = () => {
             ))}
           </View>
 
-          {/* Energy particles */}
+          {/* Energy particles - Réduit à 40 */}
           {Array.from({ length: ENERGY_PARTICLES }).map((_, i) => (
             <EnergyParticle key={`particle-${i}`} index={i} isActive={showLevelUpModal} tierColor={tierTheme.accent} />
           ))}
@@ -233,17 +246,21 @@ export const EpicLevelUpModal: React.FC = () => {
           <Animated.View style={[styles.contentWrapper, containerStyle]}>
             <Animated.View style={[styles.cardWrapper, cardStyle]}>
               <LinearGradient colors={tierTheme.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.gradientBorder}>
-                <ImageBackground source={tierTheme.texture} style={styles.card} imageStyle={{ borderRadius: 24 }} resizeMode="cover">
+                <ImageBackground source={tierTheme.texture} style={styles.card} imageStyle={{ borderRadius: 24, opacity: 0.7 }} resizeMode="cover">
+                  {/* Overlay gradient matching tier colors */}
                   <LinearGradient
-                    colors={[`${tierTheme.gradient[0]}f0`, `${tierTheme.gradient[1]}f5`, `${tierTheme.gradient[2]}f0`]}
+                    colors={[`${tierTheme.gradient[0]}e6`, `${tierTheme.gradient[1]}dd`, `${tierTheme.gradient[2]}cc`]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={StyleSheet.absoluteFillObject}
                   />
 
                   <View style={styles.cardContent}>
+                    {/* Header - Centered on one line */}
                     <View style={styles.header}>
-                      <Text style={styles.headerText}>LEVEL UP!</Text>
+                      <Text style={styles.headerText} numberOfLines={1} adjustsFontSizeToFit>
+                        {t('levelUp.title')}
+                      </Text>
                     </View>
 
                     {/* Badge without rotation */}
@@ -255,21 +272,26 @@ export const EpicLevelUpModal: React.FC = () => {
 
                     {/* Level with bounce */}
                     <Animated.View style={[styles.levelInfo, levelBounceStyle]}>
-                      <Text style={styles.levelLabel}>LEVEL</Text>
+                      <Text style={styles.levelLabel}>{t('levelUp.levelLabel')}</Text>
                       <Text style={styles.levelNumber} allowFontScaling={false}>
                         {levelUpData.newLevel}
                       </Text>
                     </Animated.View>
 
                     <View style={styles.titleContainer}>
-                      <Text style={styles.achievementTitle}>{levelUpData.achievement?.title || 'New Achievement'}</Text>
+                      <Text style={styles.achievementTitle} numberOfLines={2}>
+                        {levelUpData.achievement?.title || t('levelUp.newAchievement')}
+                      </Text>
                     </View>
 
                     <View style={styles.messageContainer}>
                       <Text style={styles.message}>{getMotivationalMessage(levelUpData.newLevel)}</Text>
                     </View>
 
-                    <Text style={styles.hint}>Tap to continue</Text>
+                    <View style={styles.hintContainer}>
+                      <Text style={styles.hint}>{t('levelUp.tapToContinue')}</Text>
+                      <Text style={styles.countdown}>{t('levelUp.closingIn', { seconds: countdown })}</Text>
+                    </View>
                   </View>
                 </ImageBackground>
               </LinearGradient>
@@ -281,15 +303,7 @@ export const EpicLevelUpModal: React.FC = () => {
   );
 };
 
-function getMotivationalMessage(level: number): string {
-  if (level <= 5) return 'Great start on your journey!';
-  if (level <= 10) return "You're on fire!";
-  if (level <= 15) return 'Unstoppable progress!';
-  if (level <= 20) return 'Legendary warrior!';
-  if (level <= 30) return 'Elite achiever!';
-  return 'MYTHIC STATUS ACHIEVED!';
-}
-
+// Styles identiques...
 const styles = StyleSheet.create({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
@@ -339,19 +353,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   header: {
-    paddingHorizontal: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: 20,
     marginBottom: 24,
+    width: '100%',
   },
   headerText: {
     color: '#ffffff',
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: '900',
-    letterSpacing: 2,
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    letterSpacing: 3,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.6)',
     textShadowOffset: { width: 0, height: 3 },
-    textShadowRadius: 6,
+    textShadowRadius: 8,
   },
   badgeContainer: {
     marginBottom: 24,
@@ -372,8 +389,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 3,
     marginBottom: 4,
-    color: 'rgba(255, 255, 255, 0.8)',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    color: 'rgba(255, 255, 255, 0.9)',
+    textShadowColor: 'rgba(0, 0, 0, 0.4)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
@@ -387,15 +404,17 @@ const styles = StyleSheet.create({
     textShadowRadius: 10,
   },
   titleContainer: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 10,
     paddingVertical: 10,
     borderRadius: 16,
     marginBottom: 20,
+    alignItems: 'center',
   },
   achievementTitle: {
-    fontSize: 18,
+    fontSize: 26,
     fontWeight: '800',
     letterSpacing: 0.5,
+    textAlign: 'center',
     color: '#ffffff',
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 0, height: 2 },
@@ -413,9 +432,21 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },
+  hintContainer: {
+    alignItems: 'center',
+    gap: 4,
+  },
   hint: {
     fontSize: 12,
     fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: 'rgba(255, 255, 255, 0.8)',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  countdown: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.6)',
   },
 });

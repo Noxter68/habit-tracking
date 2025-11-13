@@ -3,7 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Modal, Pressable, Image, ActivityIndicator } from 'react-native';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
-import { X, Sparkles, CheckCircle, XCircle } from 'lucide-react-native';
+import { X, CheckCircle, XCircle } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import tw from '@/lib/tailwind';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RevenueCatService, SubscriptionPackage } from '@/services/RevenueCatService';
@@ -26,12 +27,6 @@ const getStreakSaverQuantity = (identifier: string): number => {
   return 3;
 };
 
-const getSavingsText = (quantity: number): string | undefined => {
-  if (quantity === 10) return 'Save 20%';
-  if (quantity === 25) return 'Save 40%';
-  return undefined;
-};
-
 export const StreakSaverShopModal: React.FC<StreakSaverShopModalProps> = ({ visible, onClose, onPurchaseSuccess }) => {
   const [packages, setPackages] = useState<SubscriptionPackage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,6 +36,7 @@ export const StreakSaverShopModal: React.FC<StreakSaverShopModalProps> = ({ visi
   const [errorMessage, setErrorMessage] = useState('');
 
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (visible) {
@@ -87,15 +83,21 @@ export const StreakSaverShopModal: React.FC<StreakSaverShopModalProps> = ({ visi
         setMessageState('success');
         onPurchaseSuccess?.();
       } else if (result.error !== 'cancelled') {
-        setErrorMessage(result.error || 'Purchase failed');
+        setErrorMessage(result.error || t('streakSaver.shop.purchaseFailed'));
         setMessageState('error');
       }
     } catch (error: any) {
-      setErrorMessage(error.message || 'Something went wrong');
+      setErrorMessage(error.message || t('streakSaver.shop.purchaseFailed'));
       setMessageState('error');
     } finally {
       setPurchasing(null);
     }
+  };
+
+  const getSavingsText = (quantity: number): string | undefined => {
+    if (quantity === 10) return t('streakSaver.shop.save20');
+    if (quantity === 25) return t('streakSaver.shop.save40');
+    return undefined;
   };
 
   if (messageState) {
@@ -107,20 +109,20 @@ export const StreakSaverShopModal: React.FC<StreakSaverShopModalProps> = ({ visi
               {messageState === 'success' ? (
                 <>
                   <View style={tw`items-center mb-6`}>
-                    <LinearGradient colors={['#10b981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`w-16 h-16 rounded-full items-center justify-center mb-4`}>
+                    <LinearGradient colors={['#8b5cf6', '#7c3aed']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`w-16 h-16 rounded-full items-center justify-center mb-4`}>
                       <CheckCircle size={40} color="white" strokeWidth={2.5} />
                     </LinearGradient>
-                    <Text style={tw`text-2xl font-black text-center text-stone-900`}>Purchase Successful!</Text>
+                    <Text style={tw`text-2xl font-black text-center text-stone-900`}>{t('streakSaver.shop.purchaseSuccess')}</Text>
                   </View>
 
                   <View style={tw`items-center mb-6`}>
-                    <View style={tw`w-28 h-28 rounded-2xl bg-orange-50 items-center justify-center mb-3`}>
+                    <View style={tw`w-28 h-28 rounded-2xl bg-purple-50 items-center justify-center mb-3`}>
                       <Image source={require('../../../assets/interface/streak-saver.png')} style={{ width: 64, height: 64 }} resizeMode="contain" />
                     </View>
                     <Text style={tw`text-5xl font-black text-stone-900`}>×{purchasedQuantity}</Text>
                   </View>
 
-                  <Text style={tw`text-sm text-center text-stone-600`}>Added to your inventory</Text>
+                  <Text style={tw`text-sm text-center text-stone-600`}>{t('streakSaver.shop.addedToInventory')}</Text>
                 </>
               ) : (
                 <>
@@ -128,7 +130,7 @@ export const StreakSaverShopModal: React.FC<StreakSaverShopModalProps> = ({ visi
                     <LinearGradient colors={['#ef4444', '#dc2626']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`w-16 h-16 rounded-full items-center justify-center mb-4`}>
                       <XCircle size={40} color="white" strokeWidth={2.5} />
                     </LinearGradient>
-                    <Text style={tw`text-2xl font-black text-center text-stone-900`}>Purchase Failed</Text>
+                    <Text style={tw`text-2xl font-black text-center text-stone-900`}>{t('streakSaver.shop.purchaseFailed')}</Text>
                   </View>
                   <Text style={tw`text-sm text-center text-stone-600`}>{errorMessage}</Text>
                 </>
@@ -147,7 +149,8 @@ export const StreakSaverShopModal: React.FC<StreakSaverShopModalProps> = ({ visi
           <Pressable style={tw`absolute inset-0`} onPress={onClose} />
 
           <Animated.View entering={FadeInDown.duration(400).springify()} style={tw`bg-white rounded-3xl overflow-hidden w-full max-w-md shadow-2xl`}>
-            <LinearGradient colors={['#FEF3C7', '#FED7AA']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`px-5 pt-5 pb-3 relative`}>
+            {/* Header avec gradient violet Amethyst */}
+            <LinearGradient colors={['#f3e8ff', '#e9d5ff']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`px-5 pt-5 pb-3 relative`}>
               <Pressable onPress={onClose} style={tw`absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/95 items-center justify-center shadow-sm`}>
                 <X size={18} color="#57534E" strokeWidth={2.5} />
               </Pressable>
@@ -156,18 +159,43 @@ export const StreakSaverShopModal: React.FC<StreakSaverShopModalProps> = ({ visi
                 <View style={tw`w-14 h-14 rounded-full bg-white items-center justify-center shadow-xl mb-2`}>
                   <Image source={require('../../../assets/interface/streak-saver.png')} style={{ width: 32, height: 32 }} resizeMode="contain" />
                 </View>
-                <Text style={tw`text-lg font-black text-orange-900`}>Streak Savers</Text>
+                <Text style={tw`text-lg font-black text-purple-900`}>{t('streakSaver.shop.title')}</Text>
               </Animated.View>
             </LinearGradient>
 
             <View style={tw`px-4 py-3`}>
+              {/* 🔧 DEBUG BUTTONS - Remove in production */}
+              {__DEV__ && (
+                <View style={tw`flex-row gap-2 mb-3`}>
+                  <Pressable
+                    onPress={() => {
+                      setPurchasedQuantity(10);
+                      setMessageState('success');
+                    }}
+                    style={tw`flex-1 bg-green-500 py-2 rounded-lg`}
+                  >
+                    <Text style={tw`text-white text-xs font-bold text-center`}>Test Success</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => {
+                      setErrorMessage('Test error message');
+                      setMessageState('error');
+                    }}
+                    style={tw`flex-1 bg-red-500 py-2 rounded-lg`}
+                  >
+                    <Text style={tw`text-white text-xs font-bold text-center`}>Test Error</Text>
+                  </Pressable>
+                </View>
+              )}
+
               {loading ? (
                 <View style={tw`py-8 items-center`}>
-                  <ActivityIndicator size="large" color="#EA580C" />
+                  <ActivityIndicator size="large" color="#8b5cf6" />
+                  <Text style={tw`text-stone-500 text-sm mt-2`}>{t('streakSaver.shop.loading')}</Text>
                 </View>
               ) : packages.length === 0 ? (
                 <View style={tw`py-8 items-center`}>
-                  <Text style={tw`text-stone-500 text-sm`}>No packages available</Text>
+                  <Text style={tw`text-stone-500 text-sm`}>{t('streakSaver.shop.noPackages')}</Text>
                 </View>
               ) : (
                 packages.map((pkg, index) => {
@@ -182,22 +210,22 @@ export const StreakSaverShopModal: React.FC<StreakSaverShopModalProps> = ({ visi
                         onPress={() => handlePurchase(pkg)}
                         disabled={isPurchasing || !!purchasing}
                         style={({ pressed }) => [
-                          tw`relative rounded-xl overflow-hidden border-2 ${isPopular ? 'border-orange-400' : 'border-stone-200'}`,
+                          tw`relative rounded-xl overflow-hidden border-2 ${isPopular ? 'border-purple-400' : 'border-stone-200'}`,
                           pressed && tw`scale-98`,
                           (isPurchasing || purchasing) && tw`opacity-50`,
                         ]}
                       >
-                        <LinearGradient colors={isPopular ? ['#FFFBEB', '#FFFFFF'] : ['#FAFAF9', '#FFFFFF']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={tw`p-4`}>
+                        <LinearGradient colors={isPopular ? ['#faf5ff', '#FFFFFF'] : ['#FAFAF9', '#FFFFFF']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={tw`p-4`}>
                           <View style={tw`flex-row items-center justify-between mb-3`}>
                             <View style={tw`flex-row items-center flex-1`}>
-                              <View style={tw`w-12 h-12 rounded-xl bg-orange-50 items-center justify-center mr-3`}>
+                              <View style={tw`w-12 h-12 rounded-xl bg-purple-50 items-center justify-center mr-3`}>
                                 <Image source={require('../../../assets/interface/streak-saver.png')} style={{ width: 28, height: 28 }} resizeMode="contain" />
                               </View>
                               <View style={tw`flex-1`}>
-                                <Text style={tw`text-base font-black text-stone-900`}>{quantity} Savers</Text>
+                                <Text style={tw`text-base font-black text-stone-900`}>{t('streakSaver.shop.savers', { count: quantity })}</Text>
                                 {isPopular && (
-                                  <View style={tw`bg-orange-500 px-2.5 py-1 rounded-full mt-1 self-start`}>
-                                    <Text style={tw`text-white text-[9px] font-black`}>POPULAR</Text>
+                                  <View style={tw`bg-purple-600 px-2.5 py-1 rounded-full mt-1 self-start`}>
+                                    <Text style={tw`text-white text-[9px] font-black`}>{t('streakSaver.shop.popular')}</Text>
                                   </View>
                                 )}
                               </View>
@@ -205,12 +233,13 @@ export const StreakSaverShopModal: React.FC<StreakSaverShopModalProps> = ({ visi
 
                             <View style={tw`items-end ml-2`}>
                               <Text style={tw`text-xl font-black text-stone-900`}>{pkg.product.priceString}</Text>
-                              {savings && <Text style={tw`text-[10px] font-bold text-orange-600 mt-0.5`}>{savings}</Text>}
+                              {savings && <Text style={tw`text-[10px] font-bold text-purple-600 mt-0.5`}>{savings}</Text>}
                             </View>
                           </View>
 
-                          <LinearGradient colors={['#EA580C', '#F97316']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`py-2.5 rounded-lg items-center`}>
-                            {isPurchasing ? <ActivityIndicator size="small" color="white" /> : <Text style={tw`text-white text-xs font-black`}>BUY NOW</Text>}
+                          {/* Bouton d'achat avec gradient Amethyst */}
+                          <LinearGradient colors={['#8b5cf6', '#7c3aed']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`py-2.5 rounded-lg items-center`}>
+                            {isPurchasing ? <ActivityIndicator size="small" color="white" /> : <Text style={tw`text-white text-xs font-black`}>{t('streakSaver.shop.buyNow')}</Text>}
                           </LinearGradient>
                         </LinearGradient>
                       </Pressable>
@@ -219,7 +248,7 @@ export const StreakSaverShopModal: React.FC<StreakSaverShopModalProps> = ({ visi
                 })
               )}
 
-              {!loading && packages.length > 0 && <Text style={tw`text-[10px] text-center text-stone-500 mt-2`}>Restore missed days within 24h 🔥</Text>}
+              {!loading && packages.length > 0 && <Text style={tw`text-[10px] text-center text-stone-500 mt-2`}>{t('streakSaver.shop.footer')}</Text>}
             </View>
           </Animated.View>
         </Animated.View>

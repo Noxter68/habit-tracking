@@ -2,6 +2,7 @@ import React from 'react';
 import { Modal, View, Text, Pressable, Image, ImageBackground } from 'react-native';
 import Animated, { SlideInDown, FadeInDown } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 import tw, { quartzGradients } from '../../lib/tailwind';
 import { getAchievementTierTheme } from '../../utils/tierTheme';
 import { Achievement } from '../../utils/achievements';
@@ -15,6 +16,8 @@ interface AchievementDetailModalProps {
 }
 
 export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ visible, onClose, achievement, currentLevel, totalCompletions }) => {
+  const { t } = useTranslation();
+
   if (!achievement) return null;
 
   const isUnlocked = achievement.level <= currentLevel;
@@ -22,7 +25,7 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
   const remaining = requiredCompletions - totalCompletions;
   const progress = Math.min((totalCompletions / requiredCompletions) * 100, 100);
 
-  const tierTheme = getAchievementTierTheme(achievement.tier as any);
+  const tierTheme = getAchievementTierTheme(achievement.tierKey);
   const tierGradient = tierTheme.gradient;
   const tierTexture = tierTheme.texture;
 
@@ -73,7 +76,7 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
                           style={{
                             width: 250,
                             height: 180,
-                            opacity: isUnlocked ? 1 : 0.5, // changed from 0.3
+                            opacity: isUnlocked ? 1 : 0.5,
                           }}
                           resizeMode="contain"
                         />
@@ -91,7 +94,7 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
                     <View style={tw`flex-row gap-2 justify-center`}>
                       {/* Level badge with tier gradient */}
                       <LinearGradient colors={isUnlocked ? tierGradient : lockedButtonGradient} style={tw`rounded-full px-3.5 py-1.5`}>
-                        <Text style={tw`text-sm font-bold text-white`}>Level {achievement.level}</Text>
+                        <Text style={tw`text-sm font-bold text-white`}>{t('achievements.level', { level: achievement.level })}</Text>
                       </LinearGradient>
 
                       {/* Tier badge - shows gem name */}
@@ -122,10 +125,12 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
                       end={{ x: 1, y: 1 }}
                       style={tw`rounded-2xl p-4`}
                     >
-                      <Text style={[tw`text-sm font-semibold text-center mb-2`, { color: textColors.primary }]}>{isUnlocked ? 'Achievement Unlocked!' : 'Progress Status'}</Text>
+                      <Text style={[tw`text-sm font-semibold text-center mb-2`, { color: textColors.primary }]}>
+                        {isUnlocked ? t('achievements.achievementUnlocked') : t('achievements.progressStatus')}
+                      </Text>
 
                       <Text style={[tw`text-sm text-center leading-5 font-medium`, { color: textColors.secondary }]}>
-                        {isUnlocked ? `Unlocked at ${requiredCompletions} completions` : `Requires ${requiredCompletions} total completions`}
+                        {isUnlocked ? t('achievements.unlockedAt', { count: requiredCompletions }) : t('achievements.requiresCompletions', { count: requiredCompletions })}
                       </Text>
 
                       {!isUnlocked && (
@@ -134,9 +139,7 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
                           <View style={tw`mt-3 bg-white/50 rounded-full h-2.5 overflow-hidden`}>
                             <LinearGradient colors={tierGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[tw`h-full rounded-full`, { width: `${progress}%` }]} />
                           </View>
-                          <Text style={tw`text-xs text-sand-700 text-center mt-2 font-medium`}>
-                            {remaining} more needed • {Math.round(progress)}% complete
-                          </Text>
+                          <Text style={tw`text-xs text-sand-700 text-center mt-2 font-medium`}>{t('achievements.moreNeeded', { count: remaining, percent: Math.round(progress) })}</Text>
                         </>
                       )}
                     </LinearGradient>
@@ -145,7 +148,7 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({ 
                   {/* Action Button with tier gradient */}
                   <Pressable onPress={onClose} style={({ pressed }) => [tw`overflow-hidden rounded-2xl`, pressed && tw`scale-95`]}>
                     <LinearGradient colors={isUnlocked ? tierGradient : lockedButtonGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`py-3.5`}>
-                      <Text style={tw`font-bold text-center text-base text-white`}>{isUnlocked ? 'Awesome!' : 'Keep Going!'}</Text>
+                      <Text style={tw`font-bold text-center text-base text-white`}>{isUnlocked ? t('achievements.awesome') : t('achievements.keepGoing')}</Text>
                     </LinearGradient>
                   </Pressable>
                 </View>

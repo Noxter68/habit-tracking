@@ -1,10 +1,12 @@
 // src/screens/HabitWizard.tsx
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { View, Text, Pressable, ScrollView, Alert, ImageBackground, StyleSheet } from 'react-native';
+import { View, Text, Pressable, ScrollView, Alert, ImageBackground, StyleSheet, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
-import { ChevronLeft } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
+import { ChevronLeft, X } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 import tw from '../lib/tailwind';
 import { Habit, HabitType } from '../types';
 import { useHabits } from '../context/HabitContext';
@@ -28,6 +30,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'HabitWizard
 
 const HabitWizard: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const { t } = useTranslation();
   const { addHabit } = useHabits();
   const { user } = useAuth();
   const [step, setStep] = useState(1);
@@ -82,24 +85,24 @@ const HabitWizard: React.FC = () => {
 
   const handleNext = useCallback(async () => {
     if (step === 1 && !habitData.type) {
-      Alert.alert('Please select', 'Choose whether you want to build or quit a habit');
+      Alert.alert(t('wizard.alerts.selectType.title'), t('wizard.alerts.selectType.message'));
       return;
     }
 
     if (step === 2) {
       if (!isCustomHabit && !habitData.category) {
-        Alert.alert('Please select', 'Choose a category for your habit');
+        Alert.alert(t('wizard.alerts.selectCategory.title'), t('wizard.alerts.selectCategory.message'));
         return;
       }
     }
 
     if (step === 3 && isCustomHabit) {
       if (customHabitName.trim().length === 0) {
-        Alert.alert('Habit name required', 'Please enter a name for your habit');
+        Alert.alert(t('wizard.alerts.habitNameRequired.title'), t('wizard.alerts.habitNameRequired.message'));
         return;
       }
       if (!customHabitIcon) {
-        Alert.alert('Icon required', 'Please select an icon for your habit');
+        Alert.alert(t('wizard.alerts.iconRequired.title'), t('wizard.alerts.iconRequired.message'));
         return;
       }
       setStep(4);
@@ -109,7 +112,7 @@ const HabitWizard: React.FC = () => {
     if (step === 4 && isCustomHabit) {
       const validTasks = customTasks.filter((t) => t.trim() !== '');
       if (validTasks.length === 0) {
-        Alert.alert('Tasks required', 'Please create at least one task for your habit');
+        Alert.alert(t('wizard.alerts.tasksRequired.title'), t('wizard.alerts.tasksRequired.message'));
         return;
       }
       setHabitData((prev) => ({ ...prev, tasks: validTasks }));
@@ -119,7 +122,7 @@ const HabitWizard: React.FC = () => {
 
     if (step === 3 && !isCustomHabit) {
       if (!habitData.tasks || habitData.tasks.length === 0) {
-        Alert.alert('Please select', 'Choose at least one task to track');
+        Alert.alert(t('wizard.alerts.selectTasks.title'), t('wizard.alerts.selectTasks.message'));
         return;
       }
     }
@@ -130,7 +133,7 @@ const HabitWizard: React.FC = () => {
     }
 
     setStep(step + 1);
-  }, [step, habitData, isCustomHabit, customHabitName, customHabitIcon, customTasks, isLastStep]);
+  }, [step, habitData, isCustomHabit, customHabitName, customHabitIcon, customTasks, isLastStep, t]);
 
   const createHabit = async () => {
     setIsCreating(true);
@@ -169,11 +172,11 @@ const HabitWizard: React.FC = () => {
         if (isFirstHabit && permissionRequested) {
           if (permissionGranted) {
             if (habitData.notifications) {
-              Alert.alert('Notifications Enabled! 🔔', "You'll receive reminders to help you stay on track.", [{ text: 'Great!' }]);
+              Alert.alert(t('wizard.alerts.notificationsEnabled.title'), t('wizard.alerts.notificationsEnabled.message'), [{ text: t('wizard.alerts.notificationsEnabled.button') }]);
             }
           } else {
             newHabit.notifications = false;
-            Alert.alert('Notifications Disabled', 'You can enable them later in Settings.', [{ text: 'OK' }]);
+            Alert.alert(t('wizard.alerts.notificationsDisabled.title'), t('wizard.alerts.notificationsDisabled.message'), [{ text: t('wizard.alerts.notificationsDisabled.button') }]);
           }
         }
       }
@@ -182,12 +185,14 @@ const HabitWizard: React.FC = () => {
       navigation.replace('MainTabs');
     } catch (error) {
       setIsCreating(false);
-      Alert.alert('Error', 'Failed to create habit. Please try again.');
+      Alert.alert(t('wizard.alerts.error.title'), t('wizard.alerts.error.message'));
       Logger.error('Error creating habit:', error);
     }
   };
 
   const handleBack = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
     if (isCustomHabit) {
       if (step === 3) {
         setIsCustomHabit(false);
@@ -208,6 +213,24 @@ const HabitWizard: React.FC = () => {
       }
     }
   }, [step, isCustomHabit, navigation]);
+
+  const handleExit = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    Alert.alert(t('wizard.alerts.exitWizard.title'), t('wizard.alerts.exitWizard.message'), [
+      {
+        text: t('wizard.alerts.exitWizard.cancel'),
+        style: 'cancel',
+      },
+      {
+        text: t('wizard.alerts.exitWizard.confirm'),
+        style: 'destructive',
+        onPress: () => {
+          navigation.navigate('MainTabs', { screen: 'Dashboard' });
+        },
+      },
+    ]);
+  }, [navigation, t]);
 
   const renderStep = useCallback(() => {
     if (isCustomHabit) {
@@ -303,16 +326,25 @@ const HabitWizard: React.FC = () => {
 
   return (
     <ImageBackground source={require('../../assets/interface/variante-purple-background.png')} style={styles.background} resizeMode="cover">
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       <SafeAreaView style={tw`flex-1`} edges={['top']}>
         <View style={tw`flex-1`}>
-          {/* Header - Back Button Only */}
-          {!isFirstStep && (
-            <View style={tw`px-6 pt-2`}>
-              <Pressable onPress={handleBack} disabled={isCreating} style={({ pressed }) => [tw`w-12 h-12 rounded-full items-center justify-center`, pressed && tw`opacity-70`]}>
-                <ChevronLeft size={28} color="#ffffff" strokeWidth={2} />
+          {/* Header - Exit & Back Buttons */}
+          <View style={tw`px-6 pt-2 flex-row items-center ${isFirstStep ? 'justify-between' : 'justify-start'}`}>
+            {/* Exit Button - Only visible on first step */}
+            {isFirstStep && (
+              <Pressable onPress={handleExit} disabled={isCreating} style={({ pressed }) => [tw`w-12 h-12 rounded-full items-center justify-center bg-white/10`, pressed && tw`opacity-70`]}>
+                <X size={24} color="#ffffff" strokeWidth={2.5} />
               </Pressable>
-            </View>
-          )}
+            )}
+
+            {/* Back Button - Only visible when not on first step */}
+            {!isFirstStep && (
+              <Pressable onPress={handleBack} disabled={isCreating} style={({ pressed }) => [tw`w-12 h-12 rounded-full items-center justify-center bg-white/10`, pressed && tw`opacity-70`]}>
+                <ChevronLeft size={24} color="#ffffff" strokeWidth={2.5} />
+              </Pressable>
+            )}
+          </View>
 
           {/* Content */}
           <ScrollView ref={scrollViewRef} style={tw`flex-1`} showsVerticalScrollIndicator={false} contentContainerStyle={tw`flex-grow`}>
@@ -330,7 +362,9 @@ const HabitWizard: React.FC = () => {
 
             {/* Continue Button */}
             <Pressable onPress={handleNext} disabled={isCreating} style={({ pressed }) => [tw`bg-white rounded-full py-4 px-8`, pressed && tw`opacity-80`, isCreating && tw`opacity-50`]}>
-              <Text style={tw`text-purple-600 text-lg font-bold text-center`}>{isCreating ? 'Creating...' : isLastStep ? 'Create Habit' : 'Continue'}</Text>
+              <Text style={tw`text-purple-600 text-lg font-bold text-center`}>
+                {isCreating ? t('wizard.navigation.creating') : isLastStep ? t('wizard.navigation.createHabit') : t('wizard.navigation.continue')}
+              </Text>
             </Pressable>
           </View>
         </View>

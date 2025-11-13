@@ -1,4 +1,6 @@
 // src/screens/HabitDetails.tsx
+// Fixed: Closing tag issue + isWeekCompleted logic
+
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, Dimensions, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,11 +9,11 @@ import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, FadeInUp, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { ArrowLeft, Calendar } from 'lucide-react-native';
+import { ArrowLeft, Zap } from 'lucide-react-native';
 
 // Utils & Services
 import tw from '@/lib/tailwind';
-import { getTodayString } from '@/utils/dateHelpers';
+import { getTodayString, getLocalDateString } from '@/utils/dateHelpers';
 import { tierThemes } from '@/utils/tierTheme';
 
 // Types
@@ -36,6 +38,7 @@ import { DebugButton } from '@/components/debug/DebugButton';
 // Services
 import { HabitProgressionService } from '@/services/habitProgressionService';
 import Logger from '@/utils/logger';
+import { Config } from '@/config';
 
 // ============================================================================
 // TYPES
@@ -52,10 +55,6 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 // ============================================================================
 
 const HabitDetails: React.FC = () => {
-  // ============================================================================
-  // HOOKS & NAVIGATION
-  // ============================================================================
-
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
   const { user } = useAuth();
@@ -73,7 +72,28 @@ const HabitDetails: React.FC = () => {
   const [isTogglingTask, setIsTogglingTask] = useState(false);
   const [loadingTaskId, setLoadingTaskId] = useState<string | null>(null);
 
-  // Animation values
+  // DEV MODE: Test Modal
+  const [showTestModal, setShowTestModal] = useState(false);
+  const [testModalLoading, setTestModalLoading] = useState(false);
+  const [testModalSuccess, setTestModalSuccess] = useState(false);
+  const [testNewStreak, setTestNewStreak] = useState(0);
+
+  const handleTestUseStreakSaver = () => {
+    setTestModalLoading(true);
+    setTimeout(() => {
+      setTestModalLoading(false);
+      setTestModalSuccess(true);
+      setTestNewStreak(15);
+    }, 2000);
+  };
+
+  const handleTestCloseModal = () => {
+    setShowTestModal(false);
+    setTestModalLoading(false);
+    setTestModalSuccess(false);
+    setTestNewStreak(0);
+  };
+
   const heroScale = useSharedValue(1);
 
   // Extract route params
@@ -99,6 +119,32 @@ const HabitDetails: React.FC = () => {
     completedTasks: [],
     allCompleted: false,
   };
+
+  // ============================================================================
+  // 🔧 WEEKLY HABITS: Check if week is completed
+  // ============================================================================
+  const isWeekCompleted = useMemo(() => {
+    if (habit?.frequency !== 'weekly') return false;
+
+    const created = new Date(habit.createdAt);
+    const now = new Date();
+    const daysSince = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
+    const weekStart = Math.floor(daysSince / 7) * 7;
+
+    // Check all days in current week
+    for (let i = 0; i < 7; i++) {
+      const checkDate = new Date(created);
+      checkDate.setDate(created.getDate() + weekStart + i);
+      const dateStr = getLocalDateString(checkDate);
+      const dayData = habit.dailyTasks?.[dateStr];
+
+      if (dayData?.allCompleted) {
+        return true; // Week is completed
+      }
+    }
+
+    return false;
+  }, [habit]);
 
   const completedTasksToday = todayTasks.completedTasks?.length || 0;
   const totalTasks = habit?.tasks?.length || 0;
@@ -126,12 +172,7 @@ const HabitDetails: React.FC = () => {
       Logger.debug('Streak restored to:', newStreak);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       refreshHabits();
-
-      // ✅ Notifie le Dashboard via navigation params
-      navigation.setParams({
-        refreshStreakSaver: Date.now(),
-      } as any);
-
+      navigation.setParams({ refreshStreakSaver: Date.now() } as any);
       setTimeout(() => navigation.goBack(), 2000);
     },
   });
@@ -140,7 +181,6 @@ const HabitDetails: React.FC = () => {
   // EFFECTS
   // ============================================================================
 
-  // Detect tier upgrades
   useEffect(() => {
     if (prevTier && prevTier !== currentTierData.tier.name) {
       Logger.debug(`🎉 TIER UP! ${prevTier} → ${currentTierData.tier.name}`);
@@ -155,9 +195,6 @@ const HabitDetails: React.FC = () => {
   // HANDLERS
   // ============================================================================
 
-  /**
-   * Handle task toggle - WITH DEBOUNCING to prevent rapid re-renders
-   */
   const handleToggleTask = useCallback(
     async (taskId: string): Promise<void> => {
       if (!habit || isTogglingTask) return;
@@ -167,10 +204,7 @@ const HabitDetails: React.FC = () => {
       setLoadingTaskId(taskId);
 
       try {
-        // ✅ Attendre la fin du toggle AVANT de permettre d'autres actions
         await toggleTask(habit.id, today, taskId);
-
-        // ✅ Petit délai pour éviter les re-renders trop rapides
         await new Promise((resolve) => setTimeout(resolve, 150));
       } catch (error) {
         Logger.error('❌ Task toggle failed:', error);
@@ -238,10 +272,9 @@ const HabitDetails: React.FC = () => {
 
   return (
     <View style={tw`flex-1 bg-stone-50`}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
       <ScrollView contentContainerStyle={tw`pb-8`} showsVerticalScrollIndicator={false}>
-        {/* ========== HERO SECTION ========== */}
         <Animated.View style={animatedGradientStyle}>
           <LinearGradient colors={tierThemes[currentTierData.tier.name].gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`pb-10`}>
             <SafeAreaView edges={['top']}>
@@ -262,6 +295,16 @@ const HabitDetails: React.FC = () => {
                   />
                 </View>
               </View>
+
+              {/* DEV: Test Button */}
+              {Config.debug.enabled && (
+                <View style={tw`px-8 mb-4`}>
+                  <Pressable onPress={() => setShowTestModal(true)} style={({ pressed }) => [tw`bg-purple-500 rounded-2xl py-3 px-4 flex-row items-center justify-center`, pressed && tw`opacity-80`]}>
+                    <Zap size={18} color="white" fill="white" style={tw`mr-2`} />
+                    <Text style={tw`text-white font-black text-sm`}>Test Streak Saver Modal</Text>
+                  </Pressable>
+                </View>
+              )}
 
               {/* Hero Card */}
               <Animated.View
@@ -301,6 +344,7 @@ const HabitDetails: React.FC = () => {
                   />
                 </View>
 
+                {/* Real Modal */}
                 <StreakSaverModal
                   visible={streakSaver.showModal}
                   habitName={streakSaver.eligibility.habitName || habit?.name || 'Habit'}
@@ -312,19 +356,34 @@ const HabitDetails: React.FC = () => {
                   onUse={streakSaver.useStreakSaver}
                   onClose={streakSaver.closeModal}
                 />
+
+                {/* Dev Modal */}
+                {Config.debug.enabled && (
+                  <StreakSaverModal
+                    visible={showTestModal}
+                    habitName={habit?.name || 'Morning Workout'}
+                    previousStreak={15}
+                    availableSavers={3}
+                    loading={testModalLoading}
+                    success={testModalSuccess}
+                    newStreak={testNewStreak}
+                    onUse={handleTestUseStreakSaver}
+                    onClose={handleTestCloseModal}
+                  />
+                )}
               </Animated.View>
             </SafeAreaView>
           </LinearGradient>
         </Animated.View>
 
-        {/* ========== TAB CONTENT SECTION ========== */}
+        {/* TAB CONTENT */}
         <ScrollView contentContainerStyle={[tw`pb-8 pt-5`]} showsVerticalScrollIndicator={false}>
           <Animated.View entering={FadeInUp.delay(200).springify()} style={tw`px-5 mb-5 mt-2`}>
             <TabSelector tier={currentTierData.tier.name} selected={selectedTab} onChange={handleTabChange} />
           </Animated.View>
 
           <View style={tw`px-5`}>
-            {/* ========== OVERVIEW TAB ========== */}
+            {/* OVERVIEW TAB */}
             {selectedTab === 'overview' && (
               <Animated.View entering={FadeInDown.duration(300)}>
                 {totalTasks > 0 && (
@@ -339,12 +398,13 @@ const HabitDetails: React.FC = () => {
                     isLoading={isTogglingTask}
                     loadingTaskId={loadingTaskId}
                     frequency={habit.frequency}
+                    isWeekCompleted={isWeekCompleted}
                   />
                 )}
               </Animated.View>
             )}
 
-            {/* ========== TIERS TAB ========== */}
+            {/* TIERS TAB */}
             {selectedTab === 'tiers' && (
               <Animated.View entering={FadeInDown.duration(300)}>
                 <MilestonesCard milestones={milestoneStatus?.all || []} currentStreak={debugStreak !== null ? debugStreak : habit.currentStreak} unlockedMilestones={milestoneStatus?.unlocked || []} />
@@ -354,7 +414,7 @@ const HabitDetails: React.FC = () => {
         </ScrollView>
       </ScrollView>
 
-      {/* ========== TIER CELEBRATION MODAL ========== */}
+      {/* CELEBRATION */}
       {celebrationTier && <TierCelebration visible={showCelebration} newTier={celebrationTier} onClose={handleCelebrationClose} />}
     </View>
   );

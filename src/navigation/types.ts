@@ -14,6 +14,7 @@ export type RootStackParamList = {
     habitId: string;
     pausedTasks?: Record<string, { pausedUntil: string; reason?: string }>;
   };
+  LanguageSelector: undefined;
 
   // Settings & Profile
   Settings: undefined;

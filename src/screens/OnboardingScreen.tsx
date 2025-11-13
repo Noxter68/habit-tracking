@@ -1,23 +1,22 @@
-// src/screens/OnboardingScreen.tsx
 import React, { useState, useEffect } from 'react';
 import { View, Pressable, Text, StatusBar, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay, FadeIn, FadeOut } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
 import { ChevronRight, ChevronLeft } from 'lucide-react-native';
 import { Image } from 'expo-image';
 import tw from '../lib/tailwind';
 import { RootStackParamList } from '../../App';
 import * as Haptics from 'expo-haptics';
+import i18n from '../i18n';
+import { useAuth } from '@/context/AuthContext';
 
-// Import steps
 import WelcomeStep from '../components/onboarding/WelcomeStep';
 import XPStep from '../components/onboarding/XPStep';
 import TierStep from '../components/onboarding/TierStep';
 import SaverStep from '../components/onboarding/SaverStep';
 import FeaturesStep from '../components/onboarding/FeaturesStep';
-import { useAuth } from '@/context/AuthContext';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Onboarding'>;
 
@@ -69,9 +68,8 @@ const STEPS: StepConfig[] = [
 
 const OnboardingScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const [currentStep, setCurrentStep] = useState(0);
-
   const { completeOnboarding } = useAuth();
+  const [currentStep, setCurrentStep] = useState(0);
 
   const opacity = useSharedValue(0);
 
@@ -80,24 +78,14 @@ const OnboardingScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Reset opacity for fade in animation on step change
     opacity.value = 0;
     opacity.value = withTiming(1, { duration: 400 });
   }, [currentStep]);
 
-  const goToNextStep = () => {
-    setCurrentStep((prev) => prev + 1);
-  };
-
-  const goToPrevStep = () => {
-    setCurrentStep((prev) => prev - 1);
-  };
-
   const handleNext = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
     if (currentStep < STEPS.length - 1) {
-      goToNextStep();
+      setCurrentStep((prev) => prev + 1);
     } else {
       await handleComplete();
     }
@@ -105,9 +93,8 @@ const OnboardingScreen: React.FC = () => {
 
   const handleBack = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
     if (currentStep > 0) {
-      goToPrevStep();
+      setCurrentStep((prev) => prev - 1);
     }
   };
 
@@ -120,7 +107,6 @@ const OnboardingScreen: React.FC = () => {
   const handleSkip = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await completeOnboarding();
-    // Navigate to main tab navigator instead of Dashboard directly
     navigation.replace('HabitWizard' as any);
   };
 
@@ -133,46 +119,50 @@ const OnboardingScreen: React.FC = () => {
 
   return (
     <ImageBackground source={require('../../assets/interface/purple-background-stars.png')} style={tw`flex-1`} resizeMode="cover">
-      {/* Overlay pour assombrir le fond */}
       <View style={[tw`absolute inset-0`, { backgroundColor: 'rgba(0, 0, 0, 0.3)' }]} />
-
       <StatusBar barStyle="light-content" />
 
       <SafeAreaView style={tw`flex-1`}>
-        {/* Skip Button */}
-        <View style={tw`flex-row justify-end px-6 pt-1`}>
-          <Pressable
-            onPress={handleSkip}
-            style={({ pressed }) => [
-              tw`px-5 py-2.5 rounded-full`,
-              {
-                backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                opacity: pressed ? 0.7 : 1,
-              },
-            ]}
-          >
-            <Text style={tw`text-sm font-semibold text-white/90`}>Skip</Text>
-          </Pressable>
-        </View>
+        {/* Header - Skip button and Progress dots on same line */}
+        <View style={tw`px-6 pt-1`}>
+          <View style={tw`flex-row justify-between items-center`}>
+            {/* Empty spacer for symmetry */}
+            <View style={tw`w-20`} />
 
-        {/* Progress Indicators */}
-        <View style={tw`mt-3 flex-row justify-center gap-2 px-5`}>
-          {STEPS.map((_, index) => (
-            <View
-              key={index}
-              style={[
-                tw`h-2 rounded-full`,
+            {/* Progress Indicators - Centered */}
+            <View style={tw`flex-row gap-2`}>
+              {STEPS.map((_, index) => (
+                <View
+                  key={index}
+                  style={[
+                    tw`h-2 rounded-full`,
+                    {
+                      width: index === currentStep ? 24 : 8,
+                      backgroundColor: index === currentStep ? 'white' : 'rgba(255, 255, 255, 0.3)',
+                    },
+                  ]}
+                />
+              ))}
+            </View>
+
+            {/* Skip Button */}
+            <Pressable
+              onPress={handleSkip}
+              style={({ pressed }) => [
+                tw`px-5 py-2.5 rounded-full`,
                 {
-                  width: index === currentStep ? 24 : 8,
-                  backgroundColor: index === currentStep ? 'white' : 'rgba(255, 255, 255, 0.3)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                  opacity: pressed ? 0.7 : 1,
                 },
               ]}
-            />
-          ))}
+            >
+              <Text style={tw`text-sm font-semibold text-white/90`}>{i18n.t('onboarding.skip')}</Text>
+            </Pressable>
+          </View>
         </View>
 
-        {/* Gemme avec shadow en haut */}
-        <Animated.View entering={FadeIn.duration(500)} exiting={FadeOut.duration(300)} key={`gem-${currentStep}`} style={tw`items-center mt-6 mb-4`}>
+        {/* Gem */}
+        <Animated.View key={`gem-${currentStep}`} style={tw`items-center mt-4 mb-3`}>
           <View
             style={[
               tw`w-36 h-36 rounded-full items-center justify-center`,
@@ -191,14 +181,13 @@ const OnboardingScreen: React.FC = () => {
         </Animated.View>
 
         {/* Main Content */}
-        <Animated.View style={[animatedContentStyle, tw`flex-1 justify-center px-8 pb-6`]}>
+        <Animated.View style={[animatedContentStyle, tw`flex-1 justify-center px-8`]}>
           <StepComponent gradient={step.gradient} />
         </Animated.View>
 
         {/* Bottom Navigation */}
-        <View style={tw`px-8 pb-8`}>
+        <View style={tw`px-8 pb-8 pt-8`}>
           {currentStep === 0 ? (
-            // Centré pour la première étape
             <Pressable
               onPress={handleNext}
               style={({ pressed }) => [
@@ -214,11 +203,10 @@ const OnboardingScreen: React.FC = () => {
                 },
               ]}
             >
-              <Text style={tw`text-base font-bold text-purple-900`}>Continue</Text>
+              <Text style={tw`text-base font-bold text-purple-900`}>{i18n.t('onboarding.continue')}</Text>
               <ChevronRight size={20} color="#581c87" strokeWidth={2.5} />
             </Pressable>
           ) : (
-            // Avec bouton retour pour les autres étapes
             <View style={tw`flex-row justify-between items-center gap-4`}>
               <Pressable
                 onPress={handleBack}
@@ -253,7 +241,7 @@ const OnboardingScreen: React.FC = () => {
                   },
                 ]}
               >
-                <Text style={tw`text-base font-bold text-purple-900`}>{currentStep === STEPS.length - 1 ? "Let's Start" : 'Continue'}</Text>
+                <Text style={tw`text-base font-bold text-purple-900`}>{currentStep === STEPS.length - 1 ? i18n.t('onboarding.letsStart') : i18n.t('onboarding.continue')}</Text>
                 <ChevronRight size={20} color="#581c87" strokeWidth={2.5} />
               </Pressable>
             </View>

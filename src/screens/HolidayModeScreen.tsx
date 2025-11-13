@@ -1,6 +1,4 @@
 // src/screens/HolidayModeScreen.tsx
-// Redesigned with improved UX/UI and Full Topaz gradient theme
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, ActivityIndicator, Alert, Platform, Modal, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -13,15 +11,18 @@ import { useSubscription } from '../context/SubscriptionContext';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
-import { HolidayModeService, HolidayPeriod, HolidayStats, HolidayScope, HabitWithTasks } from '../services/holidayModeService';
-import { ChevronLeft, Diamond, Info, Calendar, Sparkles, Globe, CheckSquare, ListChecks, InfinityIcon, Crown, Sun } from 'lucide-react-native';
+import { HolidayModeService, HolidayScope, HabitWithTasks } from '../services/holidayModeService';
+import { ChevronLeft, Diamond, Info, Globe, CheckSquare, ListChecks, InfinityIcon, Crown, Sun } from 'lucide-react-native';
 import { HabitSelector } from '../components/holidays/HabitSelector';
 import { TaskSelector } from '../components/holidays/TaskSelector';
 import Logger from '@/utils/logger';
+import { HolidayPeriod, HolidayStats } from '@/types/holiday.types';
+import { useTranslation } from 'react-i18next';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const HolidayModeScreen: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { isPremium } = useSubscription();
   const navigation = useNavigation<NavigationProp>();
@@ -41,7 +42,6 @@ const HolidayModeScreen: React.FC = () => {
   const [selectedHabits, setSelectedHabits] = useState<Set<string>>(new Set());
   const [selectedTasks, setSelectedTasks] = useState<Map<string, Set<string>>>(new Map());
 
-  // Calculate duration
   const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
   const loadData = useCallback(async () => {
@@ -173,13 +173,13 @@ const HolidayModeScreen: React.FC = () => {
   const validateSelection = (): { valid: boolean; message?: string } => {
     if (scope === 'habits') {
       if (selectedHabits.size === 0) {
-        return { valid: false, message: 'Please select at least one habit to freeze' };
+        return { valid: false, message: t('holidayMode.alerts.selectHabit') };
       }
     } else if (scope === 'tasks') {
       let totalTasks = 0;
       selectedTasks.forEach((tasks) => (totalTasks += tasks.size));
       if (totalTasks === 0) {
-        return { valid: false, message: 'Please select at least one task to freeze' };
+        return { valid: false, message: t('holidayMode.alerts.selectTask') };
       }
     }
     return { valid: true };
@@ -190,7 +190,7 @@ const HolidayModeScreen: React.FC = () => {
 
     const validation = validateSelection();
     if (!validation.valid) {
-      Alert.alert('Selection Required', validation.message);
+      Alert.alert(t('holidayMode.alerts.selectionRequired'), validation.message);
       return;
     }
 
@@ -201,7 +201,7 @@ const HolidayModeScreen: React.FC = () => {
 
     const dateValidation = HolidayModeService.validateDateRange(startDateStr, endDateStr);
     if (!dateValidation.isValid) {
-      Alert.alert('Invalid Dates', dateValidation.error);
+      Alert.alert(t('holidayMode.alerts.invalidDates'), dateValidation.error);
       return;
     }
 
@@ -222,42 +222,50 @@ const HolidayModeScreen: React.FC = () => {
 
       if (!canCreateResult.canCreate) {
         if (canCreateResult.requiresPremium) {
-          Alert.alert('Premium Required', canCreateResult.reason || 'This feature requires a Premium subscription.', [
-            { text: 'Cancel', style: 'cancel' },
+          Alert.alert(t('holidayMode.alerts.premiumRequired'), canCreateResult.reason || t('holidayMode.alerts.premiumMessage'), [
+            { text: t('holidayMode.alerts.cancel'), style: 'cancel' },
             {
-              text: 'Upgrade',
+              text: t('holidayMode.alerts.upgrade'),
               onPress: () => navigation.navigate('Paywall', { source: 'holiday_mode' }),
             },
           ]);
         } else {
-          Alert.alert('Cannot Create Holiday', canCreateResult.reason || 'Unable to create holiday period.');
+          Alert.alert(t('holidayMode.alerts.cannotCreate'), canCreateResult.reason || t('holidayMode.alerts.unableToCreate'));
         }
         return;
       }
     } catch (error) {
       Logger.error('Error validating holiday:', error);
-      Alert.alert('Error', 'Failed to validate holiday period. Please try again.');
+      Alert.alert(t('holidayMode.alerts.error'), t('holidayMode.alerts.validationFailed'));
       return;
     }
 
     let selectionMessage = '';
     if (scope === 'habits') {
-      selectionMessage = `\n\nFreezing ${selectedHabits.size} habit${selectedHabits.size > 1 ? 's' : ''}`;
+      selectionMessage = `\n\n${t(selectedHabits.size === 1 ? 'holidayMode.alerts.freezingHabits' : 'holidayMode.alerts.freezingHabitsPlural', { count: selectedHabits.size })}`;
     } else if (scope === 'tasks') {
       let totalTasks = 0;
       selectedTasks.forEach((tasks) => (totalTasks += tasks.size));
-      selectionMessage = `\n\nFreezing ${totalTasks} task${totalTasks > 1 ? 's' : ''} across ${selectedTasks.size} habit${selectedTasks.size > 1 ? 's' : ''}`;
+      selectionMessage = `\n\n${t(totalTasks === 1 ? 'holidayMode.alerts.freezingTasks' : 'holidayMode.alerts.freezingTasksPlural', {
+        count: totalTasks,
+        habitCount: selectedTasks.size,
+      })}`;
     }
 
+    const scopeText = scope === 'all' ? t('holidayMode.alerts.activateMessageAll') : t('holidayMode.alerts.activateMessageSelected');
+
     Alert.alert(
-      'Activate Holiday Mode?',
-      `All ${scope === 'all' ? 'habits' : 'selected items'} will be paused from ${HolidayModeService.formatDate(startDateStr)} to ${HolidayModeService.formatDate(
-        endDateStr
-      )} (${duration} days).${selectionMessage}`,
+      t('holidayMode.alerts.activateTitle'),
+      t('holidayMode.alerts.activateMessage', {
+        scope: scopeText,
+        startDate: HolidayModeService.formatDate(startDateStr),
+        endDate: HolidayModeService.formatDate(endDateStr),
+        duration,
+      }) + selectionMessage,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('holidayMode.alerts.cancel'), style: 'cancel' },
         {
-          text: 'Activate',
+          text: t('holidayMode.alerts.activate'),
           style: 'default',
           onPress: async () => {
             try {
@@ -304,20 +312,20 @@ const HolidayModeScreen: React.FC = () => {
                 await loadData();
               } else if (result.requiresPremium) {
                 setActiveHoliday(null);
-                Alert.alert('Premium Feature', result.error || 'This feature requires Premium.', [
-                  { text: 'Cancel', style: 'cancel' },
+                Alert.alert(t('holidayMode.alerts.premiumFeature'), result.error || t('holidayMode.alerts.featureRequiresPremium'), [
+                  { text: t('holidayMode.alerts.cancel'), style: 'cancel' },
                   {
-                    text: 'Upgrade',
+                    text: t('holidayMode.alerts.upgrade'),
                     onPress: () => navigation.navigate('Paywall', { source: 'holiday_mode' }),
                   },
                 ]);
               } else {
                 setActiveHoliday(null);
-                Alert.alert('Error', result.error || 'Failed to create holiday');
+                Alert.alert(t('holidayMode.alerts.error'), result.error || t('holidayMode.alerts.createFailed'));
               }
             } catch (error: any) {
               setActiveHoliday(null);
-              Alert.alert('Error', error.message || 'Failed to create holiday');
+              Alert.alert(t('holidayMode.alerts.error'), error.message || t('holidayMode.alerts.createFailed'));
             } finally {
               setSubmitting(false);
             }
@@ -330,10 +338,10 @@ const HolidayModeScreen: React.FC = () => {
   const handleCancelHoliday = async () => {
     if (!user || !activeHoliday) return;
 
-    Alert.alert('End Holiday Early?', 'Your habits will resume tracking immediately.', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('holidayMode.alerts.endEarlyTitle'), t('holidayMode.alerts.endEarlyMessage'), [
+      { text: t('holidayMode.alerts.cancel'), style: 'cancel' },
       {
-        text: 'End Holiday',
+        text: t('holidayMode.alerts.endHoliday'),
         style: 'destructive',
         onPress: async () => {
           try {
@@ -345,10 +353,10 @@ const HolidayModeScreen: React.FC = () => {
               setActiveHoliday(null);
               await loadData();
             } else {
-              Alert.alert('Error', result.error || 'Failed to cancel holiday');
+              Alert.alert(t('holidayMode.alerts.error'), result.error || t('holidayMode.alerts.cancelFailed'));
             }
           } catch (error: any) {
-            Alert.alert('Error', error.message || 'Failed to cancel holiday');
+            Alert.alert(t('holidayMode.alerts.error'), error.message || t('holidayMode.alerts.cancelFailed'));
           } finally {
             setSubmitting(false);
           }
@@ -380,7 +388,6 @@ const HolidayModeScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`pb-24`}>
-        {/* Header */}
         <Animated.View entering={FadeInDown.duration(400)} style={tw`px-6 pt-4 pb-6`}>
           <TouchableOpacity
             onPress={() => {
@@ -392,11 +399,10 @@ const HolidayModeScreen: React.FC = () => {
             <ChevronLeft size={28} color="#374151" />
           </TouchableOpacity>
 
-          <Text style={tw`text-3xl font-black text-gray-800 mb-2`}>Holiday Mode</Text>
-          <Text style={tw`text-base text-gray-500`}>Pause habits without losing progress</Text>
+          <Text style={tw`text-3xl font-black text-gray-800 mb-2`}>{t('holidayMode.title')}</Text>
+          <Text style={tw`text-base text-gray-500`}>{t('holidayMode.subtitle')}</Text>
         </Animated.View>
 
-        {/* Active Holiday Card - TOPAZ GRADIENT */}
         {activeHoliday && (
           <Animated.View entering={FadeInDown.delay(100).duration(400)} style={tw`px-6 mb-6`}>
             <LinearGradient colors={['#fbbf24', '#f59e0b', '#d97706']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-6 shadow-lg`}>
@@ -405,113 +411,109 @@ const HolidayModeScreen: React.FC = () => {
                   <View style={tw`bg-white/20 p-2 rounded-full`}>
                     <Sun size={20} color="#FFFFFF" />
                   </View>
-                  <Text style={tw`text-white text-lg font-bold ml-3`}>Holiday Active</Text>
+                  <Text style={tw`text-white text-lg font-bold ml-3`}>{t('holidayMode.active')}</Text>
                 </View>
                 <View style={tw`bg-white/20 px-3 py-1 rounded-full`}>
-                  <Text style={tw`text-white text-sm font-bold`}>{activeHoliday.daysRemaining ?? 0}d left</Text>
+                  <Text style={tw`text-white text-sm font-bold`}>{t('holidayMode.daysLeft', { count: activeHoliday.daysRemaining ?? 0 })}</Text>
                 </View>
               </View>
 
               <View style={tw`mb-4`}>
-                <Text style={tw`text-white/70 text-sm mb-1`}>Period</Text>
+                <Text style={tw`text-white/70 text-sm mb-1`}>{t('holidayMode.period')}</Text>
                 <Text style={tw`text-white text-base font-semibold`}>
                   {activeHoliday.startDate && activeHoliday.endDate
                     ? `${HolidayModeService.formatDate(activeHoliday.startDate)} - ${HolidayModeService.formatDate(activeHoliday.endDate)}`
-                    : 'Loading dates...'}
+                    : t('holidayMode.loadingDates')}
                 </Text>
               </View>
 
               {!activeHoliday.appliesToAll && (
                 <View style={tw`mb-4`}>
-                  <Text style={tw`text-white/70 text-sm mb-1`}>Frozen Items</Text>
+                  <Text style={tw`text-white/70 text-sm mb-1`}>{t('holidayMode.frozenItems')}</Text>
                   <Text style={tw`text-white text-sm`}>
                     {activeHoliday.frozenHabits?.length
-                      ? `${activeHoliday.frozenHabits.length} habits`
+                      ? t('holidayMode.habitSelection.frozenHabits', { count: activeHoliday.frozenHabits.length })
                       : activeHoliday.frozenTasks?.length
-                      ? `${activeHoliday.frozenTasks.reduce((sum, ft) => sum + ft.taskIds.length, 0)} tasks`
-                      : 'Custom selection'}
+                      ? t('holidayMode.habitSelection.frozenTasks', { count: activeHoliday.frozenTasks.reduce((sum, ft) => sum + ft.taskIds.length, 0) })
+                      : t('holidayMode.habitSelection.customSelection')}
                   </Text>
                 </View>
               )}
 
               <TouchableOpacity onPress={handleCancelHoliday} disabled={submitting} style={tw`bg-white rounded-xl py-3 ${submitting ? 'opacity-50' : ''}`}>
-                {submitting ? <ActivityIndicator color="#f59e0b" /> : <Text style={tw`text-amber-600 font-bold text-center`}>End Early</Text>}
+                {submitting ? <ActivityIndicator color="#f59e0b" /> : <Text style={tw`text-amber-600 font-bold text-center`}>{t('holidayMode.endEarly')}</Text>}
               </TouchableOpacity>
             </LinearGradient>
           </Animated.View>
         )}
 
-        {/* Stats Card - WITH TOPAZ GRADIENT */}
         {stats && !activeHoliday && (
           <Animated.View entering={FadeInDown.delay(100).duration(400)} style={tw`px-6 mb-6`}>
             {isPremium ? (
               <LinearGradient colors={['#fbbf24', '#f59e0b', '#d97706']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-3xl p-6 shadow-lg`}>
                 <View style={tw`flex-row items-center justify-between mb-3`}>
-                  <Text style={tw`text-xl font-black text-white`}>Premium Access</Text>
+                  <Text style={tw`text-xl font-black text-white`}>{t('holidayMode.stats.premiumAccess')}</Text>
                   <View style={tw`bg-white/20 px-3 py-1.5 rounded-full flex-row items-center`}>
                     <Crown size={14} color="#FFFFFF" />
-                    <Text style={tw`text-xs font-bold text-white ml-1`}>UNLIMITED</Text>
+                    <Text style={tw`text-xs font-bold text-white ml-1`}>{t('holidayMode.stats.unlimited')}</Text>
                   </View>
                 </View>
-                <Text style={tw`text-white/80 text-sm mb-4`}>Create unlimited holiday periods with no duration restrictions</Text>
+                <Text style={tw`text-white/80 text-sm mb-4`}>{t('holidayMode.stats.createUnlimited')}</Text>
 
                 <View style={tw`flex-row items-center gap-4`}>
                   <View style={tw`flex-1 bg-white/15 rounded-xl p-3 items-center`}>
                     <InfinityIcon size={28} color="#FFFFFF" strokeWidth={2} />
-                    <Text style={tw`text-xs text-white/70 mt-1`}>Periods</Text>
+                    <Text style={tw`text-xs text-white/70 mt-1`}>{t('holidayMode.stats.periods')}</Text>
                   </View>
                   <View style={tw`flex-1 bg-white/15 rounded-xl p-3 items-center`}>
                     <InfinityIcon size={28} color="#FFFFFF" strokeWidth={2} />
-                    <Text style={tw`text-xs text-white/70 mt-1`}>Days per period</Text>
+                    <Text style={tw`text-xs text-white/70 mt-1`}>{t('holidayMode.stats.daysPerPeriod')}</Text>
                   </View>
                 </View>
               </LinearGradient>
             ) : (
               <View style={tw`bg-white rounded-3xl p-6 shadow-sm border border-gray-200`}>
                 <View style={tw`flex-row items-center justify-between mb-4`}>
-                  <Text style={tw`text-lg font-bold text-gray-800`}>Your Allowance</Text>
+                  <Text style={tw`text-lg font-bold text-gray-800`}>{t('holidayMode.stats.yourAllowance')}</Text>
                   <View style={tw`bg-amber-50 px-3 py-1 rounded-full`}>
-                    <Text style={tw`text-xs font-bold text-amber-700`}>FREE PLAN</Text>
+                    <Text style={tw`text-xs font-bold text-amber-700`}>{t('holidayMode.stats.freePlan')}</Text>
                   </View>
                 </View>
 
                 <View style={tw`flex-row items-center gap-4`}>
                   <View style={tw`flex-1 bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-4 items-center`}>
                     <Text style={tw`text-4xl font-black text-amber-600`}>{stats.remainingAllowance}</Text>
-                    <Text style={tw`text-xs text-amber-700 font-semibold mt-1`}>Period left</Text>
+                    <Text style={tw`text-xs text-amber-700 font-semibold mt-1`}>{t('holidayMode.stats.periodLeft')}</Text>
                   </View>
                   <View style={tw`w-px h-16 bg-gray-200`} />
                   <View style={tw`flex-1 bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-4 items-center`}>
                     <Text style={tw`text-4xl font-black text-amber-600`}>{stats.maxDuration}</Text>
-                    <Text style={tw`text-xs text-amber-700 font-semibold mt-1`}>Days max</Text>
+                    <Text style={tw`text-xs text-amber-700 font-semibold mt-1`}>{t('holidayMode.stats.daysMax')}</Text>
                   </View>
                 </View>
 
                 <View style={tw`mt-4 pt-4 border-t border-gray-100`}>
-                  <Text style={tw`text-xs text-gray-500 text-center`}>Upgrade to Premium for unlimited holiday periods</Text>
+                  <Text style={tw`text-xs text-gray-500 text-center`}>{t('holidayMode.stats.upgradeMessage')}</Text>
                 </View>
               </View>
             )}
           </Animated.View>
         )}
 
-        {/* Create Holiday Form */}
         {!activeHoliday && (
           <View style={tw`px-6`}>
             <Animated.View entering={FadeInDown.delay(200).duration(400)} style={tw`bg-white rounded-3xl p-6 shadow-sm mb-6`}>
-              <Text style={tw`text-lg font-bold text-gray-800 mb-6`}>Schedule Break</Text>
+              <Text style={tw`text-lg font-bold text-gray-800 mb-6`}>{t('holidayMode.form.scheduleBreak')}</Text>
 
-              {/* Duration Display - TOPAZ COLORS */}
               <View style={tw`bg-amber-50 rounded-2xl p-4 mb-6 items-center`}>
-                <Text style={tw`text-amber-500 text-xs font-semibold uppercase mb-1`}>Total Duration</Text>
+                <Text style={tw`text-amber-500 text-xs font-semibold uppercase mb-1`}>{t('holidayMode.form.totalDuration')}</Text>
                 <Text style={tw`text-amber-600 text-4xl font-black`}>{duration}</Text>
-                <Text style={tw`text-amber-600 text-sm font-semibold`}>{duration === 1 ? 'day' : 'days'}</Text>
+                <Text style={tw`text-amber-600 text-sm font-semibold`}>{duration === 1 ? t('holidayMode.form.day') : t('holidayMode.form.days')}</Text>
               </View>
 
-              {/* Date Selection */}
               <View style={tw`flex-row gap-3 mb-6`}>
                 <View style={tw`flex-1`}>
-                  <Text style={tw`text-xs font-semibold text-gray-500 mb-2 uppercase`}>Start Date</Text>
+                  <Text style={tw`text-xs font-semibold text-gray-500 mb-2 uppercase`}>{t('holidayMode.form.startDate')}</Text>
                   <TouchableOpacity
                     onPress={() => {
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -524,7 +526,7 @@ const HolidayModeScreen: React.FC = () => {
                 </View>
 
                 <View style={tw`flex-1`}>
-                  <Text style={tw`text-xs font-semibold text-gray-500 mb-2 uppercase`}>End Date</Text>
+                  <Text style={tw`text-xs font-semibold text-gray-500 mb-2 uppercase`}>{t('holidayMode.form.endDate')}</Text>
                   <TouchableOpacity
                     onPress={() => {
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -537,57 +539,47 @@ const HolidayModeScreen: React.FC = () => {
                 </View>
               </View>
 
-              {/* Freeze Scope - TOPAZ SELECTED COLOR */}
               <View style={tw`mb-6`}>
-                <Text style={tw`text-sm font-semibold text-gray-700 mb-3`}>Freeze Scope</Text>
+                <Text style={tw`text-sm font-semibold text-gray-700 mb-3`}>{t('holidayMode.form.freezeScope')}</Text>
                 <View style={tw`flex-row gap-2`}>
-                  <ScopeButton value="all" icon={Globe} label="All" />
-                  <ScopeButton value="habits" icon={CheckSquare} label="Habits" />
-                  <ScopeButton value="tasks" icon={ListChecks} label="Tasks" />
+                  <ScopeButton value="all" icon={Globe} label={t('holidayMode.form.all')} />
+                  <ScopeButton value="habits" icon={CheckSquare} label={t('holidayMode.form.habits')} />
+                  <ScopeButton value="tasks" icon={ListChecks} label={t('holidayMode.form.tasks')} />
                 </View>
               </View>
 
-              {/* Habit Selector */}
               {scope === 'habits' && habits.length > 0 && (
                 <View style={tw`mb-6`}>
                   <HabitSelector habits={habits} selectedHabits={selectedHabits} onToggle={handleHabitToggle} />
                 </View>
               )}
 
-              {/* Task Selector */}
               {scope === 'tasks' && habits.length > 0 && (
                 <View style={tw`mb-6`}>
                   <TaskSelector habits={habits} selectedTasks={selectedTasks} onToggleTask={handleToggleTask} onToggleAllTasks={handleToggleAllTasks} />
                 </View>
               )}
 
-              {/* Info */}
               <View style={tw`bg-amber-50 rounded-xl p-3 mb-6 flex-row items-start`}>
                 <Info size={16} color="#D97706" style={tw`mt-0.5`} />
                 <Text style={tw`text-amber-700 text-xs ml-2 flex-1`}>
-                  {scope === 'all'
-                    ? 'All habits paused. Streaks preserved.'
-                    : scope === 'habits'
-                    ? 'Selected habits paused. Others continue normally.'
-                    : 'Selected tasks paused. Others continue normally.'}
+                  {scope === 'all' ? t('holidayMode.scope.infoAll') : scope === 'habits' ? t('holidayMode.scope.infoHabits') : t('holidayMode.scope.infoTasks')}
                 </Text>
               </View>
 
-              {/* Activate Button - TOPAZ GRADIENT */}
               <TouchableOpacity onPress={handleCreateHoliday} disabled={submitting} activeOpacity={0.8}>
                 <LinearGradient colors={['#fbbf24', '#f59e0b']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-xl py-4 shadow-md ${submitting ? 'opacity-50' : ''}`}>
                   {submitting ? (
                     <ActivityIndicator color="#FFFFFF" />
                   ) : (
                     <View style={tw`flex-row items-center justify-center`}>
-                      <Text style={tw`text-white font-bold text-center ml-2`}>Activate Holiday Mode</Text>
+                      <Text style={tw`text-white font-bold text-center ml-2`}>{t('holidayMode.form.activate')}</Text>
                     </View>
                   )}
                 </LinearGradient>
               </TouchableOpacity>
             </Animated.View>
 
-            {/* Premium Upsell - TOPAZ GRADIENT */}
             {!isPremium && (
               <Animated.View entering={FadeInDown.delay(300).duration(400)}>
                 <TouchableOpacity
@@ -602,9 +594,9 @@ const HolidayModeScreen: React.FC = () => {
                       <View style={tw`bg-white/20 p-2 rounded-full`}>
                         <Diamond size={16} color="#FFFFFF" />
                       </View>
-                      <Text style={tw`text-white text-lg font-bold ml-3`}>Go Premium</Text>
+                      <Text style={tw`text-white text-lg font-bold ml-3`}>{t('holidayMode.premium.goPremium')}</Text>
                     </View>
-                    <Text style={tw`text-white/90 text-sm`}>Unlimited holidays • No duration limits • Advanced controls</Text>
+                    <Text style={tw`text-white/90 text-sm`}>{t('holidayMode.premium.benefits')}</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </Animated.View>
@@ -613,7 +605,6 @@ const HolidayModeScreen: React.FC = () => {
         )}
       </ScrollView>
 
-      {/* Date Pickers - TOPAZ ACCENT */}
       {showStartPicker && (
         <Modal visible={true} transparent animationType="fade" onRequestClose={() => setShowStartPicker(false)}>
           <Animated.View entering={FadeInDown.duration(300)} style={tw`flex-1`}>
@@ -621,11 +612,11 @@ const HolidayModeScreen: React.FC = () => {
               <Pressable style={tw`bg-white rounded-t-3xl pb-8`} onPress={(e) => e.stopPropagation()}>
                 <View style={tw`flex-row justify-between items-center px-6 py-4 border-b border-gray-100`}>
                   <TouchableOpacity onPress={() => setShowStartPicker(false)}>
-                    <Text style={tw`text-amber-600 font-semibold`}>Cancel</Text>
+                    <Text style={tw`text-amber-600 font-semibold`}>{t('holidayMode.datePicker.cancel')}</Text>
                   </TouchableOpacity>
-                  <Text style={tw`font-bold text-gray-800`}>Start Date</Text>
+                  <Text style={tw`font-bold text-gray-800`}>{t('holidayMode.form.startDate')}</Text>
                   <TouchableOpacity onPress={() => setShowStartPicker(false)}>
-                    <Text style={tw`text-amber-600 font-semibold`}>Done</Text>
+                    <Text style={tw`text-amber-600 font-semibold`}>{t('holidayMode.datePicker.done')}</Text>
                   </TouchableOpacity>
                 </View>
                 <View style={tw`w-full items-center`}>
@@ -653,11 +644,11 @@ const HolidayModeScreen: React.FC = () => {
               <Pressable style={tw`bg-white rounded-t-3xl pb-8`} onPress={(e) => e.stopPropagation()}>
                 <View style={tw`flex-row justify-between items-center px-6 py-4 border-b border-gray-100`}>
                   <TouchableOpacity onPress={() => setShowEndPicker(false)}>
-                    <Text style={tw`text-amber-600 font-semibold`}>Cancel</Text>
+                    <Text style={tw`text-amber-600 font-semibold`}>{t('holidayMode.datePicker.cancel')}</Text>
                   </TouchableOpacity>
-                  <Text style={tw`font-bold text-gray-800`}>End Date</Text>
+                  <Text style={tw`font-bold text-gray-800`}>{t('holidayMode.form.endDate')}</Text>
                   <TouchableOpacity onPress={() => setShowEndPicker(false)}>
-                    <Text style={tw`text-amber-600 font-semibold`}>Done</Text>
+                    <Text style={tw`text-amber-600 font-semibold`}>{t('holidayMode.datePicker.done')}</Text>
                   </TouchableOpacity>
                 </View>
                 <View style={tw`w-full items-center`}>

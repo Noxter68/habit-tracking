@@ -8,6 +8,7 @@ import { RevenueCatService } from '@/services/RevenueCatService';
 import { PushTokenService } from '@/services/pushTokenService';
 import Logger from '@/utils/logger';
 import { OnboardingService } from '@/services/onboardingService';
+import { LanguageDetectionService } from '@/services/languageDetectionService';
 
 interface AuthContextType {
   user: User | null;
@@ -60,6 +61,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       setUsername(data.username || null);
       setHasCompletedOnboarding(data.has_completed_onboarding === true);
+
+      await LanguageDetectionService.loadUserLanguage(userId);
 
       Logger.debug('✅ [Auth] Profile loaded:', {
         username: data.username,
@@ -336,6 +339,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (error) throw error;
 
       if (data.user) {
+        // 2. Créer le profil (fait automatiquement par le trigger DB)
+        // Attendre un peu pour que le trigger se termine
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        // 3. 🌍 INITIALISER LA LANGUE AUTOMATIQUEMENT
+        await LanguageDetectionService.initializeUserLanguage(data.user.id);
+        Logger.info('✅ User signed up with auto-detected language');
+
         RevenueCatService.setAppUserId(data.user.id).catch(() => {});
         Logger.debug('✅ [Auth] Sign up successful');
       }

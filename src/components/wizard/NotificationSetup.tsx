@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Switch, Pressable, Modal, Alert, Platform, ScrollView } from 'react-native';
 import { Bell, BellOff, Sun, Sunrise, Moon, Clock } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 import * as Notifications from 'expo-notifications';
 import TimePicker from '../TimePicker';
 import tw from '@/lib/tailwind';
@@ -14,6 +15,7 @@ interface NotificationSetupProps {
 }
 
 const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, onChange }) => {
+  const { t } = useTranslation();
   const [selectedTime, setSelectedTime] = useState(time || '09:00');
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [hasPermission, setHasPermission] = useState(false);
@@ -37,7 +39,7 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, on
     }
 
     if (finalStatus !== 'granted') {
-      Alert.alert('Permission Required', 'Please enable notifications in your device settings.', [{ text: 'OK' }]);
+      Alert.alert(t('wizard.notificationSetup.permissionRequired'), t('wizard.notificationSetup.permissionMessage'), [{ text: t('common.ok') }]);
       return false;
     }
 
@@ -61,9 +63,24 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, on
   };
 
   const quickTimes = [
-    { time: '07:00', label: 'Morning', subtitle: '7:00 AM', icon: Sunrise },
-    { time: '12:00', label: 'Noon', subtitle: '12:00 PM', icon: Sun },
-    { time: '18:00', label: 'Evening', subtitle: '6:00 PM', icon: Moon },
+    {
+      time: '07:00',
+      label: t('wizard.notificationSetup.morning'),
+      subtitle: t('wizard.notificationSetup.morningTime'),
+      icon: Sunrise,
+    },
+    {
+      time: '12:00',
+      label: t('wizard.notificationSetup.noon'),
+      subtitle: t('wizard.notificationSetup.noonTime'),
+      icon: Sun,
+    },
+    {
+      time: '18:00',
+      label: t('wizard.notificationSetup.evening'),
+      subtitle: t('wizard.notificationSetup.eveningTime'),
+      icon: Moon,
+    },
   ];
 
   return (
@@ -71,8 +88,8 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, on
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`px-8 py-8`}>
         {/* Header */}
         <View style={tw`mb-10`}>
-          <Text style={tw`text-3xl font-bold text-white text-center mb-3`}>Daily Reminders</Text>
-          <Text style={tw`text-base text-white/80 text-center leading-6 px-2`}>Get gentle nudges to stay on track</Text>
+          <Text style={tw`text-3xl font-bold text-white text-center mb-3`}>{t('wizard.notificationSetup.title')}</Text>
+          <Text style={tw`text-base text-white/80 text-center leading-6 px-2`}>{t('wizard.notificationSetup.subtitle')}</Text>
         </View>
 
         {/* Enable/Disable Toggle */}
@@ -81,8 +98,8 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, on
             <View style={tw`flex-row items-center flex-1`}>
               {enabled ? <Bell size={24} color="#10b981" strokeWidth={2} style={tw`mr-3`} /> : <BellOff size={24} color="rgba(255, 255, 255, 0.5)" strokeWidth={2} style={tw`mr-3`} />}
               <View style={tw`flex-1`}>
-                <Text style={tw`text-base font-semibold text-white mb-0.5`}>{enabled ? 'Notifications On' : 'Notifications Off'}</Text>
-                <Text style={tw`text-sm text-white/70`}>{enabled ? 'Daily reminder active' : 'No reminders'}</Text>
+                <Text style={tw`text-base font-semibold text-white mb-0.5`}>{enabled ? t('wizard.notificationSetup.enabled') : t('wizard.notificationSetup.disabled')}</Text>
+                <Text style={tw`text-sm text-white/70`}>{enabled ? t('wizard.notificationSetup.enabledDescription') : t('wizard.notificationSetup.disabledDescription')}</Text>
               </View>
             </View>
             <Switch value={enabled} onValueChange={handleToggle} trackColor={{ false: 'rgba(255, 255, 255, 0.2)', true: '#10b981' }} thumbColor="#ffffff" />
@@ -93,7 +110,7 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, on
         {enabled && (
           <Animated.View entering={FadeInDown.duration(300)}>
             {/* Quick Time Options */}
-            <Text style={tw`text-sm font-medium text-white/90 mb-3`}>Quick select:</Text>
+            <Text style={tw`text-sm font-medium text-white/90 mb-3`}>{t('wizard.notificationSetup.quickSelect')}</Text>
             <View style={tw`gap-2 mb-6`}>
               {quickTimes.map((quickTime, index) => {
                 const Icon = quickTime.icon;
@@ -108,11 +125,20 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, on
                       }}
                       style={({ pressed }) => [
                         tw`rounded-2xl p-4 flex-row items-center border-2 ${isSelected ? 'border-amber-400/60' : 'border-white/10'}`,
-                        { backgroundColor: isSelected ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255, 255, 255, 0.15)' },
+                        {
+                          backgroundColor: isSelected ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255, 255, 255, 0.15)',
+                        },
                         pressed && tw`opacity-80`,
                       ]}
                     >
-                      <View style={[tw`w-10 h-10 rounded-xl items-center justify-center mr-3`, { backgroundColor: isSelected ? 'rgba(251, 191, 36, 0.25)' : 'rgba(255, 255, 255, 0.1)' }]}>
+                      <View
+                        style={[
+                          tw`w-10 h-10 rounded-xl items-center justify-center mr-3`,
+                          {
+                            backgroundColor: isSelected ? 'rgba(251, 191, 36, 0.25)' : 'rgba(255, 255, 255, 0.1)',
+                          },
+                        ]}
+                      >
                         <Icon size={20} color="#ffffff" strokeWidth={2} />
                       </View>
 
@@ -138,12 +164,12 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, on
               style={({ pressed }) => [tw`rounded-2xl p-4 flex-row items-center justify-center bg-white/15 border-2 border-white/20`, pressed && tw`opacity-70`]}
             >
               <Clock size={20} color="#ffffff" strokeWidth={2} style={tw`mr-2`} />
-              <Text style={tw`text-white font-semibold`}>Choose Custom Time</Text>
+              <Text style={tw`text-white font-semibold`}>{t('wizard.notificationSetup.customTime')}</Text>
             </Pressable>
 
             {/* Current Time Display */}
             <View style={tw`mt-4 bg-emerald-500/20 border-2 border-emerald-400/30 rounded-2xl p-4`}>
-              <Text style={tw`text-sm text-white/70 text-center mb-1`}>You'll be reminded at</Text>
+              <Text style={tw`text-sm text-white/70 text-center mb-1`}>{t('wizard.notificationSetup.remindAt')}</Text>
               <Text style={tw`text-2xl font-bold text-white text-center`}>{selectedTime}</Text>
             </View>
           </Animated.View>
@@ -151,9 +177,7 @@ const NotificationSetup: React.FC<NotificationSetupProps> = ({ enabled, time, on
 
         {/* Tip */}
         <View style={tw`mt-8`}>
-          <Text style={tw`text-xs text-white/50 text-center font-light italic leading-5`}>
-            {enabled ? 'Choose a time that fits naturally into your routine' : 'You can always enable reminders later in settings'}
-          </Text>
+          <Text style={tw`text-xs text-white/50 text-center font-light italic leading-5`}>{enabled ? t('wizard.notificationSetup.tipEnabled') : t('wizard.notificationSetup.tipDisabled')}</Text>
         </View>
       </ScrollView>
 

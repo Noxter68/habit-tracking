@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, ImageBackground } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 import tw from '../../lib/tailwind';
 import { Achievement } from '../../types/achievement.types';
 import { AchievementBadge } from './AchievementBadge';
@@ -19,10 +20,11 @@ interface CurrentLevelHeroProps {
 }
 
 export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel, currentTitle, nextTitle, levelProgress, requiredXp, currentStreak, perfectDays, totalHabits, onPress }) => {
+  const { t } = useTranslation();
   const percent = Math.min(100, Math.round((levelProgress / requiredXp) * 100));
 
-  // Get the tier theme directly from utils
-  const tierTheme = getAchievementTierTheme((currentTitle?.tier as AchievementTierName) || 'Novice');
+  // Get the tier theme directly from utils using tierKey
+  const tierTheme = getAchievementTierTheme(currentTitle?.tierKey || 'novice');
 
   // Determine text colors based on gem type
   const getTextColors = (gemName: string) => {
@@ -60,14 +62,14 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
               {/* Top Section: Title & Badge - Simplified */}
               <View style={tw`flex-row items-start justify-between mb-5`}>
                 <View style={tw`flex-1 pr-16`}>
-                  <Text style={[tw`text-xs font-semibold uppercase tracking-wide mb-1.5`, tw`${textColors.secondary}`]}>Current Achievement</Text>
+                  <Text style={[tw`text-xs font-semibold uppercase tracking-wide mb-1.5`, tw`${textColors.secondary}`]}>{t('achievements.currentAchievement')}</Text>
 
-                  <Text style={[tw`text-xl font-bold leading-tight mb-3`, tw`${textColors.primary}`]}>{currentTitle?.title || 'Newcomer'}</Text>
+                  <Text style={[tw`text-xl font-bold leading-tight mb-3`, tw`${textColors.primary}`]}>{currentTitle?.title || t('achievements.tiers.novice')}</Text>
 
                   {/* Level badge only - simplified */}
                   <View style={tw`flex-row items-center gap-2`}>
                     <View style={[tw`rounded-lg px-3 py-1`, tw`${textColors.badgeBg}`]}>
-                      <Text style={[tw`text-xs font-semibold`, tw`${textColors.badge}`]}>Level {currentLevel}</Text>
+                      <Text style={[tw`text-xs font-semibold`, tw`${textColors.badge}`]}>{t('achievements.level', { level: currentLevel })}</Text>
                     </View>
 
                     <View style={[tw`h-1 w-1 rounded-full`, { backgroundColor: 'rgba(255, 255, 255, 0.4)' }]} />
@@ -86,7 +88,7 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
               {nextTitle && (
                 <View style={tw`mb-5`}>
                   <View style={tw`flex-row justify-between items-center mb-2`}>
-                    <Text style={[tw`text-xs font-medium`, tw`${textColors.secondary}`]}>Next: {nextTitle.title}</Text>
+                    <Text style={[tw`text-xs font-medium`, tw`${textColors.secondary}`]}>{t('achievements.next', { title: nextTitle.title })}</Text>
                     <Text style={[tw`font-semibold text-xs`, tw`${textColors.primary}`]}>{percent}%</Text>
                   </View>
 
@@ -109,7 +111,7 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
               >
                 {/* Streak */}
                 <View style={tw`items-center flex-1`}>
-                  <Text style={[tw`text-xs font-medium mb-2`, tw`${textColors.secondary}`]}>Streak</Text>
+                  <Text style={[tw`text-md font-medium mb-2`, tw`${textColors.secondary}`]}>{t('achievements.streak')}</Text>
                   <Text style={[tw`font-bold text-2xl`, tw`${textColors.primary}`]}>{currentStreak}</Text>
                 </View>
 
@@ -118,7 +120,7 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
 
                 {/* Perfect Days */}
                 <View style={tw`items-center flex-1`}>
-                  <Text style={[tw`text-xs font-medium mb-2`, tw`${textColors.secondary}`]}>Perfect</Text>
+                  <Text style={[tw`text-md font-medium mb-2`, tw`${textColors.secondary}`]}>{t('achievements.perfectDays')}</Text>
                   <Text style={[tw`font-bold text-2xl`, tw`${textColors.primary}`]}>{perfectDays}</Text>
                 </View>
 
@@ -127,7 +129,7 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
 
                 {/* Active Habits */}
                 <View style={tw`items-center flex-1`}>
-                  <Text style={[tw`text-xs font-medium mb-2`, tw`${textColors.secondary}`]}>Habits</Text>
+                  <Text style={[tw`text-md font-medium mb-2`, tw`${textColors.secondary}`]}>{t('achievements.habits')}</Text>
                   <Text style={[tw`font-bold text-2xl`, tw`${textColors.primary}`]}>{totalHabits}</Text>
                 </View>
               </View>

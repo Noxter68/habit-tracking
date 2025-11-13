@@ -3,7 +3,7 @@
     "name": "Nuvoria",
     "slug": "Nuvoria",
     "scheme": "nuvoria",
-    "version": "1.0.12",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./icons/icon/nuvoria_icon.png",
     "userInterfaceStyle": "light",
@@ -21,7 +21,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.davidplanchon.nuvoria",
       "usesAppleSignIn": true,
-      "buildNumber": "13",
+      "buildNumber": "14",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": ["remote-notification"],
@@ -44,7 +44,7 @@
       }
     },
     "owner": "noxter68",
-    "runtimeVersion": "1.0.0",
+    "runtimeVersion": "1.1.0",
     "updates": {
       "url": "https://u.expo.dev/b814beca-39ec-424e-b3df-ede00d802c77"
     }
