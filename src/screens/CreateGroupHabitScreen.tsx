@@ -1,9 +1,9 @@
-// screens/CreateGroupScreen.tsx
-// Écran de création d'un nouveau groupe
+// screens/CreateGroupHabitScreen.tsx
+// Écran pour créer une habitude dans un groupe
 
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp as RNRouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { X, Check } from 'lucide-react-native';
 import { groupService } from '@/services/groupTypeService';
@@ -13,17 +13,19 @@ import { EmojiPicker } from '@/components/groups/EmojiPicker';
 import tw from '@/lib/tailwind';
 
 type NavigationProp = NativeStackNavigationProp<any>;
+type RouteParams = RNRouteProp<{ CreateGroupHabit: { groupId: string } }, 'CreateGroupHabit'>;
 
-export default function CreateGroupScreen() {
+export default function CreateGroupHabitScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<RouteParams>();
   const { user } = useAuth();
+  const { groupId } = route.params;
+
   const [name, setName] = useState('');
-  const [emoji, setEmoji] = useState('💪');
+  const [emoji, setEmoji] = useState('🎯');
   const [loading, setLoading] = useState(false);
 
   const handleCreate = async () => {
-    console.log('🔍 User ID:', user?.id); // ✅ Ajoute ça
-    console.log('🔍 User object:', user); // ✅ Et ça
     if (!user?.id) return;
 
     // Validation
@@ -35,14 +37,14 @@ export default function CreateGroupScreen() {
 
     setLoading(true);
     try {
-      // Vérifier les limites
-      const canJoin = await groupService.canUserJoinGroup(user.id);
+      // Vérifier les limites d'habitudes
+      const canAdd = await groupService.canGroupAddHabit(groupId, user.id);
 
-      if (!canJoin.can_join) {
+      if (!canAdd.can_add) {
         Alert.alert(
           'Limite atteinte',
-          canJoin.reason || 'Vous ne pouvez pas créer plus de groupes.',
-          canJoin.requires_premium
+          canAdd.reason || "Impossible d'ajouter plus d'habitudes.",
+          canAdd.requires_premium
             ? [
                 { text: 'Plus tard', style: 'cancel' },
                 { text: 'Voir Premium', onPress: () => navigation.navigate('Premium') },
@@ -52,23 +54,22 @@ export default function CreateGroupScreen() {
         return;
       }
 
-      // Créer le groupe
-      const group = await groupService.createGroup(user.id, { name, emoji });
+      // Créer l'habitude
+      await groupService.createGroupHabit(user.id, {
+        group_id: groupId,
+        name,
+        emoji,
+      });
 
-      Alert.alert('Groupe créé ! 🎉', "Partagez le code d'invitation avec vos amis", [
+      Alert.alert('Habitude créée ! 🎉', 'Tous les membres peuvent maintenant la compléter', [
         {
           text: 'OK',
-          onPress: () => {
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'GroupsList' }, { name: 'GroupDashboard', params: { groupId: group.id } }],
-            });
-          },
+          onPress: () => navigation.goBack(),
         },
       ]);
     } catch (error: any) {
-      console.error('Error creating group:', error);
-      Alert.alert('Erreur', error.message || 'Impossible de créer le groupe');
+      console.error('Error creating habit:', error);
+      Alert.alert('Erreur', error.message || "Impossible de créer l'habitude");
     } finally {
       setLoading(false);
     }
@@ -83,7 +84,7 @@ export default function CreateGroupScreen() {
             <X size={24} color="#6B7280" />
           </TouchableOpacity>
 
-          <Text style={tw`text-xl font-bold text-gray-900`}>Nouveau groupe</Text>
+          <Text style={tw`text-xl font-bold text-gray-900`}>Nouvelle habitude</Text>
 
           <View style={tw`w-10`} />
         </View>
@@ -92,17 +93,17 @@ export default function CreateGroupScreen() {
       <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-6 py-6`}>
         {/* Emoji picker */}
         <View style={tw`mb-6`}>
-          <Text style={tw`text-sm font-semibold text-gray-700 mb-3`}>Icône du groupe</Text>
+          <Text style={tw`text-sm font-semibold text-gray-700 mb-3`}>Icône de l'habitude</Text>
           <EmojiPicker selectedEmoji={emoji} onEmojiSelect={setEmoji} />
         </View>
 
-        {/* Nom du groupe */}
+        {/* Nom de l'habitude */}
         <View style={tw`mb-6`}>
-          <Text style={tw`text-sm font-semibold text-gray-700 mb-3`}>Nom du groupe</Text>
+          <Text style={tw`text-sm font-semibold text-gray-700 mb-3`}>Nom de l'habitude</Text>
           <TextInput
             value={name}
             onChangeText={setName}
-            placeholder="Ex: Fitness Duo"
+            placeholder="Ex: Morning Run"
             placeholderTextColor="#9CA3AF"
             maxLength={50}
             style={tw`bg-white rounded-xl px-4 py-4 text-base text-gray-900 border border-gray-200`}
@@ -113,7 +114,9 @@ export default function CreateGroupScreen() {
 
         {/* Info */}
         <View style={tw`bg-blue-50 rounded-xl p-4 mb-6`}>
-          <Text style={tw`text-sm text-blue-900 leading-relaxed`}>💡 Après création, vous recevrez un code d'invitation à partager avec vos amis.</Text>
+          <Text style={tw`text-sm text-blue-900 leading-relaxed`}>
+            💡 Tous les membres du groupe pourront compléter cette habitude chaque jour. Le streak collectif se maintient si tout le monde complète.
+          </Text>
         </View>
 
         {/* Bouton créer */}
@@ -128,7 +131,7 @@ export default function CreateGroupScreen() {
           ) : (
             <>
               <Check size={20} color="#FFFFFF" />
-              <Text style={tw`text-base font-semibold text-white`}>Créer le groupe</Text>
+              <Text style={tw`text-base font-semibold text-white`}>Créer l'habitude</Text>
             </>
           )}
         </TouchableOpacity>

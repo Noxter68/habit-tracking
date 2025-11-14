@@ -58,6 +58,8 @@ import GroupsListScreen from '@/screens/GroupsListScreen';
 import CreateGroupScreen from '@/components/groups/CreateGroupScreen';
 import JoinGroupScreen from '@/components/groups/JoinGroupScreen';
 import GroupDashboardScreen from '@/screens/GroupDashboardScreen';
+import CreateGroupHabitScreen from '@/screens/CreateGroupHabitScreen';
+import GroupSettingsScreen from '@/screens/GroupSettingsScreen';
 
 // Type Definitions
 export type RootStackParamList = {
@@ -74,13 +76,20 @@ export type RootStackParamList = {
   HolidayMode: undefined;
   Onboarding: undefined;
   ResetPassword: undefined;
+
+  GroupsList: undefined;
+  CreateGroup: undefined;
+  JoinGroup: undefined;
+  GroupDashboard: { groupId: string };
+  CreateGroupHabit: { groupId: string };
+  GroupSettings: { groupId: string };
 };
 
 export type TabParamList = {
   Dashboard: undefined;
   Calendar: undefined;
   Leaderboard: undefined;
-  Stats: undefined;
+  Groups: undefined;
   Settings: undefined;
 };
 
@@ -199,11 +208,11 @@ function MainTabs() {
         listeners={{ tabPress: () => HapticFeedback.selection() }}
       />
       <Tab.Screen
-        name="Stats"
-        component={StatsScreen}
+        name="Groups"
+        component={GroupsListScreen}
         options={{
-          tabBarLabel: 'Stats',
-          tabBarIcon: ({ color, focused }) => <TabBarIcon name="chart" color={color} focused={focused} />,
+          tabBarLabel: 'Groups', // ✅ Changer le label
+          tabBarIcon: ({ color, focused }) => <TabBarIcon name="users" color={color} focused={focused} />, // ✅ Nouvelle icône
         }}
         listeners={{ tabPress: () => HapticFeedback.selection() }}
       />
@@ -329,10 +338,45 @@ function AppNavigator() {
         <Stack.Screen name="HolidayMode" component={HolidayModeScreen} options={{ headerShown: false, presentation: 'card', animation: 'slide_from_right' }} />
         <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
         <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="GroupsList" component={GroupsListScreen} />
-        <Stack.Screen name="CreateGroup" component={CreateGroupScreen} />
-        <Stack.Screen name="JoinGroup" component={JoinGroupScreen} />
-        <Stack.Screen name="GroupDashboard" component={GroupDashboardScreen} />
+        <Stack.Screen
+          name="CreateGroup"
+          component={CreateGroupScreen}
+          options={{
+            presentation: 'modal',
+            animation: 'slide_from_bottom',
+          }}
+        />
+        <Stack.Screen
+          name="JoinGroup"
+          component={JoinGroupScreen}
+          options={{
+            presentation: 'modal',
+            animation: 'slide_from_bottom',
+          }}
+        />
+        <Stack.Screen
+          name="GroupDashboard"
+          component={GroupDashboardScreen}
+          options={{
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen
+          name="CreateGroupHabit"
+          component={CreateGroupHabitScreen}
+          options={{
+            presentation: 'modal',
+            animation: 'slide_from_bottom',
+          }}
+        />
+        <Stack.Screen
+          name="GroupSettings"
+          component={GroupSettingsScreen}
+          options={{
+            presentation: 'modal',
+            animation: 'slide_from_bottom',
+          }}
+        />
         <Stack.Screen
           name="LanguageSelector"
           component={LanguageSelectorScreen}

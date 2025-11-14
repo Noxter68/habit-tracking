@@ -6,7 +6,7 @@ import Svg, { Path, Circle, Rect, G, Line, Polygon } from 'react-native-svg';
 import tw from '../lib/tailwind';
 
 interface TabBarIconProps {
-  name: 'home' | 'calendar' | 'chart' | 'settings' | 'leaderboard';
+  name: 'home' | 'calendar' | 'users' | 'settings' | 'leaderboard'; // ✅ 'chart' remplacé par 'users'
   color: string;
   focused: boolean;
   size?: number;
@@ -98,27 +98,47 @@ export const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, focused, si
           </Svg>
         );
 
-      case 'chart':
+      case 'users':
+        // ✅ NOUVELLE ICÔNE: Groupe d'utilisateurs
         return (
           <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-            {/* Modern bar chart with gradient effect */}
-            <Path
-              d="M3 20V4C3 3.44772 3.44772 3 4 3H20C20.5523 3 21 3.44772 21 4V20C21 20.5523 20.5523 21 20 21H4C3.44772 21 3 20.5523 3 20Z"
+            {/* User 1 (left) */}
+            <Circle
+              cx="9"
+              cy="8"
+              r="3.5"
               stroke={activeColor}
               strokeWidth={strokeWidth}
               strokeLinecap="round"
               strokeLinejoin="round"
               fill={focused ? activeColor : 'none'}
-              fillOpacity={focused ? 0.04 : 0}
+              fillOpacity={focused ? 0.08 : 0}
             />
-            {/* Bars */}
-            <Path d="M7 16V11M12 16V8M17 16V13" stroke={activeColor} strokeWidth={strokeWidth + 0.5} strokeLinecap="round" />
-            {/* Accent dots on bars when focused */}
+            {/* User 2 (right) */}
+            <Circle
+              cx="15"
+              cy="8"
+              r="3.5"
+              stroke={activeColor}
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill={focused ? activeColor : 'none'}
+              fillOpacity={focused ? 0.08 : 0}
+            />
+            {/* Body/shoulders group */}
+            <Path
+              d="M3 21C3 18 5.5 16 9 16C10 16 10.8 16.2 11.5 16.5M13 16.5C13.7 16.2 14.5 16 15.5 16C19 16 21.5 18 21.5 21"
+              stroke={activeColor}
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* Connection line when focused */}
             {focused && (
               <G>
-                <Circle cx="7" cy="11" r="1.3" fill={activeColor} opacity="0.6" />
-                <Circle cx="12" cy="8" r="1.3" fill={activeColor} opacity="0.6" />
-                <Circle cx="17" cy="13" r="1.3" fill={activeColor} opacity="0.6" />
+                <Path d="M10.5 9.5L13.5 9.5" stroke={activeColor} strokeWidth={strokeWidth * 0.8} strokeLinecap="round" opacity="0.4" />
+                <Circle cx="12" cy="9.5" r="1" fill={activeColor} opacity="0.3" />
               </G>
             )}
           </Svg>
