@@ -54,6 +54,10 @@ import notificationBadgeService from '@/services/notificationBadgeService';
 import LanguageSelectorScreen from '@/components/settings/LanguageSelector';
 import { LanguageDetectionService } from '@/services/languageDetectionService';
 import ResetPasswordScreen from '@/screens/ResetPasswordScreen';
+import GroupsListScreen from '@/screens/GroupsListScreen';
+import CreateGroupScreen from '@/components/groups/CreateGroupScreen';
+import JoinGroupScreen from '@/components/groups/JoinGroupScreen';
+import GroupDashboardScreen from '@/screens/GroupDashboardScreen';
 
 // Type Definitions
 export type RootStackParamList = {
@@ -325,6 +329,10 @@ function AppNavigator() {
         <Stack.Screen name="HolidayMode" component={HolidayModeScreen} options={{ headerShown: false, presentation: 'card', animation: 'slide_from_right' }} />
         <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
         <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="GroupsList" component={GroupsListScreen} />
+        <Stack.Screen name="CreateGroup" component={CreateGroupScreen} />
+        <Stack.Screen name="JoinGroup" component={JoinGroupScreen} />
+        <Stack.Screen name="GroupDashboard" component={GroupDashboardScreen} />
         <Stack.Screen
           name="LanguageSelector"
           component={LanguageSelectorScreen}
