@@ -225,10 +225,31 @@ function AppNavigator() {
   const [isFirstLaunch, setIsFirstLaunch] = useState<boolean | null>(null);
   const [isCheckingFirstLaunch, setIsCheckingFirstLaunch] = useState(true);
   const [minLoadingTimePassed, setMinLoadingTimePassed] = useState(false);
+  const [languageInitialized, setLanguageInitialized] = useState(false);
 
   // ============================================================================
   // INITIALIZATION
   // ============================================================================
+
+  useEffect(() => {
+    const initializeLanguage = async () => {
+      try {
+        if (user?.id) {
+          Logger.debug('🌍 Loading user language from database');
+          await LanguageDetectionService.loadUserLanguage(user.id);
+        } else {
+          Logger.debug('🌍 Loading device language (no user connected)');
+          await LanguageDetectionService.initializeDefaultLanguage();
+        }
+      } catch (error) {
+        Logger.error('Error initializing language:', error);
+      } finally {
+        setLanguageInitialized(true); // ✅ Marque comme initialisé
+      }
+    };
+
+    initializeLanguage();
+  }, [user?.id]);
 
   useEffect(() => {
     checkFirstLaunch();
@@ -265,7 +286,7 @@ function AppNavigator() {
 
   // Détermine si on peut afficher l'UI
   const canShowUI = useMemo(() => {
-    return !authLoading && !isCheckingFirstLaunch && minLoadingTimePassed;
+    return languageInitialized && !authLoading && !isCheckingFirstLaunch && minLoadingTimePassed;
   }, [authLoading, isCheckingFirstLaunch, minLoadingTimePassed]);
 
   // ============================================================================
@@ -450,35 +471,6 @@ const linking = {
 };
 
 // ============================================================================
-// Composant séparé pour la logique de langue (à l'intérieur d'AuthProvider)
-// ============================================================================
-function LanguageInitializer() {
-  const { user } = useAuth(); // ✅ Maintenant c'est OK car dans AuthProvider
-
-  useEffect(() => {
-    const initializeLanguage = async () => {
-      try {
-        if (user?.id) {
-          // ✅ Utilisateur connecté → charge SA langue depuis la DB
-          Logger.debug('🌍 Loading user language from database');
-          await LanguageDetectionService.loadUserLanguage(user.id);
-        } else {
-          // ✅ Pas connecté → utilise la langue du téléphone
-          Logger.debug('🌍 Loading device language (no user connected)');
-          await LanguageDetectionService.initializeDefaultLanguage();
-        }
-      } catch (error) {
-        Logger.error('Error initializing language:', error);
-      }
-    };
-
-    initializeLanguage();
-  }, [user?.id]);
-
-  return null; // Ce composant ne rend rien
-}
-
-// ============================================================================
 // Composant principal App
 // ============================================================================
 export default function App() {
@@ -527,9 +519,6 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <AuthProvider>
-          {/* ✅ LanguageInitializer DANS AuthProvider */}
-          <LanguageInitializer />
-
           <SubscriptionProvider>
             <StatsProvider>
               <HabitProvider>
