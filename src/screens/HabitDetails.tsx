@@ -1,8 +1,8 @@
 // src/screens/HabitDetails.tsx
-// Fixed: Closing tag issue + isWeekCompleted logic
+// Fixed: TaskManager integration with proper callback
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, Dimensions, StatusBar } from 'react-native';
+import { View, Text, ScrollView, Pressable, Dimensions, StatusBar, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
@@ -34,6 +34,7 @@ import MilestonesCard from '@/components/habits/MilestoneCard';
 import { TierCelebration } from '@/components/habits/TierCelebration';
 import { StreakSaverModal } from '@/components/streakSaver/StreakSaverModal';
 import { DebugButton } from '@/components/debug/DebugButton';
+import TaskManager from '@/components/tasks/TaskManager';
 
 // Services
 import { HabitProgressionService } from '@/services/habitProgressionService';
@@ -113,6 +114,11 @@ const HabitDetails: React.FC = () => {
     return { tier, progress };
   }, [habit?.currentStreak, debugStreak]);
 
+  // Get tier color from theme
+  const tierColor = useMemo(() => {
+    return tierThemes[currentTierData.tier.name]?.accent || '#3b82f6';
+  }, [currentTierData.tier.name]);
+
   const today = useMemo(() => getTodayString(), []);
 
   const todayTasks: DailyTaskProgress = habit?.dailyTasks?.[today] || {
@@ -131,7 +137,6 @@ const HabitDetails: React.FC = () => {
     const daysSince = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
     const weekStart = Math.floor(daysSince / 7) * 7;
 
-    // Check all days in current week
     for (let i = 0; i < 7; i++) {
       const checkDate = new Date(created);
       checkDate.setDate(created.getDate() + weekStart + i);
@@ -139,7 +144,7 @@ const HabitDetails: React.FC = () => {
       const dayData = habit.dailyTasks?.[dateStr];
 
       if (dayData?.allCompleted) {
-        return true; // Week is completed
+        return true;
       }
     }
 
@@ -216,6 +221,16 @@ const HabitDetails: React.FC = () => {
     },
     [habit, today, toggleTask, isTogglingTask]
   );
+
+  const handleTasksUpdated = useCallback(async () => {
+    try {
+      await refreshHabits();
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Logger.debug('✅ Tasks updated, habits refreshed');
+    } catch (error) {
+      Logger.error('❌ Failed to refresh habits after task update:', error);
+    }
+  }, [refreshHabits]);
 
   const handleGoBack = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -313,7 +328,7 @@ const HabitDetails: React.FC = () => {
                   tw`px-8 mt-6`,
                   {
                     shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 8 },
+                    shadowOffset: { width: 0, height: 4 },
                     shadowOpacity: 0.15,
                     shadowRadius: 12,
                     elevation: 6,
@@ -381,6 +396,19 @@ const HabitDetails: React.FC = () => {
           <Animated.View entering={FadeInUp.delay(200).springify()} style={tw`px-5 mb-5 mt-2`}>
             <TabSelector tier={currentTierData.tier.name} selected={selectedTab} onChange={handleTabChange} />
           </Animated.View>
+
+          {/* Task Manager */}
+          <View style={tw`px-5`}>
+            <TaskManager
+              habitId={habit.id}
+              habitCategory={habit.category}
+              habitType={habit.type}
+              currentTier={currentTierData.tier.name}
+              tasks={habit.tasks || []}
+              onTasksUpdated={handleTasksUpdated}
+              tierColor={tierColor}
+            />
+          </View>
 
           <View style={tw`px-5`}>
             {/* OVERVIEW TAB */}

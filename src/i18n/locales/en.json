@@ -2043,9 +2043,63 @@
       "save40": "Save 40%",
       "savers_one": "{{count}} Saver",
       "savers_other": "{{count}} Savers",
-      "footer": "Restore missed days within 24h 🔥",
+      "footer": "Restore missed days within 24h",
       "loading": "Loading...",
       "savers": "{{count}} Savers"
+    }
+  },
+  "taskManager": {
+    "manageTitle": "Manage Tasks",
+    "maxTasks": "Maximum 3 tasks per habit",
+    "taskCount": "{{count}} task",
+    "taskCount_plural": "{{count}} tasks",
+    "noTasksTitle": "No Tasks Yet",
+    "noTasks": "Add your first task to get started with this habit",
+    "addNewTask": "Add New Task",
+    "deleteTask": "Delete Task",
+    "deleteTaskConfirm": "Are you sure you want to delete \"{{taskName}}\"? This action cannot be undone.",
+    "deleteError": "Failed to delete task. Please try again.",
+    "deleting": "Deleting...",
+    "addError": "Failed to add tasks. Please try again.",
+    "selectTasks": "Select Tasks",
+    "selectedCount": "{{count}} / {{max}} selected",
+    "maxTasksReached": "Maximum 3 tasks per habit reached. Delete a task first to add new ones.",
+    "customTaskDurationLabel": "Duration (optional)",
+    "customTaskDurationPlaceholder": "30",
+    "customTaskDurationHint": "Estimated time to complete this task",
+    "limitReached": {
+      "title": "Task Limit Reached",
+      "message": "You already have 3 tasks for this habit. Please delete a task before adding new ones."
+    },
+    "addTasks": "Add {{count}} Task",
+    "addTasks_plural": "Add {{count}} Tasks",
+    "createCustomTask": "Create Custom Task",
+    "createCustomTaskDescription": "Define your own action",
+    "customTaskNameLabel": "Task Name",
+    "customTaskPlaceholder": "e.g., Drink 8 glasses of water",
+    "customTaskTip": "Be specific and measurable. Example: \"Exercise for 30 minutes\" instead of just \"Exercise\"",
+    "customTaskLabel": "Custom task",
+    "createTask": "Create Task",
+    "alerts": {
+      "noTasksSelected": {
+        "title": "No Tasks Selected",
+        "message": "Please select at least one task."
+      },
+      "customTaskEmpty": {
+        "title": "Task Name Required",
+        "message": "Please enter a name for your custom task."
+      },
+      "taskAdded": {
+        "title": "Task Added",
+        "message": "Your custom task has been created successfully."
+      },
+      "tasksAdded": {
+        "title": "Tasks Added",
+        "message": "{{count}} task added successfully.",
+        "message_plural": "{{count}} tasks added successfully."
+      },
+      "errorAddingTask": "Unable to add task. Please try again.",
+      "errorAddingTasks": "Unable to add tasks. Please try again."
     }
   }
 }

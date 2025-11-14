@@ -2048,5 +2048,59 @@
       "loading": "Chargement...",
       "savers": "{{count}} Sauvegardes"
     }
+  },
+  "taskManager": {
+    "manageTitle": "Gérer les Tâches",
+    "maxTasks": "Maximum 3 tâches par habitude",
+    "taskCount": "{{count}} tâche",
+    "taskCount_plural": "{{count}} tâches",
+    "noTasksTitle": "Aucune Tâche",
+    "noTasks": "Ajoutez votre première tâche pour commencer cette habitude",
+    "addNewTask": "Ajouter une Tâche",
+    "deleteTask": "Supprimer la Tâche",
+    "deleteTaskConfirm": "Êtes-vous sûr de vouloir supprimer \"{{taskName}}\" ? Cette action est irréversible.",
+    "deleteError": "Échec de la suppression. Veuillez réessayer.",
+    "deleting": "Suppression...",
+    "addError": "Échec de l'ajout des tâches. Veuillez réessayer.",
+    "selectTasks": "Sélectionner des Tâches",
+    "selectedCount": "{{count}} / {{max}} sélectionnées",
+    "maxTasksReached": "Maximum de 3 tâches par habitude atteint. Supprimez d'abord une tâche pour en ajouter de nouvelles.",
+    "customTaskDurationLabel": "Durée (optionnel)",
+    "customTaskDurationPlaceholder": "30",
+    "customTaskDurationHint": "Temps estimé pour compléter cette tâche",
+    "limitReached": {
+      "title": "Limite de Tâches Atteinte",
+      "message": "Vous avez déjà 3 tâches pour cette habitude. Veuillez supprimer une tâche avant d'en ajouter de nouvelles."
+    },
+    "addTasks": "Ajouter {{count}} Tâche",
+    "addTasks_plural": "Ajouter {{count}} Tâches",
+    "createCustomTask": "Créer une Tâche Personnalisée",
+    "createCustomTaskDescription": "Définissez votre propre action",
+    "customTaskNameLabel": "Nom de la Tâche",
+    "customTaskPlaceholder": "ex: Boire 8 verres d'eau",
+    "customTaskTip": "Soyez spécifique et mesurable. Exemple : \"Faire 30 minutes d'exercice\" au lieu de juste \"Exercice\"",
+    "customTaskLabel": "Tâche personnalisée",
+    "createTask": "Créer la Tâche",
+    "alerts": {
+      "noTasksSelected": {
+        "title": "Aucune Tâche Sélectionnée",
+        "message": "Veuillez sélectionner au moins une tâche."
+      },
+      "customTaskEmpty": {
+        "title": "Nom de Tâche Requis",
+        "message": "Veuillez entrer un nom pour votre tâche personnalisée."
+      },
+      "taskAdded": {
+        "title": "Tâche Ajoutée",
+        "message": "Votre tâche personnalisée a été créée avec succès."
+      },
+      "tasksAdded": {
+        "title": "Tâches Ajoutées",
+        "message": "{{count}} tâche ajoutée avec succès.",
+        "message_plural": "{{count}} tâches ajoutées avec succès."
+      },
+      "errorAddingTask": "Impossible d'ajouter la tâche. Veuillez réessayer.",
+      "errorAddingTasks": "Impossible d'ajouter les tâches. Veuillez réessayer."
+    }
   }
 }

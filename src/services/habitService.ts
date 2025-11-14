@@ -307,6 +307,131 @@ export class HabitService {
   }
 
   /**
+   * Delete a task from a habit
+   *
+   * Logic:
+   * - Removes the task from the habit's tasks array
+   * - Cleans up any related task_completions entries for this task
+   * - Updates the habit's updated_at timestamp
+   */
+  static async deleteTask(habitId: string, userId: string, taskId: string): Promise<void> {
+    try {
+      // 1. Fetch current habit
+      const { data: habit, error: fetchError } = await supabase.from('habits').select('tasks').eq('id', habitId).eq('user_id', userId).single();
+
+      if (fetchError) throw fetchError;
+      if (!habit) throw new Error('Habit not found');
+
+      // 2. Remove the task from the tasks array
+      const updatedTasks = (habit.tasks || []).filter((task: any) => {
+        const currentTaskId = typeof task === 'string' ? task : task.id;
+        return currentTaskId !== taskId;
+      });
+
+      // 3. Update habit with new tasks array
+      const { error: updateError } = await supabase
+        .from('habits')
+        .update({
+          tasks: updatedTasks,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', habitId)
+        .eq('user_id', userId);
+
+      if (updateError) throw updateError;
+
+      // 4. Clean up task_completions for this task
+      // Remove the taskId from completed_tasks arrays in all task_completions
+      const { data: completions, error: completionsError } = await supabase.from('task_completions').select('id, completed_tasks').eq('habit_id', habitId).eq('user_id', userId);
+
+      if (completionsError) throw completionsError;
+
+      // Update each completion entry that contains this task
+      if (completions && completions.length > 0) {
+        for (const completion of completions) {
+          const updatedCompletedTasks = (completion.completed_tasks || []).filter((id: string) => id !== taskId);
+
+          // Only update if the task was present
+          if (updatedCompletedTasks.length !== completion.completed_tasks?.length) {
+            const { error: updateCompletionError } = await supabase
+              .from('task_completions')
+              .update({
+                completed_tasks: updatedCompletedTasks,
+                all_completed: updatedCompletedTasks.length === updatedTasks.length && updatedTasks.length > 0,
+              })
+              .eq('id', completion.id);
+
+            if (updateCompletionError) {
+              Logger.error('Error updating task completion:', updateCompletionError);
+            }
+          }
+        }
+      }
+
+      Logger.debug('✅ Task deleted successfully:', {
+        habitId,
+        taskId,
+        remainingTasks: updatedTasks.length,
+      });
+    } catch (error) {
+      Logger.error('Error deleting task:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Add a task to an existing habit
+   *
+   * Logic:
+   * - Adds a new task to the habit's tasks array
+   * - Maintains consistency with existing task format
+   * - Updates the habit's updated_at timestamp
+   */
+  static async addTask(habitId: string, userId: string, task: { id: string; name: string; description?: string; duration?: string; category?: string }): Promise<void> {
+    try {
+      // 1. Fetch current habit
+      const { data: habit, error: fetchError } = await supabase.from('habits').select('tasks, category').eq('id', habitId).eq('user_id', userId).single();
+
+      if (fetchError) throw fetchError;
+      if (!habit) throw new Error('Habit not found');
+
+      // 2. Prepare new task with consistent format
+      const newTask = {
+        id: task.id,
+        name: task.name,
+        description: task.description || '',
+        duration: task.duration || '',
+        category: task.category || habit.category || 'custom',
+      };
+
+      // 3. Add task to existing tasks array
+      const updatedTasks = [...(habit.tasks || []), newTask];
+
+      // 4. Update habit with new tasks array
+      const { error: updateError } = await supabase
+        .from('habits')
+        .update({
+          tasks: updatedTasks,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', habitId)
+        .eq('user_id', userId);
+
+      if (updateError) throw updateError;
+
+      Logger.debug('✅ Task added successfully:', {
+        habitId,
+        taskId: task.id,
+        taskName: task.name,
+        totalTasks: updatedTasks.length,
+      });
+    } catch (error) {
+      Logger.error('Error adding task:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Create a new habit
    *
    * Logic:
