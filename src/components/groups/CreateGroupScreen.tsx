@@ -22,8 +22,8 @@ export default function CreateGroupScreen() {
   const [loading, setLoading] = useState(false);
 
   const handleCreate = async () => {
-    console.log('🔍 User ID:', user?.id); // ✅ Ajoute ça
-    console.log('🔍 User object:', user); // ✅ Et ça
+    console.log('🔍 User ID:', user?.id);
+    console.log('🔍 User object:', user);
     if (!user?.id) return;
 
     // Validation
@@ -59,9 +59,12 @@ export default function CreateGroupScreen() {
         {
           text: 'OK',
           onPress: () => {
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'GroupsList' }, { name: 'GroupDashboard', params: { groupId: group.id } }],
+            navigation.navigate('MainTabs', {
+              screen: 'Groups',
+              params: {
+                screen: 'GroupDashboard',
+                params: { groupId: group.id },
+              },
             });
           },
         },

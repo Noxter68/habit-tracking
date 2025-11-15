@@ -62,11 +62,16 @@ export default function GroupSettingsScreen() {
         onPress: async () => {
           try {
             await groupService.leaveGroup(user.id, groupId);
-            Alert.alert('Groupe quitté', 'Vous avez quitté le groupe avec succès');
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'GroupsList' }],
+            navigation.navigate('MainTabs', {
+              screen: 'Groups',
+              params: {
+                screen: 'GroupsList',
+              },
             });
+
+            setTimeout(() => {
+              Alert.alert('Groupe quitté', 'Vous avez quitté le groupe avec succès');
+            }, 500);
           } catch (error: any) {
             Alert.alert('Erreur', error.message || 'Impossible de quitter le groupe');
           }
@@ -86,11 +91,16 @@ export default function GroupSettingsScreen() {
         onPress: async () => {
           try {
             await groupService.deleteGroup(groupId, user.id);
-            Alert.alert('Groupe supprimé', 'Le groupe a été supprimé avec succès');
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'GroupsList' }],
+            navigation.navigate('MainTabs', {
+              screen: 'Groups',
+              params: {
+                screen: 'GroupsList',
+              },
             });
+
+            setTimeout(() => {
+              Alert.alert('Groupe supprimé', 'Le groupe a été supprimé avec succès');
+            }, 500);
           } catch (error: any) {
             Alert.alert('Erreur', error.message || 'Impossible de supprimer le groupe');
           }

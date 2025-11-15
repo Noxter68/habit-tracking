@@ -1,50 +1,96 @@
 // components/groups/MemberAvatars.tsx
-// Affichage des avatars des membres (cercles superposés)
+// Affichage des avatars des membres du groupe
 
 import React from 'react';
 import { View, Text } from 'react-native';
-import type { GroupMember } from '@/types/group.types';
-import { getAvatarDisplay } from '@/utils/groupUtils';
+import { Users } from 'lucide-react-native';
 import tw from '@/lib/tailwind';
+import type { GroupMember } from '@/types/group.types';
 
-interface MemberAvatarsProps {
+interface Props {
   members: GroupMember[];
   maxDisplay?: number;
   size?: 'sm' | 'md' | 'lg';
 }
 
-export function MemberAvatars({ members, maxDisplay = 5, size = 'md' }: MemberAvatarsProps) {
-  const displayMembers = members.slice(0, maxDisplay);
+export const MemberAvatars: React.FC<Props> = ({ members, maxDisplay = 3, size = 'md' }) => {
+  const visibleMembers = members.slice(0, maxDisplay);
   const remainingCount = Math.max(0, members.length - maxDisplay);
 
+  // Tailles selon le prop
   const sizeStyles = {
-    sm: { container: 'w-7 h-7', text: 'text-xs', offset: '-ml-2' },
-    md: { container: 'w-10 h-10', text: 'text-sm', offset: '-ml-3' },
-    lg: { container: 'w-12 h-12', text: 'text-base', offset: '-ml-3' },
+    sm: tw`w-9 h-9`,
+    md: tw`w-10 h-10`,
+    lg: tw`w-12 h-12`,
   };
 
-  const styles = sizeStyles[size];
+  const iconSizes = {
+    sm: 18,
+    md: 20,
+    lg: 24,
+  };
+
+  const textSizes = {
+    sm: tw`text-xs`,
+    md: tw`text-sm`,
+    lg: tw`text-base`,
+  };
+
+  // Générer une couleur basée sur l'user_id
+  const getAvatarColor = (userId: string) => {
+    const colors = [
+      '#3b82f6', // blue
+      '#8b5cf6', // purple
+      '#ec4899', // pink
+      '#f59e0b', // amber
+      '#10b981', // emerald
+      '#06b6d4', // cyan
+      '#ef4444', // red
+      '#6366f1', // indigo
+    ];
+
+    const hash = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return colors[hash % colors.length];
+  };
+
+  // Obtenir les initiales d'un nom
+  const getInitials = (name: string) => {
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
 
   return (
     <View style={tw`flex-row items-center`}>
-      {displayMembers.map((member, index) => {
-        const avatar = getAvatarDisplay(member.profile || null);
+      {/* Avatars visibles */}
+      <View style={tw`flex-row -space-x-2`}>
+        {visibleMembers.map((member, index) => {
+          const bgColor = getAvatarColor(member.user_id);
+          const initials = getInitials(member.user_name || 'User');
 
-        return (
-          <View
-            key={member.id}
-            style={[tw`${styles.container} rounded-full items-center justify-center border-2 border-white shadow-sm`, { backgroundColor: avatar.color }, index > 0 && tw`${styles.offset}`]}
-          >
-            {avatar.type === 'emoji' ? <Text style={tw`${styles.text}`}>{avatar.value}</Text> : <Text style={tw`${styles.text} font-semibold text-white`}>{avatar.value}</Text>}
+          return (
+            <View key={member.user_id} style={[sizeStyles[size], tw`rounded-full border-2 border-white items-center justify-center`, { backgroundColor: bgColor, zIndex: 10 - index }]}>
+              <Text style={[textSizes[size], tw`font-bold text-white`]}>{initials}</Text>
+            </View>
+          );
+        })}
+
+        {/* Compteur des membres restants */}
+        {remainingCount > 0 && (
+          <View style={[sizeStyles[size], tw`rounded-full bg-stone-200 border-2 border-white items-center justify-center`, { zIndex: 0 }]}>
+            <Text style={[textSizes[size], tw`font-semibold text-stone-600`]}>+{remainingCount}</Text>
           </View>
-        );
-      })}
+        )}
 
-      {remainingCount > 0 && (
-        <View style={[tw`${styles.container} rounded-full bg-gray-200 items-center justify-center border-2 border-white ${styles.offset}`]}>
-          <Text style={tw`${styles.text} font-semibold text-gray-600`}>+{remainingCount}</Text>
-        </View>
-      )}
+        {/* Si aucun membre visible, afficher l'icône */}
+        {visibleMembers.length === 0 && (
+          <View style={[sizeStyles[size], tw`rounded-full bg-stone-100 border-2 border-white items-center justify-center`]}>
+            <Users size={iconSizes[size]} color="#9CA3AF" />
+          </View>
+        )}
+      </View>
     </View>
   );
-}
+};

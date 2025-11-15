@@ -21,7 +21,6 @@ import Dashboard from './src/screens/Dashboard';
 import HabitDetails from './src/screens/HabitDetails';
 import CalendarScreen from './src/screens/CalendarScreen';
 import LeaderboardScreen from './src/screens/LeaderboardScreen';
-import StatsScreen from './src/screens/StatsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import AchievementsScreen from './src/screens/AchievementScreen';
 import DiagnosticScreen from './src/screens/DiagnosticScreen';
@@ -54,12 +53,9 @@ import notificationBadgeService from '@/services/notificationBadgeService';
 import LanguageSelectorScreen from '@/components/settings/LanguageSelector';
 import { LanguageDetectionService } from '@/services/languageDetectionService';
 import ResetPasswordScreen from '@/screens/ResetPasswordScreen';
-import GroupsListScreen from '@/screens/GroupsListScreen';
 import CreateGroupScreen from '@/components/groups/CreateGroupScreen';
 import JoinGroupScreen from '@/components/groups/JoinGroupScreen';
-import GroupDashboardScreen from '@/screens/GroupDashboardScreen';
-import CreateGroupHabitScreen from '@/screens/CreateGroupHabitScreen';
-import GroupSettingsScreen from '@/screens/GroupSettingsScreen';
+import { GroupsNavigator } from '@/navigation/GroupsNavigator';
 
 // Type Definitions
 export type RootStackParamList = {
@@ -209,10 +205,10 @@ function MainTabs() {
       />
       <Tab.Screen
         name="Groups"
-        component={GroupsListScreen}
+        component={GroupsNavigator}
         options={{
-          tabBarLabel: 'Groups', // ✅ Changer le label
-          tabBarIcon: ({ color, focused }) => <TabBarIcon name="users" color={color} focused={focused} />, // ✅ Nouvelle icône
+          tabBarLabel: 'Groups',
+          tabBarIcon: ({ color, focused }) => <TabBarIcon name="users" color={color} focused={focused} />,
         }}
         listeners={{ tabPress: () => HapticFeedback.selection() }}
       />
@@ -349,29 +345,6 @@ function AppNavigator() {
         <Stack.Screen
           name="JoinGroup"
           component={JoinGroupScreen}
-          options={{
-            presentation: 'modal',
-            animation: 'slide_from_bottom',
-          }}
-        />
-        <Stack.Screen
-          name="GroupDashboard"
-          component={GroupDashboardScreen}
-          options={{
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen
-          name="CreateGroupHabit"
-          component={CreateGroupHabitScreen}
-          options={{
-            presentation: 'modal',
-            animation: 'slide_from_bottom',
-          }}
-        />
-        <Stack.Screen
-          name="GroupSettings"
-          component={GroupSettingsScreen}
           options={{
             presentation: 'modal',
             animation: 'slide_from_bottom',

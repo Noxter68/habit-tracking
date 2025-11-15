@@ -61,12 +61,7 @@ export default function CreateGroupHabitScreen() {
         emoji,
       });
 
-      Alert.alert('Habitude créée ! 🎉', 'Tous les membres peuvent maintenant la compléter', [
-        {
-          text: 'OK',
-          onPress: () => navigation.goBack(),
-        },
-      ]);
+      navigation.goBack();
     } catch (error: any) {
       console.error('Error creating habit:', error);
       Alert.alert('Erreur', error.message || "Impossible de créer l'habitude");
