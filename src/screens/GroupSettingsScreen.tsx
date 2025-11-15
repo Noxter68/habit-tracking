@@ -1,5 +1,5 @@
 // screens/GroupSettingsScreen.tsx
-// Écran des paramètres d'un groupe
+// Écran des paramètres d'un groupe avec liste membres corrigée
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
@@ -7,6 +7,7 @@ import { useNavigation, useRoute, RouteProp as RNRouteProp } from '@react-naviga
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { X, Copy, Users, LogOut, Trash2, AlertCircle } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
+import * as Haptics from 'expo-haptics';
 import { groupService } from '@/services/groupTypeService';
 import { useAuth } from '@/context/AuthContext';
 import type { GroupWithMembers } from '@/types/group.types';
@@ -29,9 +30,11 @@ export default function GroupSettingsScreen() {
     if (!user?.id) return;
 
     try {
-      const groups = await groupService.getUserGroups(user.id);
-      const currentGroup = groups.find((g) => g.id === groupId);
-      setGroup(currentGroup || null);
+      // Utilise getGroupById au lieu de getUserGroups
+      const currentGroup = await groupService.getGroupById(groupId, user.id);
+      console.log('📦 Group loaded:', currentGroup);
+      console.log('👥 Members:', currentGroup?.members);
+      setGroup(currentGroup);
     } catch (error) {
       console.error('Error loading group:', error);
     } finally {
@@ -48,11 +51,14 @@ export default function GroupSettingsScreen() {
 
     const formattedCode = formatInviteCode(group.invite_code);
     await Clipboard.setStringAsync(formattedCode);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     Alert.alert('Code copié !', `Le code ${formattedCode} a été copié`);
   };
 
   const handleLeaveGroup = () => {
     if (!user?.id || !group) return;
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     Alert.alert('Quitter le groupe', group.is_creator ? 'Vous êtes le créateur. Si vous quittez, le rôle sera transféré au membre le plus ancien.' : 'Êtes-vous sûr de vouloir quitter ce groupe ?', [
       { text: 'Annuler', style: 'cancel' },
@@ -62,6 +68,8 @@ export default function GroupSettingsScreen() {
         onPress: async () => {
           try {
             await groupService.leaveGroup(user.id, groupId);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
             navigation.navigate('MainTabs', {
               screen: 'Groups',
               params: {
@@ -73,6 +81,7 @@ export default function GroupSettingsScreen() {
               Alert.alert('Groupe quitté', 'Vous avez quitté le groupe avec succès');
             }, 500);
           } catch (error: any) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             Alert.alert('Erreur', error.message || 'Impossible de quitter le groupe');
           }
         },
@@ -83,6 +92,8 @@ export default function GroupSettingsScreen() {
   const handleDeleteGroup = () => {
     if (!user?.id || !group) return;
 
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+
     Alert.alert('Supprimer le groupe', 'Cette action est irréversible. Tous les membres seront retirés et toutes les données seront supprimées.', [
       { text: 'Annuler', style: 'cancel' },
       {
@@ -91,6 +102,8 @@ export default function GroupSettingsScreen() {
         onPress: async () => {
           try {
             await groupService.deleteGroup(groupId, user.id);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+
             navigation.navigate('MainTabs', {
               screen: 'Groups',
               params: {
@@ -102,6 +115,7 @@ export default function GroupSettingsScreen() {
               Alert.alert('Groupe supprimé', 'Le groupe a été supprimé avec succès');
             }, 500);
           } catch (error: any) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             Alert.alert('Erreur', error.message || 'Impossible de supprimer le groupe');
           }
         },
@@ -112,7 +126,7 @@ export default function GroupSettingsScreen() {
   if (loading) {
     return (
       <View style={tw`flex-1 bg-[#FAFAFA] items-center justify-center`}>
-        <ActivityIndicator size="large" color="#A78BFA" />
+        <ActivityIndicator size="large" color="#3b82f6" />
       </View>
     );
   }
@@ -120,7 +134,7 @@ export default function GroupSettingsScreen() {
   if (!group) {
     return (
       <View style={tw`flex-1 bg-[#FAFAFA] items-center justify-center`}>
-        <Text style={tw`text-gray-500`}>Groupe introuvable</Text>
+        <Text style={tw`text-sm text-stone-400`}>Groupe introuvable</Text>
       </View>
     );
   }
@@ -128,13 +142,19 @@ export default function GroupSettingsScreen() {
   return (
     <View style={tw`flex-1 bg-[#FAFAFA]`}>
       {/* Header */}
-      <View style={tw`px-6 pt-16 pb-4 bg-white border-b border-gray-100`}>
+      <View style={tw`px-6 pt-16 pb-4 bg-white border-b border-stone-100`}>
         <View style={tw`flex-row items-center justify-between`}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={tw`w-10 h-10 items-center justify-center`}>
-            <X size={24} color="#6B7280" />
+          <TouchableOpacity
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              navigation.goBack();
+            }}
+            style={tw`w-10 h-10 items-center justify-center`}
+          >
+            <X size={24} color="#57534E" />
           </TouchableOpacity>
 
-          <Text style={tw`text-xl font-bold text-gray-900`}>Paramètres</Text>
+          <Text style={tw`text-xl font-bold text-stone-800`}>Paramètres</Text>
 
           <View style={tw`w-10`} />
         </View>
@@ -142,73 +162,85 @@ export default function GroupSettingsScreen() {
 
       <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-6 py-6`}>
         {/* Infos du groupe */}
-        <View style={tw`bg-white rounded-2xl p-5 mb-4 border border-gray-100`}>
+        <View style={tw`bg-white rounded-2xl p-5 mb-4 shadow-sm border border-stone-100`}>
           <View style={tw`flex-row items-center gap-3 mb-4`}>
-            <View style={tw`w-12 h-12 bg-[#F3F4F6] rounded-xl items-center justify-center`}>
+            <View style={tw`w-12 h-12 bg-stone-50 rounded-xl items-center justify-center`}>
               <Text style={tw`text-2xl`}>{group.emoji}</Text>
             </View>
             <View style={tw`flex-1`}>
-              <Text style={tw`text-lg font-bold text-gray-900`}>{group.name}</Text>
-              <Text style={tw`text-sm text-gray-500`}>
+              <Text style={tw`text-lg font-bold text-stone-800`}>{group.name}</Text>
+              <Text style={tw`text-sm text-stone-500`}>
                 {group.members_count} membre{group.members_count > 1 ? 's' : ''}
               </Text>
             </View>
           </View>
 
           {/* Code d'invitation */}
-          <TouchableOpacity onPress={handleCopyCode} style={tw`flex-row items-center justify-between bg-[#F3F4F6] rounded-xl p-4`} activeOpacity={0.7}>
+          <TouchableOpacity onPress={handleCopyCode} style={tw`flex-row items-center justify-between bg-stone-50 rounded-xl p-4`} activeOpacity={0.7}>
             <View>
-              <Text style={tw`text-xs text-gray-500 mb-1`}>Code d'invitation</Text>
-              <Text style={tw`text-lg font-mono font-bold text-gray-900`}>{formatInviteCode(group.invite_code)}</Text>
+              <Text style={tw`text-xs text-stone-500 mb-1`}>Code d'invitation</Text>
+              <Text style={tw`text-lg font-mono font-bold text-stone-800`}>{formatInviteCode(group.invite_code)}</Text>
             </View>
-            <Copy size={20} color="#6B7280" />
+            <Copy size={20} color="#57534E" />
           </TouchableOpacity>
         </View>
 
         {/* Membres */}
-        <View style={tw`bg-white rounded-2xl p-5 mb-4 border border-gray-100`}>
+        <View style={tw`bg-white rounded-2xl p-5 mb-4 shadow-sm border border-stone-100`}>
           <View style={tw`flex-row items-center gap-2 mb-4`}>
-            <Users size={20} color="#6B7280" />
-            <Text style={tw`text-base font-bold text-gray-900`}>Membres ({group.members_count})</Text>
+            <Users size={20} color="#57534E" />
+            <Text style={tw`text-base font-bold text-stone-800`}>Membres ({group.members_count})</Text>
           </View>
 
-          <View style={tw`gap-3`}>
-            {group.members.map((member) => {
-              const avatar = getAvatarDisplay(member.profile || null);
-              const isCreator = member.role === 'creator';
-              const isMe = member.user_id === user?.id;
+          {group.members && group.members.length > 0 ? (
+            <View style={tw`gap-3`}>
+              {group.members.map((member) => {
+                const avatar = getAvatarDisplay({
+                  id: member.user_id,
+                  username: member.profile?.username || null,
+                  email: member.profile?.email || null,
+                  avatar_emoji: member.profile?.avatar_emoji || null,
+                  avatar_color: member.profile?.avatar_color || null,
+                  subscription_tier: member.profile?.subscription_tier || 'free',
+                });
 
-              return (
-                <View key={member.id} style={tw`flex-row items-center justify-between`}>
-                  <View style={tw`flex-row items-center gap-3 flex-1`}>
-                    <View style={[tw`w-10 h-10 rounded-full items-center justify-center border-2 border-white`, { backgroundColor: avatar.color }]}>
-                      {avatar.type === 'emoji' ? <Text style={tw`text-lg`}>{avatar.value}</Text> : <Text style={tw`text-sm font-semibold text-white`}>{avatar.value}</Text>}
-                    </View>
-                    <View style={tw`flex-1`}>
-                      <Text style={tw`text-sm font-semibold text-gray-900`}>
-                        {member.profile?.username || 'Utilisateur'}
-                        {isMe && ' (Vous)'}
-                      </Text>
-                      {isCreator && <Text style={tw`text-xs text-[#A78BFA]`}>Créateur</Text>}
+                const isCreator = member.user_id === group.created_by || member.role === 'creator';
+                const isMe = member.user_id === user?.id;
+
+                return (
+                  <View key={member.user_id} style={tw`flex-row items-center justify-between`}>
+                    <View style={tw`flex-row items-center gap-3 flex-1`}>
+                      <View style={[tw`w-10 h-10 rounded-full items-center justify-center border-2 border-white`, { backgroundColor: avatar.color }]}>
+                        {avatar.type === 'emoji' ? <Text style={tw`text-lg`}>{avatar.value}</Text> : <Text style={tw`text-sm font-semibold text-white`}>{avatar.value}</Text>}
+                      </View>
+                      <View style={tw`flex-1`}>
+                        <Text style={tw`text-sm font-semibold text-stone-800`}>
+                          {member.profile?.username || member.profile?.email || 'Utilisateur'}
+                          {isMe && ' (Vous)'}
+                        </Text>
+                        {isCreator && <Text style={tw`text-xs text-[#3b82f6]`}>Créateur</Text>}
+                      </View>
                     </View>
                   </View>
-                </View>
-              );
-            })}
-          </View>
+                );
+              })}
+            </View>
+          ) : (
+            <Text style={tw`text-sm text-stone-400 text-center py-4`}>Aucun membre trouvé</Text>
+          )}
         </View>
 
         {/* Actions */}
         <View style={tw`gap-3`}>
           {/* Quitter le groupe */}
-          <TouchableOpacity onPress={handleLeaveGroup} style={tw`bg-white rounded-2xl px-5 py-4 flex-row items-center gap-3 border border-gray-100`} activeOpacity={0.7}>
+          <TouchableOpacity onPress={handleLeaveGroup} style={tw`bg-white rounded-2xl px-5 py-4 flex-row items-center gap-3 shadow-sm border border-stone-100`} activeOpacity={0.7}>
             <LogOut size={20} color="#F59E0B" />
             <Text style={tw`text-base font-semibold text-[#F59E0B]`}>Quitter le groupe</Text>
           </TouchableOpacity>
 
           {/* Supprimer le groupe (créateur uniquement) */}
           {group.is_creator && (
-            <TouchableOpacity onPress={handleDeleteGroup} style={tw`bg-white rounded-2xl px-5 py-4 flex-row items-center gap-3 border border-red-200`} activeOpacity={0.7}>
+            <TouchableOpacity onPress={handleDeleteGroup} style={tw`bg-white rounded-2xl px-5 py-4 flex-row items-center gap-3 shadow-sm border border-red-200`} activeOpacity={0.7}>
               <Trash2 size={20} color="#EF4444" />
               <Text style={tw`text-base font-semibold text-red-500`}>Supprimer le groupe</Text>
             </TouchableOpacity>
@@ -222,6 +254,8 @@ export default function GroupSettingsScreen() {
             <Text style={tw`text-sm text-blue-900 leading-relaxed flex-1`}>En tant que créateur, si vous quittez le groupe, votre rôle sera automatiquement transféré au membre le plus ancien.</Text>
           </View>
         )}
+
+        <View style={tw`h-8`} />
       </ScrollView>
     </View>
   );

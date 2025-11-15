@@ -1,6 +1,4 @@
 // services/groupService.ts
-// Service principal pour gérer les groupes d'habitudes
-
 import { supabase } from '@/lib/supabase';
 import type {
   Group,
@@ -21,37 +19,76 @@ import type {
   TimelineDay,
 } from '@/types/group.types';
 
+interface CreateGroupResponse {
+  success: boolean;
+  group_id?: string;
+  invite_code?: string;
+  error?: string;
+}
+
 class GroupService {
   // ============================================
   // GROUPES - CRUD
   // ============================================
 
+  /**
+   * ✅ OPTIMISÉ: Charge uniquement les groupes de l'utilisateur
+   */
   async getUserGroups(userId: string): Promise<GroupWithMembers[]> {
+    // Étape 1 : Récupérer les IDs des groupes de l'utilisateur
+    const { data: memberships, error: memberError } = await supabase.from('group_members').select('group_id').eq('user_id', userId);
+
+    if (memberError) throw memberError;
+
+    const groupIds = memberships?.map((m) => m.group_id) || [];
+
+    if (groupIds.length === 0) return [];
+
+    // Étape 2 : Récupérer les groupes AVEC TOUS LES MEMBRES
     const { data: groups, error } = await supabase
       .from('groups')
       .select(
         `
         *,
         members:group_members(
-          *,
+          id,
+          user_id,
+          role,
+          joined_at,
           profile:profiles(id, username, email, avatar_emoji, avatar_color, subscription_tier)
         )
       `
       )
-      .eq('group_members.user_id', userId)
+      .in('id', groupIds)
       .order('updated_at', { ascending: false });
 
     if (error) throw error;
 
+    console.log('📦 getUserGroups RAW data:', groups);
+
     // Enrichir avec les infos calculées
     return Promise.all(
       (groups || []).map(async (group) => {
+        console.log(`👥 Group "${group.name}" members:`, group.members);
+
         const streak = await this.calculateGroupStreak(group.id);
         const isCreator = group.created_by === userId;
 
+        // Mapper les membres correctement
+        const mappedMembers = (group.members || []).map((m: any) => ({
+          id: m.id,
+          user_id: m.user_id,
+          role: m.role || (m.user_id === group.created_by ? 'creator' : 'member'),
+          joined_at: m.joined_at,
+          profile: m.profile,
+        }));
+
+        console.log(`✅ Mapped members for "${group.name}":`, mappedMembers);
+
         return {
           ...group,
-          members_count: group.members?.length || 0,
+          members: mappedMembers,
+          members_count: mappedMembers.length,
           current_streak: streak,
           is_creator: isCreator,
         };
@@ -59,27 +96,77 @@ class GroupService {
     );
   }
 
+  /**
+   * ✅ NOUVEAU: Charge UN SEUL groupe (pour le Dashboard)
+   * Plus rapide et évite les race conditions
+   */
+  async getGroupById(groupId: string, userId: string): Promise<GroupWithMembers | null> {
+    try {
+      const { data: group, error } = await supabase
+        .from('groups')
+        .select(
+          `
+          *,
+          members:group_members(
+            *,
+            profile:profiles(id, username, email, avatar_emoji, avatar_color, subscription_tier)
+          )
+        `
+        )
+        .eq('id', groupId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching group:', error);
+        return null;
+      }
+
+      if (!group) return null;
+
+      // Vérifier que l'utilisateur est membre
+      const isMember = group.members?.some((m: any) => m.user_id === userId);
+      if (!isMember) {
+        console.warn('User is not a member of this group');
+        return null;
+      }
+
+      // Enrichir avec les infos calculées
+      const streak = await this.calculateGroupStreak(group.id);
+      const isCreator = group.created_by === userId;
+
+      return {
+        ...group,
+        members_count: group.members?.length || 0,
+        current_streak: streak,
+        is_creator: isCreator,
+      };
+    } catch (error) {
+      console.error('Error in getGroupById:', error);
+      return null;
+    }
+  }
+
   async createGroup(userId: string, input: CreateGroupInput): Promise<Group> {
-    // Générer le code d'invitation via la fonction SQL
-    const { data: codeData, error: codeError } = await supabase.rpc('generate_unique_invite_code');
-
-    if (codeError) throw codeError;
-
-    const inviteCode = codeData as string;
-
-    // Créer le groupe (le trigger va auto-ajouter le créateur comme membre)
-    const { data: group, error } = await supabase
-      .from('groups')
-      .insert({
-        name: input.name,
-        emoji: input.emoji,
-        invite_code: inviteCode,
-        created_by: userId,
-      })
-      .select()
-      .single();
+    // Utiliser la fonction SQL qui gère RLS et l'ajout du membre
+    const { data, error } = await supabase.rpc('create_group', {
+      user_uuid: userId,
+      group_name: input.name,
+      group_emoji: input.emoji,
+    });
 
     if (error) throw error;
+
+    const result = data as CreateGroupResponse;
+
+    if (!result.success || !result.group_id) {
+      throw new Error(result.error || 'Failed to create group');
+    }
+
+    // Récupérer le groupe créé
+    const { data: group, error: fetchError } = await supabase.from('groups').select('*').eq('id', result.group_id).single();
+
+    if (fetchError) throw fetchError;
+
     return group;
   }
 
@@ -173,7 +260,6 @@ class GroupService {
   }
 
   async deleteGroupHabit(habitId: string, userId: string): Promise<void> {
-    // La RLS policy vérifie que l'user est soit le créateur de l'habit soit du groupe
     const { error } = await supabase.from('group_habits').delete().eq('id', habitId);
 
     if (error) throw error;
@@ -264,115 +350,73 @@ class GroupService {
       `
       )
       .eq('completion_id', completionId)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
     return data || [];
   }
 
   // ============================================
-  // CALCULS & STATISTIQUES
+  // STATISTIQUES & CALCULS
   // ============================================
 
   async calculateGroupStreak(groupId: string): Promise<number> {
-    const { data, error } = await supabase.rpc('calculate_group_streak', { group_uuid: groupId });
+    const { data, error } = await supabase.rpc('calculate_group_streak', {
+      group_uuid: groupId,
+    });
 
     if (error) throw error;
     return data as number;
   }
 
   async getGroupStats(groupId: string): Promise<GroupStats> {
-    // Récupérer les membres avec leur profil
+    // Récupérer le streak
+    const currentStreak = await this.calculateGroupStreak(groupId);
+
+    // Récupérer les membres avec leurs streaks individuels
     const { data: members } = await supabase
       .from('group_members')
       .select(
         `
         user_id,
-        profiles!inner(id, username, avatar_emoji, avatar_color)
+        profile:profiles(username, avatar_emoji, avatar_color)
       `
       )
       .eq('group_id', groupId);
 
-    // Récupérer d'abord les IDs des habitudes du groupe
-    const { data: groupHabits } = await supabase.from('group_habits').select('id').eq('group_id', groupId);
-
-    const habitIds = groupHabits?.map((h) => h.id) || [];
-
-    // Récupérer toutes les complétions pour ces habitudes
-    const { data: completions } = await supabase.from('group_habit_completions').select('*').in('group_habit_id', habitIds);
-
-    const currentStreak = await this.calculateGroupStreak(groupId);
-    const totalCompletions = completions?.length || 0;
-
-    // Calculer les streaks individuels et stats cette semaine
-    const memberStreaks = await Promise.all(
-      (members || []).map(async (member: any) => {
-        const profile = member.profiles;
-        const userCompletions = completions?.filter((c) => c.user_id === member.user_id) || [];
-
-        // Calculer streak individuel (simplifié)
-        let streak = 0;
-        const today = new Date();
-        for (let i = 0; i < 365; i++) {
-          const checkDate = new Date(today);
-          checkDate.setDate(today.getDate() - i);
-          const dateStr = checkDate.toISOString().split('T')[0];
-
-          const hasCompletion = userCompletions.some((c) => c.date === dateStr);
-          if (!hasCompletion) break;
-          streak++;
-        }
-
-        // Complétions cette semaine
-        const weekAgo = new Date();
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        const weekAgoStr = weekAgo.toISOString().split('T')[0];
-        const completionsThisWeek = userCompletions.filter((c) => c.date >= weekAgoStr).length;
-
-        return {
-          user_id: member.user_id,
-          username: profile?.username || null,
-          avatar_emoji: profile?.avatar_emoji || null,
-          avatar_color: profile?.avatar_color || null,
-          current_streak: streak,
-          completions_this_week: completionsThisWeek,
-        };
-      })
-    );
+    // TODO: Calculer les stats individuelles de chaque membre
+    const memberStreaks = (members || []).map((m: any) => ({
+      user_id: m.user_id,
+      username: m.profile?.username || null,
+      avatar_emoji: m.profile?.avatar_emoji || null,
+      avatar_color: m.profile?.avatar_color || null,
+      current_streak: 0, // À implémenter
+      completions_this_week: 0, // À implémenter
+    }));
 
     return {
       group_id: groupId,
       current_streak: currentStreak,
-      total_completions: totalCompletions,
-      completion_rate: 0, // À calculer selon besoin
+      total_completions: 0, // À implémenter
+      completion_rate: 0, // À implémenter
       member_streaks: memberStreaks,
     };
   }
 
-  // ============================================
-  // TIMELINE (7 jours)
-  // ============================================
-
-  async getHabitTimeline(habitId: string, days: number = 7): Promise<TimelineDay[]> {
+  async getHabitTimeline(habitId: string, groupId: string, days: number = 7): Promise<TimelineDay[]> {
     const completions = await this.getHabitCompletions(habitId, days);
 
     const { data: members } = await supabase
-      .from('group_habits')
+      .from('group_members')
       .select(
         `
-        group_id,
-        group:groups!inner(
-          members:group_members(
-            user_id,
-            profile:profiles(id, username, avatar_emoji, avatar_color)
-          )
-        )
+        user_id,
+        profile:profiles(username, avatar_emoji, avatar_color)
       `
       )
-      .eq('id', habitId)
-      .single();
+      .eq('group_id', groupId);
 
-    const groupMembers = members?.group?.members || [];
+    const groupMembers = members || [];
     const timeline: TimelineDay[] = [];
     const today = new Date();
     const dayNames = ['Di', 'Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa'];
@@ -410,10 +454,23 @@ class GroupService {
   // ============================================
 
   async canUserJoinGroup(userId: string): Promise<CanJoinGroupResponse> {
-    const { data, error } = await supabase.rpc('can_user_join_group', { user_uuid: userId });
+    // Compter les groupes de l'utilisateur
+    const { count } = await supabase.from('group_members').select('*', { count: 'exact', head: true }).eq('user_id', userId);
 
-    if (error) throw error;
-    return data as CanJoinGroupResponse;
+    // Vérifier si premium
+    const { data: profile } = await supabase.from('profiles').select('subscription_tier').eq('id', userId).single();
+
+    const isPremium = profile?.subscription_tier === 'premium';
+    const maxGroups = isPremium ? 5 : 1;
+    const currentCount = count || 0;
+
+    return {
+      can_join: currentCount < maxGroups,
+      reason: currentCount >= maxGroups ? 'Limite de groupes atteinte' : undefined,
+      current_count: currentCount,
+      max_allowed: maxGroups,
+      requires_premium: !isPremium,
+    };
   }
 
   async canGroupAddHabit(groupId: string, creatorId: string): Promise<CanAddHabitResponse> {

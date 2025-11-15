@@ -1,15 +1,17 @@
 // screens/GroupDashboardScreen.tsx
-// Dashboard principal d'un groupe avec habitudes et timeline
+// Dashboard avec Realtime + Optimistic Updates
 
-import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, ImageBackground } from 'react-native';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, ImageBackground, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation, useRoute, RouteProp as RNRouteProp, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp as RNRouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ArrowLeft, Plus, Settings, Share2, Flame, Users } from 'lucide-react-native';
+import { ArrowLeft, Plus, Settings, Share2, Flame } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
+import * as Haptics from 'expo-haptics';
 import { groupService } from '@/services/groupTypeService';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 import type { GroupWithMembers, GroupHabitWithCompletions } from '@/types/group.types';
 import { formatStreak, getLevelProgress, formatInviteCode } from '@/utils/groupUtils';
 import { MemberAvatars } from '@/components/groups/MemberAvatars';
@@ -19,7 +21,6 @@ import tw from '@/lib/tailwind';
 type NavigationProp = NativeStackNavigationProp<any>;
 type RouteParams = RNRouteProp<{ GroupDashboard: { groupId: string } }, 'GroupDashboard'>;
 
-// Texture pour le header (utilise la texture Crystal de Nuvoria)
 const headerTexture = require('../../assets/interface/progressBar/crystal.png');
 
 export default function GroupDashboardScreen() {
@@ -33,17 +34,40 @@ export default function GroupDashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadGroupData = async () => {
+  const xpProgress = useRef(new Animated.Value(0)).current;
+
+  const loadGroupData = async (silent = false) => {
     if (!user?.id) return;
 
+    if (!silent) setLoading(true);
+
     try {
-      const groups = await groupService.getUserGroups(user.id);
-      const currentGroup = groups.find((g) => g.id === groupId);
+      const currentGroup = await groupService.getGroupById(groupId, user.id);
 
       if (!currentGroup) {
-        Alert.alert('Erreur', 'Groupe introuvable');
-        navigation.goBack();
+        console.warn('Group not found or user is not a member');
+        if (!silent) {
+          Alert.alert('Erreur', 'Groupe introuvable');
+          navigation.goBack();
+        }
         return;
+      }
+
+      // Animation de la barre XP si changement
+      if (group && currentGroup.xp !== group.xp) {
+        const newProgress = getLevelProgress(currentGroup.xp);
+
+        Animated.timing(xpProgress, {
+          toValue: newProgress,
+          duration: 800,
+          useNativeDriver: false,
+        }).start();
+
+        if (currentGroup.xp > group.xp) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+      } else if (!group) {
+        xpProgress.setValue(getLevelProgress(currentGroup.xp));
       }
 
       setGroup(currentGroup);
@@ -52,20 +76,93 @@ export default function GroupDashboardScreen() {
       setHabits(habitsData);
     } catch (error) {
       console.error('Error loading group:', error);
-      Alert.alert('Erreur', 'Impossible de charger le groupe');
+      if (!silent) {
+        Alert.alert('Erreur', 'Impossible de charger le groupe');
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      loadGroupData();
-    }, [groupId, user?.id])
-  );
+  // Setup Realtime subscriptions
+  useEffect(() => {
+    if (!groupId) return;
+
+    // Subscribe aux complétions
+    const completionsChannel = supabase
+      .channel(`group_completions:${groupId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'group_habit_completions',
+        },
+        (payload) => {
+          console.log('🔥 Realtime completion change:', payload);
+          loadGroupData(true);
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 Completions channel status:', status);
+      });
+
+    // Subscribe aux habitudes du groupe
+    const habitsChannel = supabase
+      .channel(`group_habits:${groupId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'group_habits',
+          filter: `group_id=eq.${groupId}`,
+        },
+        (payload) => {
+          console.log('🔥 Realtime habit change:', payload);
+          loadGroupData(true);
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 Habits channel status:', status);
+      });
+
+    // Subscribe aux changements du groupe (XP, niveau, streak)
+    const groupChannel = supabase
+      .channel(`group:${groupId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'groups',
+          filter: `id=eq.${groupId}`,
+        },
+        (payload) => {
+          console.log('🔥 Realtime group change:', payload);
+          loadGroupData(true);
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 Group channel status:', status);
+      });
+
+    return () => {
+      completionsChannel.unsubscribe();
+      habitsChannel.unsubscribe();
+      groupChannel.unsubscribe();
+    };
+  }, [groupId]);
+
+  // Charge uniquement au mount (pas de reload au retour depuis Settings)
+  useEffect(() => {
+    loadGroupData();
+  }, [groupId, user?.id]);
+
   const onRefresh = () => {
     setRefreshing(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     loadGroupData();
   };
 
@@ -74,18 +171,22 @@ export default function GroupDashboardScreen() {
 
     const formattedCode = formatInviteCode(group.invite_code);
     await Clipboard.setStringAsync(formattedCode);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     Alert.alert('Code copié !', `Le code ${formattedCode} a été copié dans le presse-papier`);
   };
 
   const handleAddHabit = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     navigation.navigate('CreateGroupHabit', { groupId });
   };
 
   const handleSettings = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.navigate('GroupSettings', { groupId });
   };
 
   const handleGoBack = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.navigate('GroupsList');
   };
 
@@ -97,6 +198,7 @@ export default function GroupDashboardScreen() {
         style: 'destructive',
         onPress: async () => {
           try {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
             await groupService.deleteGroupHabit(habitId, user.id);
             await loadGroupData();
           } catch (error) {
@@ -160,7 +262,7 @@ export default function GroupDashboardScreen() {
             </View>
           </View>
 
-          {/* Barre XP */}
+          {/* Barre XP animée */}
           <View style={tw`mb-5`}>
             <View style={tw`flex-row items-center justify-between mb-2`}>
               <Text style={tw`text-xs font-semibold text-white/90`}>
@@ -169,13 +271,22 @@ export default function GroupDashboardScreen() {
               <Text style={tw`text-xs text-white/70`}>{progress}%</Text>
             </View>
             <View style={tw`h-2.5 bg-white/20 rounded-full overflow-hidden`}>
-              <View style={[tw`h-full bg-white rounded-full shadow-sm`, { width: `${progress}%` }]} />
+              <Animated.View
+                style={[
+                  tw`h-full bg-white rounded-full shadow-sm`,
+                  {
+                    width: xpProgress.interpolate({
+                      inputRange: [0, 100],
+                      outputRange: ['0%', '100%'],
+                    }),
+                  },
+                ]}
+              />
             </View>
           </View>
 
           {/* Stats: Streak et Membres */}
           <View style={tw`flex-row items-center justify-between`}>
-            {/* Streak collectif */}
             <View style={tw`flex-row items-center gap-2.5`}>
               <View style={tw`w-11 h-11 bg-orange-500/20 rounded-full items-center justify-center`}>
                 <Flame size={22} color="#FBBF24" />
@@ -186,7 +297,6 @@ export default function GroupDashboardScreen() {
               </View>
             </View>
 
-            {/* Membres */}
             <View style={tw`flex-row items-center gap-2.5`}>
               <MemberAvatars members={group.members} maxDisplay={3} size="sm" />
               <View>
@@ -200,7 +310,6 @@ export default function GroupDashboardScreen() {
 
       {/* Liste des habitudes */}
       <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-6 py-6`} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3b82f6" />}>
-        {/* Header section habitudes */}
         <View style={tw`flex-row items-center justify-between mb-5`}>
           <Text style={tw`text-xl font-bold text-stone-800`}>Habitudes ({habits.length})</Text>
 
@@ -211,7 +320,6 @@ export default function GroupDashboardScreen() {
         </View>
 
         {habits.length === 0 ? (
-          // État vide
           <View style={tw`bg-white rounded-3xl p-8 items-center shadow-sm border border-stone-100`}>
             <View style={tw`w-20 h-20 bg-stone-50 rounded-2xl items-center justify-center mb-4`}>
               <Text style={tw`text-4xl`}>🎯</Text>
@@ -223,15 +331,13 @@ export default function GroupDashboardScreen() {
             </TouchableOpacity>
           </View>
         ) : (
-          // Liste des habitudes avec swipe-to-delete
           <View style={tw`gap-4`}>
             {habits.map((habit) => (
-              <GroupHabitCard key={habit.id} habit={habit} groupId={groupId} members={group.members} onRefresh={loadGroupData} onDelete={() => handleDeleteHabit(habit.id)} />
+              <GroupHabitCard key={habit.id} habit={habit} groupId={groupId} members={group.members} onRefresh={() => loadGroupData(true)} onDelete={() => handleDeleteHabit(habit.id)} />
             ))}
           </View>
         )}
 
-        {/* Padding bottom pour éviter que la dernière carte ne soit coupée */}
         <View style={tw`h-8`} />
       </ScrollView>
     </View>

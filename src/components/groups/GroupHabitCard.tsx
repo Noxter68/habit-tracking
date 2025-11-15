@@ -1,21 +1,23 @@
 // components/groups/GroupHabitCard.tsx
-// Card d'habitude de groupe avec timeline 7 jours et complétions dynamiques
+// Card d'habitude de groupe avec optimistic updates complets
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { Check } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 import { groupService } from '@/services/groupTypeService';
 import { useAuth } from '@/context/AuthContext';
 import type { GroupHabitWithCompletions, TimelineDay } from '@/types/group.types';
 import { getAvatarDisplay } from '@/utils/groupUtils';
+import { GroupHabitTimeline } from './GroupHabitTimeline';
 import tw from '@/lib/tailwind';
 
 interface GroupHabitCardProps {
   habit: GroupHabitWithCompletions;
   groupId: string;
-  members: Array<{ user_id: string; user_name: string }>; // Ajout du prop members
+  members: Array<{ user_id: string; user_name: string }>;
   onRefresh: () => void;
-  onDelete: () => void; // Ajout du prop onDelete
+  onDelete: () => void;
 }
 
 export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }: GroupHabitCardProps) {
@@ -23,11 +25,21 @@ export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }:
   const [timeline, setTimeline] = useState<TimelineDay[]>([]);
   const [loading, setLoading] = useState(true);
   const [completing, setCompleting] = useState(false);
+  const [userCompletedToday, setUserCompletedToday] = useState(false);
+  const [completionsCount, setCompletionsCount] = useState(habit.completions_today || 0);
 
   const loadTimeline = async () => {
     try {
-      const data = await groupService.getHabitTimeline(habit.id, 7);
+      const data = await groupService.getHabitTimeline(habit.id, groupId, 7);
       setTimeline(data);
+
+      const today = data.find((day) => day.is_today);
+      const isCompleted = today?.completions.find((c) => c.user_id === user?.id)?.completed || false;
+      setUserCompletedToday(isCompleted);
+
+      // Sync le compteur avec les vraies données
+      const realCount = today?.completions.filter((c) => c.completed).length || 0;
+      setCompletionsCount(realCount);
     } catch (error) {
       console.error('Error loading timeline:', error);
     } finally {
@@ -39,25 +51,72 @@ export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }:
     loadTimeline();
   }, [habit.id]);
 
+  // Recharger quand les props changent (Realtime)
+  useEffect(() => {
+    setCompletionsCount(habit.completions_today || 0);
+  }, [habit.completions_today]);
+
+  // ✨ NOUVEAU: Recharger la timeline quand une complétion change via Realtime
+  useEffect(() => {
+    if (!loading && habit.completions_today !== undefined) {
+      // Silent reload de la timeline
+      loadTimeline();
+    }
+  }, [habit.completions_today]);
+
   const today = timeline.find((day) => day.is_today);
-  const userCompletedToday = today?.completions.find((c) => c.user_id === user?.id)?.completed || false;
 
   const handleToggleComplete = async () => {
     if (!user?.id || completing) return;
 
     setCompleting(true);
+    const wasCompleted = userCompletedToday;
+
+    // ✨ OPTIMISTIC UPDATE
+    setUserCompletedToday(!wasCompleted);
+    setCompletionsCount((prev) => (wasCompleted ? Math.max(0, prev - 1) : prev + 1));
+
+    // Update optimiste de la timeline
+    const optimisticTimeline = timeline.map((day) => {
+      if (!day.is_today) return day;
+
+      return {
+        ...day,
+        completions: day.completions.map((c) => (c.user_id === user.id ? { ...c, completed: !wasCompleted } : c)),
+      };
+    });
+    setTimeline(optimisticTimeline);
+
+    // Haptic feedback immédiat
+    Haptics.impactAsync(wasCompleted ? Haptics.ImpactFeedbackStyle.Light : Haptics.ImpactFeedbackStyle.Medium);
+
     try {
-      if (completing) {
-        await groupService.uncompleteGroupHabit(habit.id, user.id);
+      if (wasCompleted) {
+        await groupService.uncompleteGroupHabit(user.id, habit.id);
       } else {
-        await groupService.completeGroupHabit(habit.id, user.id);
+        await groupService.completeGroupHabit(user.id, {
+          group_habit_id: habit.id,
+        });
       }
 
-      // ✅ FIX: Reload + trigger parent refresh
+      // Recharge les vraies données après succès
       await loadTimeline();
-      onRefresh(); // ← Important !
+      onRefresh();
+
+      // Success haptic
+      if (!wasCompleted) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
     } catch (error) {
       console.error('Error toggling completion:', error);
+
+      // ❌ ROLLBACK en cas d'erreur
+      setUserCompletedToday(wasCompleted);
+      setCompletionsCount((prev) => (wasCompleted ? prev + 1 : Math.max(0, prev - 1)));
+      await loadTimeline(); // Recharge la timeline originale
+
+      // Error haptic
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert('Erreur', 'Impossible de modifier la complétion');
     } finally {
       setCompleting(false);
@@ -65,6 +124,7 @@ export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }:
   };
 
   const handleLongPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     Alert.alert("Supprimer l'habitude", `Voulez-vous supprimer "${habit.name}" ?`, [
       { text: 'Annuler', style: 'cancel' },
       {
@@ -73,52 +133,6 @@ export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }:
         onPress: onDelete,
       },
     ]);
-  };
-
-  const getCompletionStatus = (day: TimelineDay): 'all' | 'partial' | 'none' | 'today' => {
-    if (day.is_today) return 'today';
-
-    const completedCount = day.completions.filter((c) => c.completed).length;
-    if (completedCount === 0) return 'none';
-    if (completedCount === day.completions.length) return 'all';
-    return 'partial';
-  };
-
-  const getStatusColor = (status: string): string => {
-    switch (status) {
-      case 'all':
-        return '#10b981'; // Emerald
-      case 'partial':
-        return '#3b82f6'; // Blue
-      case 'today':
-        return '#8b5cf6'; // Purple
-      default:
-        return '#E5E7EB'; // Gray
-    }
-  };
-
-  const getStatusSymbol = (status: string): string => {
-    switch (status) {
-      case 'all':
-        return '✓✓';
-      case 'partial':
-        return '✓○';
-      case 'none':
-        return '○○';
-      case 'today':
-        return '●●';
-      default:
-        return '○○';
-    }
-  };
-
-  // Générer initiales
-  const getInitials = (name: string) => {
-    const parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-    }
-    return name.slice(0, 2).toUpperCase();
   };
 
   return (
@@ -135,12 +149,12 @@ export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }:
                 {habit.name}
               </Text>
               <Text style={tw`text-xs text-stone-500`}>
-                {habit.completions_today || 0}/{habit.total_members || members.length} complété{(habit.completions_today || 0) > 1 ? 's' : ''}
+                {completionsCount}/{habit.total_members || members.length} complété{completionsCount > 1 ? 's' : ''}
               </Text>
             </View>
           </View>
 
-          {/* Bouton complétion */}
+          {/* Bouton complétion avec feedback visuel */}
           <TouchableOpacity
             onPress={handleToggleComplete}
             disabled={completing}
@@ -151,24 +165,7 @@ export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }:
           </TouchableOpacity>
         </View>
 
-        {/* Avatars des membres avec états (fallback si pas de timeline) */}
-        {!today && members.length > 0 && (
-          <View style={tw`flex-row -space-x-2 mb-4`}>
-            {members.map((member, index) => {
-              const initials = getInitials(member.user_name || 'User');
-              const isCompleted = userCompletedToday && member.user_id === user?.id;
-              const bgColor = isCompleted ? '#10b981' : '#E5E7EB';
-
-              return (
-                <View key={member.user_id} style={[tw`w-9 h-9 rounded-full border-2 border-white items-center justify-center`, { backgroundColor: bgColor, zIndex: 10 - index }]}>
-                  {isCompleted ? <Check size={16} color="#FFFFFF" strokeWidth={3} /> : <Text style={tw`text-xs font-bold text-stone-500`}>{initials}</Text>}
-                </View>
-              );
-            })}
-          </View>
-        )}
-
-        {/* Membres avec avatars (si timeline disponible) */}
+        {/* Membres avec avatars - Utilise la timeline pour les données à jour */}
         {today && today.completions.length > 0 && (
           <View style={tw`flex-row -space-x-2 mb-4`}>
             {today.completions.map((completion, index) => {
@@ -184,7 +181,13 @@ export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }:
               return (
                 <View
                   key={completion.user_id}
-                  style={[tw`w-9 h-9 rounded-full items-center justify-center border-2 border-white`, { backgroundColor: completion.completed ? '#10b981' : avatar.color, zIndex: 10 - index }]}
+                  style={[
+                    tw`w-9 h-9 rounded-full items-center justify-center border-2 border-white`,
+                    {
+                      backgroundColor: completion.completed ? '#10b981' : avatar.color,
+                      zIndex: 10 - index,
+                    },
+                  ]}
                 >
                   {completion.completed ? (
                     <Check size={16} color="#FFFFFF" strokeWidth={3} />
@@ -199,62 +202,13 @@ export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }:
           </View>
         )}
 
-        {/* Timeline 7 jours */}
+        {/* Timeline stylée */}
         {loading ? (
           <View style={tw`py-4 items-center`}>
-            <ActivityIndicator size="small" color="#8b5cf6" />
+            <ActivityIndicator size="small" color="#3b82f6" />
           </View>
         ) : (
-          timeline.length > 0 && (
-            <View style={tw`gap-3`}>
-              {/* Jours de la semaine */}
-              <View style={tw`flex-row justify-between`}>
-                {timeline.map((day) => (
-                  <View key={day.date} style={tw`items-center w-10`}>
-                    <Text style={tw`text-xs font-medium text-stone-500 mb-1`}>{day.day_name}</Text>
-                  </View>
-                ))}
-              </View>
-
-              {/* Indicateurs de complétion */}
-              <View style={tw`flex-row justify-between items-center`}>
-                {timeline.map((day) => {
-                  const status = getCompletionStatus(day);
-                  const color = getStatusColor(status);
-
-                  return (
-                    <View
-                      key={day.date}
-                      style={[
-                        tw`w-10 h-10 rounded-lg items-center justify-center`,
-                        { backgroundColor: color + '20' }, // 20% opacity
-                      ]}
-                    >
-                      <Text style={[tw`text-xs font-bold`, { color }]}>{getStatusSymbol(status)}</Text>
-                    </View>
-                  );
-                })}
-              </View>
-            </View>
-          )
-        )}
-
-        {/* Légende */}
-        {timeline.length > 0 && (
-          <View style={tw`flex-row justify-center gap-4 mt-3 pt-3 border-t border-stone-100`}>
-            <View style={tw`flex-row items-center gap-1`}>
-              <Text style={tw`text-xs font-bold text-[#10b981]`}>✓✓</Text>
-              <Text style={tw`text-xs text-stone-500`}>Tous</Text>
-            </View>
-            <View style={tw`flex-row items-center gap-1`}>
-              <Text style={tw`text-xs font-bold text-[#3b82f6]`}>✓○</Text>
-              <Text style={tw`text-xs text-stone-500`}>Partiel</Text>
-            </View>
-            <View style={tw`flex-row items-center gap-1`}>
-              <Text style={tw`text-xs font-bold text-[#E5E7EB]`}>○○</Text>
-              <Text style={tw`text-xs text-stone-500`}>Aucun</Text>
-            </View>
-          </View>
+          timeline.length > 0 && <GroupHabitTimeline key={`timeline-${completionsCount}-${userCompletedToday}`} timeline={timeline} />
         )}
       </View>
     </TouchableOpacity>
