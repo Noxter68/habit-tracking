@@ -290,19 +290,6 @@ export default function GroupDashboardScreen() {
 
             {/* Titre avec icône dynamique, niveau, et stats inline */}
             <View style={tw`flex-row items-start gap-3 mb-4`}>
-              <View
-                style={[
-                  tw`w-14 h-14 rounded-2xl items-center justify-center`,
-                  {
-                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                    borderWidth: 1,
-                    borderColor: 'rgba(255, 255, 255, 0.4)',
-                  },
-                ]}
-              >
-                <GroupIcon size={32} color="#FFFFFF" strokeWidth={2} />
-              </View>
-
               <View style={tw`flex-1`}>
                 <Text
                   style={[

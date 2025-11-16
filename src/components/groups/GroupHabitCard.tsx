@@ -132,6 +132,31 @@ export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }:
     ]);
   };
 
+  // ============================================================================
+  // BADGE BONUS XP - Logique minimaliste
+  // ============================================================================
+  const totalMembers = members.length;
+  const completionRate = totalMembers > 0 ? (completionsCount / totalMembers) * 100 : 0;
+
+  const getBonusBadge = () => {
+    // On affiche le badge seulement si au moins 1 personne a complété
+    if (completionsCount === 0) return null;
+
+    if (completionRate === 100) {
+      return {
+        text: '+50 XP à minuit',
+      };
+    } else if (completionRate >= 50) {
+      return {
+        text: '+35 XP possible',
+      };
+    }
+
+    return null; // <50% = pas de badge (logique backend décidera)
+  };
+
+  const bonusBadge = getBonusBadge();
+
   return (
     <TouchableOpacity onLongPress={handleLongPress} activeOpacity={0.96} delayLongPress={500}>
       {/* Container with gradient border */}
@@ -178,9 +203,9 @@ export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }:
 
           {/* Content */}
           <View style={tw`p-3`}>
-            {/* Header: Title + Avatars + Check - ultra compact */}
-            <View style={tw`flex-row items-center justify-between mb-1`}>
-              {/* Left: Title + Avatars */}
+            {/* Header: Title + Streak + Check */}
+            <View style={tw`flex-row items-center justify-between mb-2`}>
+              {/* Left: Title + Streak badge inline */}
               <View style={tw`flex-1 flex-row items-center gap-2 pr-3`}>
                 <Text
                   style={[
@@ -197,56 +222,21 @@ export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }:
                 >
                   {habit.name}
                 </Text>
-                <View style={tw`flex-row items-center gap-2`}>
-                  <Flame size={16} color="#F59E0B" />
-                  <Text style={tw`text-sm font-semibold text-gray-700`}>{habit.current_streak} jours</Text>
+
+                {/* Streak badge - inline avec titre */}
+                <View
+                  style={[
+                    tw`rounded-full px-2.5 py-1 flex-row items-center`,
+                    {
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      borderWidth: 1,
+                      borderColor: 'rgba(255, 255, 255, 0.3)',
+                    },
+                  ]}
+                >
+                  <Flame size={14} color="#FFFFFF" fill="#FFFFFF" />
+                  <Text style={tw`text-xs font-semibold text-white ml-1`}>{currentStreak}</Text>
                 </View>
-
-                {/* Mini avatars inline */}
-                {today && today.completions.length > 0 && (
-                  <View style={tw`flex-row -space-x-1.5 gap-1`}>
-                    {today.completions.map((completion, index) => {
-                      const avatar = getAvatarDisplay({
-                        id: completion.user_id,
-                        username: completion.username,
-                        email: null,
-                        avatar_emoji: completion.avatar_emoji,
-                        avatar_color: completion.avatar_color,
-                        subscription_tier: 'free',
-                      });
-
-                      const isCompleted = completion.completed;
-                      const bgColor = isCompleted ? tierTheme.accent : 'rgba(255, 255, 255, 0.3)';
-                      const borderColor = isCompleted ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.4)';
-                      const hasGlow = isCompleted;
-
-                      return (
-                        <View
-                          key={completion.user_id}
-                          style={[
-                            tw`w-8 h-8 rounded-full items-center justify-center`,
-                            {
-                              backgroundColor: bgColor,
-                              borderWidth: 1,
-                              borderColor: borderColor,
-                              zIndex: 10 - index,
-                              shadowColor: hasGlow ? tierTheme.accent : 'transparent',
-                              shadowOffset: { width: 0, height: 0 },
-                              shadowOpacity: hasGlow ? 0.4 : 0,
-                              shadowRadius: hasGlow ? 4 : 0,
-                            },
-                          ]}
-                        >
-                          {avatar.type === 'emoji' ? (
-                            <Text style={tw`text-[10px]`}>{avatar.value}</Text>
-                          ) : (
-                            <Text style={[tw`text-[10px] font-bold`, { color: isCompleted ? '#FFFFFF' : 'rgba(255, 255, 255, 0.9)' }]}>{avatar.value}</Text>
-                          )}
-                        </View>
-                      );
-                    })}
-                  </View>
-                )}
               </View>
 
               {/* Right: Round check button */}
@@ -272,6 +262,70 @@ export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }:
                 ) : null}
               </TouchableOpacity>
             </View>
+
+            {/* Bonus XP badge - si applicable */}
+            {bonusBadge && (
+              <View style={tw`mb-2`}>
+                <View
+                  style={[
+                    tw`rounded-full px-2.5 py-1 self-start`,
+                    {
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      borderWidth: 1,
+                      borderColor: 'rgba(255, 255, 255, 0.3)',
+                    },
+                  ]}
+                >
+                  <Text style={tw`text-xs font-semibold text-white`}>{bonusBadge.text}</Text>
+                </View>
+              </View>
+            )}
+
+            {/* Group members avatars */}
+            {today && today.completions.length > 0 && (
+              <View style={tw`flex-row -space-x-1.5 gap-1 mb-2`}>
+                {today.completions.map((completion, index) => {
+                  const avatar = getAvatarDisplay({
+                    id: completion.user_id,
+                    username: completion.username,
+                    email: null,
+                    avatar_emoji: completion.avatar_emoji,
+                    avatar_color: completion.avatar_color,
+                    subscription_tier: 'free',
+                  });
+
+                  const isCompleted = completion.completed;
+                  const bgColor = isCompleted ? tierTheme.accent : 'rgba(255, 255, 255, 0.3)';
+                  const borderColor = isCompleted ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.4)';
+                  const hasGlow = isCompleted;
+
+                  return (
+                    <View
+                      key={completion.user_id}
+                      style={[
+                        tw`w-8 h-8 rounded-full items-center justify-center`,
+                        {
+                          backgroundColor: bgColor,
+                          borderWidth: 1,
+                          borderColor: borderColor,
+                          zIndex: 10 - index,
+                          shadowColor: hasGlow ? tierTheme.accent : 'transparent',
+                          shadowOffset: { width: 0, height: 0 },
+                          shadowOpacity: hasGlow ? 0.4 : 0,
+                          shadowRadius: hasGlow ? 4 : 0,
+                        },
+                      ]}
+                    >
+                      {avatar.type === 'emoji' ? (
+                        <Text style={tw`text-[10px]`}>{avatar.value}</Text>
+                      ) : (
+                        <Text style={[tw`text-[10px] font-bold`, { color: isCompleted ? '#FFFFFF' : 'rgba(255, 255, 255, 0.9)' }]}>{avatar.value}</Text>
+                      )}
+                    </View>
+                  );
+                })}
+              </View>
+            )}
 
             {/* Timeline */}
             {loading ? (
