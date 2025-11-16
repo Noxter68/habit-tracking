@@ -1,7 +1,10 @@
 // screens/GroupSettingsScreen.tsx
+// Settings avec i18n
+
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute, RouteProp as RNRouteProp } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { X, Copy, Users, LogOut, Trash2, AlertCircle } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -22,6 +25,7 @@ export default function GroupSettingsScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteParams>();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { groupId } = route.params;
 
   const [group, setGroup] = useState<GroupWithMembers | null>(null);
@@ -54,7 +58,7 @@ export default function GroupSettingsScreen() {
     const formattedCode = formatInviteCode(group.invite_code);
     await Clipboard.setStringAsync(formattedCode);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    Alert.alert('Code copié !', `Le code ${formattedCode} a été copié`);
+    Alert.alert(t('groups.settings.codeCopied'), t('groups.settings.codeCopiedMessage', { code: formattedCode }));
   };
 
   const handleLeaveGroup = () => {
@@ -62,10 +66,10 @@ export default function GroupSettingsScreen() {
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    Alert.alert('Quitter le groupe', group.is_creator ? 'Vous êtes le créateur. Si vous quittez, le rôle sera transféré au membre le plus ancien.' : 'Êtes-vous sûr de vouloir quitter ce groupe ?', [
-      { text: 'Annuler', style: 'cancel' },
+    Alert.alert(t('groups.settings.leaveConfirm'), group.is_creator ? t('groups.settings.leaveMessageCreator') : t('groups.settings.leaveMessage'), [
+      { text: t('groups.dashboard.cancel'), style: 'cancel' },
       {
-        text: 'Quitter',
+        text: t('groups.settings.leaveGroup'),
         style: 'destructive',
         onPress: async () => {
           try {
@@ -80,11 +84,11 @@ export default function GroupSettingsScreen() {
             });
 
             setTimeout(() => {
-              Alert.alert('Groupe quitté', 'Vous avez quitté le groupe avec succès');
+              Alert.alert(t('groups.settings.groupLeft'), t('groups.settings.groupLeftMessage'));
             }, 500);
           } catch (error: any) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-            Alert.alert('Erreur', error.message || 'Impossible de quitter le groupe');
+            Alert.alert(t('groups.dashboard.error'), error.message || t('groups.settings.errorLeave'));
           }
         },
       },
@@ -96,10 +100,10 @@ export default function GroupSettingsScreen() {
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
 
-    Alert.alert('Supprimer le groupe', 'Cette action est irréversible. Tous les membres seront retirés et toutes les données seront supprimées.', [
-      { text: 'Annuler', style: 'cancel' },
+    Alert.alert(t('groups.settings.deleteConfirm'), t('groups.settings.deleteMessage'), [
+      { text: t('groups.dashboard.cancel'), style: 'cancel' },
       {
-        text: 'Supprimer',
+        text: t('groups.settings.deleteGroup'),
         style: 'destructive',
         onPress: async () => {
           try {
@@ -114,11 +118,11 @@ export default function GroupSettingsScreen() {
             });
 
             setTimeout(() => {
-              Alert.alert('Groupe supprimé', 'Le groupe a été supprimé avec succès');
+              Alert.alert(t('groups.settings.groupDeleted'), t('groups.settings.groupDeletedMessage'));
             }, 500);
           } catch (error: any) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-            Alert.alert('Erreur', error.message || 'Impossible de supprimer le groupe');
+            Alert.alert(t('groups.dashboard.error'), error.message || t('groups.settings.errorDelete'));
           }
         },
       },
@@ -136,18 +140,16 @@ export default function GroupSettingsScreen() {
   if (!group) {
     return (
       <View style={tw`flex-1 bg-[#FAFAFA] items-center justify-center`}>
-        <Text style={tw`text-sm text-stone-400`}>Groupe introuvable</Text>
+        <Text style={tw`text-sm text-stone-400`}>{t('groups.dashboard.groupNotFound')}</Text>
       </View>
     );
   }
 
-  // Récupère le composant d'icône dynamique
   const GroupIcon = getIconComponent(group.emoji || 'target');
 
   return (
     <View style={tw`flex-1 bg-[#FAFAFA]`}>
-      {/* Header minimaliste */}
-      <View style={tw`px-6 pt-8 pb-4 bg-[#FAFAFA]`}>
+      <View style={tw`px-6 pt-6 pb-4 bg-[#FAFAFA]`}>
         <View style={tw`flex-row items-center justify-between`}>
           <TouchableOpacity
             onPress={() => {
@@ -159,14 +161,13 @@ export default function GroupSettingsScreen() {
             <X size={24} color="#57534E" />
           </TouchableOpacity>
 
-          <Text style={tw`text-xl font-bold text-stone-800`}>Paramètres</Text>
+          <Text style={tw`text-xl font-bold text-stone-800`}>{t('groups.settings.title')}</Text>
 
           <View style={tw`w-10`} />
         </View>
       </View>
 
       <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-6 py-2`}>
-        {/* Infos du groupe - Card avec gradient bleu sans texture */}
         <LinearGradient
           colors={['#3b82f6', '#2563eb']}
           start={{ x: 0, y: 0 }}
@@ -219,12 +220,11 @@ export default function GroupSettingsScreen() {
                     },
                   ]}
                 >
-                  {group.members_count} membre{group.members_count > 1 ? 's' : ''}
+                  {t('groups.list.members', { count: group.members_count })}
                 </Text>
               </View>
             </View>
 
-            {/* Code d'invitation */}
             <TouchableOpacity
               onPress={handleCopyCode}
               style={[
@@ -246,7 +246,7 @@ export default function GroupSettingsScreen() {
                     },
                   ]}
                 >
-                  Code d'invitation
+                  {t('groups.settings.inviteCode')}
                 </Text>
                 <Text
                   style={[
@@ -267,7 +267,6 @@ export default function GroupSettingsScreen() {
           </View>
         </LinearGradient>
 
-        {/* Membres - Card élégante */}
         <View
           style={[
             tw`rounded-[20px] p-5 mb-3`,
@@ -284,7 +283,7 @@ export default function GroupSettingsScreen() {
         >
           <View style={tw`flex-row items-center gap-2 mb-4`}>
             <Users size={20} color="#57534E" />
-            <Text style={tw`text-base font-bold text-stone-800`}>Membres ({group.members_count})</Text>
+            <Text style={tw`text-base font-bold text-stone-800`}>{t('groups.settings.members', { count: group.members_count })}</Text>
           </View>
 
           {group.members && group.members.length > 0 ? (
@@ -321,22 +320,20 @@ export default function GroupSettingsScreen() {
                     <View style={tw`flex-1`}>
                       <Text style={tw`text-sm font-semibold text-stone-800`}>
                         {member.profile?.username || member.profile?.email || 'Utilisateur'}
-                        {isMe && ' (Vous)'}
+                        {isMe && ` ${t('groups.settings.you')}`}
                       </Text>
-                      {isCreator && <Text style={[tw`text-xs font-medium`, { color: '#3b82f6' }]}>Créateur</Text>}
+                      {isCreator && <Text style={[tw`text-xs font-medium`, { color: '#3b82f6' }]}>{t('groups.settings.creator')}</Text>}
                     </View>
                   </View>
                 );
               })}
             </View>
           ) : (
-            <Text style={tw`text-sm text-stone-400 text-center py-4`}>Aucun membre trouvé</Text>
+            <Text style={tw`text-sm text-stone-400 text-center py-4`}>{t('groups.settings.noMembers')}</Text>
           )}
         </View>
 
-        {/* Actions */}
         <View style={tw`gap-3 mb-3`}>
-          {/* Quitter le groupe - Gradient rouge */}
           <TouchableOpacity onPress={handleLeaveGroup} activeOpacity={0.7}>
             <LinearGradient
               colors={['#ef4444', '#dc2626']}
@@ -353,11 +350,10 @@ export default function GroupSettingsScreen() {
               ]}
             >
               <LogOut size={20} color="#FFFFFF" />
-              <Text style={tw`text-base font-semibold text-white`}>Quitter le groupe</Text>
+              <Text style={tw`text-base font-semibold text-white`}>{t('groups.settings.leaveGroup')}</Text>
             </LinearGradient>
           </TouchableOpacity>
 
-          {/* Supprimer le groupe (créateur uniquement) */}
           {group.is_creator && (
             <TouchableOpacity
               onPress={handleDeleteGroup}
@@ -376,12 +372,11 @@ export default function GroupSettingsScreen() {
               activeOpacity={0.7}
             >
               <Trash2 size={20} color="#EF4444" />
-              <Text style={tw`text-base font-semibold text-red-500`}>Supprimer le groupe</Text>
+              <Text style={tw`text-base font-semibold text-red-500`}>{t('groups.settings.deleteGroup')}</Text>
             </TouchableOpacity>
           )}
         </View>
 
-        {/* Info créateur */}
         {group.is_creator && (
           <View
             style={[
@@ -394,7 +389,7 @@ export default function GroupSettingsScreen() {
             ]}
           >
             <AlertCircle size={20} color="#3B82F6" style={tw`mt-0.5`} />
-            <Text style={tw`text-sm text-blue-900 leading-relaxed flex-1`}>En tant que créateur, si vous quittez le groupe, votre rôle sera automatiquement transféré au membre le plus ancien.</Text>
+            <Text style={tw`text-sm text-blue-900 leading-relaxed flex-1`}>{t('groups.settings.creatorInfo')}</Text>
           </View>
         )}
 

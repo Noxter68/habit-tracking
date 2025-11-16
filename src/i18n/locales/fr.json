@@ -2102,5 +2102,167 @@
       "errorAddingTask": "Impossible d'ajouter la tâche. Veuillez réessayer.",
       "errorAddingTasks": "Impossible d'ajouter les tâches. Veuillez réessayer."
     }
+  },
+  "groups": {
+    "title": "Groupes",
+    "subtitle": "Mes Groupes",
+    "activeCount_one": "{{count}} groupe actif",
+    "activeCount_other": "{{count}} groupes actifs",
+
+    "list": {
+      "members_one": "{{count}} membre",
+      "members_other": "{{count}} membres",
+      "level": "Niveau {{level}}",
+      "createGroup": "Créer un groupe",
+      "joinGroup": "Rejoindre un groupe",
+      "noGroups": "Aucun groupe",
+      "noGroupsDescription": "Créez un groupe ou rejoignez-en un pour partager vos objectifs avec d'autres",
+      "joinWithCode": "Rejoindre un groupe",
+      "joinDescription": "Entrez un code d'invitation"
+    },
+
+    "dashboard": {
+      "habits": "Habitudes",
+      "habitsCount_one": "{{count}} active",
+      "habitsCount_other": "{{count}} actives",
+      "addHabit": "Ajouter",
+      "noHabits": "Aucune habitude",
+      "noHabitsDescription": "Créez votre première habitude partagée pour commencer l'aventure ensemble",
+      "createHabit": "Créer une habitude",
+      "xpProgress": "{{current}} / {{max}} XP",
+      "deleteHabit": "Supprimer l'habitude",
+      "deleteHabitConfirm": "Êtes-vous sûr de vouloir supprimer cette habitude ?",
+      "deleteHabitMessage": "Voulez-vous supprimer \"{{name}}\" ?",
+      "cancel": "Annuler",
+      "delete": "Supprimer",
+      "error": "Erreur",
+      "errorLoading": "Impossible de charger le groupe",
+      "errorDeleting": "Impossible de supprimer l'habitude",
+      "groupNotFound": "Groupe introuvable",
+      "level": "Niveau {{level}}",
+      "groupHabit": "Habit de groupe"
+    },
+
+    "card": {
+      "bonusXpMidnight": "+{{xp}} XP à minuit",
+      "bonusXpPossible": "+{{xp}} XP possible",
+      "errorToggle": "Impossible de modifier la complétion",
+      "deleteConfirm": "Supprimer l'habitude",
+      "deleteMessage": "Voulez-vous supprimer \"{{name}}\" ?"
+    },
+
+    "timeline": {
+      "today": "AUJOURD'HUI",
+      "completions": "{{completed}}/{{total}}"
+    },
+
+    "tiers": {
+      "allTiers": "Tous les tiers",
+      "current": "Actuel",
+      "levelRequired": "Niveau {{level}} requis",
+      "unlocked": "✓ Niveau {{level}}+",
+      "tier": "Tier {{tier}}",
+      "tapToClose": "Toucher pour fermer"
+    },
+
+    "settings": {
+      "title": "Paramètres",
+      "inviteCode": "Code d'invitation",
+      "members": "Membres ({{count}})",
+      "creator": "Créateur",
+      "you": "(Vous)",
+      "noMembers": "Aucun membre trouvé",
+      "leaveGroup": "Quitter le groupe",
+      "deleteGroup": "Supprimer le groupe",
+      "leaveConfirm": "Quitter le groupe",
+      "leaveMessage": "Êtes-vous sûr de vouloir quitter ce groupe ?",
+      "leaveMessageCreator": "Vous êtes le créateur. Si vous quittez, le rôle sera transféré au membre le plus ancien.",
+      "deleteConfirm": "Supprimer le groupe",
+      "deleteMessage": "Cette action est irréversible. Tous les membres seront retirés et toutes les données seront supprimées.",
+      "groupLeft": "Groupe quitté",
+      "groupLeftMessage": "Vous avez quitté le groupe avec succès",
+      "groupDeleted": "Groupe supprimé",
+      "groupDeletedMessage": "Le groupe a été supprimé avec succès",
+      "errorLeave": "Impossible de quitter le groupe",
+      "errorDelete": "Impossible de supprimer le groupe",
+      "codeCopied": "Code copié !",
+      "codeCopiedMessage": "Le code {{code}} a été copié",
+      "creatorInfo": "En tant que créateur, si vous quittez le groupe, votre rôle sera automatiquement transféré au membre le plus ancien."
+    },
+
+    "join": {
+      "title": "Rejoindre un groupe",
+      "inviteCode": "Code d'invitation",
+      "placeholder": "ABC-123",
+      "info": "💡 Le code est composé de 6 caractères (lettres et chiffres)",
+      "description": "Entrez le code d'invitation partagé par le créateur du groupe",
+      "button": "Rejoindre le groupe",
+      "invalidCode": "Code invalide",
+      "invalidCodeMessage": "Le code doit contenir 6 caractères (lettres et chiffres)",
+      "codeNotFound": "Ce code d'invitation n'existe pas",
+      "alreadyMember": "Déjà membre",
+      "alreadyMemberMessage": "Vous êtes déjà membre de ce groupe",
+      "limitReached": "Limite atteinte",
+      "limitReachedMessage": "Vous avez atteint votre limite de groupes",
+      "groupFull": "Groupe complet",
+      "groupFullMessage": "Ce groupe est complet",
+      "errorJoining": "Impossible de rejoindre le groupe",
+      "success": "Groupe rejoint ! 🎉",
+      "successMessage": "Vous pouvez maintenant voir les habitudes partagées",
+      "later": "Plus tard",
+      "seePremium": "Voir Premium"
+    },
+
+    "create": {
+      "title": "Nouveau groupe",
+      "groupName": "Nom du groupe",
+      "placeholder": "Ex: Fitness Duo",
+      "charactersCount": "{{count}}/50 caractères",
+      "info": "Après création, vous recevrez un code d'invitation à partager avec vos amis.",
+      "button": "Créer le groupe",
+      "invalidName": "Erreur",
+      "success": "Groupe créé ! 🎉",
+      "successMessage": "Partagez le code d'invitation avec vos amis",
+      "errorCreating": "Impossible de créer le groupe",
+      "limitReached": "Limite atteinte",
+      "limitReachedMessage": "Vous ne pouvez pas créer plus de groupes.",
+      "later": "Plus tard",
+      "seePremium": "Voir Premium"
+    },
+
+    "createHabit": {
+      "title": "Nouvelle habitude",
+      "habitName": "Nom de l'habitude",
+      "placeholder": "Ex: Morning Run",
+      "charactersCount": "{{count}}/50 caractères",
+      "frequency": "Fréquence",
+      "daily": "Quotidien",
+      "weekly": "Hebdomadaire",
+      "duration": "Durée estimée (optionnel)",
+      "none": "Aucune",
+      "info": "Tous les membres du groupe pourront compléter cette habitude {{frequency}}. Le streak collectif se maintient si tout le monde complète.",
+      "infoDaily": "chaque jour",
+      "infoWeekly": "chaque semaine",
+      "button": "Créer l'habitude",
+      "invalidName": "Erreur",
+      "errorCreating": "Impossible de créer l'habitude",
+      "limitReached": "Limite atteinte",
+      "limitReachedMessage": "Impossible d'ajouter plus d'habitudes.",
+      "later": "Plus tard",
+      "seePremium": "Voir Premium"
+    },
+
+    "streak": {
+      "current": "{{count}} jour de suite",
+      "noStreakSaver": "Aucun Streak Saver",
+      "noStreakSaverMessage": "Vous n'avez plus de Streak Savers. Voulez-vous en acheter ?",
+      "later": "Plus tard",
+      "buy": "Acheter"
+    },
+
+    "invite": {
+      "codeCopied": "Code copié !",
+      "codeMessage": "Le code {{code}} a été copié dans le presse-papier"
+    }
   }
 }

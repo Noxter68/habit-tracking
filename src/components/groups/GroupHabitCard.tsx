@@ -1,10 +1,11 @@
 // components/groups/GroupHabitCard.tsx
-// Card d'habitude de groupe - Texture et couleurs adaptées au tier
+// Card d'habitude avec i18n
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, Alert, ImageBackground } from 'react-native';
 import { Check, Flame } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 import * as Haptics from 'expo-haptics';
 import { groupService } from '@/services/groupTypeService';
 import { useAuth } from '@/context/AuthContext';
@@ -26,16 +27,14 @@ interface GroupHabitCardProps {
 
 export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh, onDelete }: GroupHabitCardProps) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [timeline, setTimeline] = useState<TimelineDay[]>([]);
   const [loading, setLoading] = useState(true);
   const [completing, setCompleting] = useState(false);
   const [userCompletedToday, setUserCompletedToday] = useState(false);
   const [completionsCount, setCompletionsCount] = useState(habit.completions_today || 0);
 
-  // Calculate tier based on GROUP LEVEL (not habit streak)
   const currentTierNumber = calculateGroupTierFromLevel(groupLevel);
-
-  // Utiliser la même logique que les autres screens : tier 1-3 = getHabitTierTheme, tier 4-6 = getAchievementTierTheme
   const tierTheme =
     currentTierNumber <= 3
       ? getHabitTierTheme(currentTierNumber === 1 ? 'Crystal' : currentTierNumber === 2 ? 'Ruby' : 'Amethyst')
@@ -45,7 +44,6 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
   const isJade = tierTheme.accent === '#059669';
   const isTopaz = tierTheme.accent === '#f59e0b';
 
-  // Opacités adaptées pour Obsidian
   const textureOpacity = isObsidianTier ? 0.35 : 0.2;
   const baseOverlayOpacity = isObsidianTier ? 0.15 : 0.05;
 
@@ -126,7 +124,7 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
       await loadTimeline();
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert('Erreur', 'Impossible de modifier la complétion');
+      Alert.alert(t('groups.dashboard.error'), t('groups.card.errorToggle'));
     } finally {
       setCompleting(false);
     }
@@ -134,19 +132,16 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
 
   const handleLongPress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    Alert.alert("Supprimer l'habitude", `Voulez-vous supprimer "${habit.name}" ?`, [
-      { text: 'Annuler', style: 'cancel' },
+    Alert.alert(t('groups.card.deleteConfirm'), t('groups.card.deleteMessage', { name: habit.name }), [
+      { text: t('groups.dashboard.cancel'), style: 'cancel' },
       {
-        text: 'Supprimer',
+        text: t('groups.dashboard.delete'),
         style: 'destructive',
         onPress: onDelete,
       },
     ]);
   };
 
-  // ============================================================================
-  // BADGE BONUS XP - Logique minimaliste
-  // ============================================================================
   const totalMembers = members.length;
   const completionRate = totalMembers > 0 ? (completionsCount / totalMembers) * 100 : 0;
 
@@ -155,11 +150,11 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
 
     if (completionRate === 100) {
       return {
-        text: '+50 XP à minuit',
+        text: t('groups.card.bonusXpMidnight', { xp: 50 }),
       };
     } else if (completionRate >= 50) {
       return {
-        text: '+35 XP possible',
+        text: t('groups.card.bonusXpPossible', { xp: 35 }),
       };
     }
 
@@ -170,7 +165,6 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
 
   return (
     <TouchableOpacity onLongPress={handleLongPress} activeOpacity={0.96} delayLongPress={500}>
-      {/* Container with gradient border */}
       <LinearGradient
         colors={tierTheme.gradient}
         start={{ x: 0, y: 0 }}
@@ -188,7 +182,6 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
         ]}
       >
         <ImageBackground source={tierTheme.texture} resizeMode="cover" imageStyle={{ opacity: textureOpacity }}>
-          {/* Overlay layers adaptées au tier */}
           {(isObsidianTier || isJade || isTopaz) && (
             <View
               style={{
@@ -212,11 +205,8 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
             }}
           />
 
-          {/* Content */}
           <View style={tw`p-3`}>
-            {/* Header: Title + Streak + Check */}
             <View style={tw`flex-row items-center justify-between mb-2`}>
-              {/* Left: Title + Streak badge inline */}
               <View style={tw`flex-1 flex-row items-center gap-2 pr-3`}>
                 <Text
                   style={[
@@ -234,7 +224,6 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
                   {habit.name}
                 </Text>
 
-                {/* Streak badge - inline avec titre */}
                 <View
                   style={[
                     tw`rounded-full px-2.5 py-1 flex-row items-center`,
@@ -250,7 +239,6 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
                 </View>
               </View>
 
-              {/* Right: Round check button */}
               <TouchableOpacity
                 onPress={handleToggleComplete}
                 disabled={completing}
@@ -274,7 +262,6 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
               </TouchableOpacity>
             </View>
 
-            {/* Bonus XP badge - si applicable */}
             {bonusBadge && (
               <View style={tw`mb-2`}>
                 <View
@@ -292,7 +279,6 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
               </View>
             )}
 
-            {/* Group members avatars - Couleur adaptée au tier */}
             {today && today.completions.length > 0 && (
               <View style={tw`flex-row -space-x-1.5 gap-1 mb-2`}>
                 {today.completions.map((completion, index) => {
@@ -337,7 +323,6 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
               </View>
             )}
 
-            {/* Timeline */}
             {loading ? (
               <View style={tw`py-2 items-center`}>
                 <ActivityIndicator size="small" color="#FFFFFF" />

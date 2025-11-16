@@ -1,10 +1,13 @@
 // screens/GroupTiersScreen.tsx
+// Screen des tiers avec i18n
+
 import React, { useState, useEffect } from 'react';
 import { ScrollView, Pressable, ActivityIndicator, View, Text, ImageBackground, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronLeft } from 'lucide-react-native';
 import { useNavigation, useRoute, RouteProp as RNRouteProp } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -12,7 +15,8 @@ import { groupService } from '@/services/groupTypeService';
 import { useAuth } from '@/context/AuthContext';
 import type { GroupWithMembers } from '@/types/group.types';
 import { getHabitTierTheme, getAchievementTierTheme } from '@/utils/tierTheme';
-import { getGroupTierConfigByLevel, GROUP_TIERS_BY_LEVEL, calculateGroupTierFromLevel, getGroupTierThemeKey } from '@utils/groups/groupConstants';
+import { getGroupTierConfigByLevel, GROUP_TIERS_BY_LEVEL, calculateGroupTierFromLevel, getGroupTierThemeKey } from '@/utils/groups/groupConstants';
+import { getTranslatedGroupTier } from '@/i18n/groupTiersTranslation';
 import { GroupTierZoomModal } from '@/components/groups/GroupTierZoomModal';
 import tw from '@/lib/tailwind';
 
@@ -23,6 +27,7 @@ export default function GroupTiersScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteParams>();
   const { user } = useAuth();
+  const { t, i18n } = useTranslation();
   const { groupId } = route.params;
 
   const [group, setGroup] = useState<GroupWithMembers | null>(null);
@@ -72,7 +77,7 @@ export default function GroupTiersScreen() {
   if (!group) {
     return (
       <View style={tw`flex-1 bg-[#FAFAFA] items-center justify-center`}>
-        <Text style={tw`text-sm text-stone-400`}>Groupe introuvable</Text>
+        <Text style={tw`text-sm text-stone-400`}>{t('groups.dashboard.groupNotFound')}</Text>
       </View>
     );
   }
@@ -81,22 +86,22 @@ export default function GroupTiersScreen() {
   const currentTierConfig = getGroupTierConfigByLevel(currentLevel);
   const currentTierNumber = calculateGroupTierFromLevel(currentLevel);
 
-  // Utiliser getHabitTierTheme pour Crystal/Ruby/Amethyst, getAchievementTierTheme pour Jade/Topaz/Obsidian
   const tierTheme = currentTierNumber <= 3 ? getHabitTierTheme(currentTierConfig.name as any) : getAchievementTierTheme(getGroupTierThemeKey(currentTierNumber));
 
   const isObsidian = tierTheme.accent === '#8b5cf6';
   const isJade = tierTheme.accent === '#059669';
   const isTopaz = tierTheme.accent === '#f59e0b';
 
-  // TOUJOURS utiliser le gradient normal (pas backgroundGradient)
   const headerGradient = tierTheme.gradient;
 
   const allTiers = [1, 2, 3, 4, 5, 6];
 
+  // ✅ FIX: Utiliser i18n.language au lieu de t.language
+  const translatedCurrentTier = getTranslatedGroupTier(currentTierConfig.name as any, i18n.language as 'en' | 'fr');
+
   return (
     <View style={tw`flex-1 bg-[#FAFAFA]`}>
       <StatusBar style="light" />
-      {/* Compact Header with Current Tier Centered */}
       <LinearGradient
         colors={headerGradient}
         start={{ x: 0, y: 0 }}
@@ -112,7 +117,6 @@ export default function GroupTiersScreen() {
           },
         ]}
       >
-        {/* Force status bar to white */}
         <View
           style={{
             position: 'absolute',
@@ -150,12 +154,10 @@ export default function GroupTiersScreen() {
 
           <SafeAreaView edges={['top']} style={{ backgroundColor: 'transparent' }}>
             <View style={tw`px-5 pt-4 pb-6`}>
-              {/* Back Button Only */}
               <Pressable onPress={handleGoBack} style={({ pressed }) => [tw`p-2 -ml-2 rounded-full self-start mb-5`, { backgroundColor: pressed ? 'rgba(255, 255, 255, 0.2)' : 'transparent' }]}>
                 <ChevronLeft size={24} color="#FFFFFF" strokeWidth={2.5} />
               </Pressable>
 
-              {/* Current Tier - Centered with Large Icon */}
               <View style={tw`items-center`}>
                 <View
                   style={[
@@ -185,7 +187,7 @@ export default function GroupTiersScreen() {
                     },
                   ]}
                 >
-                  {currentTierConfig.name}
+                  {translatedCurrentTier.name}
                 </Text>
 
                 <View
@@ -209,7 +211,7 @@ export default function GroupTiersScreen() {
                       },
                     ]}
                   >
-                    Niveau {currentLevel}
+                    {t('groups.dashboard.level', { level: currentLevel })}
                   </Text>
                 </View>
               </View>
@@ -218,22 +220,22 @@ export default function GroupTiersScreen() {
         </ImageBackground>
       </LinearGradient>
 
-      {/* All Tiers List */}
       <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-5 py-5`} showsVerticalScrollIndicator={false}>
-        <Text style={tw`text-lg font-black text-stone-800 mb-4`}>Tous les tiers</Text>
+        <Text style={tw`text-lg font-black text-stone-800 mb-4`}>{t('groups.tiers.allTiers')}</Text>
 
         {allTiers.map((tierNumber) => {
           const tierConfig = GROUP_TIERS_BY_LEVEL[tierNumber];
+          // ✅ FIX: Utiliser i18n.language au lieu de t.language
+          const translatedTier = getTranslatedGroupTier(tierConfig.name as any, i18n.language as 'en' | 'fr');
           const isUnlocked = currentTierNumber >= tierNumber;
           const isCurrent = currentTierNumber === tierNumber;
 
-          // Utiliser getHabitTierTheme pour tiers 1-3, getAchievementTierTheme pour tiers 4-6
           const theme = tierNumber <= 3 ? getHabitTierTheme(tierConfig.name as any) : getAchievementTierTheme(getGroupTierThemeKey(tierNumber));
 
           return (
             <Pressable
               key={tierNumber}
-              onPress={() => handleTierPress(tierConfig, theme, isUnlocked)}
+              onPress={() => handleTierPress({ ...tierConfig, name: translatedTier.name, description: translatedTier.description }, theme, isUnlocked)}
               style={({ pressed }) => [
                 tw`rounded-2xl p-4 mb-3`,
                 {
@@ -250,25 +252,22 @@ export default function GroupTiersScreen() {
               ]}
             >
               <View style={tw`flex-row items-center gap-3`}>
-                {/* Tier Icon */}
                 <View style={tw`w-16 h-16 items-center justify-center`}>
                   <Image source={tierConfig.icon} style={{ width: 64, height: 64 }} resizeMode="contain" />
                 </View>
 
-                {/* Info */}
                 <View style={tw`flex-1`}>
                   <View style={tw`flex-row items-center gap-2 mb-1`}>
-                    <Text style={tw`text-lg font-black text-stone-800`}>{tierConfig.name}</Text>
+                    <Text style={tw`text-lg font-black text-stone-800`}>{translatedTier.name}</Text>
                     {isCurrent && (
                       <View style={[tw`rounded-full px-2 py-0.5`, { backgroundColor: `${theme.accent}20` }]}>
-                        <Text style={[tw`text-xs font-bold`, { color: theme.accent }]}>Actuel</Text>
+                        <Text style={[tw`text-xs font-bold`, { color: theme.accent }]}>{t('groups.tiers.current')}</Text>
                       </View>
                     )}
                   </View>
 
-                  <Text style={tw`text-sm text-stone-600 mb-2`}>{tierConfig.description}</Text>
+                  <Text style={tw`text-sm text-stone-600 mb-2`}>{translatedTier.description}</Text>
 
-                  {/* Level Required */}
                   <View
                     style={[
                       tw`rounded-lg px-2.5 py-1.5 self-start`,
@@ -285,7 +284,7 @@ export default function GroupTiersScreen() {
                         },
                       ]}
                     >
-                      {isUnlocked ? `✓ Niveau ${tierConfig.minLevel}+` : `Niveau ${tierConfig.minLevel} requis`}
+                      {isUnlocked ? t('groups.tiers.unlocked', { level: tierConfig.minLevel }) : t('groups.tiers.levelRequired', { level: tierConfig.minLevel })}
                     </Text>
                   </View>
                 </View>
@@ -297,7 +296,6 @@ export default function GroupTiersScreen() {
         <View style={tw`h-6`} />
       </ScrollView>
 
-      {/* Zoom Modal */}
       {selectedTier && (
         <GroupTierZoomModal
           visible={!!selectedTier}

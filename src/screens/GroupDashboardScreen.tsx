@@ -1,11 +1,12 @@
 // screens/GroupDashboardScreen.tsx
-// Fix: Animation XP bidirectionnelle + Opacités Obsidian
+// Dashboard avec i18n
 
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, ImageBackground, Animated, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation, useRoute, RouteProp as RNRouteProp } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ArrowLeft, Plus, Settings, Share2, Flame, Trophy } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
@@ -18,7 +19,6 @@ import { formatStreak, getLevelProgress, formatInviteCode } from '@/utils/groupU
 import { GroupHabitCard } from '@/components/groups/GroupHabitCard';
 import { getAchievementTierTheme, getHabitTierTheme } from '@/utils/tierTheme';
 import { calculateGroupTierFromLevel, getGroupTierConfigByLevel, getGroupTierThemeKey } from '@utils/groups/groupConstants';
-import { getIconComponent } from '@/utils/iconMapper';
 import { useStreakSaver } from '@/hooks/useStreakSaver';
 import { StreakSaverModal } from '@/components/streakSaver/StreakSaverModal';
 import { StreakSaverShopModal } from '@/components/streakSaver/StreakSaverShopModal';
@@ -31,6 +31,7 @@ export default function GroupDashboardScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteParams>();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { groupId } = route.params;
 
   const [group, setGroup] = useState<GroupWithMembers | null>(null);
@@ -40,10 +41,6 @@ export default function GroupDashboardScreen() {
   const [showStreakSaverShop, setShowStreakSaverShop] = useState(false);
 
   const xpProgress = useRef(new Animated.Value(0)).current;
-
-  // ============================================================================
-  // STREAK SAVER - Phase 2
-  // ============================================================================
 
   const firstHabitId = habits[0]?.id || '';
 
@@ -68,13 +65,12 @@ export default function GroupDashboardScreen() {
       if (!currentGroup) {
         console.warn('Group not found or user is not a member');
         if (!silent) {
-          Alert.alert('Erreur', 'Groupe introuvable');
+          Alert.alert(t('groups.dashboard.error'), t('groups.dashboard.groupNotFound'));
           navigation.goBack();
         }
         return;
       }
 
-      // ✅ FIX: Animer la progression dans les DEUX sens (augmentation ET diminution)
       if (group && currentGroup.xp !== group.xp) {
         const newProgress = getLevelProgress(currentGroup.xp);
 
@@ -84,16 +80,12 @@ export default function GroupDashboardScreen() {
           useNativeDriver: false,
         }).start();
 
-        // Feedback haptique seulement si XP augmente
         if (currentGroup.xp > group.xp) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        }
-        // ✅ Optionnel: feedback subtil si XP diminue
-        else if (currentGroup.xp < group.xp) {
+        } else if (currentGroup.xp < group.xp) {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         }
       } else if (!group) {
-        // Initialisation au premier chargement
         xpProgress.setValue(getLevelProgress(currentGroup.xp));
       }
 
@@ -104,7 +96,7 @@ export default function GroupDashboardScreen() {
     } catch (error) {
       console.error('Error loading group:', error);
       if (!silent) {
-        Alert.alert('Erreur', 'Impossible de charger le groupe');
+        Alert.alert(t('groups.dashboard.error'), t('groups.dashboard.errorLoading'));
       }
     } finally {
       setLoading(false);
@@ -161,7 +153,7 @@ export default function GroupDashboardScreen() {
     const formattedCode = formatInviteCode(group.invite_code);
     await Clipboard.setStringAsync(formattedCode);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    Alert.alert('Code copié !', `Le code ${formattedCode} a été copié dans le presse-papier`);
+    Alert.alert(t('groups.invite.codeCopied'), t('groups.invite.codeMessage', { code: formattedCode }));
   };
 
   const handleAddHabit = () => {
@@ -184,11 +176,11 @@ export default function GroupDashboardScreen() {
     navigation.goBack();
   };
 
-  const handleDeleteHabit = async (habitId: string) => {
-    Alert.alert("Supprimer l'habitude", 'Êtes-vous sûr de vouloir supprimer cette habitude ?', [
-      { text: 'Annuler', style: 'cancel' },
+  const handleDeleteHabit = async (habitId: string, habitName: string) => {
+    Alert.alert(t('groups.dashboard.deleteHabit'), t('groups.dashboard.deleteHabitMessage', { name: habitName }), [
+      { text: t('groups.dashboard.cancel'), style: 'cancel' },
       {
-        text: 'Supprimer',
+        text: t('groups.dashboard.delete'),
         style: 'destructive',
         onPress: async () => {
           try {
@@ -197,16 +189,12 @@ export default function GroupDashboardScreen() {
             await loadGroupData();
           } catch (error) {
             console.error('Error deleting habit:', error);
-            Alert.alert('Erreur', "Impossible de supprimer l'habitude");
+            Alert.alert(t('groups.dashboard.error'), t('groups.dashboard.errorDeleting'));
           }
         },
       },
     ]);
   };
-
-  // ============================================================================
-  // STREAK SAVER HANDLERS
-  // ============================================================================
 
   const handleStreakSaverShopClose = () => {
     setShowStreakSaverShop(false);
@@ -215,10 +203,10 @@ export default function GroupDashboardScreen() {
 
   const handleStreakSaverModalClose = () => {
     if (streakSaver.inventory.available === 0) {
-      Alert.alert('Aucun Streak Saver', "Vous n'avez plus de Streak Savers. Voulez-vous en acheter ?", [
-        { text: 'Plus tard', style: 'cancel', onPress: streakSaver.closeModal },
+      Alert.alert(t('groups.streak.noStreakSaver'), t('groups.streak.noStreakSaverMessage'), [
+        { text: t('groups.streak.later'), style: 'cancel', onPress: streakSaver.closeModal },
         {
-          text: 'Acheter',
+          text: t('groups.streak.buy'),
           onPress: () => {
             streakSaver.closeModal();
             setShowStreakSaverShop(true);
@@ -241,7 +229,7 @@ export default function GroupDashboardScreen() {
   if (!group) {
     return (
       <View style={tw`flex-1 bg-[#FAFAFA] items-center justify-center`}>
-        <Text style={tw`text-sm text-stone-400`}>Groupe introuvable</Text>
+        <Text style={tw`text-sm text-stone-400`}>{t('groups.dashboard.groupNotFound')}</Text>
       </View>
     );
   }
@@ -249,29 +237,23 @@ export default function GroupDashboardScreen() {
   const progress = getLevelProgress(group.xp);
   const xpForNextLevel = group.level * 100;
 
-  // Tier basé sur le NIVEAU du groupe (pas la streak)
   const currentTierNumber = calculateGroupTierFromLevel(group.level);
   const currentTierConfig = getGroupTierConfigByLevel(group.level);
-
-  // Utiliser getHabitTierTheme pour Crystal/Ruby/Amethyst, getAchievementTierTheme pour Jade/Topaz/Obsidian
   const tierTheme = currentTierNumber <= 3 ? getHabitTierTheme(currentTierConfig.name as any) : getAchievementTierTheme(getGroupTierThemeKey(currentTierNumber));
 
   const isObsidianTier = currentTierNumber === 6;
   const isJade = tierTheme.accent === '#059669';
   const isTopaz = tierTheme.accent === '#f59e0b';
 
-  // Exception pour Obsidian : opacités ajustées
   const textureOpacity = isObsidianTier ? 0.35 : 0.2;
   const iconOpacity = isObsidianTier ? 0.15 : 0.25;
   const baseOverlayOpacity = isObsidianTier ? 0.15 : 0.05;
 
-  // TOUJOURS utiliser le gradient normal (pas backgroundGradient)
   const headerGradient = tierTheme.gradient;
 
   return (
     <View style={tw`flex-1 bg-[#FAFAFA] mb-10`}>
       <StatusBar style="light" />
-      {/* Header avec gradient tier et texture */}
       <LinearGradient
         colors={headerGradient}
         start={{ x: 0, y: 0 }}
@@ -312,7 +294,6 @@ export default function GroupDashboardScreen() {
           />
 
           <View style={tw`px-5 pt-14 pb-4`}>
-            {/* Icône du tier en arrière-plan - GRANDE et INCRUSTÉE */}
             <View
               style={{
                 position: 'absolute',
@@ -330,7 +311,6 @@ export default function GroupDashboardScreen() {
                 }}
               />
             </View>
-            {/* Navigation */}
             <View style={tw`flex-row items-center justify-between mb-3`}>
               <TouchableOpacity
                 onPress={handleGoBack}
@@ -348,7 +328,6 @@ export default function GroupDashboardScreen() {
               </TouchableOpacity>
 
               <View style={tw`flex-row gap-2`}>
-                {/* NOUVEAU: Bouton Tiers - Phase 3 */}
                 <TouchableOpacity
                   onPress={handleTiers}
                   style={[
@@ -396,7 +375,6 @@ export default function GroupDashboardScreen() {
               </View>
             </View>
 
-            {/* Titre avec icône dynamique, niveau, et stats inline */}
             <View style={tw`flex-row items-start gap-3 mb-4`}>
               <View style={tw`flex-1`}>
                 <Text
@@ -435,7 +413,7 @@ export default function GroupDashboardScreen() {
                         },
                       ]}
                     >
-                      Niveau {group.level}
+                      {t('groups.dashboard.level', { level: group.level })}
                     </Text>
                   </View>
 
@@ -468,7 +446,6 @@ export default function GroupDashboardScreen() {
               </View>
             </View>
 
-            {/* Barre XP */}
             <View>
               <View style={tw`flex-row items-center justify-between mb-1.5`}>
                 <Text
@@ -482,7 +459,7 @@ export default function GroupDashboardScreen() {
                     },
                   ]}
                 >
-                  {group.xp} / {xpForNextLevel} XP
+                  {t('groups.dashboard.xpProgress', { current: group.xp, max: xpForNextLevel })}
                 </Text>
                 <Text
                   style={[
@@ -526,7 +503,6 @@ export default function GroupDashboardScreen() {
         </ImageBackground>
       </LinearGradient>
 
-      {/* Liste des habitudes */}
       <ScrollView
         style={tw`flex-1`}
         contentContainerStyle={tw`px-5 py-5`}
@@ -535,10 +511,8 @@ export default function GroupDashboardScreen() {
       >
         <View style={tw`flex-row items-center justify-between mb-4`}>
           <View>
-            <Text style={tw`text-xl font-black text-stone-800`}>Habitudes</Text>
-            <Text style={tw`text-sm text-stone-500 mt-0.5`}>
-              {habits.length} {habits.length > 1 ? 'actives' : 'active'}
-            </Text>
+            <Text style={tw`text-xl font-black text-stone-800`}>{t('groups.dashboard.habits')}</Text>
+            <Text style={tw`text-sm text-stone-500 mt-0.5`}>{t('groups.dashboard.habitsCount', { count: habits.length })}</Text>
           </View>
 
           <TouchableOpacity onPress={handleAddHabit} activeOpacity={0.8}>
@@ -557,7 +531,7 @@ export default function GroupDashboardScreen() {
               ]}
             >
               <Plus size={16} color="#FFFFFF" strokeWidth={2.5} />
-              <Text style={tw`text-sm font-bold text-white`}>Ajouter</Text>
+              <Text style={tw`text-sm font-bold text-white`}>{t('groups.dashboard.addHabit')}</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -587,8 +561,8 @@ export default function GroupDashboardScreen() {
             >
               <Text style={tw`text-3xl`}>🎯</Text>
             </View>
-            <Text style={tw`text-lg font-bold text-stone-800 mb-1.5`}>Aucune habitude</Text>
-            <Text style={tw`text-sm text-stone-500 text-center mb-5 px-2`}>Créez votre première habitude partagée pour commencer l'aventure ensemble</Text>
+            <Text style={tw`text-lg font-bold text-stone-800 mb-1.5`}>{t('groups.dashboard.noHabits')}</Text>
+            <Text style={tw`text-sm text-stone-500 text-center mb-5 px-2`}>{t('groups.dashboard.noHabitsDescription')}</Text>
             <TouchableOpacity onPress={handleAddHabit} activeOpacity={0.8}>
               <LinearGradient
                 colors={tierTheme.gradient}
@@ -604,7 +578,7 @@ export default function GroupDashboardScreen() {
                   },
                 ]}
               >
-                <Text style={tw`text-sm font-bold text-white`}>Créer une habitude</Text>
+                <Text style={tw`text-sm font-bold text-white`}>{t('groups.dashboard.createHabit')}</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
@@ -618,7 +592,7 @@ export default function GroupDashboardScreen() {
                 groupLevel={group.level}
                 members={group.members}
                 onRefresh={() => loadGroupData(true)}
-                onDelete={() => handleDeleteHabit(habit.id)}
+                onDelete={() => handleDeleteHabit(habit.id, habit.name)}
               />
             ))}
           </View>
@@ -627,10 +601,9 @@ export default function GroupDashboardScreen() {
         <View style={tw`h-6`} />
       </ScrollView>
 
-      {/* MODALS - Phase 2 */}
       <StreakSaverModal
         visible={streakSaver.showModal}
-        habitName={streakSaver.eligibility.habitName || 'Habit de groupe'}
+        habitName={streakSaver.eligibility.habitName || t('groups.dashboard.groupHabit')}
         previousStreak={streakSaver.eligibility.previousStreak || 0}
         availableSavers={streakSaver.inventory.available}
         loading={streakSaver.using}

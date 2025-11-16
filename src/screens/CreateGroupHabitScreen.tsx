@@ -1,16 +1,16 @@
 // screens/CreateGroupHabitScreen.tsx
-// Écran pour créer une habitude dans un groupe avec fréquence et durée
+// Écran pour créer une habitude dans un groupe avec i18n
 
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import { useNavigation, useRoute, RouteProp as RNRouteProp } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { X, Calendar, Clock, Target } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { groupService } from '@/services/groupTypeService';
 import { useAuth } from '@/context/AuthContext';
 import { validateName } from '@/utils/groupUtils';
-import { EmojiPicker } from '@/components/groups/EmojiPicker';
 import tw from '@/lib/tailwind';
 
 type NavigationProp = NativeStackNavigationProp<any>;
@@ -18,23 +18,11 @@ type RouteParams = RNRouteProp<{ CreateGroupHabit: { groupId: string } }, 'Creat
 
 type Frequency = 'daily' | 'weekly';
 
-const DURATIONS = [
-  { value: null, label: 'Aucune' },
-  { value: 5, label: '5 min' },
-  { value: 10, label: '10 min' },
-  { value: 15, label: '15 min' },
-  { value: 20, label: '20 min' },
-  { value: 30, label: '30 min' },
-  { value: 45, label: '45 min' },
-  { value: 60, label: '1h' },
-  { value: 90, label: '1h30' },
-  { value: 120, label: '2h' },
-];
-
 export default function CreateGroupHabitScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteParams>();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { groupId } = route.params;
 
   const [name, setName] = useState('');
@@ -43,38 +31,49 @@ export default function CreateGroupHabitScreen() {
   const [duration, setDuration] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Durées traduites
+  const getDurations = () => [
+    { value: null, label: t('groups.createHabit.none') },
+    { value: 5, label: '5 min' },
+    { value: 10, label: '10 min' },
+    { value: 15, label: '15 min' },
+    { value: 20, label: '20 min' },
+    { value: 30, label: '30 min' },
+    { value: 45, label: '45 min' },
+    { value: 60, label: '1h' },
+    { value: 90, label: '1h30' },
+    { value: 120, label: '2h' },
+  ];
+
   const handleCreate = async () => {
     if (!user?.id) return;
 
-    // Validation
     const validation = validateName(name);
     if (!validation.valid) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert('Erreur', validation.error);
+      Alert.alert(t('groups.createHabit.invalidName'), validation.error);
       return;
     }
 
     setLoading(true);
     try {
-      // Vérifier les limites d'habitudes
       const canAdd = await groupService.canGroupAddHabit(groupId, user.id);
 
       if (!canAdd.can_add) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
         Alert.alert(
-          'Limite atteinte',
-          canAdd.reason || "Impossible d'ajouter plus d'habitudes.",
+          t('groups.createHabit.limitReached'),
+          canAdd.reason || t('groups.createHabit.limitReachedMessage'),
           canAdd.requires_premium
             ? [
-                { text: 'Plus tard', style: 'cancel' },
-                { text: 'Voir Premium', onPress: () => navigation.navigate('Premium') },
+                { text: t('groups.createHabit.later'), style: 'cancel' },
+                { text: t('groups.createHabit.seePremium'), onPress: () => navigation.navigate('Premium') },
               ]
             : [{ text: 'OK' }]
         );
         return;
       }
 
-      // Créer l'habitude avec fréquence et durée
       await groupService.createGroupHabit(user.id, {
         group_id: groupId,
         name,
@@ -88,7 +87,7 @@ export default function CreateGroupHabitScreen() {
     } catch (error: any) {
       console.error('Error creating habit:', error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert('Erreur', error.message || "Impossible de créer l'habitude");
+      Alert.alert(t('groups.dashboard.error'), error.message || t('groups.createHabit.errorCreating'));
     } finally {
       setLoading(false);
     }
@@ -96,7 +95,6 @@ export default function CreateGroupHabitScreen() {
 
   return (
     <View style={tw`flex-1 bg-[#FAFAFA]`}>
-      {/* Header minimaliste */}
       <View style={tw`px-6 pt-8 pb-4 bg-[#FAFAFA]`}>
         <View style={tw`flex-row items-center justify-between`}>
           <TouchableOpacity
@@ -109,7 +107,7 @@ export default function CreateGroupHabitScreen() {
             <X size={24} color="#57534E" />
           </TouchableOpacity>
 
-          <Text style={tw`text-xl font-bold text-stone-800`}>Nouvelle habitude</Text>
+          <Text style={tw`text-xl font-bold text-stone-800`}>{t('groups.createHabit.title')}</Text>
 
           <View style={tw`w-10`} />
         </View>
@@ -118,11 +116,11 @@ export default function CreateGroupHabitScreen() {
       <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-6 py-2`}>
         {/* Nom de l'habitude */}
         <View style={tw`mb-4`}>
-          <Text style={tw`text-sm font-semibold text-stone-700 mb-3`}>Nom de l'habitude</Text>
+          <Text style={tw`text-sm font-semibold text-stone-700 mb-3`}>{t('groups.createHabit.habitName')}</Text>
           <TextInput
             value={name}
             onChangeText={setName}
-            placeholder="Ex: Morning Run"
+            placeholder={t('groups.createHabit.placeholder')}
             placeholderTextColor="#9CA3AF"
             maxLength={50}
             style={[
@@ -139,14 +137,14 @@ export default function CreateGroupHabitScreen() {
             ]}
             autoFocus
           />
-          <Text style={tw`text-xs text-stone-500 mt-2`}>{name.length}/50 caractères</Text>
+          <Text style={tw`text-xs text-stone-500 mt-2`}>{t('groups.createHabit.charactersCount', { count: name.length })}</Text>
         </View>
 
         {/* Fréquence */}
         <View style={tw`mb-4`}>
           <View style={tw`flex-row items-center gap-2 mb-3`}>
             <Calendar size={16} color="#57534E" />
-            <Text style={tw`text-sm font-semibold text-stone-700`}>Fréquence</Text>
+            <Text style={tw`text-sm font-semibold text-stone-700`}>{t('groups.createHabit.frequency')}</Text>
           </View>
           <View style={tw`flex-row gap-3`}>
             <TouchableOpacity
@@ -168,7 +166,7 @@ export default function CreateGroupHabitScreen() {
               ]}
               activeOpacity={0.7}
             >
-              <Text style={[tw`text-sm font-semibold`, { color: frequency === 'daily' ? '#FFFFFF' : '#57534E' }]}>Quotidien</Text>
+              <Text style={[tw`text-sm font-semibold`, { color: frequency === 'daily' ? '#FFFFFF' : '#57534E' }]}>{t('groups.createHabit.daily')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -190,7 +188,7 @@ export default function CreateGroupHabitScreen() {
               ]}
               activeOpacity={0.7}
             >
-              <Text style={[tw`text-sm font-semibold`, { color: frequency === 'weekly' ? '#FFFFFF' : '#57534E' }]}>Hebdomadaire</Text>
+              <Text style={[tw`text-sm font-semibold`, { color: frequency === 'weekly' ? '#FFFFFF' : '#57534E' }]}>{t('groups.createHabit.weekly')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -199,10 +197,10 @@ export default function CreateGroupHabitScreen() {
         <View style={tw`mb-4`}>
           <View style={tw`flex-row items-center gap-2 mb-3`}>
             <Clock size={16} color="#57534E" />
-            <Text style={tw`text-sm font-semibold text-stone-700`}>Durée estimée (optionnel)</Text>
+            <Text style={tw`text-sm font-semibold text-stone-700`}>{t('groups.createHabit.duration')}</Text>
           </View>
           <View style={tw`flex-row flex-wrap gap-2`}>
-            {DURATIONS.map((dur) => (
+            {getDurations().map((dur) => (
               <TouchableOpacity
                 key={dur.value?.toString() || 'none'}
                 onPress={() => {
@@ -242,7 +240,9 @@ export default function CreateGroupHabitScreen() {
         >
           <Target size={20} color="#3B82F6" strokeWidth={2} style={tw`mt-0.5`} />
           <Text style={tw`text-sm text-blue-900 leading-relaxed flex-1`}>
-            Tous les membres du groupe pourront compléter cette habitude {frequency === 'daily' ? 'chaque jour' : 'chaque semaine'}. Le streak collectif se maintient si tout le monde complète.
+            {t('groups.createHabit.info', {
+              frequency: frequency === 'daily' ? t('groups.createHabit.infoDaily') : t('groups.createHabit.infoWeekly'),
+            })}
           </Text>
         </View>
 
@@ -263,7 +263,7 @@ export default function CreateGroupHabitScreen() {
           ]}
           activeOpacity={0.8}
         >
-          {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={tw`text-base font-bold text-white`}>Créer l'habitude</Text>}
+          {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={tw`text-base font-bold text-white`}>{t('groups.createHabit.button')}</Text>}
         </TouchableOpacity>
 
         <View style={tw`h-8`} />

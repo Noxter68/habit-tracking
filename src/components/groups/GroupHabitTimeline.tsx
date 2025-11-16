@@ -1,10 +1,11 @@
 // components/groups/GroupHabitTimeline.tsx
-// Timeline avec profondeur améliorée (shadows + gradients)
+// Timeline avec i18n
 
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Check } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 import type { TimelineDay } from '@/types/group.types';
 import tw from '@/lib/tailwind';
 
@@ -14,6 +15,7 @@ interface GroupHabitTimelineProps {
 }
 
 export function GroupHabitTimeline({ timeline, accentColor = '#10b981' }: GroupHabitTimelineProps) {
+  const { t } = useTranslation();
   const todayData = timeline.find((day) => day.is_today);
 
   const getCompletionStatus = (day: TimelineDay): 'all' | 'partial' | 'none' => {
@@ -23,16 +25,14 @@ export function GroupHabitTimeline({ timeline, accentColor = '#10b981' }: GroupH
     return 'partial';
   };
 
-  // Générer un gradient plus clair pour les états partiels
   const getLighterGradient = (baseColor: string): string[] => {
-    return [baseColor + '60', baseColor + '30']; // 38% et 19% opacity
+    return [baseColor + '60', baseColor + '30'];
   };
 
   const renderCircle = (day: TimelineDay) => {
     const status = getCompletionStatus(day);
     const isToday = day.is_today;
 
-    // Aucun: cercle blanc avec shadow subtile
     if (status === 'none') {
       return (
         <View
@@ -58,7 +58,6 @@ export function GroupHabitTimeline({ timeline, accentColor = '#10b981' }: GroupH
       );
     }
 
-    // Partiel: gradient subtil avec profondeur
     if (status === 'partial') {
       const gradientColors = getLighterGradient(accentColor);
       return (
@@ -86,8 +85,7 @@ export function GroupHabitTimeline({ timeline, accentColor = '#10b981' }: GroupH
       );
     }
 
-    // Tous complété: gradient plein avec check et shadow prononcée
-    const fullGradient = [accentColor, accentColor + 'DD']; // 100% et 87% opacity
+    const fullGradient = [accentColor, accentColor + 'DD'];
     return (
       <LinearGradient
         colors={fullGradient}
@@ -120,25 +118,20 @@ export function GroupHabitTimeline({ timeline, accentColor = '#10b981' }: GroupH
 
   return (
     <View style={tw`bg-stone-50/60 rounded-2xl p-3 mt-2`}>
-      {/* Stats du jour - Ultra compact */}
       {todayData && (
         <View style={tw`flex-row items-center justify-center gap-1.5 mb-2.5`}>
           <View style={[tw`rounded-full px-2 py-0.5`, { backgroundColor: accentColor + '15' }]}>
-            <Text style={[tw`text-[9px] font-bold`, { color: accentColor }]}>AUJOURD'HUI</Text>
+            <Text style={[tw`text-[9px] font-bold`, { color: accentColor }]}>{t('groups.timeline.today')}</Text>
           </View>
 
           <View style={tw`flex-row items-center gap-1`}>
             <View style={[tw`w-1.5 h-1.5 rounded-full`, { backgroundColor: accentColor }]} />
-            <Text style={tw`text-[10px] font-semibold text-stone-700`}>
-              {completedToday}/{totalToday}
-            </Text>
+            <Text style={tw`text-[10px] font-semibold text-stone-700`}>{t('groups.timeline.completions', { completed: completedToday, total: totalToday })}</Text>
           </View>
         </View>
       )}
 
-      {/* Timeline principale */}
       <View>
-        {/* Jours de la semaine */}
         <View style={tw`flex-row justify-between mb-1.5`}>
           {timeline.map((day) => (
             <View key={day.date} style={tw`items-center w-8`}>
@@ -147,15 +140,12 @@ export function GroupHabitTimeline({ timeline, accentColor = '#10b981' }: GroupH
           ))}
         </View>
 
-        {/* Cercles de complétion avec profondeur */}
         <View style={tw`flex-row justify-between items-center`}>
           {timeline.map((day) => {
             return (
               <View key={day.date} style={tw`items-center relative`}>
-                {/* Circle avec shadow/gradient */}
                 <View style={[tw`items-center justify-center`, day.is_today && tw`transform scale-110`]}>{renderCircle(day)}</View>
 
-                {/* Glow subtil pour aujourd'hui */}
                 {day.is_today && (
                   <View
                     style={[

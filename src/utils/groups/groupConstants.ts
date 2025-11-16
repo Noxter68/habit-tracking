@@ -1,5 +1,7 @@
 // constants/groupConstants.ts
-// Système de tiers basé sur le NIVEAU (pas l'XP)
+// Système de tiers basé sur le NIVEAU (pas l'XP) avec support i18n
+
+import { getTranslatedGroupTier, type GroupTierTranslation } from '@/i18n/groupTiersTranslation';
 
 /**
  * XP System - Pour progresser de niveau en niveau
@@ -29,15 +31,18 @@ export const GROUP_XP = {
 
 export interface GroupTierConfig {
   tier: number;
-  name: string;
+  name: string; // Nom technique (Crystal, Ruby, etc.) - ne change jamais
   minLevel: number;
   maxLevel: number | null; // null = tier max
   themeKey: string;
   icon: any; // require('path/to/icon.png')
-  description: string;
+  description: string; // Description par défaut (FR) - utilisée comme fallback
 }
 
 /**
+ * ⚠️ IMPORTANT: Ce sont les données RAW (techniques)
+ * Pour afficher les traductions, utilisez getTranslatedGroupTierConfig()
+ *
  * Mapping NIVEAU → TIER
  * Les tiers se débloquent selon le niveau du groupe
  */
@@ -49,7 +54,7 @@ export const GROUP_TIERS_BY_LEVEL: Record<number, GroupTierConfig> = {
     maxLevel: 9,
     themeKey: 'novice',
     icon: require('../../../assets/groupHabit/tiers/group-tier-1.png'),
-    description: 'Fondation cristalline',
+    description: 'Fondation cristalline', // Fallback FR
   },
   2: {
     tier: 2,
@@ -117,7 +122,7 @@ export function calculateGroupTierFromLevel(level: number): number {
 }
 
 /**
- * Récupère la config complète d'un tier
+ * Récupère la config complète d'un tier (RAW - non traduite)
  * @param tier - Numéro du tier (1-6)
  */
 export function getGroupTierConfig(tier: number): GroupTierConfig {
@@ -125,12 +130,42 @@ export function getGroupTierConfig(tier: number): GroupTierConfig {
 }
 
 /**
- * Récupère la config du tier selon le niveau
+ * Récupère la config du tier selon le niveau (RAW - non traduite)
  * @param level - Niveau du groupe
  */
 export function getGroupTierConfigByLevel(level: number): GroupTierConfig {
   const tier = calculateGroupTierFromLevel(level);
   return getGroupTierConfig(tier);
+}
+
+/**
+ * ✨ NEW: Récupère la config du tier TRADUITE selon le niveau
+ * @param level - Niveau du groupe
+ * @param language - Langue ('en' ou 'fr')
+ * @returns Config complète avec nom et description traduits
+ */
+export function getTranslatedGroupTierConfig(level: number, language: 'en' | 'fr'): GroupTierConfig & { translatedName: string; translatedDescription: string } {
+  const tierConfig = getGroupTierConfigByLevel(level);
+  const translation = getTranslatedGroupTier(tierConfig.name as any, language);
+
+  return {
+    ...tierConfig,
+    translatedName: translation.name,
+    translatedDescription: translation.description,
+    // Garde aussi le name/description original pour compatibilité
+    name: tierConfig.name,
+    description: tierConfig.description,
+  };
+}
+
+/**
+ * ✨ NEW: Récupère UNIQUEMENT la traduction d'un tier
+ * @param tier - Numéro du tier (1-6)
+ * @param language - Langue ('en' ou 'fr')
+ */
+export function getGroupTierTranslation(tier: number, language: 'en' | 'fr'): GroupTierTranslation {
+  const config = getGroupTierConfig(tier);
+  return getTranslatedGroupTier(config.name as any, language);
 }
 
 /**
@@ -222,7 +257,8 @@ export function calculateLevelProgress(currentXP: number, currentLevel: number):
 }
 
 /**
- * Formate le nom du tier
+ * Formate le nom du tier (version RAW - non traduite)
+ * Pour la version traduite, utilisez getGroupTierTranslation()
  */
 export function formatGroupTierName(tier: number): string {
   const config = getGroupTierConfig(tier);
@@ -251,7 +287,7 @@ export const GROUP_LIMITS = {
 } as const;
 
 // ============================================
-// EXPORT DEFAULT
+// EXPORT DEFAULT - Version améliorée avec i18n
 // ============================================
 
 export default {
@@ -260,16 +296,20 @@ export default {
   VALIDATION: GROUP_VALIDATION,
   LIMITS: GROUP_LIMITS,
 
-  // Helper functions - NIVEAU-BASED
+  // Helper functions - NIVEAU-BASED (RAW)
   calculateTierFromLevel: calculateGroupTierFromLevel,
   getTierConfig: getGroupTierConfig,
   getTierConfigByLevel: getGroupTierConfigByLevel,
   getTierThemeKey: getGroupTierThemeKey,
-  getTierNameForTheme: getGroupTierNameForTheme, // NEW: Pour getHabitTierTheme()
+  getTierNameForTheme: getGroupTierNameForTheme,
   getNextTierInfo,
   getLevelsToNextTier,
   calculateTierProgress,
   getXPForNextLevel,
   calculateLevelProgress,
   formatTierName: formatGroupTierName,
+
+  // ✨ NEW: i18n functions
+  getTranslatedTierConfig: getTranslatedGroupTierConfig,
+  getTierTranslation: getGroupTierTranslation,
 } as const;

@@ -2101,5 +2101,167 @@
       "errorAddingTask": "Unable to add task. Please try again.",
       "errorAddingTasks": "Unable to add tasks. Please try again."
     }
+  },
+  "groups": {
+    "title": "Groups",
+    "subtitle": "My Groups",
+    "activeCount_one": "{{count}} active group",
+    "activeCount_other": "{{count}} active groups",
+
+    "list": {
+      "members_one": "{{count}} member",
+      "members_other": "{{count}} members",
+      "level": "Level {{level}}",
+      "createGroup": "Create a group",
+      "joinGroup": "Join a group",
+      "noGroups": "No groups",
+      "noGroupsDescription": "Create a group or join one to share your goals with others",
+      "joinWithCode": "Join a group",
+      "joinDescription": "Enter an invitation code"
+    },
+
+    "dashboard": {
+      "habits": "Habits",
+      "habitsCount_one": "{{count}} active",
+      "habitsCount_other": "{{count}} active",
+      "addHabit": "Add",
+      "noHabits": "No habits",
+      "noHabitsDescription": "Create your first shared habit to start the adventure together",
+      "createHabit": "Create a habit",
+      "xpProgress": "{{current}} / {{max}} XP",
+      "deleteHabit": "Delete habit",
+      "deleteHabitConfirm": "Are you sure you want to delete this habit?",
+      "deleteHabitMessage": "Do you want to delete \"{{name}}\"?",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "error": "Error",
+      "errorLoading": "Unable to load group",
+      "errorDeleting": "Unable to delete habit",
+      "groupNotFound": "Group not found",
+      "level": "Level {{level}}",
+      "groupHabit": "Group habit"
+    },
+
+    "card": {
+      "bonusXpMidnight": "+{{xp}} XP at midnight",
+      "bonusXpPossible": "+{{xp}} XP possible",
+      "errorToggle": "Unable to modify completion",
+      "deleteConfirm": "Delete habit",
+      "deleteMessage": "Do you want to delete \"{{name}}\"?"
+    },
+
+    "timeline": {
+      "today": "TODAY",
+      "completions": "{{completed}}/{{total}}"
+    },
+
+    "tiers": {
+      "allTiers": "All tiers",
+      "current": "Current",
+      "levelRequired": "Level {{level}} required",
+      "unlocked": "✓ Level {{level}}+",
+      "tier": "Tier {{tier}}",
+      "tapToClose": "Tap to close"
+    },
+
+    "settings": {
+      "title": "Settings",
+      "inviteCode": "Invitation code",
+      "members": "Members ({{count}})",
+      "creator": "Creator",
+      "you": "(You)",
+      "noMembers": "No members found",
+      "leaveGroup": "Leave group",
+      "deleteGroup": "Delete group",
+      "leaveConfirm": "Leave group",
+      "leaveMessage": "Are you sure you want to leave this group?",
+      "leaveMessageCreator": "You are the creator. If you leave, the role will be transferred to the oldest member.",
+      "deleteConfirm": "Delete group",
+      "deleteMessage": "This action is irreversible. All members will be removed and all data will be deleted.",
+      "groupLeft": "Group left",
+      "groupLeftMessage": "You have successfully left the group",
+      "groupDeleted": "Group deleted",
+      "groupDeletedMessage": "The group has been successfully deleted",
+      "errorLeave": "Unable to leave group",
+      "errorDelete": "Unable to delete group",
+      "codeCopied": "Code copied!",
+      "codeCopiedMessage": "The code {{code}} has been copied",
+      "creatorInfo": "As the creator, if you leave the group, your role will be automatically transferred to the oldest member."
+    },
+
+    "join": {
+      "title": "Join a group",
+      "inviteCode": "Invitation code",
+      "placeholder": "ABC-123",
+      "info": "💡 The code is made of 6 characters (letters and numbers)",
+      "description": "Enter the invitation code shared by the group creator",
+      "button": "Join the group",
+      "invalidCode": "Invalid code",
+      "invalidCodeMessage": "The code must contain 6 characters (letters and numbers)",
+      "codeNotFound": "This invitation code does not exist",
+      "alreadyMember": "Already member",
+      "alreadyMemberMessage": "You are already a member of this group",
+      "limitReached": "Limit reached",
+      "limitReachedMessage": "You have reached your groups limit",
+      "groupFull": "Group full",
+      "groupFullMessage": "This group is full",
+      "errorJoining": "Unable to join group",
+      "success": "Group joined! 🎉",
+      "successMessage": "You can now see shared habits",
+      "later": "Later",
+      "seePremium": "See Premium"
+    },
+
+    "create": {
+      "title": "New group",
+      "groupName": "Group name",
+      "placeholder": "Ex: Fitness Duo",
+      "charactersCount": "{{count}}/50 characters",
+      "info": "After creation, you will receive an invitation code to share with your friends.",
+      "button": "Create group",
+      "invalidName": "Error",
+      "success": "Group created! 🎉",
+      "successMessage": "Share the invitation code with your friends",
+      "errorCreating": "Unable to create group",
+      "limitReached": "Limit reached",
+      "limitReachedMessage": "You cannot create more groups.",
+      "later": "Later",
+      "seePremium": "See Premium"
+    },
+
+    "createHabit": {
+      "title": "New habit",
+      "habitName": "Habit name",
+      "placeholder": "Ex: Morning Run",
+      "charactersCount": "{{count}}/50 characters",
+      "frequency": "Frequency",
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "duration": "Estimated duration (optional)",
+      "none": "None",
+      "info": "All group members will be able to complete this habit {{frequency}}. The collective streak is maintained if everyone completes.",
+      "infoDaily": "every day",
+      "infoWeekly": "every week",
+      "button": "Create habit",
+      "invalidName": "Error",
+      "errorCreating": "Unable to create habit",
+      "limitReached": "Limit reached",
+      "limitReachedMessage": "Cannot add more habits.",
+      "later": "Later",
+      "seePremium": "See Premium"
+    },
+
+    "streak": {
+      "current": "{{count}} day streak",
+      "noStreakSaver": "No Streak Saver",
+      "noStreakSaverMessage": "You have no more Streak Savers. Would you like to buy some?",
+      "later": "Later",
+      "buy": "Buy"
+    },
+
+    "invite": {
+      "codeCopied": "Code copied!",
+      "codeMessage": "The code {{code}} has been copied to the clipboard"
+    }
   }
 }

@@ -1,9 +1,10 @@
 // screens/GroupsListScreen.tsx
-// Liste des groupes avec textures dynamiques basées sur le niveau
+// Liste des groupes avec i18n et textures dynamiques basées sur le niveau
 
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, ImageBackground, Image } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Plus, Users, Flame, ArrowRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,19 +18,15 @@ import tw from '@/lib/tailwind';
 
 type NavigationProp = NativeStackNavigationProp<any>;
 
-const GroupCard = ({ group, onPress }: { group: GroupWithMembers; onPress: () => void }) => {
+const GroupCard = ({ group, onPress, t }: { group: GroupWithMembers; onPress: () => void; t: any }) => {
   const activeMembers = group.members?.filter((m) => m.user_id).length || 0;
   const currentLevel = group.level || 1;
   const currentStreak = group.current_streak || 0;
 
-  // Tier basé sur le NIVEAU du groupe (pas la streak)
   const currentTierNumber = calculateGroupTierFromLevel(currentLevel);
   const currentTierConfig = getGroupTierConfigByLevel(currentLevel);
-
-  // Utiliser getHabitTierTheme pour Crystal/Ruby/Amethyst, getAchievementTierTheme pour Jade/Topaz/Obsidian
   const tierTheme = currentTierNumber <= 3 ? getHabitTierTheme(currentTierConfig.name as any) : getAchievementTierTheme(getGroupTierThemeKey(currentTierNumber));
 
-  // Exception pour Obsidian : opacités ajustées
   const isObsidian = currentTierNumber === 6;
   const textureOpacity = isObsidian ? 0.2 : 0.2;
   const iconOpacity = isObsidian ? 0.8 : 0.3;
@@ -65,7 +62,6 @@ const GroupCard = ({ group, onPress }: { group: GroupWithMembers; onPress: () =>
             }}
           />
 
-          {/* Icône du tier en arrière-plan - GRANDE et INCRUSTÉE */}
           <View
             style={{
               position: 'absolute',
@@ -102,7 +98,6 @@ const GroupCard = ({ group, onPress }: { group: GroupWithMembers; onPress: () =>
                   >
                     {group.name}
                   </Text>
-                  {/* Streak déplacée à côté du titre */}
                   <View style={tw`flex-row items-center gap-0.5`}>
                     <Flame size={16} color="#FFFFFF" fill="#FFFFFF" />
                     <Text
@@ -121,7 +116,6 @@ const GroupCard = ({ group, onPress }: { group: GroupWithMembers; onPress: () =>
                   </View>
                 </View>
 
-                {/* Badge niveau sous le titre */}
                 <View
                   style={[
                     tw`rounded-full px-3 py-1 self-start mb-2`,
@@ -132,7 +126,7 @@ const GroupCard = ({ group, onPress }: { group: GroupWithMembers; onPress: () =>
                     },
                   ]}
                 >
-                  <Text style={tw`text-white text-xs font-black`}>Niveau {currentLevel}</Text>
+                  <Text style={tw`text-white text-xs font-black`}>{t('groups.list.level', { level: currentLevel })}</Text>
                 </View>
 
                 {group.description && (
@@ -152,7 +146,6 @@ const GroupCard = ({ group, onPress }: { group: GroupWithMembers; onPress: () =>
             </View>
 
             <View style={tw`flex-row items-center justify-between`}>
-              {/* Membres */}
               <View
                 style={[
                   tw`rounded-full px-3 py-1.5 flex-row items-center gap-1.5`,
@@ -164,12 +157,9 @@ const GroupCard = ({ group, onPress }: { group: GroupWithMembers; onPress: () =>
                 ]}
               >
                 <Users size={14} color="#FFFFFF" strokeWidth={2.5} />
-                <Text style={tw`text-white text-xs font-semibold`}>
-                  {activeMembers} {activeMembers > 1 ? 'membres' : 'membre'}
-                </Text>
+                <Text style={tw`text-white text-xs font-semibold`}>{t('groups.list.members', { count: activeMembers })}</Text>
               </View>
 
-              {/* Flèche */}
               <View
                 style={[
                   tw`rounded-full p-2`,
@@ -190,7 +180,7 @@ const GroupCard = ({ group, onPress }: { group: GroupWithMembers; onPress: () =>
   );
 };
 
-const EmptyState = ({ onCreateGroup, onJoinGroup }: { onCreateGroup: () => void; onJoinGroup: () => void }) => {
+const EmptyState = ({ onCreateGroup, onJoinGroup, t }: { onCreateGroup: () => void; onJoinGroup: () => void; t: any }) => {
   return (
     <View style={tw`flex-1 items-center justify-center px-8 py-12`}>
       <View
@@ -204,8 +194,8 @@ const EmptyState = ({ onCreateGroup, onJoinGroup }: { onCreateGroup: () => void;
         <Users size={56} color="#3B82F6" strokeWidth={2} />
       </View>
 
-      <Text style={tw`text-2xl font-bold text-stone-800 text-center mb-2`}>Aucun groupe</Text>
-      <Text style={tw`text-base text-stone-500 text-center mb-8 leading-6`}>Créez un groupe ou rejoignez-en un pour partager vos objectifs avec d'autres</Text>
+      <Text style={tw`text-2xl font-bold text-stone-800 text-center mb-2`}>{t('groups.list.noGroups')}</Text>
+      <Text style={tw`text-base text-stone-500 text-center mb-8 leading-6`}>{t('groups.list.noGroupsDescription')}</Text>
 
       <View style={tw`w-full gap-3`}>
         <TouchableOpacity onPress={onCreateGroup} activeOpacity={0.8}>
@@ -223,7 +213,7 @@ const EmptyState = ({ onCreateGroup, onJoinGroup }: { onCreateGroup: () => void;
               },
             ]}
           >
-            <Text style={tw`text-white text-base font-bold text-center`}>Créer un groupe</Text>
+            <Text style={tw`text-white text-base font-bold text-center`}>{t('groups.list.createGroup')}</Text>
           </LinearGradient>
         </TouchableOpacity>
 
@@ -242,7 +232,7 @@ const EmptyState = ({ onCreateGroup, onJoinGroup }: { onCreateGroup: () => void;
               },
             ]}
           >
-            <Text style={tw`text-stone-700 text-base font-semibold text-center`}>Rejoindre un groupe</Text>
+            <Text style={tw`text-stone-700 text-base font-semibold text-center`}>{t('groups.list.joinGroup')}</Text>
           </View>
         </TouchableOpacity>
       </View>
@@ -253,6 +243,7 @@ const EmptyState = ({ onCreateGroup, onJoinGroup }: { onCreateGroup: () => void;
 export default function GroupsListScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [groups, setGroups] = useState<GroupWithMembers[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -311,7 +302,6 @@ export default function GroupsListScreen() {
 
   return (
     <View style={tw`flex-1 bg-[#FAFAFA]`}>
-      {/* Header élégant avec gradient Crystal */}
       <LinearGradient colors={tierTheme.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`pt-16 pb-6`}>
         <ImageBackground source={tierTheme.texture} style={tw`absolute inset-0`} imageStyle={{ opacity: 0.15 }} resizeMode="cover" />
 
@@ -338,7 +328,7 @@ export default function GroupsListScreen() {
                   },
                 ]}
               >
-                GROUPES
+                {t('groups.title').toUpperCase()}
               </Text>
             </View>
             <Text
@@ -352,7 +342,7 @@ export default function GroupsListScreen() {
                 },
               ]}
             >
-              Mes Groupes
+              {t('groups.subtitle')}
             </Text>
             <Text
               style={[
@@ -362,11 +352,10 @@ export default function GroupsListScreen() {
                 },
               ]}
             >
-              {groups.length} {groups.length > 1 ? 'groupes actifs' : 'groupe actif'}
+              {t('groups.activeCount', { count: groups.length })}
             </Text>
           </View>
 
-          {/* Bouton créer */}
           <TouchableOpacity onPress={handleCreateGroup} activeOpacity={0.8}>
             <View
               style={[
@@ -381,7 +370,7 @@ export default function GroupsListScreen() {
               ]}
             >
               <Plus size={20} color="#3b82f6" strokeWidth={2.5} />
-              <Text style={tw`text-[#3b82f6] text-base font-bold ml-2`}>Créer un groupe</Text>
+              <Text style={tw`text-[#3b82f6] text-base font-bold ml-2`}>{t('groups.list.createGroup')}</Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -394,14 +383,13 @@ export default function GroupsListScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3b82f6" />}
       >
         {groups.length === 0 ? (
-          <EmptyState onCreateGroup={handleCreateGroup} onJoinGroup={handleJoinGroup} />
+          <EmptyState onCreateGroup={handleCreateGroup} onJoinGroup={handleJoinGroup} t={t} />
         ) : (
           <View>
             {groups.map((group) => (
-              <GroupCard key={group.id} group={group} onPress={() => handleGroupPress(group.id)} />
+              <GroupCard key={group.id} group={group} onPress={() => handleGroupPress(group.id)} t={t} />
             ))}
 
-            {/* Join Group Card */}
             <TouchableOpacity onPress={handleJoinGroup} activeOpacity={0.7}>
               <View
                 style={[
@@ -428,8 +416,8 @@ export default function GroupsListScreen() {
                 >
                   <Users size={24} color="#3b82f6" strokeWidth={2} />
                 </View>
-                <Text style={tw`text-base font-bold text-stone-800 mb-1`}>Rejoindre un groupe</Text>
-                <Text style={tw`text-sm text-stone-500 text-center`}>Entrez un code d'invitation</Text>
+                <Text style={tw`text-base font-bold text-stone-800 mb-1`}>{t('groups.list.joinWithCode')}</Text>
+                <Text style={tw`text-sm text-stone-500 text-center`}>{t('groups.list.joinDescription')}</Text>
               </View>
             </TouchableOpacity>
           </View>

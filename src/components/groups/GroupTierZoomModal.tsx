@@ -1,7 +1,10 @@
 // components/groups/GroupTierZoomModal.tsx
+// Modal zoom tier avec i18n
+
 import React from 'react';
 import { Modal, Pressable, View, Text, ImageBackground, Image, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 import tw from '@/lib/tailwind';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -20,18 +23,19 @@ interface GroupTierZoomModalProps {
     accent: string;
     gradient: string[];
     texture: any;
-    backgroundGradient?: string[]; // Pour achievement tiers (Jade, Topaz, Obsidian)
+    backgroundGradient?: string[];
   };
   isUnlocked: boolean;
   currentLevel: number;
 }
 
 export const GroupTierZoomModal: React.FC<GroupTierZoomModalProps> = ({ visible, onClose, tierConfig, tierTheme, isUnlocked, currentLevel }) => {
+  const { t } = useTranslation();
+
   const isObsidian = tierTheme.accent === '#8b5cf6';
   const isJade = tierTheme.accent === '#059669';
   const isTopaz = tierTheme.accent === '#f59e0b';
 
-  // Pour les tiers avancés (Jade, Topaz, Obsidian), utiliser backgroundGradient s'il existe
   const gradientColors = tierTheme.backgroundGradient || tierTheme.gradient;
 
   return (
@@ -39,7 +43,6 @@ export const GroupTierZoomModal: React.FC<GroupTierZoomModalProps> = ({ visible,
       <Pressable style={tw`flex-1 bg-slate-900/95 items-center justify-center px-6`} onPress={onClose}>
         <View style={tw`w-full max-w-sm`}>
           <Pressable style={tw`bg-[#FAFAFA] rounded-3xl p-8 shadow-2xl`} onPress={(e) => e.stopPropagation()}>
-            {/* Tier Icon */}
             <View style={tw`items-center -mt-20 mb-6`}>
               <LinearGradient
                 colors={tierTheme.gradient}
@@ -84,13 +87,10 @@ export const GroupTierZoomModal: React.FC<GroupTierZoomModalProps> = ({ visible,
               </LinearGradient>
             </View>
 
-            {/* Tier Name */}
             <Text style={tw`text-stone-900 text-3xl font-black text-center mb-3`}>{tierConfig.name}</Text>
 
-            {/* Description */}
             <Text style={tw`text-stone-600 text-base text-center mb-6 leading-6`}>{tierConfig.description}</Text>
 
-            {/* Pills */}
             <View style={tw`flex-row gap-2 justify-center mb-6`}>
               <View
                 style={[
@@ -108,17 +108,16 @@ export const GroupTierZoomModal: React.FC<GroupTierZoomModalProps> = ({ visible,
                     },
                   ]}
                 >
-                  {isUnlocked ? `✓ Niveau ${tierConfig.minLevel}+` : `Niveau ${tierConfig.minLevel} requis`}
+                  {isUnlocked ? t('groups.tiers.unlocked', { level: tierConfig.minLevel }) : t('groups.tiers.levelRequired', { level: tierConfig.minLevel })}
                 </Text>
               </View>
 
               <View style={tw`bg-stone-100 rounded-full px-4 py-2`}>
-                <Text style={tw`text-stone-700 text-sm font-semibold`}>Tier {tierConfig.tier || 1}</Text>
+                <Text style={tw`text-stone-700 text-sm font-semibold`}>{t('groups.tiers.tier', { tier: tierConfig.tier || 1 })}</Text>
               </View>
             </View>
 
-            {/* Close Hint */}
-            <Text style={tw`text-stone-400 text-xs text-center`}>Toucher pour fermer</Text>
+            <Text style={tw`text-stone-400 text-xs text-center`}>{t('groups.tiers.tapToClose')}</Text>
           </Pressable>
         </View>
       </Pressable>

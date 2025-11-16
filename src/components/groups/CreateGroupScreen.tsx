@@ -1,16 +1,16 @@
 // screens/CreateGroupScreen.tsx
-// Écran de création d'un nouveau groupe avec design cohérent
+// Écran de création d'un nouveau groupe avec i18n
 
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { X, Users } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { groupService } from '@/services/groupTypeService';
 import { useAuth } from '@/context/AuthContext';
 import { validateName } from '@/utils/groupUtils';
-import { EmojiPicker } from '@/components/groups/EmojiPicker';
 import tw from '@/lib/tailwind';
 
 type NavigationProp = NativeStackNavigationProp<any>;
@@ -18,6 +18,7 @@ type NavigationProp = NativeStackNavigationProp<any>;
 export default function CreateGroupScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [emoji, setEmoji] = useState('💪');
   const [loading, setLoading] = useState(false);
@@ -28,7 +29,7 @@ export default function CreateGroupScreen() {
     const validation = validateName(name);
     if (!validation.valid) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert('Erreur', validation.error);
+      Alert.alert(t('groups.create.invalidName'), validation.error);
       return;
     }
 
@@ -39,12 +40,12 @@ export default function CreateGroupScreen() {
       if (!canJoin.can_join) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
         Alert.alert(
-          'Limite atteinte',
-          canJoin.reason || 'Vous ne pouvez pas créer plus de groupes.',
+          t('groups.create.limitReached'),
+          canJoin.reason || t('groups.create.limitReachedMessage'),
           canJoin.requires_premium
             ? [
-                { text: 'Plus tard', style: 'cancel' },
-                { text: 'Voir Premium', onPress: () => navigation.navigate('Premium') },
+                { text: t('groups.create.later'), style: 'cancel' },
+                { text: t('groups.create.seePremium'), onPress: () => navigation.navigate('Premium') },
               ]
             : [{ text: 'OK' }]
         );
@@ -54,7 +55,7 @@ export default function CreateGroupScreen() {
       const group = await groupService.createGroup(user.id, { name, emoji });
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert('Groupe créé ! 🎉', "Partagez le code d'invitation avec vos amis", [
+      Alert.alert(t('groups.create.success'), t('groups.create.successMessage'), [
         {
           text: 'OK',
           onPress: () => {
@@ -71,7 +72,7 @@ export default function CreateGroupScreen() {
     } catch (error: any) {
       console.error('Error creating group:', error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert('Erreur', error.message || 'Impossible de créer le groupe');
+      Alert.alert(t('groups.dashboard.error'), error.message || t('groups.create.errorCreating'));
     } finally {
       setLoading(false);
     }
@@ -79,8 +80,7 @@ export default function CreateGroupScreen() {
 
   return (
     <View style={tw`flex-1 bg-[#FAFAFA]`}>
-      {/* Header minimaliste */}
-      <View style={tw`px-6 pt-8 pb-4 bg-[#FAFAFA]`}>
+      <View style={tw`px-6 pt-6 pb-4 bg-[#FAFAFA]`}>
         <View style={tw`flex-row items-center justify-between`}>
           <TouchableOpacity
             onPress={() => {
@@ -92,20 +92,19 @@ export default function CreateGroupScreen() {
             <X size={24} color="#57534E" />
           </TouchableOpacity>
 
-          <Text style={tw`text-xl font-bold text-stone-800`}>Nouveau groupe</Text>
+          <Text style={tw`text-xl font-bold text-stone-800`}>{t('groups.create.title')}</Text>
 
           <View style={tw`w-10`} />
         </View>
       </View>
 
       <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-6 py-2`}>
-        {/* Nom du groupe */}
         <View style={tw`mb-4`}>
-          <Text style={tw`text-sm font-semibold text-stone-700 mb-3`}>Nom du groupe</Text>
+          <Text style={tw`text-sm font-semibold text-stone-700 mb-3`}>{t('groups.create.groupName')}</Text>
           <TextInput
             value={name}
             onChangeText={setName}
-            placeholder="Ex: Fitness Duo"
+            placeholder={t('groups.create.placeholder')}
             placeholderTextColor="#9CA3AF"
             maxLength={50}
             style={[
@@ -122,10 +121,9 @@ export default function CreateGroupScreen() {
             ]}
             autoFocus
           />
-          <Text style={tw`text-xs text-stone-500 mt-2`}>{name.length}/50 caractères</Text>
+          <Text style={tw`text-xs text-stone-500 mt-2`}>{t('groups.create.charactersCount', { count: name.length })}</Text>
         </View>
 
-        {/* Info */}
         <View
           style={[
             tw`rounded-xl p-4 mb-4 flex-row gap-3`,
@@ -137,10 +135,9 @@ export default function CreateGroupScreen() {
           ]}
         >
           <Users size={20} color="#3B82F6" strokeWidth={2} style={tw`mt-0.5`} />
-          <Text style={tw`text-sm text-blue-900 leading-relaxed flex-1`}>Après création, vous recevrez un code d'invitation à partager avec vos amis.</Text>
+          <Text style={tw`text-sm text-blue-900 leading-relaxed flex-1`}>{t('groups.create.info')}</Text>
         </View>
 
-        {/* Bouton créer */}
         <TouchableOpacity
           onPress={handleCreate}
           disabled={!name.trim() || loading}
@@ -157,7 +154,7 @@ export default function CreateGroupScreen() {
           ]}
           activeOpacity={0.8}
         >
-          {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={tw`text-base font-bold text-white`}>Créer le groupe</Text>}
+          {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={tw`text-base font-bold text-white`}>{t('groups.create.button')}</Text>}
         </TouchableOpacity>
 
         <View style={tw`h-8`} />
