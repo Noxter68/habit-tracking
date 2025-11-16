@@ -15,6 +15,7 @@ export type RootStackParamList = {
     pausedTasks?: Record<string, { pausedUntil: string; reason?: string }>;
   };
   LanguageSelector: undefined;
+  GroupTiers: { groupId: string };
 
   // Settings & Profile
   Settings: undefined;

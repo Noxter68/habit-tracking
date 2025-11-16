@@ -56,6 +56,7 @@ import ResetPasswordScreen from '@/screens/ResetPasswordScreen';
 import CreateGroupScreen from '@/components/groups/CreateGroupScreen';
 import JoinGroupScreen from '@/components/groups/JoinGroupScreen';
 import { GroupsNavigator } from '@/navigation/GroupsNavigator';
+import GroupTiersScreen from '@/screens/GroupTierScreen';
 
 // Type Definitions
 export type RootStackParamList = {
@@ -334,6 +335,7 @@ function AppNavigator() {
         <Stack.Screen name="HolidayMode" component={HolidayModeScreen} options={{ headerShown: false, presentation: 'card', animation: 'slide_from_right' }} />
         <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
         <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="GroupTiers" component={GroupTiersScreen} options={{ headerShown: false }} />
         <Stack.Screen
           name="CreateGroup"
           component={CreateGroupScreen}

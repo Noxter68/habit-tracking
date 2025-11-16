@@ -2,9 +2,10 @@
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, ImageBackground, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { StatusBar } from 'expo-status-bar';
 import { useNavigation, useRoute, RouteProp as RNRouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ArrowLeft, Plus, Settings, Share2, Flame } from 'lucide-react-native';
+import { ArrowLeft, Plus, Settings, Share2, Flame, Trophy } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { groupService } from '@/services/groupTypeService';
@@ -13,9 +14,12 @@ import { supabase } from '@/lib/supabase';
 import type { GroupWithMembers, GroupHabitWithCompletions } from '@/types/group.types';
 import { formatStreak, getLevelProgress, formatInviteCode } from '@/utils/groupUtils';
 import { GroupHabitCard } from '@/components/groups/GroupHabitCard';
-import { getHabitTierTheme } from '@/utils/tierTheme';
-import { HabitProgressionService } from '@/services/habitProgressionService';
+import { getAchievementTierTheme, getHabitTierTheme } from '@/utils/tierTheme';
+import { calculateGroupTierFromLevel, getGroupTierConfigByLevel, getGroupTierThemeKey } from '@/utils/groups/groupConstants';
 import { getIconComponent } from '@/utils/iconMapper';
+import { useStreakSaver } from '@/hooks/useStreakSaver';
+import { StreakSaverModal } from '@/components/streakSaver/StreakSaverModal';
+import { StreakSaverShopModal } from '@/components/streakSaver/StreakSaverShopModal';
 import tw from '@/lib/tailwind';
 
 type NavigationProp = NativeStackNavigationProp<any>;
@@ -31,8 +35,26 @@ export default function GroupDashboardScreen() {
   const [habits, setHabits] = useState<GroupHabitWithCompletions[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showStreakSaverShop, setShowStreakSaverShop] = useState(false);
 
   const xpProgress = useRef(new Animated.Value(0)).current;
+
+  // ============================================================================
+  // STREAK SAVER - Phase 2
+  // ============================================================================
+
+  const firstHabitId = habits[0]?.id || '';
+
+  const streakSaver = useStreakSaver({
+    type: 'group',
+    groupHabitId: firstHabitId,
+    groupId: groupId,
+    userId: user?.id || '',
+    enabled: !!firstHabitId && !!user?.id,
+    onStreakRestored: () => {
+      loadGroupData(true);
+    },
+  });
 
   const loadGroupData = async (silent = false) => {
     if (!user?.id) return;
@@ -143,6 +165,11 @@ export default function GroupDashboardScreen() {
     navigation.navigate('GroupSettings', { groupId });
   };
 
+  const handleTiers = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    navigation.navigate('GroupTiers', { groupId });
+  };
+
   const handleGoBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.goBack();
@@ -168,6 +195,32 @@ export default function GroupDashboardScreen() {
     ]);
   };
 
+  // ============================================================================
+  // STREAK SAVER HANDLERS
+  // ============================================================================
+
+  const handleStreakSaverShopClose = () => {
+    setShowStreakSaverShop(false);
+    streakSaver.loadInventory();
+  };
+
+  const handleStreakSaverModalClose = () => {
+    if (streakSaver.inventory.available === 0) {
+      Alert.alert('Aucun Streak Saver', "Vous n'avez plus de Streak Savers. Voulez-vous en acheter ?", [
+        { text: 'Plus tard', style: 'cancel', onPress: streakSaver.closeModal },
+        {
+          text: 'Acheter',
+          onPress: () => {
+            streakSaver.closeModal();
+            setShowStreakSaverShop(true);
+          },
+        },
+      ]);
+    } else {
+      streakSaver.closeModal();
+    }
+  };
+
   if (loading) {
     return (
       <View style={tw`flex-1 bg-[#FAFAFA] items-center justify-center`}>
@@ -187,34 +240,41 @@ export default function GroupDashboardScreen() {
   const progress = getLevelProgress(group.xp);
   const xpForNextLevel = group.level * 100;
 
-  const currentStreak = group.current_streak || 0;
-  const { tier: tierInfo } = HabitProgressionService.calculateTierFromStreak(currentStreak);
-  const tierTheme = getHabitTierTheme(tierInfo.name);
-  const isObsidian = tierTheme.accent === '#8b5cf6';
+  // Tier basé sur le NIVEAU du groupe (pas la streak)
+  const currentTierNumber = calculateGroupTierFromLevel(group.level);
+  const currentTierConfig = getGroupTierConfigByLevel(group.level);
 
-  // Récupère le composant d'icône dynamique
-  const GroupIcon = getIconComponent(group.emoji || 'target');
+  // Utiliser getHabitTierTheme pour Crystal/Ruby/Amethyst, getAchievementTierTheme pour Jade/Topaz/Obsidian
+  const tierTheme = currentTierNumber <= 3 ? getHabitTierTheme(currentTierConfig.name as any) : getAchievementTierTheme(getGroupTierThemeKey(currentTierNumber));
+
+  const isObsidian = tierTheme.accent === '#8b5cf6';
+  const isJade = tierTheme.accent === '#059669';
+  const isTopaz = tierTheme.accent === '#f59e0b';
+
+  // TOUJOURS utiliser le gradient normal (pas backgroundGradient)
+  const headerGradient = tierTheme.gradient;
 
   return (
     <View style={tw`flex-1 bg-[#FAFAFA]`}>
+      <StatusBar style="light" />
       {/* Header avec gradient tier et texture */}
       <LinearGradient
-        colors={tierTheme.gradient}
+        colors={headerGradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[
           {
             borderBottomLeftRadius: 24,
             borderBottomRightRadius: 24,
-            shadowColor: isObsidian ? '#8b5cf6' : '#000',
+            shadowColor: isObsidian ? '#8b5cf6' : isJade ? '#059669' : isTopaz ? '#f59e0b' : '#000',
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: isObsidian ? 0.3 : 0.15,
+            shadowOpacity: isObsidian || isJade || isTopaz ? 0.3 : 0.15,
             shadowRadius: 12,
           },
         ]}
       >
         <ImageBackground source={tierTheme.texture} resizeMode="cover" imageStyle={{ opacity: 0.2 }}>
-          {isObsidian && (
+          {(isObsidian || isJade || isTopaz) && (
             <View
               style={{
                 position: 'absolute',
@@ -222,7 +282,7 @@ export default function GroupDashboardScreen() {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                backgroundColor: 'rgba(139, 92, 246, 0.08)',
+                backgroundColor: isObsidian ? 'rgba(139, 92, 246, 0.15)' : isJade ? 'rgba(5, 150, 105, 0.15)' : 'rgba(245, 158, 11, 0.15)',
               }}
             />
           )}
@@ -233,7 +293,7 @@ export default function GroupDashboardScreen() {
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: isObsidian ? 'rgba(0, 0, 0, 0.15)' : 'rgba(0, 0, 0, 0.05)',
+              backgroundColor: isObsidian || isJade || isTopaz ? 'rgba(0, 0, 0, 0.05)' : 'rgba(0, 0, 0, 0.05)',
             }}
           />
 
@@ -256,6 +316,22 @@ export default function GroupDashboardScreen() {
               </TouchableOpacity>
 
               <View style={tw`flex-row gap-2`}>
+                {/* NOUVEAU: Bouton Tiers - Phase 3 */}
+                <TouchableOpacity
+                  onPress={handleTiers}
+                  style={[
+                    tw`w-9 h-9 rounded-full items-center justify-center`,
+                    {
+                      backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                      borderWidth: 1,
+                      borderColor: 'rgba(255, 255, 255, 0.4)',
+                    },
+                  ]}
+                  activeOpacity={0.7}
+                >
+                  <Trophy size={15} color="#FFFFFF" strokeWidth={2.5} />
+                </TouchableOpacity>
+
                 <TouchableOpacity
                   onPress={handleShareCode}
                   style={[
@@ -510,6 +586,27 @@ export default function GroupDashboardScreen() {
 
         <View style={tw`h-6`} />
       </ScrollView>
+
+      {/* MODALS - Phase 2 */}
+      <StreakSaverModal
+        visible={streakSaver.showModal}
+        habitName={streakSaver.eligibility.habitName || 'Habit de groupe'}
+        previousStreak={streakSaver.eligibility.previousStreak || 0}
+        availableSavers={streakSaver.inventory.available}
+        loading={streakSaver.using}
+        success={streakSaver.success}
+        newStreak={streakSaver.newStreak}
+        onUse={streakSaver.useStreakSaver}
+        onClose={handleStreakSaverModalClose}
+      />
+
+      <StreakSaverShopModal
+        visible={showStreakSaverShop}
+        onClose={handleStreakSaverShopClose}
+        onPurchaseSuccess={() => {
+          streakSaver.loadInventory();
+        }}
+      />
     </View>
   );
 }
