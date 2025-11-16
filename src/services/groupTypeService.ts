@@ -70,8 +70,6 @@ class GroupService {
     return Promise.all(
       (groups || []).map(async (group) => {
         console.log(`👥 Group "${group.name}" members:`, group.members);
-
-        const streak = await this.calculateGroupStreak(group.id);
         const isCreator = group.created_by === userId;
 
         // Mapper les membres correctement
@@ -89,7 +87,7 @@ class GroupService {
           ...group,
           members: mappedMembers,
           members_count: mappedMembers.length,
-          current_streak: streak,
+          current_streak: group.current_streak || 0,
           is_creator: isCreator,
         };
       })
@@ -269,10 +267,11 @@ class GroupService {
   // COMPLÉTIONS
   // ============================================
 
-  async completeGroupHabit(userId: string, input: CompleteGroupHabitInput): Promise<GroupHabitCompletion> {
+  async completeGroupHabit(userId: string, input: CompleteGroupHabitInput) {
     const date = input.date || new Date().toISOString().split('T')[0];
 
-    const { data, error } = await supabase
+    // 1. Insérer la complétion
+    const { data: completion, error } = await supabase
       .from('group_habit_completions')
       .insert({
         group_habit_id: input.group_habit_id,
@@ -283,7 +282,27 @@ class GroupService {
       .single();
 
     if (error) throw error;
-    return data;
+
+    // 2. Récupérer le group_id
+    const { data: habit } = await supabase.from('group_habits').select('group_id').eq('id', input.group_habit_id).single();
+
+    if (habit) {
+      // 3. Ajouter +10 XP immédiatement
+      await supabase.from('group_xp_transactions').insert({
+        group_id: habit.group_id,
+        amount: 10,
+        reason: 'task_completion',
+        date: date,
+        metadata: { habit_id: input.group_habit_id, user_id: userId },
+      });
+
+      // 4. Mettre à jour le XP du groupe
+      await supabase.rpc('update_group_xp_and_level', {
+        group_uuid: habit.group_id,
+      });
+    }
+
+    return completion;
   }
 
   async uncompleteGroupHabit(userId: string, habitId: string, date?: string): Promise<void> {
@@ -370,7 +389,7 @@ class GroupService {
   }
 
   async getGroupStats(groupId: string): Promise<GroupStats> {
-    // Récupérer le streak
+    // Récupérer le streak du groupe
     const currentStreak = await this.calculateGroupStreak(groupId);
 
     // Récupérer les membres avec leurs streaks individuels
@@ -378,9 +397,9 @@ class GroupService {
       .from('group_members')
       .select(
         `
-        user_id,
-        profile:profiles(username, avatar_emoji, avatar_color)
-      `
+      user_id,
+      profile:profiles(username, avatar_emoji, avatar_color)
+    `
       )
       .eq('group_id', groupId);
 
@@ -394,12 +413,24 @@ class GroupService {
       completions_this_week: 0, // À implémenter
     }));
 
+    // ✨ NOUVEAU: Récupérer les streaks de chaque habit
+    const { data: habits } = await supabase.from('group_habits').select('id, name, emoji, current_streak, longest_streak').eq('group_id', groupId).eq('is_active', true);
+
+    const habitStreaks = (habits || []).map((h: any) => ({
+      habit_id: h.id,
+      habit_name: h.name,
+      habit_emoji: h.emoji,
+      current_streak: h.current_streak || 0,
+      longest_streak: h.longest_streak || 0,
+    }));
+
     return {
       group_id: groupId,
       current_streak: currentStreak,
       total_completions: 0, // À implémenter
       completion_rate: 0, // À implémenter
       member_streaks: memberStreaks,
+      habit_streaks: habitStreaks, // ✨ AJOUTÉ
     };
   }
 

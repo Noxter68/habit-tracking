@@ -1,10 +1,13 @@
 // types/groups.types.ts
-// Types TypeScript pour la feature groupes
+// Types TypeScript pour la feature groupes - AVEC STREAKS
 
 export type GroupRole = 'creator' | 'member';
 
 export type ReactionEmoji = '💪' | '🔥' | '👍' | '⭐';
 
+// ============================================
+// ✨ AJOUT: Propriétés streak dans Group
+// ============================================
 export interface Group {
   id: string;
   name: string;
@@ -15,6 +18,12 @@ export interface Group {
   created_by: string;
   created_at: string;
   updated_at: string;
+  // ✨ NOUVEAU: Streaks au niveau groupe
+  current_streak: number;
+  longest_streak: number;
+  last_streak_break_date: string | null;
+  failed_days_count: number;
+  saving_team_once: number; // Streak saver collectif (premium)
 }
 
 export interface GroupMember {
@@ -26,6 +35,9 @@ export interface GroupMember {
   profile?: UserProfile;
 }
 
+// ============================================
+// ✨ AJOUT: Propriétés streak dans GroupHabit
+// ============================================
 export interface GroupHabit {
   id: string;
   group_id: string;
@@ -34,6 +46,10 @@ export interface GroupHabit {
   created_by: string;
   created_at: string;
   updated_at: string;
+  // ✨ NOUVEAU: Streaks au niveau habit
+  current_streak: number;
+  longest_streak: number;
+  last_streak_break_date: string | null;
 }
 
 export interface GroupHabitCompletion {
@@ -70,7 +86,7 @@ export interface UserProfile {
 export interface GroupWithMembers extends Group {
   members: GroupMember[];
   members_count: number;
-  current_streak: number;
+  // current_streak déjà dans Group (pas besoin de redéfinir)
   is_creator: boolean;
 }
 
@@ -78,11 +94,45 @@ export interface GroupHabitWithCompletions extends GroupHabit {
   completions: GroupHabitCompletion[];
   completions_today: number;
   total_members: number;
+  // current_streak déjà dans GroupHabit (pas besoin de redéfinir)
 }
 
 export interface CompletionWithReactions extends GroupHabitCompletion {
   reactions: GroupReaction[];
   reactions_count: number;
+}
+
+// ============================================
+// ✨ NOUVEAU: Type pour les daily summaries
+// ============================================
+export interface GroupDailySummary {
+  id: string;
+  group_id: string;
+  group_habit_id: string;
+  date: string; // YYYY-MM-DD
+  total_members: number;
+  members_completed: number;
+  completion_rate: number; // 0.0 - 1.0
+  bonus_type: 'full' | 'reduced' | 'none';
+  xp_earned: number;
+  day_validated: boolean;
+  partial_tolerance_used: boolean;
+  is_streak_saved: boolean;
+  created_at: string;
+}
+
+// ============================================
+// ✨ NOUVEAU: Type pour les weekly summaries
+// ============================================
+export interface GroupWeeklySummary {
+  id: string;
+  group_id: string;
+  week_start_date: string;
+  week_end_date: string;
+  days_validated: number; // 0-7
+  all_week_validated: boolean;
+  bonus_xp_earned: number;
+  created_at: string;
 }
 
 // ============================================
@@ -162,6 +212,8 @@ export interface GroupStats {
   total_completions: number;
   completion_rate: number; // 0-100
   member_streaks: MemberStreak[];
+  // ✨ NOUVEAU: Streaks par habit
+  habit_streaks: HabitStreak[];
 }
 
 export interface MemberStreak {
@@ -171,6 +223,15 @@ export interface MemberStreak {
   avatar_color: string | null;
   current_streak: number;
   completions_this_week: number;
+}
+
+// ✨ NOUVEAU: Streak par habit
+export interface HabitStreak {
+  habit_id: string;
+  habit_name: string;
+  habit_emoji: string;
+  current_streak: number;
+  longest_streak: number;
 }
 
 // ============================================
@@ -242,4 +303,20 @@ export interface GroupLimits {
   max_members_per_group: number;
   max_habits_per_group: number | 'unlimited';
   is_premium: boolean;
+}
+
+// ============================================
+// ✨ NOUVEAU: Types pour les streak savers
+// ============================================
+export interface StreakSaveEligibility {
+  can_save: boolean;
+  has_personal_savers: boolean;
+  has_team_saver: boolean;
+  last_break_date: string | null;
+  reason?: string;
+}
+
+export interface UseStreakSaverInput {
+  group_id: string;
+  saver_type: 'personal' | 'team';
 }

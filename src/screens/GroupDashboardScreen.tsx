@@ -1,6 +1,4 @@
 // screens/GroupDashboardScreen.tsx
-// Dashboard avec Realtime + Optimistic Updates
-
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, ImageBackground, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,14 +12,14 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import type { GroupWithMembers, GroupHabitWithCompletions } from '@/types/group.types';
 import { formatStreak, getLevelProgress, formatInviteCode } from '@/utils/groupUtils';
-import { MemberAvatars } from '@/components/groups/MemberAvatars';
 import { GroupHabitCard } from '@/components/groups/GroupHabitCard';
+import { getHabitTierTheme } from '@/utils/tierTheme';
+import { HabitProgressionService } from '@/services/habitProgressionService';
+import { getIconComponent } from '@/utils/iconMapper';
 import tw from '@/lib/tailwind';
 
 type NavigationProp = NativeStackNavigationProp<any>;
 type RouteParams = RNRouteProp<{ GroupDashboard: { groupId: string } }, 'GroupDashboard'>;
-
-const headerTexture = require('../../assets/interface/progressBar/crystal.png');
 
 export default function GroupDashboardScreen() {
   const navigation = useNavigation<NavigationProp>();
@@ -38,7 +36,6 @@ export default function GroupDashboardScreen() {
 
   const loadGroupData = async (silent = false) => {
     if (!user?.id) return;
-
     if (!silent) setLoading(true);
 
     try {
@@ -53,7 +50,6 @@ export default function GroupDashboardScreen() {
         return;
       }
 
-      // Animation de la barre XP si changement
       if (group && currentGroup.xp !== group.xp) {
         const newProgress = getLevelProgress(currentGroup.xp);
 
@@ -85,68 +81,32 @@ export default function GroupDashboardScreen() {
     }
   };
 
-  // Setup Realtime subscriptions
   useEffect(() => {
     if (!groupId) return;
 
-    // Subscribe aux complétions
     const completionsChannel = supabase
       .channel(`group_completions:${groupId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'group_habit_completions',
-        },
-        (payload) => {
-          console.log('🔥 Realtime completion change:', payload);
-          loadGroupData(true);
-        }
-      )
-      .subscribe((status) => {
-        console.log('📡 Completions channel status:', status);
-      });
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'group_habit_completions' }, (payload) => {
+        console.log('🔥 Realtime completion change:', payload);
+        loadGroupData(true);
+      })
+      .subscribe();
 
-    // Subscribe aux habitudes du groupe
     const habitsChannel = supabase
       .channel(`group_habits:${groupId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'group_habits',
-          filter: `group_id=eq.${groupId}`,
-        },
-        (payload) => {
-          console.log('🔥 Realtime habit change:', payload);
-          loadGroupData(true);
-        }
-      )
-      .subscribe((status) => {
-        console.log('📡 Habits channel status:', status);
-      });
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'group_habits', filter: `group_id=eq.${groupId}` }, (payload) => {
+        console.log('🔥 Realtime habit change:', payload);
+        loadGroupData(true);
+      })
+      .subscribe();
 
-    // Subscribe aux changements du groupe (XP, niveau, streak)
     const groupChannel = supabase
       .channel(`group:${groupId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'groups',
-          filter: `id=eq.${groupId}`,
-        },
-        (payload) => {
-          console.log('🔥 Realtime group change:', payload);
-          loadGroupData(true);
-        }
-      )
-      .subscribe((status) => {
-        console.log('📡 Group channel status:', status);
-      });
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'groups', filter: `id=eq.${groupId}` }, (payload) => {
+        console.log('🔥 Realtime group change:', payload);
+        loadGroupData(true);
+      })
+      .subscribe();
 
     return () => {
       completionsChannel.unsubscribe();
@@ -155,7 +115,6 @@ export default function GroupDashboardScreen() {
     };
   }, [groupId]);
 
-  // Charge uniquement au mount (pas de reload au retour depuis Settings)
   useEffect(() => {
     loadGroupData();
   }, [groupId, user?.id]);
@@ -168,7 +127,6 @@ export default function GroupDashboardScreen() {
 
   const handleShareCode = async () => {
     if (!group) return;
-
     const formattedCode = formatInviteCode(group.invite_code);
     await Clipboard.setStringAsync(formattedCode);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -187,7 +145,7 @@ export default function GroupDashboardScreen() {
 
   const handleGoBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    navigation.navigate('GroupsList');
+    navigation.goBack();
   };
 
   const handleDeleteHabit = async (habitId: string) => {
@@ -213,7 +171,7 @@ export default function GroupDashboardScreen() {
   if (loading) {
     return (
       <View style={tw`flex-1 bg-[#FAFAFA] items-center justify-center`}>
-        <ActivityIndicator size="large" color="#60a5fa" />
+        <ActivityIndicator size="large" color="#3b82f6" />
       </View>
     );
   }
@@ -229,116 +187,341 @@ export default function GroupDashboardScreen() {
   const progress = getLevelProgress(group.xp);
   const xpForNextLevel = group.level * 100;
 
+  const currentStreak = group.current_streak || 0;
+  const { tier: tierInfo } = HabitProgressionService.calculateTierFromStreak(currentStreak);
+  const tierTheme = getHabitTierTheme(tierInfo.name);
+  const isObsidian = tierTheme.accent === '#8b5cf6';
+
+  // Récupère le composant d'icône dynamique
+  const GroupIcon = getIconComponent(group.emoji || 'target');
+
   return (
     <View style={tw`flex-1 bg-[#FAFAFA]`}>
-      {/* Header avec texture et gradient */}
-      <ImageBackground source={headerTexture} style={tw`overflow-hidden`} imageStyle={tw`opacity-60`} resizeMode="cover">
-        <LinearGradient colors={['#60a5fa', '#3b82f6', '#1d4ed8']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`px-6 pt-16 pb-6`}>
-          {/* Navigation */}
-          <View style={tw`flex-row items-center justify-between mb-6`}>
-            <TouchableOpacity onPress={handleGoBack} style={tw`w-10 h-10 items-center justify-center bg-white/20 rounded-full`} activeOpacity={0.7}>
-              <ArrowLeft size={22} color="#FFFFFF" />
-            </TouchableOpacity>
+      {/* Header avec gradient tier et texture */}
+      <LinearGradient
+        colors={tierTheme.gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[
+          {
+            borderBottomLeftRadius: 24,
+            borderBottomRightRadius: 24,
+            shadowColor: isObsidian ? '#8b5cf6' : '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: isObsidian ? 0.3 : 0.15,
+            shadowRadius: 12,
+          },
+        ]}
+      >
+        <ImageBackground source={tierTheme.texture} resizeMode="cover" imageStyle={{ opacity: 0.2 }}>
+          {isObsidian && (
+            <View
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(139, 92, 246, 0.08)',
+              }}
+            />
+          )}
+          <View
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: isObsidian ? 'rgba(0, 0, 0, 0.15)' : 'rgba(0, 0, 0, 0.05)',
+            }}
+          />
 
-            <View style={tw`flex-row gap-2`}>
-              <TouchableOpacity onPress={handleShareCode} style={tw`w-10 h-10 rounded-full bg-white/20 items-center justify-center`} activeOpacity={0.7}>
-                <Share2 size={18} color="#FFFFFF" />
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={handleSettings} style={tw`w-10 h-10 rounded-full bg-white/20 items-center justify-center`} activeOpacity={0.7}>
-                <Settings size={18} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Nom et emoji du groupe */}
-          <View style={tw`flex-row items-center gap-3 mb-5`}>
-            <View style={tw`w-16 h-16 bg-white/20 rounded-2xl items-center justify-center backdrop-blur`}>
-              <Text style={tw`text-4xl`}>{group.emoji}</Text>
-            </View>
-            <View style={tw`flex-1`}>
-              <Text style={tw`text-3xl font-bold text-white mb-1`}>{group.name}</Text>
-              <Text style={tw`text-sm text-white/80`}>Niveau {group.level}</Text>
-            </View>
-          </View>
-
-          {/* Barre XP animée */}
-          <View style={tw`mb-5`}>
-            <View style={tw`flex-row items-center justify-between mb-2`}>
-              <Text style={tw`text-xs font-semibold text-white/90`}>
-                {group.xp} / {xpForNextLevel} XP
-              </Text>
-              <Text style={tw`text-xs text-white/70`}>{progress}%</Text>
-            </View>
-            <View style={tw`h-2.5 bg-white/20 rounded-full overflow-hidden`}>
-              <Animated.View
+          <View style={tw`px-5 pt-14 pb-4`}>
+            {/* Navigation */}
+            <View style={tw`flex-row items-center justify-between mb-3`}>
+              <TouchableOpacity
+                onPress={handleGoBack}
                 style={[
-                  tw`h-full bg-white rounded-full shadow-sm`,
+                  tw`w-9 h-9 items-center justify-center rounded-full`,
                   {
-                    width: xpProgress.interpolate({
-                      inputRange: [0, 100],
-                      outputRange: ['0%', '100%'],
-                    }),
+                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                    borderWidth: 1,
+                    borderColor: 'rgba(255, 255, 255, 0.4)',
                   },
                 ]}
-              />
+                activeOpacity={0.7}
+              >
+                <ArrowLeft size={18} color="#FFFFFF" strokeWidth={2.5} />
+              </TouchableOpacity>
+
+              <View style={tw`flex-row gap-2`}>
+                <TouchableOpacity
+                  onPress={handleShareCode}
+                  style={[
+                    tw`w-9 h-9 rounded-full items-center justify-center`,
+                    {
+                      backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                      borderWidth: 1,
+                      borderColor: 'rgba(255, 255, 255, 0.4)',
+                    },
+                  ]}
+                  activeOpacity={0.7}
+                >
+                  <Share2 size={15} color="#FFFFFF" strokeWidth={2.5} />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={handleSettings}
+                  style={[
+                    tw`w-9 h-9 rounded-full items-center justify-center`,
+                    {
+                      backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                      borderWidth: 1,
+                      borderColor: 'rgba(255, 255, 255, 0.4)',
+                    },
+                  ]}
+                  activeOpacity={0.7}
+                >
+                  <Settings size={15} color="#FFFFFF" strokeWidth={2.5} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Titre avec icône dynamique, niveau, et stats inline */}
+            <View style={tw`flex-row items-start gap-3 mb-4`}>
+              <View
+                style={[
+                  tw`w-14 h-14 rounded-2xl items-center justify-center`,
+                  {
+                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                    borderWidth: 1,
+                    borderColor: 'rgba(255, 255, 255, 0.4)',
+                  },
+                ]}
+              >
+                <GroupIcon size={32} color="#FFFFFF" strokeWidth={2} />
+              </View>
+
+              <View style={tw`flex-1`}>
+                <Text
+                  style={[
+                    tw`text-2xl font-black mb-1`,
+                    {
+                      color: '#FFFFFF',
+                      textShadowColor: isObsidian ? 'rgba(139, 92, 246, 0.6)' : 'rgba(0, 0, 0, 0.4)',
+                      textShadowOffset: { width: 0, height: 1 },
+                      textShadowRadius: 3,
+                    },
+                  ]}
+                >
+                  {group.name}
+                </Text>
+
+                <View style={tw`flex-row items-center gap-2 flex-wrap`}>
+                  <View
+                    style={[
+                      tw`px-2.5 py-1 rounded-full`,
+                      {
+                        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                        borderWidth: 1,
+                        borderColor: 'rgba(255, 255, 255, 0.4)',
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        tw`text-xs font-bold`,
+                        {
+                          color: '#FFFFFF',
+                          textShadowColor: 'rgba(0, 0, 0, 0.3)',
+                          textShadowOffset: { width: 0, height: 1 },
+                          textShadowRadius: 2,
+                        },
+                      ]}
+                    >
+                      Niveau {group.level}
+                    </Text>
+                  </View>
+
+                  <View
+                    style={[
+                      tw`px-2.5 py-1 rounded-full flex-row items-center gap-1`,
+                      {
+                        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                        borderWidth: 1,
+                        borderColor: 'rgba(255, 255, 255, 0.4)',
+                      },
+                    ]}
+                  >
+                    <Flame size={12} color="#FFFFFF" fill="#FFFFFF" />
+                    <Text
+                      style={[
+                        tw`text-xs font-bold`,
+                        {
+                          color: '#FFFFFF',
+                          textShadowColor: 'rgba(0, 0, 0, 0.3)',
+                          textShadowOffset: { width: 0, height: 1 },
+                          textShadowRadius: 2,
+                        },
+                      ]}
+                    >
+                      {formatStreak(group.current_streak)}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            {/* Barre XP */}
+            <View>
+              <View style={tw`flex-row items-center justify-between mb-1.5`}>
+                <Text
+                  style={[
+                    tw`text-xs font-bold`,
+                    {
+                      color: '#FFFFFF',
+                      textShadowColor: 'rgba(0, 0, 0, 0.3)',
+                      textShadowOffset: { width: 0, height: 1 },
+                      textShadowRadius: 2,
+                    },
+                  ]}
+                >
+                  {group.xp} / {xpForNextLevel} XP
+                </Text>
+                <Text
+                  style={[
+                    tw`text-xs font-semibold`,
+                    {
+                      color: 'rgba(255, 255, 255, 0.9)',
+                      textShadowColor: 'rgba(0, 0, 0, 0.3)',
+                      textShadowOffset: { width: 0, height: 1 },
+                      textShadowRadius: 2,
+                    },
+                  ]}
+                >
+                  {progress}%
+                </Text>
+              </View>
+              <View
+                style={[
+                  tw`h-2.5 rounded-full overflow-hidden`,
+                  {
+                    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                    borderWidth: 1,
+                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                  },
+                ]}
+              >
+                <Animated.View
+                  style={[
+                    tw`h-full rounded-full`,
+                    {
+                      backgroundColor: '#FFFFFF',
+                      width: xpProgress.interpolate({
+                        inputRange: [0, 100],
+                        outputRange: ['0%', '100%'],
+                      }),
+                    },
+                  ]}
+                />
+              </View>
             </View>
           </View>
-
-          {/* Stats: Streak et Membres */}
-          <View style={tw`flex-row items-center justify-between`}>
-            <View style={tw`flex-row items-center gap-2.5`}>
-              <View style={tw`w-11 h-11 bg-orange-500/20 rounded-full items-center justify-center`}>
-                <Flame size={22} color="#FBBF24" />
-              </View>
-              <View>
-                <Text style={tw`text-xs text-white/70`}>Streak</Text>
-                <Text style={tw`text-lg font-bold text-white`}>{formatStreak(group.current_streak)}</Text>
-              </View>
-            </View>
-
-            <View style={tw`flex-row items-center gap-2.5`}>
-              <MemberAvatars members={group.members} maxDisplay={3} size="sm" />
-              <View>
-                <Text style={tw`text-xs text-white/70`}>Membres</Text>
-                <Text style={tw`text-lg font-bold text-white`}>{group.members_count}</Text>
-              </View>
-            </View>
-          </View>
-        </LinearGradient>
-      </ImageBackground>
+        </ImageBackground>
+      </LinearGradient>
 
       {/* Liste des habitudes */}
-      <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-6 py-6`} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3b82f6" />}>
-        <View style={tw`flex-row items-center justify-between mb-5`}>
-          <Text style={tw`text-xl font-bold text-stone-800`}>Habitudes ({habits.length})</Text>
+      <ScrollView
+        style={tw`flex-1`}
+        contentContainerStyle={tw`px-5 py-5`}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3b82f6" />}
+      >
+        <View style={tw`flex-row items-center justify-between mb-4`}>
+          <View>
+            <Text style={tw`text-xl font-black text-stone-800`}>Habitudes</Text>
+            <Text style={tw`text-sm text-stone-500 mt-0.5`}>
+              {habits.length} {habits.length > 1 ? 'actives' : 'active'}
+            </Text>
+          </View>
 
-          <TouchableOpacity onPress={handleAddHabit} style={tw`flex-row items-center gap-2 bg-[#3b82f6] rounded-xl px-4 py-2.5 shadow-sm`} activeOpacity={0.8}>
-            <Plus size={18} color="#FFFFFF" strokeWidth={2.5} />
-            <Text style={tw`text-sm font-semibold text-white`}>Ajouter</Text>
+          <TouchableOpacity onPress={handleAddHabit} activeOpacity={0.8}>
+            <LinearGradient
+              colors={['#60a5fa', '#3b82f6']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[
+                tw`flex-row items-center gap-1.5 rounded-xl px-3.5 py-2`,
+                {
+                  shadowColor: '#3b82f6',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                },
+              ]}
+            >
+              <Plus size={16} color="#FFFFFF" strokeWidth={2.5} />
+              <Text style={tw`text-sm font-bold text-white`}>Ajouter</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
 
         {habits.length === 0 ? (
-          <View style={tw`bg-white rounded-3xl p-8 items-center shadow-sm border border-stone-100`}>
-            <View style={tw`w-20 h-20 bg-stone-50 rounded-2xl items-center justify-center mb-4`}>
-              <Text style={tw`text-4xl`}>🎯</Text>
+          <View
+            style={[
+              tw`rounded-2xl p-6 items-center`,
+              {
+                backgroundColor: '#FFFFFF',
+                borderWidth: 1,
+                borderColor: 'rgba(0, 0, 0, 0.05)',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.08,
+                shadowRadius: 12,
+              },
+            ]}
+          >
+            <View
+              style={[
+                tw`w-16 h-16 rounded-xl items-center justify-center mb-3`,
+                {
+                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                },
+              ]}
+            >
+              <Text style={tw`text-3xl`}>🎯</Text>
             </View>
-            <Text style={tw`text-lg font-bold text-stone-800 mb-2`}>Aucune habitude</Text>
-            <Text style={tw`text-sm text-stone-500 text-center mb-6 px-4`}>Créez votre première habitude partagée pour commencer votre aventure ensemble</Text>
-            <TouchableOpacity onPress={handleAddHabit} style={tw`bg-[#3b82f6] rounded-xl px-6 py-3 shadow-sm`} activeOpacity={0.8}>
-              <Text style={tw`text-sm font-semibold text-white`}>Créer une habitude</Text>
+            <Text style={tw`text-lg font-bold text-stone-800 mb-1.5`}>Aucune habitude</Text>
+            <Text style={tw`text-sm text-stone-500 text-center mb-5 px-2`}>Créez votre première habitude partagée pour commencer l'aventure ensemble</Text>
+            <TouchableOpacity onPress={handleAddHabit} activeOpacity={0.8}>
+              <LinearGradient
+                colors={['#60a5fa', '#3b82f6']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[
+                  tw`rounded-xl px-5 py-2.5`,
+                  {
+                    shadowColor: '#3b82f6',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 8,
+                  },
+                ]}
+              >
+                <Text style={tw`text-sm font-bold text-white`}>Créer une habitude</Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
         ) : (
-          <View style={tw`gap-4`}>
+          <View>
             {habits.map((habit) => (
               <GroupHabitCard key={habit.id} habit={habit} groupId={groupId} members={group.members} onRefresh={() => loadGroupData(true)} onDelete={() => handleDeleteHabit(habit.id)} />
             ))}
           </View>
         )}
 
-        <View style={tw`h-8`} />
+        <View style={tw`h-6`} />
       </ScrollView>
     </View>
   );

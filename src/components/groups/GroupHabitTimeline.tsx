@@ -1,18 +1,18 @@
 // components/groups/GroupHabitTimeline.tsx
-// Timeline stylée pour les habitudes de groupe (style Duolingo)
+// Timeline stylée compacte pour les habitudes de groupe
 
 import React from 'react';
 import { View, Text } from 'react-native';
+import { Check } from 'lucide-react-native';
 import type { TimelineDay } from '@/types/group.types';
-import { NoneIcon, PartialIcon, CompleteIcon, TodayIcon, TodayCompleteIcon } from './icons/CompletionIcons';
-import { TodayCompletionBadge } from './TodayCompletionBadge';
 import tw from '@/lib/tailwind';
 
 interface GroupHabitTimelineProps {
   timeline: TimelineDay[];
+  accentColor?: string;
 }
 
-export function GroupHabitTimeline({ timeline }: GroupHabitTimelineProps) {
+export function GroupHabitTimeline({ timeline, accentColor = '#10b981' }: GroupHabitTimelineProps) {
   const todayData = timeline.find((day) => day.is_today);
 
   const getCompletionStatus = (day: TimelineDay): 'all' | 'partial' | 'none' => {
@@ -22,81 +22,119 @@ export function GroupHabitTimeline({ timeline }: GroupHabitTimelineProps) {
     return 'partial';
   };
 
-  const renderIcon = (day: TimelineDay) => {
+  const renderCircle = (day: TimelineDay) => {
     const status = getCompletionStatus(day);
+    const isToday = day.is_today;
 
-    // Aujourd'hui avec état
-    if (day.is_today) {
-      return status === 'all' ? <TodayCompleteIcon size={36} /> : <TodayIcon size={36} />;
+    // Aucun: cercle vide (blanc avec border)
+    if (status === 'none') {
+      return (
+        <View
+          style={[
+            tw`w-8 h-8 rounded-full items-center justify-center border-2`,
+            {
+              backgroundColor: '#FFFFFF',
+              borderColor: isToday ? accentColor : '#d6d3d1',
+            },
+          ]}
+        />
+      );
     }
 
-    // Autres jours
-    if (status === 'all') return <CompleteIcon size={36} />;
-    if (status === 'partial') return <PartialIcon size={36} />;
-    return <NoneIcon size={36} />;
+    // Partiel: cercle avec couleur accent (pas de check)
+    if (status === 'partial') {
+      return (
+        <View
+          style={[
+            tw`w-8 h-8 rounded-full items-center justify-center`,
+            {
+              backgroundColor: accentColor + '40', // 25% opacity
+              borderWidth: isToday ? 2 : 0,
+              borderColor: accentColor,
+            },
+          ]}
+        />
+      );
+    }
+
+    // Tous complété: cercle plein avec check blanc
+    return (
+      <View
+        style={[
+          tw`w-8 h-8 rounded-full items-center justify-center`,
+          {
+            backgroundColor: accentColor,
+            borderWidth: isToday ? 2 : 0,
+            borderColor: accentColor,
+            shadowColor: accentColor,
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.3,
+            shadowRadius: 4,
+            elevation: 3,
+          },
+        ]}
+      >
+        <Check size={16} color="#FFFFFF" strokeWidth={3} />
+      </View>
+    );
   };
 
+  const completedToday = todayData ? todayData.completions.filter((c) => c.completed).length : 0;
+  const totalToday = todayData?.completions.length || 0;
+
   return (
-    <View style={tw`bg-stone-50 rounded-xl p-3`}>
-      {/* Badge de complétion du jour */}
+    <View style={tw`bg-stone-50/60 rounded-2xl p-3 mt-2`}>
+      {/* Stats du jour - Ultra compact */}
       {todayData && (
-        <View style={tw`items-center mb-3`}>
-          <TodayCompletionBadge todayData={todayData} />
+        <View style={tw`flex-row items-center justify-center gap-1.5 mb-2.5`}>
+          <View style={[tw`rounded-full px-2 py-0.5`, { backgroundColor: accentColor + '15' }]}>
+            <Text style={[tw`text-[9px] font-bold`, { color: accentColor }]}>AUJOURD'HUI</Text>
+          </View>
+
+          <View style={tw`flex-row items-center gap-1`}>
+            <View style={[tw`w-1.5 h-1.5 rounded-full`, { backgroundColor: accentColor }]} />
+            <Text style={tw`text-[10px] font-semibold text-stone-700`}>
+              {completedToday}/{totalToday}
+            </Text>
+          </View>
         </View>
       )}
 
-      {/* Jours de la semaine */}
-      <View style={tw`flex-row justify-between mb-2`}>
-        {timeline.map((day) => (
-          <View key={day.date} style={tw`items-center w-9`}>
-            <Text style={[tw`text-[10px] font-bold`, day.is_today ? tw`text-amber-500` : tw`text-stone-400`]}>{day.day_name}</Text>
-          </View>
-        ))}
-      </View>
-
-      {/* Cercles de complétion avec SVG */}
-      <View style={tw`flex-row justify-between items-center mb-2`}>
-        {timeline.map((day) => {
-          const status = getCompletionStatus(day);
-
-          return (
-            <View key={day.date} style={tw`items-center relative`}>
-              {/* Icon SVG */}
-              <View style={[tw`items-center justify-center`, day.is_today && tw`transform scale-105`]}>{renderIcon(day)}</View>
-
-              {/* Glow pour aujourd'hui */}
-              {day.is_today && (
-                <View
-                  style={[
-                    tw`absolute w-9 h-9 rounded-full -z-10`,
-                    {
-                      backgroundColor: status === 'all' ? '#22C55E' : '#F59E0B',
-                      opacity: 0.25,
-                      transform: [{ scale: 1.3 }],
-                    },
-                  ]}
-                />
-              )}
+      {/* Timeline principale - Plus compacte */}
+      <View>
+        {/* Jours de la semaine */}
+        <View style={tw`flex-row justify-between mb-1.5`}>
+          {timeline.map((day) => (
+            <View key={day.date} style={tw`items-center w-8`}>
+              <Text style={[tw`text-[9px] font-bold`, day.is_today ? { color: accentColor } : tw`text-stone-400`]}>{day.day_name}</Text>
             </View>
-          );
-        })}
-      </View>
-
-      {/* Légende compacte avec SVG */}
-      <View style={tw`flex-row justify-center gap-3 pt-2 border-t border-stone-200`}>
-        <View style={tw`flex-row items-center gap-1`}>
-          <CompleteIcon size={16} />
-          <Text style={tw`text-[10px] text-stone-600`}>Tous</Text>
+          ))}
         </View>
 
-        <View style={tw`flex-row items-center gap-1`}>
-          <PartialIcon size={16} />
-          <Text style={tw`text-[10px] text-stone-600`}>Partiel</Text>
-        </View>
+        {/* Cercles de complétion */}
+        <View style={tw`flex-row justify-between items-center`}>
+          {timeline.map((day) => {
+            return (
+              <View key={day.date} style={tw`items-center relative`}>
+                {/* Circle */}
+                <View style={[tw`items-center justify-center`, day.is_today && tw`transform scale-110`]}>{renderCircle(day)}</View>
 
-        <View style={tw`flex-row items-center gap-1`}>
-          <NoneIcon size={16} />
-          <Text style={tw`text-[10px] text-stone-600`}>Aucun</Text>
+                {/* Subtle glow pour aujourd'hui */}
+                {day.is_today && (
+                  <View
+                    style={[
+                      tw`absolute w-8 h-8 rounded-full -z-10`,
+                      {
+                        backgroundColor: accentColor,
+                        opacity: 0.15,
+                        transform: [{ scale: 1.3 }],
+                      },
+                    ]}
+                  />
+                )}
+              </View>
+            );
+          })}
         </View>
       </View>
     </View>

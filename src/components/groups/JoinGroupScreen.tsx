@@ -72,9 +72,12 @@ export default function JoinGroupScreen() {
         {
           text: 'OK',
           onPress: () => {
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'GroupsList' }, { name: 'GroupDashboard', params: { groupId: result.group_id } }],
+            navigation.navigate('MainTabs', {
+              screen: 'Groups',
+              params: {
+                screen: 'GroupDashboard',
+                params: { groupId: result.group_id },
+              },
             });
           },
         },

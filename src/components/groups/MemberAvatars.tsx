@@ -1,6 +1,4 @@
 // components/groups/MemberAvatars.tsx
-// Affichage des avatars des membres avec leurs vrais profils
-
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Users } from 'lucide-react-native';
@@ -11,50 +9,28 @@ import { getAvatarDisplay } from '@/utils/groupUtils';
 interface Props {
   members: GroupMember[];
   maxDisplay?: number;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
 }
 
 export const MemberAvatars: React.FC<Props> = ({ members, maxDisplay = 3, size = 'md' }) => {
-  console.log('👥 MemberAvatars received:', members);
-  console.log('📊 Members length:', members?.length);
-
   const visibleMembers = members.slice(0, maxDisplay);
   const remainingCount = Math.max(0, members.length - maxDisplay);
 
-  console.log('👀 Visible members:', visibleMembers);
-  console.log('➕ Remaining count:', remainingCount);
-
-  // Tailles selon le prop
-  const sizeStyles = {
-    sm: tw`w-9 h-9`,
-    md: tw`w-10 h-10`,
-    lg: tw`w-12 h-12`,
+  // Tailles avec aspect-ratio 1:1 pour cercles parfaits
+  const sizeConfig = {
+    xs: { width: 24, height: 24, fontSize: 9, iconSize: 12 },
+    sm: { width: 32, height: 32, fontSize: 11, iconSize: 16 },
+    md: { width: 40, height: 40, fontSize: 13, iconSize: 20 },
+    lg: { width: 48, height: 48, fontSize: 15, iconSize: 24 },
   };
 
-  const iconSizes = {
-    sm: 18,
-    md: 20,
-    lg: 24,
-  };
-
-  const emojiSizes = {
-    sm: tw`text-base`,
-    md: tw`text-lg`,
-    lg: tw`text-xl`,
-  };
-
-  const textSizes = {
-    sm: tw`text-xs`,
-    md: tw`text-sm`,
-    lg: tw`text-base`,
-  };
+  const config = sizeConfig[size];
 
   return (
     <View style={tw`flex-row items-center`}>
       {/* Avatars visibles */}
-      <View style={tw`flex-row -space-x-2`}>
+      <View style={tw`flex-row -space-x-2 gap-1`}>
         {visibleMembers.map((member, index) => {
-          // Utilise la vraie fonction getAvatarDisplay
           const avatar = getAvatarDisplay({
             id: member.user_id,
             username: member.profile?.username || null,
@@ -65,23 +41,63 @@ export const MemberAvatars: React.FC<Props> = ({ members, maxDisplay = 3, size =
           });
 
           return (
-            <View key={member.user_id} style={[sizeStyles[size], tw`rounded-full border-2 border-white items-center justify-center`, { backgroundColor: avatar.color, zIndex: 10 - index }]}>
-              {avatar.type === 'emoji' ? <Text style={emojiSizes[size]}>{avatar.value}</Text> : <Text style={[textSizes[size], tw`font-bold text-white`]}>{avatar.value}</Text>}
+            <View
+              key={member.user_id}
+              style={{
+                width: config.width,
+                height: config.height,
+                borderRadius: config.width / 2,
+                backgroundColor: avatar.color,
+                borderWidth: 2,
+                borderColor: '#FFFFFF',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10 - index,
+              }}
+            >
+              {avatar.type === 'emoji' ? (
+                <Text style={{ fontSize: config.fontSize + 2 }}>{avatar.value}</Text>
+              ) : (
+                <Text style={{ fontSize: config.fontSize, fontWeight: '700', color: '#FFFFFF' }}>{avatar.value}</Text>
+              )}
             </View>
           );
         })}
 
         {/* Compteur des membres restants */}
         {remainingCount > 0 && (
-          <View style={[sizeStyles[size], tw`rounded-full bg-stone-200 border-2 border-white items-center justify-center`, { zIndex: 0 }]}>
-            <Text style={[textSizes[size], tw`font-semibold text-stone-600`]}>+{remainingCount}</Text>
+          <View
+            style={{
+              width: config.width,
+              height: config.height,
+              borderRadius: config.width / 2,
+              backgroundColor: '#E7E5E4',
+              borderWidth: 2,
+              borderColor: '#FFFFFF',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 0,
+            }}
+          >
+            <Text style={{ fontSize: config.fontSize, fontWeight: '600', color: '#57534E' }}>+{remainingCount}</Text>
           </View>
         )}
 
-        {/* Si aucun membre visible, afficher l'icône */}
+        {/* Si aucun membre visible */}
         {visibleMembers.length === 0 && (
-          <View style={[sizeStyles[size], tw`rounded-full bg-stone-100 border-2 border-white items-center justify-center`]}>
-            <Users size={iconSizes[size]} color="#A8A29E" />
+          <View
+            style={{
+              width: config.width,
+              height: config.height,
+              borderRadius: config.width / 2,
+              backgroundColor: '#F5F5F4',
+              borderWidth: 2,
+              borderColor: '#FFFFFF',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Users size={config.iconSize} color="#A8A29E" />
           </View>
         )}
       </View>
