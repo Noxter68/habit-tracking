@@ -75,8 +75,6 @@ export type RootStackParamList = {
   ResetPassword: undefined;
 
   GroupsList: undefined;
-  CreateGroup: undefined;
-  JoinGroup: undefined;
   GroupDashboard: { groupId: string };
   CreateGroupHabit: { groupId: string };
   GroupSettings: { groupId: string };
@@ -336,22 +334,6 @@ function AppNavigator() {
         <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
         <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} options={{ headerShown: false }} />
         <Stack.Screen name="GroupTiers" component={GroupTiersScreen} options={{ headerShown: false }} />
-        <Stack.Screen
-          name="CreateGroup"
-          component={CreateGroupScreen}
-          options={{
-            presentation: 'modal',
-            animation: 'slide_from_bottom',
-          }}
-        />
-        <Stack.Screen
-          name="JoinGroup"
-          component={JoinGroupScreen}
-          options={{
-            presentation: 'modal',
-            animation: 'slide_from_bottom',
-          }}
-        />
         <Stack.Screen
           name="LanguageSelector"
           component={LanguageSelectorScreen}

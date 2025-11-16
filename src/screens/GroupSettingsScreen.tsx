@@ -1,6 +1,4 @@
 // screens/GroupSettingsScreen.tsx
-// Settings avec i18n
-
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute, RouteProp as RNRouteProp } from '@react-navigation/native';
@@ -16,9 +14,10 @@ import type { GroupWithMembers } from '@/types/group.types';
 import { formatInviteCode, getAvatarDisplay } from '@/utils/groupUtils';
 import { getHabitTierTheme } from '@/utils/tierTheme';
 import { getIconComponent } from '@/utils/iconMapper';
+import { GroupsStackParamList } from '@/navigation/GroupsNavigator';
 import tw from '@/lib/tailwind';
 
-type NavigationProp = NativeStackNavigationProp<any>;
+type NavigationProp = NativeStackNavigationProp<GroupsStackParamList>;
 type RouteParams = RNRouteProp<{ GroupSettings: { groupId: string } }, 'GroupSettings'>;
 
 export default function GroupSettingsScreen() {
@@ -76,16 +75,12 @@ export default function GroupSettingsScreen() {
             await groupService.leaveGroup(user.id, groupId);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-            navigation.navigate('MainTabs', {
-              screen: 'Groups',
-              params: {
-                screen: 'GroupsList',
-              },
-            });
+            // ✅ Navigation simplifiée : popToTop pour revenir à GroupsList
+            navigation.popToTop(); // Ferme toutes les modals et revient à GroupsList
 
             setTimeout(() => {
               Alert.alert(t('groups.settings.groupLeft'), t('groups.settings.groupLeftMessage'));
-            }, 500);
+            }, 300);
           } catch (error: any) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             Alert.alert(t('groups.dashboard.error'), error.message || t('groups.settings.errorLeave'));
@@ -110,16 +105,12 @@ export default function GroupSettingsScreen() {
             await groupService.deleteGroup(groupId, user.id);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
 
-            navigation.navigate('MainTabs', {
-              screen: 'Groups',
-              params: {
-                screen: 'GroupsList',
-              },
-            });
+            // ✅ Navigation simplifiée : popToTop pour revenir à GroupsList
+            navigation.popToTop(); // Ferme toutes les modals et revient à GroupsList
 
             setTimeout(() => {
               Alert.alert(t('groups.settings.groupDeleted'), t('groups.settings.groupDeletedMessage'));
-            }, 500);
+            }, 300);
           } catch (error: any) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             Alert.alert(t('groups.dashboard.error'), error.message || t('groups.settings.errorDelete'));
@@ -186,18 +177,6 @@ export default function GroupSettingsScreen() {
         >
           <View style={tw`p-5`}>
             <View style={tw`flex-row items-center gap-3 mb-4`}>
-              <View
-                style={[
-                  tw`w-14 h-14 rounded-2xl items-center justify-center`,
-                  {
-                    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-                    borderWidth: 1,
-                    borderColor: 'rgba(255, 255, 255, 0.4)',
-                  },
-                ]}
-              >
-                <GroupIcon size={32} color="#FFFFFF" strokeWidth={2} />
-              </View>
               <View style={tw`flex-1`}>
                 <Text
                   style={[

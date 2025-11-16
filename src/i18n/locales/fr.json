@@ -2214,7 +2214,8 @@
       "success": "Groupe rejoint ! 🎉",
       "successMessage": "Vous pouvez maintenant voir les habitudes partagées",
       "later": "Plus tard",
-      "seePremium": "Voir Premium"
+      "seePremium": "Voir Premium",
+      "enterCode": "Entrez le Code d'Invitation"
     },
 
     "create": {

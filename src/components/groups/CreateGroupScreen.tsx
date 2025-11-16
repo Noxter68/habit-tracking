@@ -1,6 +1,4 @@
-// screens/CreateGroupScreen.tsx
-// Écran de création d'un nouveau groupe avec i18n
-
+// components/groups/CreateGroupScreen.tsx
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -11,9 +9,10 @@ import * as Haptics from 'expo-haptics';
 import { groupService } from '@/services/groupTypeService';
 import { useAuth } from '@/context/AuthContext';
 import { validateName } from '@/utils/groupUtils';
+import { GroupsStackParamList } from '@/navigation/GroupsNavigator';
 import tw from '@/lib/tailwind';
 
-type NavigationProp = NativeStackNavigationProp<any>;
+type NavigationProp = NativeStackNavigationProp<GroupsStackParamList>;
 
 export default function CreateGroupScreen() {
   const navigation = useNavigation<NavigationProp>();
@@ -55,20 +54,13 @@ export default function CreateGroupScreen() {
       const group = await groupService.createGroup(user.id, { name, emoji });
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert(t('groups.create.success'), t('groups.create.successMessage'), [
-        {
-          text: 'OK',
-          onPress: () => {
-            navigation.navigate('MainTabs', {
-              screen: 'Groups',
-              params: {
-                screen: 'GroupDashboard',
-                params: { groupId: group.id },
-              },
-            });
-          },
-        },
-      ]);
+
+      // ✅ Navigation simplifiée : on ferme la modal puis on navigue
+      navigation.goBack(); // Ferme CreateGroup modal
+
+      setTimeout(() => {
+        navigation.navigate('GroupDashboard', { groupId: group.id });
+      }, 150); // Petit délai pour l'animation smooth
     } catch (error: any) {
       console.error('Error creating group:', error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
