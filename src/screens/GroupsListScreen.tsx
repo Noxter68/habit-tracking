@@ -1,8 +1,8 @@
 // screens/GroupsListScreen.tsx
-// Liste des groupes avec design élégant et cohérent
+// Liste des groupes avec textures dynamiques basées sur le niveau
 
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, ImageBackground } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, ImageBackground, Image } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Plus, Users, Flame, ArrowRight } from 'lucide-react-native';
@@ -11,16 +11,29 @@ import * as Haptics from 'expo-haptics';
 import { groupService } from '@/services/groupTypeService';
 import { useAuth } from '@/context/AuthContext';
 import type { GroupWithMembers } from '@/types/group.types';
-import { getHabitTierTheme } from '@/utils/tierTheme';
-import { formatStreak } from '@/utils/groupUtils';
+import { getHabitTierTheme, getAchievementTierTheme } from '@/utils/tierTheme';
+import { calculateGroupTierFromLevel, getGroupTierConfigByLevel, getGroupTierThemeKey } from '@utils/groups/groupConstants';
 import tw from '@/lib/tailwind';
 
 type NavigationProp = NativeStackNavigationProp<any>;
 
 const GroupCard = ({ group, onPress }: { group: GroupWithMembers; onPress: () => void }) => {
   const activeMembers = group.members?.filter((m) => m.user_id).length || 0;
-  const tierTheme = getHabitTierTheme('Jade');
+  const currentLevel = group.level || 1;
   const currentStreak = group.current_streak || 0;
+
+  // Tier basé sur le NIVEAU du groupe (pas la streak)
+  const currentTierNumber = calculateGroupTierFromLevel(currentLevel);
+  const currentTierConfig = getGroupTierConfigByLevel(currentLevel);
+
+  // Utiliser getHabitTierTheme pour Crystal/Ruby/Amethyst, getAchievementTierTheme pour Jade/Topaz/Obsidian
+  const tierTheme = currentTierNumber <= 3 ? getHabitTierTheme(currentTierConfig.name as any) : getAchievementTierTheme(getGroupTierThemeKey(currentTierNumber));
+
+  // Exception pour Obsidian : opacités ajustées
+  const isObsidian = currentTierNumber === 6;
+  const textureOpacity = isObsidian ? 0.2 : 0.2;
+  const iconOpacity = isObsidian ? 0.8 : 0.3;
+  const overlayOpacity = isObsidian ? 0.15 : 0.05;
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.96}>
@@ -40,7 +53,7 @@ const GroupCard = ({ group, onPress }: { group: GroupWithMembers; onPress: () =>
           },
         ]}
       >
-        <ImageBackground source={tierTheme.texture} resizeMode="cover" imageStyle={{ opacity: 0.2 }}>
+        <ImageBackground source={tierTheme.texture} resizeMode="cover" imageStyle={{ opacity: textureOpacity }}>
           <View
             style={{
               position: 'absolute',
@@ -48,31 +61,84 @@ const GroupCard = ({ group, onPress }: { group: GroupWithMembers; onPress: () =>
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.05)',
+              backgroundColor: `rgba(0, 0, 0, ${overlayOpacity})`,
             }}
           />
 
+          {/* Icône du tier en arrière-plan - GRANDE et INCRUSTÉE */}
+          <View
+            style={{
+              position: 'absolute',
+              top: 8,
+              right: 50,
+              opacity: iconOpacity,
+            }}
+          >
+            <Image
+              source={currentTierConfig.icon}
+              style={{
+                width: 130,
+                height: 130,
+                resizeMode: 'contain',
+              }}
+            />
+          </View>
+
           <View style={tw`p-4`}>
             <View style={tw`flex-row items-start justify-between mb-3`}>
-              <View style={tw`flex-1 pr-3`}>
-                <Text
+              <View style={tw`flex-1`}>
+                <View style={tw`flex-row items-center gap-2 mb-2`}>
+                  <Text
+                    style={[
+                      tw`text-xl font-bold flex-shrink`,
+                      {
+                        color: '#FFFFFF',
+                        textShadowColor: 'rgba(0, 0, 0, 0.4)',
+                        textShadowOffset: { width: 0, height: 1 },
+                        textShadowRadius: 3,
+                      },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {group.name}
+                  </Text>
+                  {/* Streak déplacée à côté du titre */}
+                  <View style={tw`flex-row items-center gap-0.5`}>
+                    <Flame size={16} color="#FFFFFF" fill="#FFFFFF" />
+                    <Text
+                      style={[
+                        tw`text-sm font-black`,
+                        {
+                          color: '#FFFFFF',
+                          textShadowColor: 'rgba(0, 0, 0, 0.3)',
+                          textShadowOffset: { width: 0, height: 1 },
+                          textShadowRadius: 2,
+                        },
+                      ]}
+                    >
+                      {currentStreak}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Badge niveau sous le titre */}
+                <View
                   style={[
-                    tw`text-xl font-bold mb-1`,
+                    tw`rounded-full px-3 py-1 self-start mb-2`,
                     {
-                      color: '#FFFFFF',
-                      textShadowColor: 'rgba(0, 0, 0, 0.4)',
-                      textShadowOffset: { width: 0, height: 1 },
-                      textShadowRadius: 3,
+                      backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                      borderWidth: 1,
+                      borderColor: 'rgba(255, 255, 255, 0.4)',
                     },
                   ]}
-                  numberOfLines={1}
                 >
-                  {group.name}
-                </Text>
+                  <Text style={tw`text-white text-xs font-black`}>Niveau {currentLevel}</Text>
+                </View>
+
                 {group.description && (
                   <Text
                     style={[
-                      tw`text-sm mt-1`,
+                      tw`text-sm`,
                       {
                         color: 'rgba(255, 255, 255, 0.9)',
                       },
@@ -82,33 +148,6 @@ const GroupCard = ({ group, onPress }: { group: GroupWithMembers; onPress: () =>
                     {group.description}
                   </Text>
                 )}
-              </View>
-
-              {/* Streak à la place de l'emoji */}
-              <View
-                style={[
-                  tw`rounded-xl px-2.5 py-2 flex-row items-center gap-1`,
-                  {
-                    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-                    borderWidth: 1,
-                    borderColor: 'rgba(255, 255, 255, 0.4)',
-                  },
-                ]}
-              >
-                <Flame size={18} color="#FFFFFF" fill="#FFFFFF" />
-                <Text
-                  style={[
-                    tw`text-base font-black`,
-                    {
-                      color: '#FFFFFF',
-                      textShadowColor: 'rgba(0, 0, 0, 0.3)',
-                      textShadowOffset: { width: 0, height: 1 },
-                      textShadowRadius: 2,
-                    },
-                  ]}
-                >
-                  {currentStreak}
-                </Text>
               </View>
             </View>
 
@@ -260,7 +299,7 @@ export default function GroupsListScreen() {
     navigation.navigate('GroupDashboard', { groupId });
   };
 
-  const tierTheme = getHabitTierTheme('Crystal');
+  const tierTheme = getAchievementTierTheme('novice');
 
   if (loading) {
     return (

@@ -1,9 +1,10 @@
 // components/groups/GroupHabitTimeline.tsx
-// Timeline stylée compacte pour les habitudes de groupe
+// Timeline avec profondeur améliorée (shadows + gradients)
 
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Check } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import type { TimelineDay } from '@/types/group.types';
 import tw from '@/lib/tailwind';
 
@@ -22,60 +23,95 @@ export function GroupHabitTimeline({ timeline, accentColor = '#10b981' }: GroupH
     return 'partial';
   };
 
+  // Générer un gradient plus clair pour les états partiels
+  const getLighterGradient = (baseColor: string): string[] => {
+    return [baseColor + '60', baseColor + '30']; // 38% et 19% opacity
+  };
+
   const renderCircle = (day: TimelineDay) => {
     const status = getCompletionStatus(day);
     const isToday = day.is_today;
 
-    // Aucun: cercle vide (blanc avec border)
+    // Aucun: cercle blanc avec shadow subtile
     if (status === 'none') {
-      return (
-        <View
-          style={[
-            tw`w-8 h-8 rounded-full items-center justify-center border-2`,
-            {
-              backgroundColor: '#FFFFFF',
-              borderColor: isToday ? accentColor : '#d6d3d1',
-            },
-          ]}
-        />
-      );
-    }
-
-    // Partiel: cercle avec couleur accent (pas de check)
-    if (status === 'partial') {
       return (
         <View
           style={[
             tw`w-8 h-8 rounded-full items-center justify-center`,
             {
-              backgroundColor: accentColor + '40', // 25% opacity
-              borderWidth: isToday ? 2 : 0,
-              borderColor: accentColor,
+              backgroundColor: '#FFFFFF',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 3,
+              elevation: 2,
+            },
+            isToday && {
+              shadowColor: accentColor,
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.3,
+              shadowRadius: 6,
+              elevation: 4,
             },
           ]}
         />
       );
     }
 
-    // Tous complété: cercle plein avec check blanc
+    // Partiel: gradient subtil avec profondeur
+    if (status === 'partial') {
+      const gradientColors = getLighterGradient(accentColor);
+      return (
+        <LinearGradient
+          colors={gradientColors}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[
+            tw`w-8 h-8 rounded-full items-center justify-center`,
+            {
+              shadowColor: accentColor,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 4,
+              elevation: 3,
+            },
+            isToday && {
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.4,
+              shadowRadius: 6,
+              elevation: 5,
+            },
+          ]}
+        />
+      );
+    }
+
+    // Tous complété: gradient plein avec check et shadow prononcée
+    const fullGradient = [accentColor, accentColor + 'DD']; // 100% et 87% opacity
     return (
-      <View
+      <LinearGradient
+        colors={fullGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
         style={[
           tw`w-8 h-8 rounded-full items-center justify-center`,
           {
-            backgroundColor: accentColor,
-            borderWidth: isToday ? 2 : 0,
-            borderColor: accentColor,
             shadowColor: accentColor,
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.3,
-            shadowRadius: 4,
-            elevation: 3,
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.4,
+            shadowRadius: 6,
+            elevation: 4,
+          },
+          isToday && {
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.5,
+            shadowRadius: 8,
+            elevation: 6,
           },
         ]}
       >
         <Check size={16} color="#FFFFFF" strokeWidth={3} />
-      </View>
+      </LinearGradient>
     );
   };
 
@@ -100,7 +136,7 @@ export function GroupHabitTimeline({ timeline, accentColor = '#10b981' }: GroupH
         </View>
       )}
 
-      {/* Timeline principale - Plus compacte */}
+      {/* Timeline principale */}
       <View>
         {/* Jours de la semaine */}
         <View style={tw`flex-row justify-between mb-1.5`}>
@@ -111,23 +147,22 @@ export function GroupHabitTimeline({ timeline, accentColor = '#10b981' }: GroupH
           ))}
         </View>
 
-        {/* Cercles de complétion */}
+        {/* Cercles de complétion avec profondeur */}
         <View style={tw`flex-row justify-between items-center`}>
           {timeline.map((day) => {
             return (
               <View key={day.date} style={tw`items-center relative`}>
-                {/* Circle */}
+                {/* Circle avec shadow/gradient */}
                 <View style={[tw`items-center justify-center`, day.is_today && tw`transform scale-110`]}>{renderCircle(day)}</View>
 
-                {/* Subtle glow pour aujourd'hui */}
+                {/* Glow subtil pour aujourd'hui */}
                 {day.is_today && (
                   <View
                     style={[
-                      tw`absolute w-8 h-8 rounded-full -z-10`,
+                      tw`absolute w-10 h-10 rounded-full -z-10`,
                       {
                         backgroundColor: accentColor,
-                        opacity: 0.15,
-                        transform: [{ scale: 1.3 }],
+                        opacity: 0.12,
                       },
                     ]}
                   />

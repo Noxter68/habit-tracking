@@ -1,6 +1,8 @@
 // screens/GroupDashboardScreen.tsx
+// Fix: Animation XP bidirectionnelle + Opacités Obsidian
+
 import React, { useCallback, useEffect, useState, useRef } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, ImageBackground, Animated } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, ImageBackground, Animated, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation, useRoute, RouteProp as RNRouteProp } from '@react-navigation/native';
@@ -15,7 +17,7 @@ import type { GroupWithMembers, GroupHabitWithCompletions } from '@/types/group.
 import { formatStreak, getLevelProgress, formatInviteCode } from '@/utils/groupUtils';
 import { GroupHabitCard } from '@/components/groups/GroupHabitCard';
 import { getAchievementTierTheme, getHabitTierTheme } from '@/utils/tierTheme';
-import { calculateGroupTierFromLevel, getGroupTierConfigByLevel, getGroupTierThemeKey } from '@/utils/groups/groupConstants';
+import { calculateGroupTierFromLevel, getGroupTierConfigByLevel, getGroupTierThemeKey } from '@utils/groups/groupConstants';
 import { getIconComponent } from '@/utils/iconMapper';
 import { useStreakSaver } from '@/hooks/useStreakSaver';
 import { StreakSaverModal } from '@/components/streakSaver/StreakSaverModal';
@@ -72,6 +74,7 @@ export default function GroupDashboardScreen() {
         return;
       }
 
+      // ✅ FIX: Animer la progression dans les DEUX sens (augmentation ET diminution)
       if (group && currentGroup.xp !== group.xp) {
         const newProgress = getLevelProgress(currentGroup.xp);
 
@@ -81,10 +84,16 @@ export default function GroupDashboardScreen() {
           useNativeDriver: false,
         }).start();
 
+        // Feedback haptique seulement si XP augmente
         if (currentGroup.xp > group.xp) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }
+        // ✅ Optionnel: feedback subtil si XP diminue
+        else if (currentGroup.xp < group.xp) {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
       } else if (!group) {
+        // Initialisation au premier chargement
         xpProgress.setValue(getLevelProgress(currentGroup.xp));
       }
 
@@ -247,15 +256,20 @@ export default function GroupDashboardScreen() {
   // Utiliser getHabitTierTheme pour Crystal/Ruby/Amethyst, getAchievementTierTheme pour Jade/Topaz/Obsidian
   const tierTheme = currentTierNumber <= 3 ? getHabitTierTheme(currentTierConfig.name as any) : getAchievementTierTheme(getGroupTierThemeKey(currentTierNumber));
 
-  const isObsidian = tierTheme.accent === '#8b5cf6';
+  const isObsidianTier = currentTierNumber === 6;
   const isJade = tierTheme.accent === '#059669';
   const isTopaz = tierTheme.accent === '#f59e0b';
+
+  // Exception pour Obsidian : opacités ajustées
+  const textureOpacity = isObsidianTier ? 0.35 : 0.2;
+  const iconOpacity = isObsidianTier ? 0.15 : 0.25;
+  const baseOverlayOpacity = isObsidianTier ? 0.15 : 0.05;
 
   // TOUJOURS utiliser le gradient normal (pas backgroundGradient)
   const headerGradient = tierTheme.gradient;
 
   return (
-    <View style={tw`flex-1 bg-[#FAFAFA]`}>
+    <View style={tw`flex-1 bg-[#FAFAFA] mb-10`}>
       <StatusBar style="light" />
       {/* Header avec gradient tier et texture */}
       <LinearGradient
@@ -266,15 +280,15 @@ export default function GroupDashboardScreen() {
           {
             borderBottomLeftRadius: 24,
             borderBottomRightRadius: 24,
-            shadowColor: isObsidian ? '#8b5cf6' : isJade ? '#059669' : isTopaz ? '#f59e0b' : '#000',
+            shadowColor: isObsidianTier ? '#8b5cf6' : isJade ? '#059669' : isTopaz ? '#f59e0b' : '#000',
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: isObsidian || isJade || isTopaz ? 0.3 : 0.15,
+            shadowOpacity: isObsidianTier || isJade || isTopaz ? 0.3 : 0.15,
             shadowRadius: 12,
           },
         ]}
       >
-        <ImageBackground source={tierTheme.texture} resizeMode="cover" imageStyle={{ opacity: 0.2 }}>
-          {(isObsidian || isJade || isTopaz) && (
+        <ImageBackground source={tierTheme.texture} resizeMode="cover" imageStyle={{ opacity: textureOpacity }}>
+          {(isObsidianTier || isJade || isTopaz) && (
             <View
               style={{
                 position: 'absolute',
@@ -282,7 +296,7 @@ export default function GroupDashboardScreen() {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                backgroundColor: isObsidian ? 'rgba(139, 92, 246, 0.15)' : isJade ? 'rgba(5, 150, 105, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                backgroundColor: isObsidianTier ? 'rgba(139, 92, 246, 0.15)' : isJade ? 'rgba(5, 150, 105, 0.15)' : 'rgba(245, 158, 11, 0.15)',
               }}
             />
           )}
@@ -293,11 +307,29 @@ export default function GroupDashboardScreen() {
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: isObsidian || isJade || isTopaz ? 'rgba(0, 0, 0, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+              backgroundColor: `rgba(0, 0, 0, ${baseOverlayOpacity})`,
             }}
           />
 
           <View style={tw`px-5 pt-14 pb-4`}>
+            {/* Icône du tier en arrière-plan - GRANDE et INCRUSTÉE */}
+            <View
+              style={{
+                position: 'absolute',
+                top: 60,
+                right: 50,
+                opacity: iconOpacity,
+              }}
+            >
+              <Image
+                source={currentTierConfig.icon}
+                style={{
+                  width: 130,
+                  height: 130,
+                  resizeMode: 'contain',
+                }}
+              />
+            </View>
             {/* Navigation */}
             <View style={tw`flex-row items-center justify-between mb-3`}>
               <TouchableOpacity
@@ -372,7 +404,7 @@ export default function GroupDashboardScreen() {
                     tw`text-2xl font-black mb-1`,
                     {
                       color: '#FFFFFF',
-                      textShadowColor: isObsidian ? 'rgba(139, 92, 246, 0.6)' : 'rgba(0, 0, 0, 0.4)',
+                      textShadowColor: isObsidianTier ? 'rgba(139, 92, 246, 0.6)' : 'rgba(0, 0, 0, 0.4)',
                       textShadowOffset: { width: 0, height: 1 },
                       textShadowRadius: 3,
                     },
@@ -511,13 +543,13 @@ export default function GroupDashboardScreen() {
 
           <TouchableOpacity onPress={handleAddHabit} activeOpacity={0.8}>
             <LinearGradient
-              colors={['#60a5fa', '#3b82f6']}
+              colors={tierTheme.gradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={[
                 tw`flex-row items-center gap-1.5 rounded-xl px-3.5 py-2`,
                 {
-                  shadowColor: '#3b82f6',
+                  shadowColor: tierTheme.accent,
                   shadowOffset: { width: 0, height: 4 },
                   shadowOpacity: 0.3,
                   shadowRadius: 8,
@@ -559,13 +591,13 @@ export default function GroupDashboardScreen() {
             <Text style={tw`text-sm text-stone-500 text-center mb-5 px-2`}>Créez votre première habitude partagée pour commencer l'aventure ensemble</Text>
             <TouchableOpacity onPress={handleAddHabit} activeOpacity={0.8}>
               <LinearGradient
-                colors={['#60a5fa', '#3b82f6']}
+                colors={tierTheme.gradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={[
                   tw`rounded-xl px-5 py-2.5`,
                   {
-                    shadowColor: '#3b82f6',
+                    shadowColor: tierTheme.accent,
                     shadowOffset: { width: 0, height: 4 },
                     shadowOpacity: 0.3,
                     shadowRadius: 8,
@@ -579,7 +611,15 @@ export default function GroupDashboardScreen() {
         ) : (
           <View>
             {habits.map((habit) => (
-              <GroupHabitCard key={habit.id} habit={habit} groupId={groupId} members={group.members} onRefresh={() => loadGroupData(true)} onDelete={() => handleDeleteHabit(habit.id)} />
+              <GroupHabitCard
+                key={habit.id}
+                habit={habit}
+                groupId={groupId}
+                groupLevel={group.level}
+                members={group.members}
+                onRefresh={() => loadGroupData(true)}
+                onDelete={() => handleDeleteHabit(habit.id)}
+              />
             ))}
           </View>
         )}

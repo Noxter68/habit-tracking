@@ -1,5 +1,5 @@
 // components/groups/GroupHabitCard.tsx
-// Card d'habitude de groupe - Design ultra simple et épuré
+// Card d'habitude de groupe - Texture et couleurs adaptées au tier
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, Alert, ImageBackground } from 'react-native';
@@ -11,19 +11,20 @@ import { useAuth } from '@/context/AuthContext';
 import type { GroupHabitWithCompletions, TimelineDay } from '@/types/group.types';
 import { getAvatarDisplay } from '@/utils/groupUtils';
 import { GroupHabitTimeline } from './GroupHabitTimeline';
-import { getHabitTierTheme } from '@/utils/tierTheme';
-import { HabitProgressionService } from '@/services/habitProgressionService';
+import { getHabitTierTheme, getAchievementTierTheme } from '@/utils/tierTheme';
+import { calculateGroupTierFromLevel } from '@utils/groups/groupConstants';
 import tw from '@/lib/tailwind';
 
 interface GroupHabitCardProps {
   habit: GroupHabitWithCompletions;
   groupId: string;
+  groupLevel: number;
   members: Array<{ user_id: string; user_name: string }>;
   onRefresh: () => void;
   onDelete: () => void;
 }
 
-export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }: GroupHabitCardProps) {
+export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh, onDelete }: GroupHabitCardProps) {
   const { user } = useAuth();
   const [timeline, setTimeline] = useState<TimelineDay[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,11 +32,22 @@ export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }:
   const [userCompletedToday, setUserCompletedToday] = useState(false);
   const [completionsCount, setCompletionsCount] = useState(habit.completions_today || 0);
 
-  // Calculate tier based on habit streak
-  const currentStreak = habit.current_streak || 0;
-  const { tier: tierInfo } = HabitProgressionService.calculateTierFromStreak(currentStreak);
-  const tierTheme = getHabitTierTheme(tierInfo.name);
-  const isObsidian = tierTheme.accent === '#8b5cf6';
+  // Calculate tier based on GROUP LEVEL (not habit streak)
+  const currentTierNumber = calculateGroupTierFromLevel(groupLevel);
+
+  // Utiliser la même logique que les autres screens : tier 1-3 = getHabitTierTheme, tier 4-6 = getAchievementTierTheme
+  const tierTheme =
+    currentTierNumber <= 3
+      ? getHabitTierTheme(currentTierNumber === 1 ? 'Crystal' : currentTierNumber === 2 ? 'Ruby' : 'Amethyst')
+      : getAchievementTierTheme(currentTierNumber === 4 ? 'legendaryAscent' : currentTierNumber === 5 ? 'epicMastery' : 'mythicGlory');
+
+  const isObsidianTier = currentTierNumber === 6;
+  const isJade = tierTheme.accent === '#059669';
+  const isTopaz = tierTheme.accent === '#f59e0b';
+
+  // Opacités adaptées pour Obsidian
+  const textureOpacity = isObsidianTier ? 0.35 : 0.2;
+  const baseOverlayOpacity = isObsidianTier ? 0.15 : 0.05;
 
   const loadTimeline = async () => {
     try {
@@ -139,7 +151,6 @@ export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }:
   const completionRate = totalMembers > 0 ? (completionsCount / totalMembers) * 100 : 0;
 
   const getBonusBadge = () => {
-    // On affiche le badge seulement si au moins 1 personne a complété
     if (completionsCount === 0) return null;
 
     if (completionRate === 100) {
@@ -152,7 +163,7 @@ export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }:
       };
     }
 
-    return null; // <50% = pas de badge (logique backend décidera)
+    return null;
   };
 
   const bonusBadge = getBonusBadge();
@@ -167,18 +178,18 @@ export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }:
         style={[
           tw`rounded-[20px] overflow-hidden mb-3`,
           {
-            borderWidth: isObsidian ? 2 : 1.5,
-            borderColor: isObsidian ? 'rgba(139, 92, 246, 0.4)' : 'rgba(255, 255, 255, 0.2)',
-            shadowColor: isObsidian ? '#8b5cf6' : '#000',
-            shadowOffset: { width: 0, height: isObsidian ? 8 : 6 },
-            shadowOpacity: isObsidian ? 0.4 : 0.2,
-            shadowRadius: isObsidian ? 16 : 12,
+            borderWidth: isObsidianTier ? 2 : 1.5,
+            borderColor: isObsidianTier ? 'rgba(139, 92, 246, 0.4)' : 'rgba(255, 255, 255, 0.2)',
+            shadowColor: isObsidianTier ? '#8b5cf6' : isJade ? '#059669' : isTopaz ? '#f59e0b' : '#000',
+            shadowOffset: { width: 0, height: isObsidianTier ? 8 : 6 },
+            shadowOpacity: isObsidianTier || isJade || isTopaz ? 0.4 : 0.2,
+            shadowRadius: isObsidianTier ? 16 : 12,
           },
         ]}
       >
-        <ImageBackground source={tierTheme.texture} resizeMode="cover" imageStyle={{ opacity: 0.2 }}>
-          {/* Overlay layers */}
-          {isObsidian && (
+        <ImageBackground source={tierTheme.texture} resizeMode="cover" imageStyle={{ opacity: textureOpacity }}>
+          {/* Overlay layers adaptées au tier */}
+          {(isObsidianTier || isJade || isTopaz) && (
             <View
               style={{
                 position: 'absolute',
@@ -186,7 +197,7 @@ export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }:
                 left: 0,
                 right: 0,
                 bottom: 0,
-                backgroundColor: 'rgba(139, 92, 246, 0.08)',
+                backgroundColor: isObsidianTier ? 'rgba(139, 92, 246, 0.15)' : isJade ? 'rgba(5, 150, 105, 0.15)' : 'rgba(245, 158, 11, 0.15)',
               }}
             />
           )}
@@ -197,7 +208,7 @@ export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }:
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: isObsidian ? 'rgba(0, 0, 0, 0.15)' : 'rgba(0, 0, 0, 0.05)',
+              backgroundColor: `rgba(0, 0, 0, ${baseOverlayOpacity})`,
             }}
           />
 
@@ -213,7 +224,7 @@ export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }:
                     {
                       fontSize: 18,
                       color: '#FFFFFF',
-                      textShadowColor: isObsidian ? 'rgba(139, 92, 246, 0.6)' : 'rgba(0, 0, 0, 0.4)',
+                      textShadowColor: isObsidianTier ? 'rgba(139, 92, 246, 0.6)' : 'rgba(0, 0, 0, 0.4)',
                       textShadowOffset: { width: 0, height: 1 },
                       textShadowRadius: 3,
                     },
@@ -235,7 +246,7 @@ export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }:
                   ]}
                 >
                   <Flame size={14} color="#FFFFFF" fill="#FFFFFF" />
-                  <Text style={tw`text-xs font-semibold text-white ml-1`}>{currentStreak}</Text>
+                  <Text style={tw`text-xs font-semibold text-white ml-1`}>{habit.current_streak || 0}</Text>
                 </View>
               </View>
 
@@ -281,7 +292,7 @@ export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }:
               </View>
             )}
 
-            {/* Group members avatars */}
+            {/* Group members avatars - Couleur adaptée au tier */}
             {today && today.completions.length > 0 && (
               <View style={tw`flex-row -space-x-1.5 gap-1 mb-2`}>
                 {today.completions.map((completion, index) => {
@@ -297,7 +308,6 @@ export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }:
                   const isCompleted = completion.completed;
                   const bgColor = isCompleted ? tierTheme.accent : 'rgba(255, 255, 255, 0.3)';
                   const borderColor = isCompleted ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.4)';
-                  const hasGlow = isCompleted;
 
                   return (
                     <View
@@ -309,10 +319,10 @@ export function GroupHabitCard({ habit, groupId, members, onRefresh, onDelete }:
                           borderWidth: 1,
                           borderColor: borderColor,
                           zIndex: 10 - index,
-                          shadowColor: hasGlow ? tierTheme.accent : 'transparent',
-                          shadowOffset: { width: 0, height: 0 },
-                          shadowOpacity: hasGlow ? 0.4 : 0,
-                          shadowRadius: hasGlow ? 4 : 0,
+                          shadowColor: isCompleted ? tierTheme.accent : 'transparent',
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: isCompleted ? 0.4 : 0,
+                          shadowRadius: isCompleted ? 4 : 0,
                         },
                       ]}
                     >

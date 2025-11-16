@@ -1,6 +1,6 @@
 // screens/GroupSettingsScreen.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator, ImageBackground } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute, RouteProp as RNRouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { X, Copy, Users, LogOut, Trash2, AlertCircle } from 'lucide-react-native';
@@ -147,7 +147,7 @@ export default function GroupSettingsScreen() {
   return (
     <View style={tw`flex-1 bg-[#FAFAFA]`}>
       {/* Header minimaliste */}
-      <View style={tw`px-6 pt-10 pb-4 bg-[#FAFAFA]`}>
+      <View style={tw`px-6 pt-8 pb-4 bg-[#FAFAFA]`}>
         <View style={tw`flex-row items-center justify-between`}>
           <TouchableOpacity
             onPress={() => {
@@ -166,9 +166,9 @@ export default function GroupSettingsScreen() {
       </View>
 
       <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-6 py-2`}>
-        {/* Infos du groupe - Card avec gradient */}
+        {/* Infos du groupe - Card avec gradient bleu sans texture */}
         <LinearGradient
-          colors={tierTheme.gradient}
+          colors={['#3b82f6', '#2563eb']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[
@@ -176,108 +176,95 @@ export default function GroupSettingsScreen() {
             {
               borderWidth: 1.5,
               borderColor: 'rgba(255, 255, 255, 0.2)',
-              shadowColor: '#000',
+              shadowColor: '#3b82f6',
               shadowOffset: { width: 0, height: 6 },
-              shadowOpacity: 0.2,
+              shadowOpacity: 0.25,
               shadowRadius: 12,
             },
           ]}
         >
-          <ImageBackground source={tierTheme.texture} resizeMode="cover" imageStyle={{ opacity: 0.2 }}>
-            <View
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: 'rgba(0, 0, 0, 0.05)',
-              }}
-            />
-
-            <View style={tw`p-5`}>
-              <View style={tw`flex-row items-center gap-3 mb-4`}>
-                <View
+          <View style={tw`p-5`}>
+            <View style={tw`flex-row items-center gap-3 mb-4`}>
+              <View
+                style={[
+                  tw`w-14 h-14 rounded-2xl items-center justify-center`,
+                  {
+                    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                    borderWidth: 1,
+                    borderColor: 'rgba(255, 255, 255, 0.4)',
+                  },
+                ]}
+              >
+                <GroupIcon size={32} color="#FFFFFF" strokeWidth={2} />
+              </View>
+              <View style={tw`flex-1`}>
+                <Text
                   style={[
-                    tw`w-14 h-14 rounded-2xl items-center justify-center`,
+                    tw`text-xl font-bold mb-1`,
                     {
-                      backgroundColor: 'rgba(255, 255, 255, 0.25)',
-                      borderWidth: 1,
-                      borderColor: 'rgba(255, 255, 255, 0.4)',
+                      color: '#FFFFFF',
+                      textShadowColor: 'rgba(0, 0, 0, 0.2)',
+                      textShadowOffset: { width: 0, height: 1 },
+                      textShadowRadius: 3,
                     },
                   ]}
                 >
-                  <GroupIcon size={32} color="#FFFFFF" strokeWidth={2} />
-                </View>
-                <View style={tw`flex-1`}>
-                  <Text
-                    style={[
-                      tw`text-xl font-bold mb-1`,
-                      {
-                        color: '#FFFFFF',
-                        textShadowColor: 'rgba(0, 0, 0, 0.4)',
-                        textShadowOffset: { width: 0, height: 1 },
-                        textShadowRadius: 3,
-                      },
-                    ]}
-                  >
-                    {group.name}
-                  </Text>
-                  <Text
-                    style={[
-                      tw`text-sm`,
-                      {
-                        color: 'rgba(255, 255, 255, 0.9)',
-                      },
-                    ]}
-                  >
-                    {group.members_count} membre{group.members_count > 1 ? 's' : ''}
-                  </Text>
-                </View>
+                  {group.name}
+                </Text>
+                <Text
+                  style={[
+                    tw`text-sm`,
+                    {
+                      color: 'rgba(255, 255, 255, 0.9)',
+                    },
+                  ]}
+                >
+                  {group.members_count} membre{group.members_count > 1 ? 's' : ''}
+                </Text>
               </View>
-
-              {/* Code d'invitation */}
-              <TouchableOpacity
-                onPress={handleCopyCode}
-                style={[
-                  tw`flex-row items-center justify-between rounded-xl p-4`,
-                  {
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                    borderWidth: 1,
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                  },
-                ]}
-                activeOpacity={0.7}
-              >
-                <View>
-                  <Text
-                    style={[
-                      tw`text-xs mb-1`,
-                      {
-                        color: 'rgba(255, 255, 255, 0.8)',
-                      },
-                    ]}
-                  >
-                    Code d'invitation
-                  </Text>
-                  <Text
-                    style={[
-                      tw`text-lg font-mono font-bold`,
-                      {
-                        color: '#FFFFFF',
-                        textShadowColor: 'rgba(0, 0, 0, 0.3)',
-                        textShadowOffset: { width: 0, height: 1 },
-                        textShadowRadius: 2,
-                      },
-                    ]}
-                  >
-                    {formatInviteCode(group.invite_code)}
-                  </Text>
-                </View>
-                <Copy size={20} color="#FFFFFF" />
-              </TouchableOpacity>
             </View>
-          </ImageBackground>
+
+            {/* Code d'invitation */}
+            <TouchableOpacity
+              onPress={handleCopyCode}
+              style={[
+                tw`flex-row items-center justify-between rounded-xl p-4`,
+                {
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  borderWidth: 1,
+                  borderColor: 'rgba(255, 255, 255, 0.3)',
+                },
+              ]}
+              activeOpacity={0.7}
+            >
+              <View>
+                <Text
+                  style={[
+                    tw`text-xs mb-1`,
+                    {
+                      color: 'rgba(255, 255, 255, 0.8)',
+                    },
+                  ]}
+                >
+                  Code d'invitation
+                </Text>
+                <Text
+                  style={[
+                    tw`text-lg font-mono font-bold`,
+                    {
+                      color: '#FFFFFF',
+                      textShadowColor: 'rgba(0, 0, 0, 0.2)',
+                      textShadowOffset: { width: 0, height: 1 },
+                      textShadowRadius: 2,
+                    },
+                  ]}
+                >
+                  {formatInviteCode(group.invite_code)}
+                </Text>
+              </View>
+              <Copy size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
         </LinearGradient>
 
         {/* Membres - Card élégante */}
@@ -336,7 +323,7 @@ export default function GroupSettingsScreen() {
                         {member.profile?.username || member.profile?.email || 'Utilisateur'}
                         {isMe && ' (Vous)'}
                       </Text>
-                      {isCreator && <Text style={[tw`text-xs font-medium`, { color: tierTheme.accent }]}>Créateur</Text>}
+                      {isCreator && <Text style={[tw`text-xs font-medium`, { color: '#3b82f6' }]}>Créateur</Text>}
                     </View>
                   </View>
                 );
@@ -349,25 +336,25 @@ export default function GroupSettingsScreen() {
 
         {/* Actions */}
         <View style={tw`gap-3 mb-3`}>
-          {/* Quitter le groupe */}
-          <TouchableOpacity
-            onPress={handleLeaveGroup}
-            style={[
-              tw`rounded-[20px] px-5 py-4 flex-row items-center gap-3`,
-              {
-                backgroundColor: '#FFFFFF',
-                borderWidth: 1,
-                borderColor: 'rgba(245, 158, 11, 0.2)',
-                shadowColor: '#F59E0B',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.1,
-                shadowRadius: 8,
-              },
-            ]}
-            activeOpacity={0.7}
-          >
-            <LogOut size={20} color="#F59E0B" />
-            <Text style={tw`text-base font-semibold text-[#F59E0B]`}>Quitter le groupe</Text>
+          {/* Quitter le groupe - Gradient rouge */}
+          <TouchableOpacity onPress={handleLeaveGroup} activeOpacity={0.7}>
+            <LinearGradient
+              colors={['#ef4444', '#dc2626']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[
+                tw`rounded-[20px] px-5 py-4 flex-row items-center gap-3`,
+                {
+                  shadowColor: '#ef4444',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 8,
+                },
+              ]}
+            >
+              <LogOut size={20} color="#FFFFFF" />
+              <Text style={tw`text-base font-semibold text-white`}>Quitter le groupe</Text>
+            </LinearGradient>
           </TouchableOpacity>
 
           {/* Supprimer le groupe (créateur uniquement) */}

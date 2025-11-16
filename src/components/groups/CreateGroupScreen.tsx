@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { X, Users, Sparkles } from 'lucide-react-native';
+import { X, Users } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { groupService } from '@/services/groupTypeService';
 import { useAuth } from '@/context/AuthContext';
@@ -80,7 +80,7 @@ export default function CreateGroupScreen() {
   return (
     <View style={tw`flex-1 bg-[#FAFAFA]`}>
       {/* Header minimaliste */}
-      <View style={tw`px-6 pt-16 pb-4 bg-[#FAFAFA]`}>
+      <View style={tw`px-6 pt-8 pb-4 bg-[#FAFAFA]`}>
         <View style={tw`flex-row items-center justify-between`}>
           <TouchableOpacity
             onPress={() => {
@@ -99,21 +99,9 @@ export default function CreateGroupScreen() {
       </View>
 
       <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-6 py-2`}>
-        {/* Emoji picker */}
-        <View style={tw`mb-4`}>
-          <View style={tw`flex-row items-center gap-2 mb-3`}>
-            <Sparkles size={16} color="#57534E" />
-            <Text style={tw`text-sm font-semibold text-stone-700`}>Icône du groupe</Text>
-          </View>
-          <EmojiPicker selectedEmoji={emoji} onEmojiSelect={setEmoji} />
-        </View>
-
         {/* Nom du groupe */}
         <View style={tw`mb-4`}>
-          <View style={tw`flex-row items-center gap-2 mb-3`}>
-            <Users size={16} color="#57534E" />
-            <Text style={tw`text-sm font-semibold text-stone-700`}>Nom du groupe</Text>
-          </View>
+          <Text style={tw`text-sm font-semibold text-stone-700 mb-3`}>Nom du groupe</Text>
           <TextInput
             value={name}
             onChangeText={setName}

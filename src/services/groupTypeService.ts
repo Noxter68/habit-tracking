@@ -308,9 +308,36 @@ class GroupService {
   async uncompleteGroupHabit(userId: string, habitId: string, date?: string): Promise<void> {
     const targetDate = date || new Date().toISOString().split('T')[0];
 
-    const { error } = await supabase.from('group_habit_completions').delete().eq('group_habit_id', habitId).eq('user_id', userId).eq('date', targetDate);
+    // 1. Récupérer le group_id AVANT de supprimer
+    const { data: habit } = await supabase.from('group_habits').select('group_id').eq('id', habitId).single();
+
+    if (!habit) {
+      throw new Error('Habit not found');
+    }
+
+    // 2. Supprimer la completion
+    const { error, data: deletedCompletion } = await supabase.from('group_habit_completions').delete().eq('group_habit_id', habitId).eq('user_id', userId).eq('date', targetDate).select();
 
     if (error) throw error;
+
+    // 3. ✅ FIX: Supprimer la transaction XP correspondante
+    const { data: deletedXP, error: xpError } = await supabase
+      .from('group_xp_transactions')
+      .delete()
+      .eq('group_id', habit.group_id)
+      .eq('reason', 'task_completion')
+      .eq('date', targetDate)
+      .contains('metadata', { habit_id: habitId, user_id: userId })
+      .select();
+
+    if (xpError) console.error('❌ XP deletion error:', xpError);
+
+    // 4. ✅ FIX: Recalculer l'XP du groupe
+    const { data: updatedXP, error: updateError } = await supabase.rpc('update_group_xp_and_level', {
+      group_uuid: habit.group_id,
+    });
+
+    if (updateError) console.error('❌ Update XP error:', updateError);
   }
 
   async getHabitCompletions(habitId: string, days: number = 7): Promise<GroupHabitCompletion[]> {

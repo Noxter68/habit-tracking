@@ -116,12 +116,6 @@ export default function CreateGroupHabitScreen() {
       </View>
 
       <ScrollView style={tw`flex-1`} contentContainerStyle={tw`px-6 py-2`}>
-        {/* Emoji picker */}
-        <View style={tw`mb-4`}>
-          <Text style={tw`text-sm font-semibold text-stone-700 mb-3`}>Icône de l'habitude</Text>
-          <EmojiPicker selectedEmoji={emoji} onEmojiSelect={setEmoji} />
-        </View>
-
         {/* Nom de l'habitude */}
         <View style={tw`mb-4`}>
           <Text style={tw`text-sm font-semibold text-stone-700 mb-3`}>Nom de l'habitude</Text>
