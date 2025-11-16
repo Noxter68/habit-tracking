@@ -170,6 +170,7 @@ const HabitDetails: React.FC = () => {
   // ============================================================================
 
   const streakSaver = useStreakSaver({
+    type: 'personal', // ✅ AJOUTE LE TYPE
     habitId: habitId,
     userId: user?.id || '',
     enabled: !!habit && !!user,
@@ -367,6 +368,7 @@ const HabitDetails: React.FC = () => {
                   availableSavers={streakSaver.inventory.available}
                   loading={streakSaver.using}
                   success={streakSaver.success}
+                  error={streakSaver.error}
                   newStreak={streakSaver.newStreak}
                   onUse={streakSaver.useStreakSaver}
                   onClose={streakSaver.closeModal}

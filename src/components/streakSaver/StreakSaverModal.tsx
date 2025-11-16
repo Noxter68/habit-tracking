@@ -1,11 +1,11 @@
 // src/components/streakSaver/StreakSaverModal.tsx
-// Version avec gradient violet Amethyst
+// Version avec gestion d'erreur
 
 import React, { useEffect, useState } from 'react';
 import { View, Text, Modal, Pressable, ActivityIndicator, Image } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut, useSharedValue, useAnimatedStyle, withRepeat, withSequence, withSpring, withTiming, Easing, ZoomIn, interpolate } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
-import { Flame, X, Clock, Sparkles } from 'lucide-react-native';
+import { Flame, X, Clock, Sparkles, AlertTriangle } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import tw from '@/lib/tailwind';
@@ -17,6 +17,7 @@ interface StreakSaverModalProps {
   availableSavers: number;
   loading?: boolean;
   success?: boolean;
+  error?: string | null;
   newStreak?: number;
   onUse: () => void;
   onClose: () => void;
@@ -30,10 +31,7 @@ const StreakSaverIcon = () => {
   const rotate = useSharedValue(0);
 
   useEffect(() => {
-    // Breathing animation - smooth infinite
     breathe.value = withRepeat(withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.ease) }), -1, true);
-
-    // Gentle rotation
     rotate.value = withRepeat(
       withSequence(
         withTiming(-5, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
@@ -55,15 +53,10 @@ const StreakSaverIcon = () => {
   return (
     <Animated.View style={animatedStyle}>
       <View style={tw`relative`}>
-        {/* Glow effect */}
         <View style={tw`absolute inset-0 bg-purple-300 rounded-full opacity-30 blur-xl scale-110`} />
-
-        {/* Icon container */}
         <View style={tw`w-20 h-20 rounded-2xl bg-white items-center justify-center shadow-2xl`}>
           <Image source={require('../../../assets/interface/streak-saver.png')} style={{ width: 48, height: 48 }} resizeMode="contain" />
         </View>
-
-        {/* Sparkle indicator */}
         <View style={tw`absolute -top-1 -right-1`}>
           <Sparkles size={18} color="#8B5CF6" fill="#8B5CF6" />
         </View>
@@ -127,7 +120,18 @@ const StreakSaverButton = ({ onPress, loading, disabled }: any) => {
 // ============================================================================
 // Main Modal Component
 // ============================================================================
-export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({ visible, habitName, previousStreak, availableSavers, loading = false, success = false, newStreak = 0, onUse, onClose }) => {
+export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({
+  visible,
+  habitName,
+  previousStreak,
+  availableSavers,
+  loading = false,
+  success = false,
+  error = null,
+  newStreak = 0,
+  onUse,
+  onClose,
+}) => {
   const { t } = useTranslation();
   const glowPulse = useSharedValue(0);
   const [countdown, setCountdown] = useState(8);
@@ -181,22 +185,17 @@ export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({ visible, hab
           <Animated.View entering={FadeInDown.duration(400).springify()} style={tw`bg-white rounded-3xl overflow-hidden w-full max-w-md shadow-2xl`}>
             {success ? (
               // ============================================================
-              // SUCCESS VIEW - Purple Design
+              // SUCCESS VIEW
               // ============================================================
               <>
                 <LinearGradient colors={['#f3e8ff', '#e9d5ff', '#ddd6fe']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`relative`}>
                   <View style={tw`px-5 pt-8 pb-6`}>
                     <Animated.View entering={ZoomIn.duration(600).springify()} style={tw`items-center mb-3`}>
                       <View style={tw`relative`}>
-                        {/* Glow effect */}
                         <View style={tw`absolute inset-0 bg-purple-300 rounded-full opacity-30 blur-xl scale-110`} />
-
-                        {/* Icon container */}
                         <View style={tw`w-20 h-20 rounded-2xl bg-white items-center justify-center shadow-2xl`}>
                           <Image source={require('../../../assets/interface/streak-saver.png')} style={{ width: 48, height: 48 }} resizeMode="contain" />
                         </View>
-
-                        {/* Success sparkle indicator */}
                         <View style={tw`absolute -top-1 -right-1 bg-green-500 rounded-full p-1.5 border-2 border-white`}>
                           <Sparkles size={14} color="white" fill="white" />
                         </View>
@@ -230,9 +229,43 @@ export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({ visible, hab
                   <Text style={tw`text-center text-xs text-stone-400 mt-4`}>{t('habitDetails.streakSaver.success.closingIn', { seconds: countdown })}</Text>
                 </View>
               </>
+            ) : error ? (
+              // ============================================================
+              // ERROR VIEW
+              // ============================================================
+              <>
+                <LinearGradient colors={['#fee2e2', '#fecaca', '#fca5a5']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                  <View style={tw`px-5 pt-6 pb-4`}>
+                    <Pressable onPress={onClose} style={tw`absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/90 items-center justify-center shadow`}>
+                      <X size={18} color="#78716C" strokeWidth={2.5} />
+                    </Pressable>
+
+                    <View style={tw`items-center mb-2`}>
+                      <View style={tw`relative`}>
+                        <View style={tw`absolute inset-0 bg-red-300 rounded-full opacity-30 blur-xl scale-110`} />
+                        <View style={tw`w-20 h-20 rounded-2xl bg-white items-center justify-center shadow-2xl`}>
+                          <AlertTriangle size={48} color="#DC2626" strokeWidth={2} />
+                        </View>
+                      </View>
+                    </View>
+
+                    <Text style={tw`text-2xl font-black text-center text-red-900`}>Something Went Wrong</Text>
+                  </View>
+                </LinearGradient>
+
+                <View style={tw`px-5 py-6`}>
+                  <View style={tw`bg-red-50 rounded-2xl p-4 mb-4 border-2 border-red-200`}>
+                    <Text style={tw`text-sm text-red-800 text-center leading-5`}>{error}</Text>
+                  </View>
+
+                  <Pressable onPress={onClose} style={({ pressed }) => [tw`bg-stone-100 rounded-xl py-3 items-center`, pressed && tw`opacity-70`]}>
+                    <Text style={tw`text-stone-600 font-semibold text-sm`}>Close</Text>
+                  </Pressable>
+                </View>
+              </>
             ) : (
               // ============================================================
-              // SAVE VIEW - Purple Design
+              // SAVE VIEW
               // ============================================================
               <>
                 <LinearGradient colors={['#f3e8ff', '#e9d5ff', '#ddd6fe']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`relative`}>
