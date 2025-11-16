@@ -103,9 +103,10 @@ export function isValidInviteCode(code: string): boolean {
 /**
  * Nettoie un code d'invitation (enlève espaces, tirets, met en majuscules)
  */
-export function cleanInviteCode(code: string): string {
-  return code.replace(/[-\s]/g, '').toUpperCase();
-}
+export const cleanInviteCode = (code: string | undefined): string => {
+  if (!code) return '';
+  return code.replace(/[^A-Z0-9]/g, '').toUpperCase();
+};
 
 // ============================================
 // XP & LEVEL UTILS

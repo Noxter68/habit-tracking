@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { X, LogIn, UserPlus } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics'; // ✅ Import manquant
+import * as Haptics from 'expo-haptics';
 import { groupService } from '@/services/groupTypeService';
 import { useAuth } from '@/context/AuthContext';
 import { isValidInviteCode, cleanInviteCode, formatInviteCode } from '@/utils/groupUtils';
@@ -29,11 +29,28 @@ export default function JoinGroupScreen() {
   };
 
   const handleJoin = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      Alert.alert(t('groups.dashboard.error'), t('groups.join.authRequired'));
+      return;
+    }
+
+    // ✅ Validation du code avant traitement
+    if (!code || code.trim().length === 0) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert(t('groups.join.invalidCode'), t('groups.join.invalidCodeMessage'));
+      return;
+    }
 
     const cleanedCode = cleanInviteCode(code);
 
-    if (!isValidInviteCode(cleanedCode)) {
+    console.log('🔍 Code entered:', code);
+    console.log('🔍 Cleaned code:', cleanedCode);
+    console.log('🔍 Cleaned code length:', cleanedCode.length);
+
+    const isValid = isValidInviteCode(cleanedCode);
+    console.log('🔍 Is valid code?', isValid);
+
+    if (!isValid) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert(t('groups.join.invalidCode'), t('groups.join.invalidCodeMessage'));
       return;
@@ -41,6 +58,7 @@ export default function JoinGroupScreen() {
 
     setLoading(true);
     try {
+      // Vérifier si l'utilisateur peut rejoindre un groupe
       const canJoin = await groupService.canUserJoinGroup(user.id);
 
       if (!canJoin.can_join) {
@@ -58,27 +76,55 @@ export default function JoinGroupScreen() {
         return;
       }
 
-      const group = await groupService.joinGroup(user.id, cleanedCode);
+      // Rejoindre le groupe
+      const result = await groupService.joinGroup(user.id, cleanedCode);
+
+      // Vérifier que l'ID du groupe est valide
+      if (!result?.group_id) {
+        throw new Error('Invalid group ID returned from server');
+      }
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-      // ✅ Navigation simplifiée : on ferme la modal puis on navigue
-      navigation.goBack(); // Ferme JoinGroup modal
+      // Navigation vers le dashboard du groupe
+      navigation.goBack();
 
       setTimeout(() => {
-        navigation.navigate('GroupDashboard', { groupId: group.id });
-      }, 150); // Petit délai pour l'animation smooth
+        navigation.navigate('GroupDashboard', { groupId: result.group_id as string });
+      }, 150);
     } catch (error: any) {
-      console.error('Error joining group:', error);
+      console.error('❌ Error joining group:', error);
+      console.error('❌ Error message:', error.message);
+
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
 
-      if (error.message?.includes('not found')) {
-        Alert.alert(t('groups.join.notFound'), t('groups.join.notFoundMessage'));
-      } else if (error.message?.includes('already a member')) {
-        Alert.alert(t('groups.join.alreadyMember'), t('groups.join.alreadyMemberMessage'));
-      } else {
-        Alert.alert(t('groups.dashboard.error'), error.message || t('groups.join.errorJoining'));
+      // ✅ Gestion détaillée des erreurs
+      let title = t('groups.dashboard.error');
+      let message = t('groups.join.errorJoining');
+
+      if (error.message) {
+        const errorMsg = error.message.toLowerCase();
+
+        if (errorMsg.includes('invalide') || errorMsg.includes('invalid')) {
+          title = t('groups.join.invalidCode');
+          message = t('groups.join.invalidCodeMessage');
+        } else if (errorMsg.includes('déjà membre') || errorMsg.includes('already a member')) {
+          title = t('groups.join.alreadyMember');
+          message = t('groups.join.alreadyMemberMessage');
+        } else if (errorMsg.includes('limite') || errorMsg.includes('limit')) {
+          title = t('groups.join.limitReached');
+          message = error.message;
+        } else if (errorMsg.includes('group_id') || errorMsg.includes('uuid')) {
+          title = t('groups.dashboard.error');
+          message = 'Une erreur est survenue. Veuillez réessayer.';
+        } else {
+          // Message d'erreur personnalisé de la DB
+          message = error.message;
+        }
       }
+
+      console.log('🚨 Showing alert:', { title, message });
+      Alert.alert(title, message);
     } finally {
       setLoading(false);
     }
@@ -116,9 +162,7 @@ export default function JoinGroupScreen() {
           <UserPlus size={48} color="#3b82f6" strokeWidth={2} />
         </View>
 
-        <Text style={tw`text-2xl font-bold text-stone-800 text-center mb-2`}>
-          {t('groups.join.enterCode')} {/* ✅ Changé de subtitle → enterCode */}
-        </Text>
+        <Text style={tw`text-2xl font-bold text-stone-800 text-center mb-2`}>{t('groups.join.enterCode')}</Text>
         <Text style={tw`text-base text-stone-500 text-center mb-8`}>{t('groups.join.description')}</Text>
 
         <View style={tw`mb-6`}>

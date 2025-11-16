@@ -23,6 +23,9 @@ import { supabase } from '@/lib/supabase';
 import EditUsernameModal from '@/components/settings/EditUserModal';
 import { useTranslation } from 'react-i18next';
 import Constants from 'expo-constants';
+import { useGroupCelebration } from '@/context/GroupCelebrationContext';
+import { GroupTierUpModal } from '@/components/groups/GroupTierUpModal';
+import { GroupLevelUpModal } from '@/components/groups/GroupLevelUpModal';
 
 const APP_ICON = require('../../assets/icon/icon-v2.png');
 const TEXTURE_BG = require('../../assets/interface/textures/texture-white.png');
@@ -326,6 +329,8 @@ const SettingsScreen: React.FC = () => {
   const { isPremium } = useSubscription();
   const navigation = useNavigation<NavigationProp>();
 
+  const { triggerTierUp, triggerLevelUp } = useGroupCelebration();
+
   useEffect(() => {
     loadNotificationPreferences();
   }, [user]);
@@ -598,6 +603,13 @@ const SettingsScreen: React.FC = () => {
               </SettingsSection>
             )}
 
+            {Config.debug.showDebugScreen && (
+              <SettingsSection title="🧪 Debug Tools" delay={0.8}>
+                <SettingsItem icon="bug" title="Test Level Up" subtitle="Célébration simple (5s)" onPress={() => triggerLevelUp(30, 14)} />
+                <SettingsItem icon="sparkles" title="Test Tier Up" subtitle="Célébration épique (8s)" onPress={() => triggerTierUp(50, 9)} isLast />
+              </SettingsSection>
+            )}
+
             <SettingsSection title={t('settings.support')} delay={400}>
               <SettingsItem icon="information-circle-outline" title={t('settings.version')} subtitle={Constants.expoConfig?.version || '1.0.0'} />
             </SettingsSection>
@@ -615,6 +627,9 @@ const SettingsScreen: React.FC = () => {
                 <ChevronRight size={20} color="#A1A1AA" />
               </Pressable>
             </View>
+
+            <GroupTierUpModal />
+            <GroupLevelUpModal />
 
             <Animated.View entering={FadeInDown.delay(500).duration(600).springify()} style={tw`mt-8 mb-6`}>
               <TouchableOpacity activeOpacity={0.8} disabled={signingOut} onPress={handleSignOut}>

@@ -57,6 +57,7 @@ import CreateGroupScreen from '@/components/groups/CreateGroupScreen';
 import JoinGroupScreen from '@/components/groups/JoinGroupScreen';
 import { GroupsNavigator } from '@/navigation/GroupsNavigator';
 import GroupTiersScreen from '@/screens/GroupTierScreen';
+import { GroupCelebrationProvider } from '@/context/GroupCelebrationContext';
 
 // Type Definitions
 export type RootStackParamList = {
@@ -533,10 +534,12 @@ export default function App() {
               <HabitProvider>
                 <AchievementProvider>
                   <LevelUpProvider>
-                    <NavigationContainer linking={linking} fallback={<BeautifulLoader />}>
-                      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
-                      <AppNavigator />
-                    </NavigationContainer>
+                    <GroupCelebrationProvider>
+                      <NavigationContainer linking={linking} fallback={<BeautifulLoader />}>
+                        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
+                        <AppNavigator />
+                      </NavigationContainer>
+                    </GroupCelebrationProvider>
                   </LevelUpProvider>
                 </AchievementProvider>
               </HabitProvider>

@@ -2,11 +2,11 @@
 // Liste des groupes avec i18n et textures dynamiques basées sur le niveau
 
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, ImageBackground, Image } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, ImageBackground, Image, StatusBar } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Plus, Users, Flame, ArrowRight } from 'lucide-react-native';
+import { Plus, Users, Flame, ArrowRight, Info } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { groupService } from '@/services/groupTypeService';
@@ -14,6 +14,7 @@ import { useAuth } from '@/context/AuthContext';
 import type { GroupWithMembers } from '@/types/group.types';
 import { getHabitTierTheme, getAchievementTierTheme } from '@/utils/tierTheme';
 import { calculateGroupTierFromLevel, getGroupTierConfigByLevel, getGroupTierThemeKey } from '@utils/groups/groupConstants';
+import GroupInfoModal from '@/components/groups/GroupInfoModal';
 import tw from '@/lib/tailwind';
 
 type NavigationProp = NativeStackNavigationProp<any>;
@@ -247,6 +248,7 @@ export default function GroupsListScreen() {
   const [groups, setGroups] = useState<GroupWithMembers[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
 
   const loadGroups = async (silent = false) => {
     if (!user?.id) return;
@@ -290,6 +292,11 @@ export default function GroupsListScreen() {
     navigation.navigate('GroupDashboard', { groupId });
   };
 
+  const handleInfoPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowInfoModal(true);
+  };
+
   const tierTheme = getAchievementTierTheme('novice');
 
   if (loading) {
@@ -302,8 +309,28 @@ export default function GroupsListScreen() {
 
   return (
     <View style={tw`flex-1 bg-[#FAFAFA]`}>
+      <StatusBar barStyle="light-content" />
+
       <LinearGradient colors={tierTheme.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`pt-16 pb-6`}>
-        <ImageBackground source={tierTheme.texture} style={tw`absolute inset-0`} imageStyle={{ opacity: 0.15 }} resizeMode="cover" />
+        <ImageBackground source={tierTheme.texture} style={tw`absolute inset-0`} imageStyle={{ opacity: 0.15 }} resizeMode="cover" pointerEvents="none" />
+
+        {/* Info Button - Top Right */}
+        <TouchableOpacity
+          onPress={handleInfoPress}
+          style={[
+            tw`absolute top-16 right-6 w-10 h-10 rounded-full items-center justify-center`,
+            {
+              backgroundColor: 'rgba(255, 255, 255, 0.25)',
+              borderWidth: 1,
+              borderColor: 'rgba(255, 255, 255, 0.4)',
+              zIndex: 9999,
+              elevation: 9999,
+            },
+          ]}
+          activeOpacity={0.8}
+        >
+          <Info size={20} color="#FFFFFF" strokeWidth={2.5} />
+        </TouchableOpacity>
 
         <View style={tw`px-6`}>
           <View style={tw`items-center mb-4`}>
@@ -425,6 +452,8 @@ export default function GroupsListScreen() {
 
         <View style={tw`h-8`} />
       </ScrollView>
+
+      {showInfoModal && <GroupInfoModal visible={showInfoModal} onClose={() => setShowInfoModal(false)} t={t} />}
     </View>
   );
 }

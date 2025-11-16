@@ -1,6 +1,6 @@
 // components/groups/CreateGroupScreen.tsx
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, ScrollView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -72,6 +72,7 @@ export default function CreateGroupScreen() {
 
   return (
     <View style={tw`flex-1 bg-[#FAFAFA]`}>
+      <StatusBar barStyle="light-content" />
       <View style={tw`px-6 pt-6 pb-4 bg-[#FAFAFA]`}>
         <View style={tw`flex-row items-center justify-between`}>
           <TouchableOpacity

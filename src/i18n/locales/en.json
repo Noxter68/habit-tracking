@@ -2111,6 +2111,47 @@
     "subtitle": "My Groups",
     "activeCount_one": "{{count}} active group",
     "activeCount_other": "{{count}} active groups",
+    "info": {
+      "header": "How Groups Work",
+      "intro": "Create shared habits with friends and build streaks together. Accountability meets motivation in a collaborative experience.",
+      "completion": {
+        "title": "Daily Completion",
+        "description": "Each member completes their tasks individually. At midnight, the group's completion rate determines if the day is validated."
+      },
+      "xp": {
+        "title": "XP Rewards",
+        "description": "Earn +10 XP instantly when you complete a task. Get bonus XP at midnight: +50 XP for 100% completion, +35 XP for 50-99% completion. The more active members, the more XP you earn together."
+      },
+      "streak": {
+        "title": "Validation Rules",
+        "description": "100% completion = perfect day with full bonus. 50-99% = validated day with reduced bonus. Below 50% = day not validated and streak breaks (unless saved)."
+      },
+      "tolerance": {
+        "title": "Weekly Flexibility",
+        "description": "All groups get one 50% tolerance per week. If at least half the team completes their tasks, the day is validated with reduced bonus. After using this flexibility, you need 100% completion or the streak breaks."
+      },
+      "weekly": {
+        "title": "Weekly Bonus",
+        "description": "Achieve 100% completion every day for a full week, and earn a massive +200 XP bonus on Saturday midnight. Perfect teamwork deserves perfect rewards!"
+      },
+      "tip": "Remember: consistency and teamwork are key. Even on tough days, your group is there to keep you motivated!",
+      "close": "Got it!"
+    },
+    "tierUp": {
+      "title": "TIER UP!",
+      "newTier": "NEW TIER",
+      "level": "Level {{level}}",
+      "congratulations": "Your group has reached a new tier! Keep up the amazing teamwork!",
+      "tapToContinue": "Tap anywhere to continue",
+      "closingIn": "Closing in {{seconds}}s"
+    },
+    "levelUp": {
+      "title": "LEVEL UP!",
+      "level": "LEVEL",
+      "keepGoing": "Great progress! Keep building those habits together!",
+      "tapToContinue": "Tap anywhere to continue",
+      "closingIn": "Closing in {{seconds}}s"
+    },
 
     "list": {
       "members_one": "{{count}} member",
@@ -2200,9 +2241,6 @@
       "info": "💡 The code is made of 6 characters (letters and numbers)",
       "description": "Enter the invitation code shared by the group creator",
       "button": "Join the group",
-      "invalidCode": "Invalid code",
-      "invalidCodeMessage": "The code must contain 6 characters (letters and numbers)",
-      "codeNotFound": "This invitation code does not exist",
       "alreadyMember": "Already member",
       "alreadyMemberMessage": "You are already a member of this group",
       "limitReached": "Limit reached",
@@ -2214,7 +2252,12 @@
       "successMessage": "You can now see shared habits",
       "later": "Later",
       "seePremium": "See Premium",
-      "enterCode": "Enter Invite Code"
+      "enterCode": "Enter Invite Code",
+      "authRequired": "Authentication required",
+      "invalidCode": "Invalid Format",
+      "invalidCodeMessage": "The code must contain exactly 6 characters (letters and numbers)",
+      "codeNotFound": "Incorrect Code",
+      "codeNotFoundMessage": "This code doesn't match any group. Please check the code and try again."
     },
 
     "create": {

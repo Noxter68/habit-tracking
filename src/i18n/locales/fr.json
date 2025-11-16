@@ -2112,6 +2112,47 @@
     "subtitle": "Mes Groupes",
     "activeCount_one": "{{count}} groupe actif",
     "activeCount_other": "{{count}} groupes actifs",
+    "info": {
+      "header": "Comment ça marche",
+      "intro": "Créez des habitudes partagées avec vos amis et construisez des séries ensemble. La responsabilité rencontre la motivation dans une expérience collaborative.",
+      "completion": {
+        "title": "Complétion Quotidienne",
+        "description": "Chaque membre complète ses tâches individuellement. À minuit, le taux de complétion du groupe détermine si la journée est validée."
+      },
+      "xp": {
+        "title": "Récompenses XP",
+        "description": "Gagnez +10 XP instantanément quand vous complétez une tâche. Obtenez des XP bonus à minuit : +50 XP pour 100% de complétion, +35 XP pour 50-99%. Plus il y a de membres actifs, plus vous gagnez d'XP ensemble."
+      },
+      "streak": {
+        "title": "Règles de Validation",
+        "description": "100% de complétion = journée parfaite avec bonus complet. 50-99% = journée validée avec bonus réduit. Moins de 50% = journée non validée et la série se casse (sauf si sauvée)."
+      },
+      "tolerance": {
+        "title": "Flexibilité Hebdomadaire",
+        "description": "Tous les groupes ont une tolérance de 50% par semaine. Si au moins la moitié de l'équipe complète ses tâches, la journée est validée avec bonus réduit. Après avoir utilisé cette flexibilité, il faut 100% ou la série casse."
+      },
+      "weekly": {
+        "title": "Bonus Hebdomadaire",
+        "description": "Atteignez 100% de complétion chaque jour pendant une semaine complète, et gagnez un énorme bonus de +200 XP le samedi à minuit. Un travail d'équipe parfait mérite des récompenses parfaites !"
+      },
+      "tip": "Rappel : la constance et le travail d'équipe sont essentiels. Même lors des jours difficiles, votre groupe est là pour vous motiver !",
+      "close": "Compris !"
+    },
+    "tierUp": {
+      "title": "NOUVEAU PALIER !",
+      "newTier": "NOUVEAU PALIER",
+      "level": "Niveau {{level}}",
+      "congratulations": "Votre groupe a atteint un nouveau palier ! Continuez ce travail d'équipe exceptionnel !",
+      "tapToContinue": "Touchez pour continuer",
+      "closingIn": "Fermeture dans {{seconds}}s"
+    },
+    "levelUp": {
+      "title": "NIVEAU SUPÉRIEUR !",
+      "level": "NIVEAU",
+      "keepGoing": "Excellent progrès ! Continuez à construire ces habitudes ensemble !",
+      "tapToContinue": "Touchez pour continuer",
+      "closingIn": "Fermeture dans {{seconds}}s"
+    },
 
     "list": {
       "members_one": "{{count}} membre",
@@ -2201,9 +2242,6 @@
       "info": "💡 Le code est composé de 6 caractères (lettres et chiffres)",
       "description": "Entrez le code d'invitation partagé par le créateur du groupe",
       "button": "Rejoindre le groupe",
-      "invalidCode": "Code invalide",
-      "invalidCodeMessage": "Le code doit contenir 6 caractères (lettres et chiffres)",
-      "codeNotFound": "Ce code d'invitation n'existe pas",
       "alreadyMember": "Déjà membre",
       "alreadyMemberMessage": "Vous êtes déjà membre de ce groupe",
       "limitReached": "Limite atteinte",
@@ -2215,7 +2253,12 @@
       "successMessage": "Vous pouvez maintenant voir les habitudes partagées",
       "later": "Plus tard",
       "seePremium": "Voir Premium",
-      "enterCode": "Entrez le Code d'Invitation"
+      "enterCode": "Entrez le Code d'Invitation",
+      "authRequired": "Authentification requise",
+      "invalidCode": "Format invalide",
+      "invalidCodeMessage": "Le code doit contenir exactement 6 caractères (lettres et chiffres)",
+      "codeNotFound": "Code incorrect",
+      "codeNotFoundMessage": "Ce code ne correspond à aucun groupe. Vérifiez le code et réessayez."
     },
 
     "create": {

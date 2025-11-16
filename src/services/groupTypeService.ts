@@ -168,14 +168,70 @@ class GroupService {
     return group;
   }
 
-  async joinGroup(userId: string, input: JoinGroupInput): Promise<JoinGroupResponse> {
-    const { data, error } = await supabase.rpc('join_group_with_code', {
-      invite_code_param: input.invite_code.toUpperCase(),
-      user_id_param: userId,
-    });
+  /**
+   * ✅ FIXED: Accepte string OU JoinGroupInput
+   * Gère les erreurs de la DB proprement
+   */
+  async joinGroup(userId: string, inviteCodeOrInput: string | JoinGroupInput): Promise<JoinGroupResponse> {
+    // Normaliser l'input
+    const inviteCode = typeof inviteCodeOrInput === 'string' ? inviteCodeOrInput : inviteCodeOrInput.invite_code;
 
-    if (error) throw error;
-    return data as JoinGroupResponse;
+    // Validation
+    if (!inviteCode || typeof inviteCode !== 'string' || inviteCode.trim().length === 0) {
+      throw new Error('Invalid invite code format');
+    }
+
+    const cleanCode = inviteCode.trim().toUpperCase();
+
+    if (cleanCode.length !== 6) {
+      throw new Error('Invite code must be 6 characters');
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('join_group_with_code', {
+        invite_code_param: cleanCode,
+        user_id_param: userId,
+      });
+
+      if (error) {
+        console.error('❌ Supabase RPC error:', error);
+        throw new Error(error.message || 'Failed to join group');
+      }
+
+      if (!data) {
+        throw new Error('No data returned from join operation');
+      }
+
+      console.log('✅ Join group RPC response:', data);
+
+      // ✅ Parser la réponse JSONB de PostgreSQL
+      const result = typeof data === 'string' ? JSON.parse(data) : data;
+
+      console.log('✅ Parsed result:', result);
+      console.log('✅ Result success:', result.success);
+
+      // Vérifier si l'opération a réussi
+      if (!result.success) {
+        console.log('❌ Join failed with error:', result.error);
+        throw new Error(result.error || 'Failed to join group');
+      }
+
+      // Vérifier que group_id existe
+      if (!result.group_id) {
+        throw new Error('Invalid response: missing group_id');
+      }
+
+      return {
+        success: true,
+        group_id: result.group_id,
+        message: result.message || 'Successfully joined group',
+      };
+    } catch (error: any) {
+      console.error('❌ Join group error:', error);
+
+      // Re-throw avec message propre
+      throw new Error(error.message || 'An unexpected error occurred while joining the group');
+    }
   }
 
   async leaveGroup(userId: string, groupId: string): Promise<void> {

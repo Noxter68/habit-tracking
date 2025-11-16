@@ -23,6 +23,9 @@ import { useStreakSaver } from '@/hooks/useStreakSaver';
 import { StreakSaverModal } from '@/components/streakSaver/StreakSaverModal';
 import { StreakSaverShopModal } from '@/components/streakSaver/StreakSaverShopModal';
 import tw from '@/lib/tailwind';
+import { useGroupCelebration } from '@/context/GroupCelebrationContext';
+import { GroupTierUpModal } from '@/components/groups/GroupTierUpModal';
+import { GroupLevelUpModal } from '@/components/groups/GroupLevelUpModal';
 
 type NavigationProp = NativeStackNavigationProp<any>;
 type RouteParams = RNRouteProp<{ GroupDashboard: { groupId: string } }, 'GroupDashboard'>;
@@ -33,6 +36,13 @@ export default function GroupDashboardScreen() {
   const { user } = useAuth();
   const { t } = useTranslation();
   const { groupId } = route.params;
+
+  // ✅ LOG IMMÉDIAT POUR DEBUG
+  console.log('🔍 GroupDashboard route.params:', route.params);
+  console.log('🔍 GroupDashboard groupId:', groupId);
+  console.log('🔍 GroupId type:', typeof groupId);
+
+  const { celebrateLevelChange } = useGroupCelebration();
 
   const [group, setGroup] = useState<GroupWithMembers | null>(null);
   const [habits, setHabits] = useState<GroupHabitWithCompletions[]>([]);
@@ -69,6 +79,11 @@ export default function GroupDashboardScreen() {
           navigation.goBack();
         }
         return;
+      }
+
+      if (group && currentGroup.level !== group.level) {
+        console.log(`🎉 Level changed: ${group.level} → ${currentGroup.level}`);
+        celebrateLevelChange(group.level, currentGroup.level);
       }
 
       if (group && currentGroup.xp !== group.xp) {
@@ -600,6 +615,9 @@ export default function GroupDashboardScreen() {
 
         <View style={tw`h-6`} />
       </ScrollView>
+
+      <GroupTierUpModal />
+      <GroupLevelUpModal />
 
       <StreakSaverModal
         visible={streakSaver.showModal}
