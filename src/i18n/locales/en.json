@@ -2067,6 +2067,10 @@
     "customTaskDurationLabel": "Duration (optional)",
     "customTaskDurationPlaceholder": "30",
     "customTaskDurationHint": "Estimated time to complete this task",
+    "allTasksAdded": "All available tasks already added",
+    "allTasksAddedTitle": "All Tasks Added",
+    "allTasksAddedDescription": "You've already added all available tasks for this habit. Create a custom task or manage existing ones.",
+    "maxTasksDescription": "You've reached the maximum of 3 tasks per habit. Delete a task to add new ones.",
     "limitReached": {
       "title": "Task Limit Reached",
       "message": "You already have 3 tasks for this habit. Please delete a task before adding new ones."

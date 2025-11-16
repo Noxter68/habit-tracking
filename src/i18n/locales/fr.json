@@ -2068,6 +2068,10 @@
     "customTaskDurationLabel": "Durée (optionnel)",
     "customTaskDurationPlaceholder": "30",
     "customTaskDurationHint": "Temps estimé pour compléter cette tâche",
+    "allTasksAdded": "Toutes les tâches disponibles déjà ajoutées",
+    "allTasksAddedTitle": "Toutes les Tâches Ajoutées",
+    "allTasksAddedDescription": "Vous avez déjà ajouté toutes les tâches disponibles pour cette habitude. Créez une tâche personnalisée ou gérez celles existantes.",
+    "maxTasksDescription": "Vous avez atteint le maximum de 3 tâches par habitude. Supprimez une tâche pour en ajouter de nouvelles.",
     "limitReached": {
       "title": "Limite de Tâches Atteinte",
       "message": "Vous avez déjà 3 tâches pour cette habitude. Veuillez supprimer une tâche avant d'en ajouter de nouvelles."
