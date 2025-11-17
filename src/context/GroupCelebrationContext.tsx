@@ -1,5 +1,6 @@
 // src/context/GroupCelebrationContext.tsx
 import React, { createContext, useContext, useState, useRef, useCallback } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { calculateGroupTierFromLevel, getGroupTierConfig } from '@/utils/groups/groupConstants';
 import Logger from '@/utils/logger';
 
@@ -31,8 +32,10 @@ interface GroupCelebrationContextType {
   triggerTierUp: (newLevel: number, previousLevel: number) => void;
   triggerLevelUp: (newLevel: number, previousLevel: number) => void;
 
-  // ✨ NOUVEAU: API simple qui prend l'ancien ET le nouveau niveau
+  // Celebration API
   celebrateLevelChange: (oldLevel: number, newLevel: number) => void;
+  checkPendingCelebrations: (groupId: string, currentLevel: number) => Promise<void>;
+  saveLastKnownLevel: (groupId: string, level: number) => Promise<void>;
 }
 
 const GroupCelebrationContext = createContext<GroupCelebrationContextType | undefined>(undefined);
@@ -48,36 +51,76 @@ export const GroupCelebrationProvider: React.FC<{ children: React.ReactNode }> =
   const hasShownLevelForLevel = useRef<Set<number>>(new Set());
 
   /**
-   * ✨ NOUVELLE API: Simple et claire - prend l'ancien et le nouveau niveau
+   * Save the last known level to AsyncStorage (without triggering celebration)
+   */
+  const saveLastKnownLevel = useCallback(async (groupId: string, level: number) => {
+    try {
+      await AsyncStorage.setItem(`group_last_level_${groupId}`, String(level));
+      Logger.debug(`[GroupCelebration] Saved last known level for ${groupId}: ${level}`);
+    } catch (error) {
+      Logger.error('[GroupCelebration] Failed to save last known level:', error);
+    }
+  }, []);
+
+  /**
+   * Get the last known level from AsyncStorage
+   */
+  const getLastKnownLevel = async (groupId: string): Promise<number | null> => {
+    try {
+      const saved = await AsyncStorage.getItem(`group_last_level_${groupId}`);
+      return saved ? parseInt(saved, 10) : null;
+    } catch (error) {
+      Logger.error('[GroupCelebration] Failed to get last known level:', error);
+      return null;
+    }
+  };
+
+  /**
+   * Check if level changed while user was away (used on initial load)
+   */
+  const checkPendingCelebrations = useCallback(async (groupId: string, currentLevel: number) => {
+    const lastKnownLevel = await getLastKnownLevel(groupId);
+
+    if (!lastKnownLevel || lastKnownLevel === currentLevel) {
+      await saveLastKnownLevel(groupId, currentLevel);
+      return;
+    }
+
+    if (currentLevel > lastKnownLevel) {
+      Logger.info(`[GroupCelebration] Level changed while user was away: ${lastKnownLevel} → ${currentLevel}`);
+      celebrateLevelChange(lastKnownLevel, currentLevel);
+    }
+
+    await saveLastKnownLevel(groupId, currentLevel);
+  }, []);
+
+  /**
+   * Main celebration logic: detects tier changes and level ups
    */
   const celebrateLevelChange = useCallback((oldLevel: number, newLevel: number) => {
     // Validation
     if (!newLevel || newLevel < 1 || !oldLevel || oldLevel < 1) {
-      Logger.debug('GroupCelebration: Invalid levels', { oldLevel, newLevel });
+      Logger.debug('[GroupCelebration] Invalid levels', { oldLevel, newLevel });
       return;
     }
 
-    // Pas de changement
     if (newLevel === oldLevel) {
       return;
     }
 
-    // Level decreased (shouldn't happen)
     if (newLevel < oldLevel) {
-      Logger.debug('GroupCelebration: Level decreased, ignoring', { oldLevel, newLevel });
+      Logger.warn('[GroupCelebration] Level decreased, ignoring', { oldLevel, newLevel });
       return;
     }
-
-    Logger.debug(`GroupCelebration: Level change detected ${oldLevel} → ${newLevel}`);
 
     const previousTier = calculateGroupTierFromLevel(oldLevel);
     const currentTier = calculateGroupTierFromLevel(newLevel);
 
-    Logger.debug(`GroupCelebration: Tier check ${previousTier} → ${currentTier}`);
+    Logger.info(`[GroupCelebration] Level change: ${oldLevel} → ${newLevel} (Tier ${previousTier} → ${currentTier})`);
 
-    // TIER CHANGED = TIER UP MODAL (prioritaire)
+    // Tier changed = show Tier Up modal (priority)
     if (currentTier > previousTier && !hasShownTierForLevel.current.has(newLevel)) {
-      Logger.debug('🎉 TIER UP DETECTED!');
+      Logger.info('[GroupCelebration] Tier up detected, showing modal');
 
       const newTierConfig = getGroupTierConfig(currentTier);
 
@@ -90,11 +133,11 @@ export const GroupCelebrationProvider: React.FC<{ children: React.ReactNode }> =
 
       setShowTierUpModal(true);
       hasShownTierForLevel.current.add(newLevel);
-      hasShownLevelForLevel.current.add(newLevel); // Skip level modal too
+      hasShownLevelForLevel.current.add(newLevel); // Skip level modal
     }
-    // SAME TIER, JUST LEVEL UP = LEVEL UP MODAL
+    // Same tier, just level up = show Level Up modal
     else if (!hasShownLevelForLevel.current.has(newLevel)) {
-      Logger.debug('📈 LEVEL UP DETECTED!');
+      Logger.info('[GroupCelebration] Level up detected, showing modal');
 
       setLevelUpData({
         newLevel,
@@ -104,11 +147,13 @@ export const GroupCelebrationProvider: React.FC<{ children: React.ReactNode }> =
 
       setShowLevelUpModal(true);
       hasShownLevelForLevel.current.add(newLevel);
+    } else {
+      Logger.debug('[GroupCelebration] Celebration already shown for this level');
     }
   }, []);
 
   /**
-   * Manual trigger for Tier Up (testing)
+   * Manual trigger for Tier Up (testing only)
    */
   const triggerTierUp = useCallback((newLevel: number, previousLevel: number) => {
     const newTier = calculateGroupTierFromLevel(newLevel);
@@ -126,7 +171,7 @@ export const GroupCelebrationProvider: React.FC<{ children: React.ReactNode }> =
   }, []);
 
   /**
-   * Manual trigger for Level Up (testing)
+   * Manual trigger for Level Up (testing only)
    */
   const triggerLevelUp = useCallback((newLevel: number, previousLevel: number) => {
     const currentTier = calculateGroupTierFromLevel(newLevel);
@@ -161,7 +206,9 @@ export const GroupCelebrationProvider: React.FC<{ children: React.ReactNode }> =
         closeLevelUpModal,
         triggerTierUp,
         triggerLevelUp,
-        celebrateLevelChange, // ✨ Nouvelle API simple
+        celebrateLevelChange,
+        checkPendingCelebrations,
+        saveLastKnownLevel,
       }}
     >
       {children}

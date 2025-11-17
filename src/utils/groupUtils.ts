@@ -113,30 +113,102 @@ export const cleanInviteCode = (code: string | undefined): string => {
 // ============================================
 
 /**
- * Calcule le niveau basé sur l'XP (100 XP = 1 level)
+ * Calcule le niveau basé sur l'XP total
+ * Level 1: 0-99 XP (besoin de 100 pour Level 2)
+ * Level 2: 100-299 XP (besoin de 200 pour Level 3)
+ * Level 3: 300-599 XP (besoin de 300 pour Level 4)
  */
-export function calculateLevel(xp: number): number {
-  return Math.max(1, Math.floor(xp / 100) + 1);
+export function calculateLevel(totalXp: number): number {
+  if (totalXp < 100) return 1;
+  if (totalXp < 300) return 2; // 100 + 200
+  if (totalXp < 600) return 3; // 100 + 200 + 300
+
+  let level = 1;
+  let xpAccumulated = 0;
+
+  while (xpAccumulated <= totalXp) {
+    const xpNeededForNextLevel = level * 100;
+    xpAccumulated += xpNeededForNextLevel;
+    if (xpAccumulated > totalXp) break;
+    level++;
+  }
+
+  return level;
+}
+
+/**
+ * Calcule l'XP total nécessaire pour atteindre un niveau donné
+ * Level 1: 0, Level 2: 100, Level 3: 300 (100+200), Level 4: 600 (100+200+300)
+ */
+export function getTotalXpForLevel(level: number): number {
+  if (level <= 1) return 0;
+
+  let totalXp = 0;
+  for (let i = 1; i < level; i++) {
+    totalXp += i * 100;
+  }
+  return totalXp;
 }
 
 /**
  * Calcule l'XP requis pour le prochain niveau
+ * Level 1 → Level 2: 100 XP
+ * Level 2 → Level 3: 200 XP
+ * Level 3 → Level 4: 300 XP
  */
-export function getXpForNextLevel(currentXp: number): number {
-  const currentLevel = calculateLevel(currentXp);
+export function getXpForNextLevel(currentLevel: number): number {
   return currentLevel * 100;
 }
 
 /**
- * Calcule le pourcentage de progression vers le prochain niveau
+ * Calcule l'XP dans le niveau actuel et le pourcentage de progression
  */
-export function getLevelProgress(currentXp: number): number {
-  const currentLevel = calculateLevel(currentXp);
-  const xpForCurrentLevel = (currentLevel - 1) * 100;
-  const xpForNextLevel = currentLevel * 100;
-  const xpInCurrentLevel = currentXp - xpForCurrentLevel;
+export function getLevelProgress(totalXp: number): number {
+  const currentLevel = calculateLevel(totalXp);
+  const xpForCurrentLevel = getTotalXpForLevel(currentLevel);
+  const xpForNextLevel = getXpForNextLevel(currentLevel);
 
-  return Math.floor((xpInCurrentLevel / 100) * 100);
+  const xpInCurrentLevel = totalXp - xpForCurrentLevel;
+
+  return Math.floor((xpInCurrentLevel / xpForNextLevel) * 100);
+}
+
+/**
+ * Retourne les infos complètes de progression XP
+ * Exemple avec 110 XP total:
+ * - currentLevel: 2
+ * - xpInCurrentLevel: 10 (110 - 100)
+ * - xpNeededForNextLevel: 200
+ * - progressPercentage: 5% (10/200)
+ */
+export function getXpProgressInfo(totalXp: number): {
+  currentLevel: number;
+  xpInCurrentLevel: number;
+  xpNeededForNextLevel: number;
+  progressPercentage: number;
+} {
+  const currentLevel = calculateLevel(totalXp);
+  const xpForCurrentLevel = getTotalXpForLevel(currentLevel);
+  const xpForNextLevel = getXpForNextLevel(currentLevel);
+  const xpInCurrentLevel = totalXp - xpForCurrentLevel;
+  const progressPercentage = Math.floor((xpInCurrentLevel / xpForNextLevel) * 100);
+
+  // 🔍 DEBUG
+  console.log('🔍 getXpProgressInfo:', {
+    totalXp,
+    currentLevel,
+    xpForCurrentLevel,
+    calculation: `${totalXp} - ${xpForCurrentLevel} = ${xpInCurrentLevel}`,
+    xpForNextLevel,
+    progressPercentage,
+  });
+
+  return {
+    currentLevel,
+    xpInCurrentLevel,
+    xpNeededForNextLevel: xpForNextLevel,
+    progressPercentage,
+  };
 }
 
 // ============================================

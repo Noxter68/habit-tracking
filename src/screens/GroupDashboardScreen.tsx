@@ -15,7 +15,7 @@ import { groupService } from '@/services/groupTypeService';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import type { GroupWithMembers, GroupHabitWithCompletions } from '@/types/group.types';
-import { formatStreak, getLevelProgress, formatInviteCode } from '@/utils/groupUtils';
+import { formatStreak, getLevelProgress, formatInviteCode, getXpProgressInfo } from '@/utils/groupUtils';
 import { GroupHabitCard } from '@/components/groups/GroupHabitCard';
 import { getAchievementTierTheme, getHabitTierTheme } from '@/utils/tierTheme';
 import { calculateGroupTierFromLevel, getGroupTierConfigByLevel, getGroupTierThemeKey } from '@utils/groups/groupConstants';
@@ -26,6 +26,7 @@ import tw from '@/lib/tailwind';
 import { useGroupCelebration } from '@/context/GroupCelebrationContext';
 import { GroupTierUpModal } from '@/components/groups/GroupTierUpModal';
 import { GroupLevelUpModal } from '@/components/groups/GroupLevelUpModal';
+import Logger from '@/utils/logger';
 
 type NavigationProp = NativeStackNavigationProp<any>;
 type RouteParams = RNRouteProp<{ GroupDashboard: { groupId: string } }, 'GroupDashboard'>;
@@ -37,12 +38,7 @@ export default function GroupDashboardScreen() {
   const { t } = useTranslation();
   const { groupId } = route.params;
 
-  // ✅ LOG IMMÉDIAT POUR DEBUG
-  console.log('🔍 GroupDashboard route.params:', route.params);
-  console.log('🔍 GroupDashboard groupId:', groupId);
-  console.log('🔍 GroupId type:', typeof groupId);
-
-  const { celebrateLevelChange } = useGroupCelebration();
+  const { celebrateLevelChange, checkPendingCelebrations, saveLastKnownLevel } = useGroupCelebration();
 
   const [group, setGroup] = useState<GroupWithMembers | null>(null);
   const [habits, setHabits] = useState<GroupHabitWithCompletions[]>([]);
@@ -51,6 +47,8 @@ export default function GroupDashboardScreen() {
   const [showStreakSaverShop, setShowStreakSaverShop] = useState(false);
 
   const xpProgress = useRef(new Animated.Value(0)).current;
+  const isInitialLoad = useRef(true);
+  const currentLevelRef = useRef<number | null>(null);
 
   const firstHabitId = habits[0]?.id || '';
 
@@ -65,6 +63,12 @@ export default function GroupDashboardScreen() {
     },
   });
 
+  useEffect(() => {
+    if (group) {
+      currentLevelRef.current = group.level;
+    }
+  }, [group]);
+
   const loadGroupData = async (silent = false) => {
     if (!user?.id) return;
     if (!silent) setLoading(true);
@@ -73,7 +77,7 @@ export default function GroupDashboardScreen() {
       const currentGroup = await groupService.getGroupById(groupId, user.id);
 
       if (!currentGroup) {
-        console.warn('Group not found or user is not a member');
+        Logger.warn('[GroupDashboard] Group not found or user is not a member');
         if (!silent) {
           Alert.alert(t('groups.dashboard.error'), t('groups.dashboard.groupNotFound'));
           navigation.goBack();
@@ -81,11 +85,13 @@ export default function GroupDashboardScreen() {
         return;
       }
 
-      if (group && currentGroup.level !== group.level) {
-        console.log(`🎉 Level changed: ${group.level} → ${currentGroup.level}`);
-        celebrateLevelChange(group.level, currentGroup.level);
+      // Check for pending celebrations on initial load only
+      if (isInitialLoad.current) {
+        await checkPendingCelebrations(groupId, currentGroup.level);
+        isInitialLoad.current = false;
       }
 
+      // Animate XP progress bar
       if (group && currentGroup.xp !== group.xp) {
         const newProgress = getLevelProgress(currentGroup.xp);
 
@@ -109,7 +115,7 @@ export default function GroupDashboardScreen() {
       const habitsData = await groupService.getGroupHabits(groupId);
       setHabits(habitsData);
     } catch (error) {
-      console.error('Error loading group:', error);
+      Logger.error('[GroupDashboard] Error loading group:', error);
       if (!silent) {
         Alert.alert(t('groups.dashboard.error'), t('groups.dashboard.errorLoading'));
       }
@@ -120,38 +126,75 @@ export default function GroupDashboardScreen() {
   };
 
   useEffect(() => {
-    if (!groupId) return;
+    if (!groupId || !user?.id) return;
+
+    Logger.debug(`[GroupDashboard] Setting up realtime subscriptions for group ${groupId}`);
 
     const completionsChannel = supabase
-      .channel(`group_completions:${groupId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'group_habit_completions' }, (payload) => {
-        console.log('🔥 Realtime completion change:', payload);
-        loadGroupData(true);
-      })
+      .channel(`group_completions:${groupId}:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'group_habit_completions',
+        },
+        () => {
+          loadGroupData(true);
+        }
+      )
       .subscribe();
 
     const habitsChannel = supabase
-      .channel(`group_habits:${groupId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'group_habits', filter: `group_id=eq.${groupId}` }, (payload) => {
-        console.log('🔥 Realtime habit change:', payload);
-        loadGroupData(true);
-      })
+      .channel(`group_habits:${groupId}:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'group_habits',
+          filter: `group_id=eq.${groupId}`,
+        },
+        () => {
+          loadGroupData(true);
+        }
+      )
       .subscribe();
 
     const groupChannel = supabase
-      .channel(`group:${groupId}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'groups', filter: `id=eq.${groupId}` }, (payload) => {
-        console.log('🔥 Realtime group change:', payload);
-        loadGroupData(true);
-      })
+      .channel(`group:${groupId}:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'groups',
+          filter: `id=eq.${groupId}`,
+        },
+        (payload) => {
+          // Detect level up immediately from realtime payload
+          const newLevel = payload.new?.level;
+          const oldLevel = currentLevelRef.current;
+
+          if (oldLevel && newLevel && newLevel > oldLevel) {
+            Logger.info(`[GroupDashboard] Level up detected: ${oldLevel} → ${newLevel}`);
+            celebrateLevelChange(oldLevel, newLevel);
+            saveLastKnownLevel(groupId, newLevel);
+            currentLevelRef.current = newLevel;
+          }
+
+          loadGroupData(true);
+        }
+      )
       .subscribe();
 
     return () => {
+      Logger.debug(`[GroupDashboard] Cleaning up realtime subscriptions for group ${groupId}`);
       completionsChannel.unsubscribe();
       habitsChannel.unsubscribe();
       groupChannel.unsubscribe();
     };
-  }, [groupId]);
+  }, [groupId, user?.id]);
 
   useEffect(() => {
     loadGroupData();
@@ -203,7 +246,7 @@ export default function GroupDashboardScreen() {
             await groupService.deleteGroupHabit(habitId, user.id);
             await loadGroupData();
           } catch (error) {
-            console.error('Error deleting habit:', error);
+            Logger.error('[GroupDashboard] Error deleting habit:', error);
             Alert.alert(t('groups.dashboard.error'), t('groups.dashboard.errorDeleting'));
           }
         },
@@ -249,8 +292,8 @@ export default function GroupDashboardScreen() {
     );
   }
 
-  const progress = getLevelProgress(group.xp);
-  const xpForNextLevel = group.level * 100;
+  const xpInfo = getXpProgressInfo(group.xp);
+  const progress = xpInfo.progressPercentage;
 
   const currentTierNumber = calculateGroupTierFromLevel(group.level);
   const currentTierConfig = getGroupTierConfigByLevel(group.level);
@@ -474,7 +517,7 @@ export default function GroupDashboardScreen() {
                     },
                   ]}
                 >
-                  {t('groups.dashboard.xpProgress', { current: group.xp, max: xpForNextLevel })}
+                  {xpInfo.xpInCurrentLevel} / {xpInfo.xpNeededForNextLevel} XP
                 </Text>
                 <Text
                   style={[

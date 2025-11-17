@@ -1,4 +1,4 @@
-// src/context/AuthContext.tsx - OPTIMIZED VERSION
+// src/context/AuthContext.tsx - AVEC TIMEZONE UPDATE
 import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
@@ -42,6 +42,37 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const initInProgress = useRef(false);
 
   // ============================================================================
+  // TIMEZONE UPDATE - Nouveau
+  // ============================================================================
+
+  const updateUserTimezone = async (userId: string): Promise<void> => {
+    try {
+      // Récupérer le timezone offset du device
+      // getTimezoneOffset() retourne l'inverse (négatif = positif en UTC)
+      const timezoneOffset = -new Date().getTimezoneOffset() / 60;
+
+      Logger.debug(`🌍 [Auth] Updating timezone: UTC${timezoneOffset >= 0 ? '+' : ''}${timezoneOffset}`);
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          timezone_offset: Math.round(timezoneOffset),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId);
+
+      if (error) {
+        Logger.error('❌ [Auth] Timezone update error:', error);
+        return;
+      }
+
+      Logger.debug('✅ [Auth] Timezone updated successfully');
+    } catch (error: any) {
+      Logger.error('❌ [Auth] Timezone update failed:', error);
+    }
+  };
+
+  // ============================================================================
   // FETCH PROFILE - Ultra optimisé
   // ============================================================================
 
@@ -74,6 +105,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       setUsername(data.username || null);
       setHasCompletedOnboarding(data.has_completed_onboarding === true);
+
+      // 🌍 Mettre à jour le timezone en arrière-plan
+      updateUserTimezone(userId).catch(() => {});
 
       // Langue en arrière-plan
       LanguageDetectionService.loadUserLanguage(userId).catch(() => {});
@@ -335,6 +369,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (data.user) {
         await new Promise((resolve) => setTimeout(resolve, 500));
         await LanguageDetectionService.initializeUserLanguage(data.user.id);
+
+        // 🌍 Mettre à jour le timezone immédiatement
+        updateUserTimezone(data.user.id).catch(() => {});
+
         RevenueCatService.setAppUserId(data.user.id).catch(() => {});
         Logger.info('✅ Sign up successful');
       }
@@ -359,6 +397,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (error) throw error;
 
       if (data.user) {
+        // 🌍 Mettre à jour le timezone immédiatement
+        updateUserTimezone(data.user.id).catch(() => {});
+
         RevenueCatService.setAppUserId(data.user.id).catch(() => {});
         Logger.debug('✅ Sign in successful');
       }
@@ -391,6 +432,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (error) throw error;
 
       if (data.user) {
+        // 🌍 Mettre à jour le timezone immédiatement
+        updateUserTimezone(data.user.id).catch(() => {});
+
         RevenueCatService.setAppUserId(data.user.id).catch(() => {});
         Logger.debug('✅ Apple Sign In successful');
       }

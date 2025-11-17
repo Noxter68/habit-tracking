@@ -20,7 +20,12 @@ interface GroupHabitCardProps {
   habit: GroupHabitWithCompletions;
   groupId: string;
   groupLevel: number;
-  members: Array<{ user_id: string; user_name: string }>;
+  members: Array<{
+    user_id: string;
+    username: string;
+    avatar_emoji?: string;
+    avatar_color?: string;
+  }>;
   onRefresh: () => void;
   onDelete: () => void;
 }
