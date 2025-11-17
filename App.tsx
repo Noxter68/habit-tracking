@@ -21,7 +21,6 @@ import Dashboard from './src/screens/Dashboard';
 import HabitDetails from './src/screens/HabitDetails';
 import CalendarScreen from './src/screens/CalendarScreen';
 import LeaderboardScreen from './src/screens/LeaderboardScreen';
-import StatsScreen from './src/screens/StatsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import AchievementsScreen from './src/screens/AchievementScreen';
 import DiagnosticScreen from './src/screens/DiagnosticScreen';
@@ -54,6 +53,11 @@ import notificationBadgeService from '@/services/notificationBadgeService';
 import LanguageSelectorScreen from '@/components/settings/LanguageSelector';
 import { LanguageDetectionService } from '@/services/languageDetectionService';
 import ResetPasswordScreen from '@/screens/ResetPasswordScreen';
+import CreateGroupScreen from '@/components/groups/CreateGroupScreen';
+import JoinGroupScreen from '@/components/groups/JoinGroupScreen';
+import { GroupsNavigator } from '@/navigation/GroupsNavigator';
+import GroupTiersScreen from '@/screens/GroupTierScreen';
+import { GroupCelebrationProvider } from '@/context/GroupCelebrationContext';
 
 // Type Definitions
 export type RootStackParamList = {
@@ -70,13 +74,18 @@ export type RootStackParamList = {
   HolidayMode: undefined;
   Onboarding: undefined;
   ResetPassword: undefined;
+
+  GroupsList: undefined;
+  GroupDashboard: { groupId: string };
+  CreateGroupHabit: { groupId: string };
+  GroupSettings: { groupId: string };
 };
 
 export type TabParamList = {
   Dashboard: undefined;
   Calendar: undefined;
   Leaderboard: undefined;
-  Stats: undefined;
+  Groups: undefined;
   Settings: undefined;
 };
 
@@ -195,11 +204,11 @@ function MainTabs() {
         listeners={{ tabPress: () => HapticFeedback.selection() }}
       />
       <Tab.Screen
-        name="Stats"
-        component={StatsScreen}
+        name="Groups"
+        component={GroupsNavigator}
         options={{
-          tabBarLabel: 'Stats',
-          tabBarIcon: ({ color, focused }) => <TabBarIcon name="chart" color={color} focused={focused} />,
+          tabBarLabel: 'Groups',
+          tabBarIcon: ({ color, focused }) => <TabBarIcon name="users" color={color} focused={focused} />,
         }}
         listeners={{ tabPress: () => HapticFeedback.selection() }}
       />
@@ -325,6 +334,7 @@ function AppNavigator() {
         <Stack.Screen name="HolidayMode" component={HolidayModeScreen} options={{ headerShown: false, presentation: 'card', animation: 'slide_from_right' }} />
         <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
         <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="GroupTiers" component={GroupTiersScreen} options={{ headerShown: false }} />
         <Stack.Screen
           name="LanguageSelector"
           component={LanguageSelectorScreen}
@@ -524,10 +534,12 @@ export default function App() {
               <HabitProvider>
                 <AchievementProvider>
                   <LevelUpProvider>
-                    <NavigationContainer linking={linking} fallback={<BeautifulLoader />}>
-                      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
-                      <AppNavigator />
-                    </NavigationContainer>
+                    <GroupCelebrationProvider>
+                      <NavigationContainer linking={linking} fallback={<BeautifulLoader />}>
+                        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
+                        <AppNavigator />
+                      </NavigationContainer>
+                    </GroupCelebrationProvider>
                   </LevelUpProvider>
                 </AchievementProvider>
               </HabitProvider>

@@ -4,6 +4,7 @@
  * Modal for selecting predefined tasks or creating custom tasks
  * - Two-step flow: Select predefined OR Create custom
  * - Maximum 3 tasks per habit
+ * - Filters out already-added tasks to prevent duplicates
  * - Tier-themed UI with gradient buttons
  * - Animated task cards with staggered entrance
  * - Custom task with name and duration fields
@@ -35,6 +36,7 @@ interface TaskCategoryPickerProps {
   currentTaskCount: number;
   currentTier: 'Crystal' | 'Ruby' | 'Amethyst';
   tierColor: string;
+  existingTaskIds?: string[]; // ✅ NOUVEAU: Liste des IDs de tâches déjà ajoutées
   onClose: () => void;
   onTasksUpdated: () => void;
 }
@@ -52,7 +54,18 @@ const CUSTOM_TASK_MAX_LENGTH = 60;
 // COMPONENT
 // ============================================================================
 
-const TaskCategoryPicker: React.FC<TaskCategoryPickerProps> = ({ visible, habitId, habitCategory, habitType, currentTaskCount, currentTier, tierColor, onClose, onTasksUpdated }) => {
+const TaskCategoryPicker: React.FC<TaskCategoryPickerProps> = ({
+  visible,
+  habitId,
+  habitCategory,
+  habitType,
+  currentTaskCount,
+  currentTier,
+  tierColor,
+  existingTaskIds = [], // ✅ Valeur par défaut
+  onClose,
+  onTasksUpdated,
+}) => {
   const { t } = useTranslation();
   const { user } = useAuth();
 
@@ -78,21 +91,23 @@ const TaskCategoryPicker: React.FC<TaskCategoryPickerProps> = ({ visible, habitI
   // Get task definitions from database
   const taskDefinitions = useMemo(() => getTaskDefinitions(habitCategory, habitType), [habitCategory, habitType]);
 
-  // Map definitions with i18n translations
+  // ✅ FIX: Filtrer les tâches déjà ajoutées + traduire
   const availableTasks = useMemo(() => {
-    return taskDefinitions.map((task) => {
-      const translationPath = `habitHelpers.tasks.${habitCategory}.${habitType}.${task.translationKey}`;
-      const taskData = t(translationPath, { returnObjects: true }) as any;
+    return taskDefinitions
+      .filter((task) => !existingTaskIds.includes(task.id)) // ✅ Exclure les tâches existantes
+      .map((task) => {
+        const translationPath = `habitHelpers.tasks.${habitCategory}.${habitType}.${task.translationKey}`;
+        const taskData = t(translationPath, { returnObjects: true }) as any;
 
-      return {
-        id: task.id,
-        name: taskData?.name || task.id,
-        description: taskData?.description || '',
-        duration: taskData?.duration || '',
-        icon: task.icon,
-      };
-    });
-  }, [taskDefinitions, habitCategory, habitType, t]);
+        return {
+          id: task.id,
+          name: taskData?.name || task.id,
+          description: taskData?.description || '',
+          duration: taskData?.duration || '',
+          icon: task.icon,
+        };
+      });
+  }, [taskDefinitions, habitCategory, habitType, existingTaskIds, t]);
 
   // ============================================================================
   // EFFECTS - KEYBOARD MANAGEMENT
@@ -294,6 +309,23 @@ const TaskCategoryPicker: React.FC<TaskCategoryPickerProps> = ({ visible, habitI
                         </View>
                         <Text style={tw`text-stone-900 text-lg font-bold text-center mb-2`}>{t('taskManager.limitReached.title')}</Text>
                         <Text style={tw`text-stone-600 text-center px-8 leading-6`}>{t('taskManager.limitReached.message')}</Text>
+                      </View>
+                    ) : availableTasks.length === 0 ? (
+                      /* ✅ Toutes les tâches déjà ajoutées */
+                      <View style={tw`items-center justify-center py-12`}>
+                        <View style={[tw`w-16 h-16 rounded-full items-center justify-center mb-4`, { backgroundColor: '#dcfce7' }]}>
+                          <Check size={32} color="#16a34a" />
+                        </View>
+                        <Text style={tw`text-stone-900 text-lg font-bold text-center mb-2`}>All Tasks Added!</Text>
+                        <Text style={tw`text-stone-600 text-center px-8 leading-6 mb-6`}>You've added all available tasks for this category. Create a custom task instead.</Text>
+
+                        <Pressable
+                          onPress={() => setStep('custom')}
+                          style={({ pressed }) => [tw`flex-row items-center px-6 py-3 rounded-xl`, { backgroundColor: `${tierColor}15` }, pressed && tw`opacity-70`]}
+                        >
+                          <Sparkles size={20} color={tierColor} style={tw`mr-2`} />
+                          <Text style={[tw`font-semibold`, { color: tierColor }]}>{t('taskManager.createCustomTask')}</Text>
+                        </Pressable>
                       </View>
                     ) : (
                       /* Task Selection */

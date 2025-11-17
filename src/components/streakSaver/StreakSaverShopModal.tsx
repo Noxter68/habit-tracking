@@ -11,6 +11,7 @@ import { RevenueCatService, SubscriptionPackage } from '@/services/RevenueCatSer
 import { StreakSaverService } from '@/services/StreakSaverService';
 import { useAuth } from '@/context/AuthContext';
 import Logger from '@/utils/logger';
+import { Config } from '@/config';
 
 interface StreakSaverShopModalProps {
   visible: boolean;
@@ -165,7 +166,7 @@ export const StreakSaverShopModal: React.FC<StreakSaverShopModalProps> = ({ visi
 
             <View style={tw`px-4 py-3`}>
               {/* 🔧 DEBUG BUTTONS - Remove in production */}
-              {__DEV__ && (
+              {Config.debug.enabled && (
                 <View style={tw`flex-row gap-2 mb-3`}>
                   <Pressable
                     onPress={() => {

@@ -144,7 +144,7 @@ export const StreakSaverBadge: React.FC<StreakSaverBadgeProps> = ({ onPress, onS
   // Render
   // ============================================================================
   return (
-    <Animated.View entering={FadeInRight.duration(500).springify()} style={tw`mb-4`}>
+    <Animated.View entering={FadeInRight.duration(500).springify()} style={tw`mt-2`}>
       {/* Dev indicator */}
       {DEV_MODE && (
         <View style={tw`mb-2 px-3 py-1.5 bg-purple-100 rounded-lg self-start`}>

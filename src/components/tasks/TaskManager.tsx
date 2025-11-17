@@ -6,6 +6,7 @@
  * - Lists existing tasks with swipe-to-delete
  * - Opens TaskCategoryPicker for adding new tasks
  * - Animated tutorial on first view showing swipe gesture
+ * - Prevents duplicate tasks from being added
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -179,7 +180,7 @@ const TaskManager: React.FC<TaskManagerProps> = ({ habitId, habitCategory, habit
                 </View>
               </View>
 
-              {/* Task List */}
+              {/* Task List - ✅ FIX: Utilise item.id (unique dans cette FlatList) */}
               <FlatList
                 data={tasks}
                 keyExtractor={(item) => item.id}
@@ -247,6 +248,7 @@ const TaskManager: React.FC<TaskManagerProps> = ({ habitId, habitCategory, habit
         currentTaskCount={tasks.length}
         currentTier={currentTier}
         tierColor={tierColor}
+        existingTaskIds={tasks.map((t) => t.id)} // ✅ Passe les IDs existants
         onClose={() => setShowCategoryPicker(false)}
         onTasksUpdated={handleTasksUpdated}
       />

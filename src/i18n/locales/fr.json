@@ -2068,6 +2068,10 @@
     "customTaskDurationLabel": "Durée (optionnel)",
     "customTaskDurationPlaceholder": "30",
     "customTaskDurationHint": "Temps estimé pour compléter cette tâche",
+    "allTasksAdded": "Toutes les tâches disponibles déjà ajoutées",
+    "allTasksAddedTitle": "Toutes les Tâches Ajoutées",
+    "allTasksAddedDescription": "Vous avez déjà ajouté toutes les tâches disponibles pour cette habitude. Créez une tâche personnalisée ou gérez celles existantes.",
+    "maxTasksDescription": "Vous avez atteint le maximum de 3 tâches par habitude. Supprimez une tâche pour en ajouter de nouvelles.",
     "limitReached": {
       "title": "Limite de Tâches Atteinte",
       "message": "Vous avez déjà 3 tâches pour cette habitude. Veuillez supprimer une tâche avant d'en ajouter de nouvelles."
@@ -2101,6 +2105,212 @@
       },
       "errorAddingTask": "Impossible d'ajouter la tâche. Veuillez réessayer.",
       "errorAddingTasks": "Impossible d'ajouter les tâches. Veuillez réessayer."
+    }
+  },
+  "groups": {
+    "title": "Groupes",
+    "subtitle": "Mes Groupes",
+    "activeCount_one": "{{count}} groupe actif",
+    "activeCount_other": "{{count}} groupes actifs",
+    "info": {
+      "header": "Comment ça marche",
+      "intro": "Créez des habitudes partagées avec vos amis et construisez des séries ensemble. La responsabilité rencontre la motivation dans une expérience collaborative.",
+      "completion": {
+        "title": "Complétion Quotidienne",
+        "description": "Chaque membre complète ses tâches individuellement. À minuit, le taux de complétion du groupe détermine si la journée est validée."
+      },
+      "xp": {
+        "title": "Récompenses XP",
+        "description": "Gagnez +10 XP instantanément quand vous complétez une tâche. Obtenez des XP bonus à minuit : +50 XP pour 100% de complétion, +35 XP pour 50-99%. Plus il y a de membres actifs, plus vous gagnez d'XP ensemble."
+      },
+      "streak": {
+        "title": "Règles de Validation",
+        "description": "100% de complétion = journée parfaite avec bonus complet. 50-99% = journée validée avec bonus réduit. Moins de 50% = journée non validée et la série se casse (sauf si sauvée)."
+      },
+      "tolerance": {
+        "title": "Flexibilité Hebdomadaire",
+        "description": "Tous les groupes ont une tolérance de 50% par semaine. Si au moins la moitié de l'équipe complète ses tâches, la journée est validée avec bonus réduit. Après avoir utilisé cette flexibilité, il faut 100% ou la série casse."
+      },
+      "weekly": {
+        "title": "Bonus Hebdomadaire",
+        "description": "Atteignez 100% de complétion chaque jour pendant une semaine complète, et gagnez un énorme bonus de +200 XP le samedi à minuit. Un travail d'équipe parfait mérite des récompenses parfaites !"
+      },
+      "tip": "Rappel : la constance et le travail d'équipe sont essentiels. Même lors des jours difficiles, votre groupe est là pour vous motiver !",
+      "close": "Compris !"
+    },
+    "tierUp": {
+      "title": "NOUVEAU PALIER !",
+      "newTier": "NOUVEAU PALIER",
+      "level": "Niveau {{level}}",
+      "congratulations": "Votre groupe a atteint un nouveau palier ! Continuez ce travail d'équipe exceptionnel !",
+      "tapToContinue": "Touchez pour continuer",
+      "closingIn": "Fermeture dans {{seconds}}s"
+    },
+    "levelUp": {
+      "title": "NIVEAU SUPÉRIEUR !",
+      "level": "NIVEAU",
+      "keepGoing": "Excellent progrès ! Continuez à construire ces habitudes ensemble !",
+      "tapToContinue": "Touchez pour continuer",
+      "closingIn": "Fermeture dans {{seconds}}s"
+    },
+
+    "list": {
+      "members_one": "{{count}} membre",
+      "members_other": "{{count}} membres",
+      "level": "Niveau {{level}}",
+      "createGroup": "Créer un groupe",
+      "joinGroup": "Rejoindre un groupe",
+      "noGroups": "Aucun groupe",
+      "noGroupsDescription": "Créez un groupe ou rejoignez-en un pour partager vos objectifs avec d'autres",
+      "joinWithCode": "Rejoindre un groupe",
+      "joinDescription": "Entrez un code d'invitation"
+    },
+
+    "dashboard": {
+      "habits": "Habitudes",
+      "habitsCount_one": "{{count}} active",
+      "habitsCount_other": "{{count}} actives",
+      "addHabit": "Ajouter",
+      "noHabits": "Aucune habitude",
+      "noHabitsDescription": "Créez votre première habitude partagée pour commencer l'aventure ensemble",
+      "createHabit": "Créer une habitude",
+      "xpProgress": "{{current}} / {{max}} XP",
+      "deleteHabit": "Supprimer l'habitude",
+      "deleteHabitConfirm": "Êtes-vous sûr de vouloir supprimer cette habitude ?",
+      "deleteHabitMessage": "Voulez-vous supprimer \"{{name}}\" ?",
+      "cancel": "Annuler",
+      "delete": "Supprimer",
+      "error": "Erreur",
+      "errorLoading": "Impossible de charger le groupe",
+      "errorDeleting": "Impossible de supprimer l'habitude",
+      "groupNotFound": "Groupe introuvable",
+      "level": "Niveau {{level}}",
+      "groupHabit": "Habit de groupe"
+    },
+
+    "card": {
+      "bonusXpMidnight": "+{{xp}} XP à minuit",
+      "bonusXpPossible": "+{{xp}} XP possible",
+      "errorToggle": "Impossible de modifier la complétion",
+      "deleteConfirm": "Supprimer l'habitude",
+      "deleteMessage": "Voulez-vous supprimer \"{{name}}\" ?"
+    },
+
+    "timeline": {
+      "today": "AUJOURD'HUI",
+      "completions": "{{completed}}/{{total}}"
+    },
+
+    "tiers": {
+      "allTiers": "Tous les tiers",
+      "current": "Actuel",
+      "levelRequired": "Niveau {{level}} requis",
+      "unlocked": "✓ Niveau {{level}}+",
+      "tier": "Tier {{tier}}",
+      "tapToClose": "Toucher pour fermer"
+    },
+
+    "settings": {
+      "title": "Paramètres",
+      "inviteCode": "Code d'invitation",
+      "members": "Membres ({{count}})",
+      "creator": "Créateur",
+      "you": "(Vous)",
+      "noMembers": "Aucun membre trouvé",
+      "leaveGroup": "Quitter le groupe",
+      "deleteGroup": "Supprimer le groupe",
+      "leaveConfirm": "Quitter le groupe",
+      "leaveMessage": "Êtes-vous sûr de vouloir quitter ce groupe ?",
+      "leaveMessageCreator": "Vous êtes le créateur. Si vous quittez, le rôle sera transféré au membre le plus ancien.",
+      "deleteConfirm": "Supprimer le groupe",
+      "deleteMessage": "Cette action est irréversible. Tous les membres seront retirés et toutes les données seront supprimées.",
+      "groupLeft": "Groupe quitté",
+      "groupLeftMessage": "Vous avez quitté le groupe avec succès",
+      "groupDeleted": "Groupe supprimé",
+      "groupDeletedMessage": "Le groupe a été supprimé avec succès",
+      "errorLeave": "Impossible de quitter le groupe",
+      "errorDelete": "Impossible de supprimer le groupe",
+      "codeCopied": "Code copié !",
+      "codeCopiedMessage": "Le code {{code}} a été copié",
+      "creatorInfo": "En tant que créateur, si vous quittez le groupe, votre rôle sera automatiquement transféré au membre le plus ancien."
+    },
+
+    "join": {
+      "title": "Rejoindre un groupe",
+      "inviteCode": "Code d'invitation",
+      "placeholder": "ABC-123",
+      "info": "💡 Le code est composé de 6 caractères (lettres et chiffres)",
+      "description": "Entrez le code d'invitation partagé par le créateur du groupe",
+      "button": "Rejoindre le groupe",
+      "alreadyMember": "Déjà membre",
+      "alreadyMemberMessage": "Vous êtes déjà membre de ce groupe",
+      "limitReached": "Limite atteinte",
+      "limitReachedMessage": "Vous avez atteint votre limite de groupes",
+      "groupFull": "Groupe complet",
+      "groupFullMessage": "Ce groupe est complet",
+      "errorJoining": "Impossible de rejoindre le groupe",
+      "success": "Groupe rejoint ! 🎉",
+      "successMessage": "Vous pouvez maintenant voir les habitudes partagées",
+      "later": "Plus tard",
+      "seePremium": "Voir Premium",
+      "enterCode": "Entrez le Code d'Invitation",
+      "authRequired": "Authentification requise",
+      "invalidCode": "Format invalide",
+      "invalidCodeMessage": "Le code doit contenir exactement 6 caractères (lettres et chiffres)",
+      "codeNotFound": "Code incorrect",
+      "codeNotFoundMessage": "Ce code ne correspond à aucun groupe. Vérifiez le code et réessayez."
+    },
+
+    "create": {
+      "title": "Nouveau groupe",
+      "groupName": "Nom du groupe",
+      "placeholder": "Ex: Fitness Duo",
+      "charactersCount": "{{count}}/50 caractères",
+      "info": "Après création, vous recevrez un code d'invitation à partager avec vos amis.",
+      "button": "Créer le groupe",
+      "invalidName": "Erreur",
+      "success": "Groupe créé ! 🎉",
+      "successMessage": "Partagez le code d'invitation avec vos amis",
+      "errorCreating": "Impossible de créer le groupe",
+      "limitReached": "Limite atteinte",
+      "limitReachedMessage": "Vous ne pouvez pas créer plus de groupes.",
+      "later": "Plus tard",
+      "seePremium": "Voir Premium"
+    },
+
+    "createHabit": {
+      "title": "Nouvelle habitude",
+      "habitName": "Nom de l'habitude",
+      "placeholder": "Ex: Morning Run",
+      "charactersCount": "{{count}}/50 caractères",
+      "frequency": "Fréquence",
+      "daily": "Quotidien",
+      "weekly": "Hebdomadaire",
+      "duration": "Durée estimée (optionnel)",
+      "none": "Aucune",
+      "info": "Tous les membres du groupe pourront compléter cette habitude {{frequency}}. Le streak collectif se maintient si tout le monde complète.",
+      "infoDaily": "chaque jour",
+      "infoWeekly": "chaque semaine",
+      "button": "Créer l'habitude",
+      "invalidName": "Erreur",
+      "errorCreating": "Impossible de créer l'habitude",
+      "limitReached": "Limite atteinte",
+      "limitReachedMessage": "Impossible d'ajouter plus d'habitudes.",
+      "later": "Plus tard",
+      "seePremium": "Voir Premium"
+    },
+
+    "streak": {
+      "current": "{{count}} jour de suite",
+      "noStreakSaver": "Aucun Streak Saver",
+      "noStreakSaverMessage": "Vous n'avez plus de Streak Savers. Voulez-vous en acheter ?",
+      "later": "Plus tard",
+      "buy": "Acheter"
+    },
+
+    "invite": {
+      "codeCopied": "Code copié !",
+      "codeMessage": "Le code {{code}} a été copié dans le presse-papier"
     }
   }
 }

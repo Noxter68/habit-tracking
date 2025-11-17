@@ -1,5 +1,5 @@
-// src/context/AuthContext.tsx - Fix session expirée
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+// src/context/AuthContext.tsx - AVEC TIMEZONE UPDATE
+import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { Alert, AppState, AppStateStatus } from 'react-native';
@@ -35,118 +35,156 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
+  // 🔧 Refs pour éviter race conditions
+  const profileFetchInProgress = useRef(false);
+  const sessionRefreshInProgress = useRef(false);
+  const lastProfileFetch = useRef<number>(0);
+  const initInProgress = useRef(false);
+
   // ============================================================================
-  // FETCH PROFILE - Optimisé avec timeout
+  // TIMEZONE UPDATE - Nouveau
+  // ============================================================================
+
+  const updateUserTimezone = async (userId: string): Promise<void> => {
+    try {
+      // Récupérer le timezone offset du device
+      // getTimezoneOffset() retourne l'inverse (négatif = positif en UTC)
+      const timezoneOffset = -new Date().getTimezoneOffset() / 60;
+
+      Logger.debug(`🌍 [Auth] Updating timezone: UTC${timezoneOffset >= 0 ? '+' : ''}${timezoneOffset}`);
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          timezone_offset: Math.round(timezoneOffset),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId);
+
+      if (error) {
+        Logger.error('❌ [Auth] Timezone update error:', error);
+        return;
+      }
+
+      Logger.debug('✅ [Auth] Timezone updated successfully');
+    } catch (error: any) {
+      Logger.error('❌ [Auth] Timezone update failed:', error);
+    }
+  };
+
+  // ============================================================================
+  // FETCH PROFILE - Ultra optimisé
   // ============================================================================
 
   const fetchUserProfile = async (userId: string): Promise<void> => {
+    const now = Date.now();
+
+    // Évite les double-fetch rapprochés
+    if (profileFetchInProgress.current || now - lastProfileFetch.current < 2000) {
+      Logger.debug('⏭️ [Auth] Skipping profile fetch (debounced)');
+      return;
+    }
+
+    profileFetchInProgress.current = true;
+    lastProfileFetch.current = now;
+
     try {
-      Logger.debug('🔄 [Auth] Fetching profile for:', userId);
+      Logger.debug('🔄 [Auth] Fetching profile...');
 
-      const profilePromise = supabase.from('profiles').select('username, has_completed_onboarding').eq('id', userId).maybeSingle();
-
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Profile fetch timeout')), 2000));
-
-      const { data, error } = (await Promise.race([profilePromise, timeoutPromise])) as any;
+      const { data, error } = await supabase.from('profiles').select('username, has_completed_onboarding').eq('id', userId).maybeSingle();
 
       if (error) {
-        Logger.error('❌ [Auth] Error fetching profile:', error);
+        Logger.error('❌ [Auth] Profile fetch error:', error);
         return;
       }
 
       if (!data) {
-        Logger.warn('⚠️ [Auth] No profile found for user:', userId);
+        Logger.warn('⚠️ [Auth] No profile found');
         return;
       }
 
       setUsername(data.username || null);
       setHasCompletedOnboarding(data.has_completed_onboarding === true);
 
-      await LanguageDetectionService.loadUserLanguage(userId);
+      // 🌍 Mettre à jour le timezone en arrière-plan
+      updateUserTimezone(userId).catch(() => {});
 
-      Logger.debug('✅ [Auth] Profile loaded:', {
-        username: data.username,
-        onboardingCompleted: data.has_completed_onboarding,
-      });
+      // Langue en arrière-plan
+      LanguageDetectionService.loadUserLanguage(userId).catch(() => {});
+
+      Logger.debug('✅ [Auth] Profile loaded');
     } catch (error: any) {
       Logger.error('❌ [Auth] Fetch profile error:', error.message);
-      setUsername(null);
-      setHasCompletedOnboarding(false);
+    } finally {
+      profileFetchInProgress.current = false;
     }
   };
 
   // ============================================================================
-  // 🔧 FIX : Gestion session expirée avec refresh forcé
+  // SESSION MANAGEMENT - Single source of truth
   // ============================================================================
 
-  const refreshSessionSafe = async (): Promise<Session | null> => {
-    try {
-      Logger.debug('🔄 [Auth] Attempting session refresh...');
-
-      const refreshPromise = supabase.auth.refreshSession();
-      const timeoutPromise = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Refresh timeout')), 3000));
-
-      const { data, error } = await Promise.race([refreshPromise, timeoutPromise]);
-
-      if (error) {
-        Logger.error('❌ [Auth] Session refresh failed:', error);
-        // Si le refresh échoue, on force le sign out
-        await supabase.auth.signOut();
-        return null;
-      }
-
-      Logger.debug('✅ [Auth] Session refreshed successfully');
-      return data.session;
-    } catch (error) {
-      Logger.error('❌ [Auth] Session refresh timeout or error:', error);
-      // Timeout ou erreur : on force le sign out propre
-      await supabase.auth.signOut();
-      return null;
+  const getValidSession = async (): Promise<Session | null> => {
+    // 🔧 Un seul refresh à la fois
+    if (sessionRefreshInProgress.current) {
+      Logger.debug('⏭️ [Auth] Session refresh already in progress');
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      return session;
     }
-  };
 
-  const getSessionSafe = async (): Promise<Session | null> => {
     try {
-      Logger.debug('🔄 [Auth] Getting session...');
+      sessionRefreshInProgress.current = true;
+      Logger.debug('🔄 [Auth] Checking session...');
 
-      const sessionPromise = supabase.auth.getSession();
-      const timeoutPromise = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Session timeout')), 3000));
-
-      const { data, error } = await Promise.race([sessionPromise, timeoutPromise]);
+      const {
+        data: { session: currentSession },
+        error,
+      } = await supabase.auth.getSession();
 
       if (error) {
-        Logger.error('❌ [Auth] Get session error:', error);
+        Logger.error('❌ [Auth] Session error:', error);
         return null;
       }
 
-      const session = data.session;
-
-      if (!session) {
-        Logger.debug('ℹ️ [Auth] No active session');
+      if (!currentSession) {
+        Logger.debug('ℹ️ [Auth] No session');
         return null;
       }
 
-      // 🔧 Vérifier si la session est expirée ou sur le point d'expirer
-      const expiresAt = session.expires_at;
+      // Vérifie expiration
+      const expiresAt = currentSession.expires_at;
       if (expiresAt) {
         const now = Math.floor(Date.now() / 1000);
         const timeUntilExpiry = expiresAt - now;
 
         Logger.debug(`⏱️ [Auth] Session expires in ${timeUntilExpiry}s`);
 
-        // Si expire dans moins de 5 minutes (300s), on refresh
-        if (timeUntilExpiry < 300) {
-          Logger.warn('⚠️ [Auth] Session about to expire, refreshing...');
-          return await refreshSessionSafe();
+        // Si expiré ou expire dans < 60s, refresh
+        if (timeUntilExpiry < 60) {
+          Logger.debug('🔄 [Auth] Refreshing session...');
+
+          const {
+            data: { session: newSession },
+            error: refreshError,
+          } = await supabase.auth.refreshSession();
+
+          if (refreshError || !newSession) {
+            Logger.error('❌ [Auth] Refresh failed:', refreshError);
+            await supabase.auth.signOut();
+            return null;
+          }
+
+          Logger.debug('✅ [Auth] Session refreshed');
+          return newSession;
         }
       }
 
-      Logger.debug('✅ [Auth] Session valid');
-      return session;
+      return currentSession;
     } catch (error) {
-      Logger.error('❌ [Auth] Get session timeout or error:', error);
-      // En cas de timeout, on considère qu'il n'y a pas de session
+      Logger.error('❌ [Auth] Session check failed:', error);
       return null;
+    } finally {
+      sessionRefreshInProgress.current = false;
     }
   };
 
@@ -161,12 +199,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     try {
-      Logger.debug('🔄 [Auth] Checking onboarding status...');
       const completed = await OnboardingService.hasCompletedOnboarding(user.id);
       setHasCompletedOnboarding(completed);
-      Logger.debug(`✅ [Auth] Onboarding status: ${completed}`);
     } catch (error) {
-      Logger.error('❌ [Auth] Error checking onboarding status:', error);
+      Logger.error('❌ [Auth] Onboarding check error:', error);
       setHasCompletedOnboarding(false);
     }
   };
@@ -175,110 +211,93 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!user) return;
 
     try {
-      Logger.debug('🔄 [Auth] Completing onboarding...');
       const success = await OnboardingService.completeOnboarding(user.id);
       if (success) {
         setHasCompletedOnboarding(true);
-        Logger.info('✅ [Auth] Onboarding completed');
       }
     } catch (error) {
-      Logger.error('❌ [Auth] Error completing onboarding:', error);
+      Logger.error('❌ [Auth] Complete onboarding error:', error);
     }
   };
 
   // ============================================================================
-  // PUSH NOTIFICATIONS - En arrière-plan (non-bloquant)
+  // PUSH NOTIFICATIONS
   // ============================================================================
 
   useEffect(() => {
     if (user?.id) {
-      Logger.debug('🔄 [Auth] Registering push token...');
-      PushTokenService.registerDevice(user.id).catch((error) => Logger.error('❌ [Auth] Push token registration failed:', error));
+      PushTokenService.registerDevice(user.id).catch(() => {});
     }
   }, [user?.id]);
 
   // ============================================================================
-  // AUTH INITIALIZATION - AVEC FIX SESSION EXPIRÉE
+  // INITIALIZATION - Ultra simplifié
   // ============================================================================
 
   useEffect(() => {
     let isMounted = true;
-    const initStartTime = Date.now();
 
     const initializeAuth = async () => {
+      if (initInProgress.current) {
+        Logger.debug('⏭️ [Auth] Init already in progress');
+        return;
+      }
+
+      initInProgress.current = true;
+
       try {
         Logger.debug('🔄 [Auth] Initializing...');
 
-        // 🔧 Utilise getSessionSafe qui gère le refresh automatique
-        const session = await getSessionSafe();
+        // Simple get session (pas de refresh ici)
+        const {
+          data: { session: currentSession },
+        } = await supabase.auth.getSession();
 
-        if (!isMounted) {
-          Logger.debug('⚠️ [Auth] Component unmounted, aborting');
-          return;
+        if (!isMounted) return;
+
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+
+        if (currentSession?.user?.id) {
+          await fetchUserProfile(currentSession.user.id);
         }
 
-        Logger.debug(`📊 [Auth] Session loaded in ${Date.now() - initStartTime}ms`);
-
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        // Si user connecté, charge son profil
-        if (session?.user?.id) {
-          await fetchUserProfile(session.user.id);
-        } else {
-          setUsername(null);
-          setHasCompletedOnboarding(false);
-        }
-
-        const duration = Date.now() - initStartTime;
-        Logger.debug(`✅ [Auth] Initialized in ${duration}ms`);
+        Logger.debug('✅ [Auth] Initialized');
       } catch (error) {
-        Logger.error('❌ [Auth] Initialization error:', error);
+        Logger.error('❌ [Auth] Init error:', error);
         if (isMounted) {
-          // En cas d'erreur, on nettoie tout
           setSession(null);
           setUser(null);
-          setUsername(null);
-          setHasCompletedOnboarding(false);
         }
       } finally {
         if (isMounted) {
           setLoading(false);
+          initInProgress.current = false;
         }
       }
     };
 
     initializeAuth();
 
-    // Auth state listener
+    // Listener simplifié
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       if (!isMounted) return;
 
-      Logger.debug('🔄 [Auth] State changed:', _event);
+      Logger.debug('🔄 [Auth] State changed:', event);
 
-      // 🔧 Si TOKEN_REFRESHED, c'est que Supabase a géré le refresh
-      if (_event === 'TOKEN_REFRESHED') {
-        Logger.debug('✅ [Auth] Token refreshed automatically');
+      // Update immédiat
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
+
+      // Fetch profile seulement si SIGNED_IN
+      if (event === 'SIGNED_IN' && newSession?.user?.id) {
+        await fetchUserProfile(newSession.user.id);
       }
 
-      // 🔧 Si SIGNED_OUT, on nettoie tout
-      if (_event === 'SIGNED_OUT') {
-        Logger.debug('🚪 [Auth] User signed out');
-        setSession(null);
-        setUser(null);
-        setUsername(null);
-        setHasCompletedOnboarding(false);
-        return;
-      }
-
-      setSession(session);
-      setUser(session?.user ?? null);
-
-      if (session?.user?.id) {
-        await fetchUserProfile(session.user.id);
-      } else {
+      // Clear si SIGNED_OUT
+      if (event === 'SIGNED_OUT') {
         setUsername(null);
         setHasCompletedOnboarding(false);
       }
@@ -291,42 +310,51 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   // ============================================================================
-  // 🔧 FIX : Refresh session quand l'app revient au premier plan
+  // APP STATE - Smart refresh
   // ============================================================================
 
   useEffect(() => {
+    let lastCheck = 0;
+
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
-      if (nextAppState === 'active' && user) {
-        Logger.debug('🔄 [Auth] App became active, checking session...');
+      if (nextAppState !== 'active' || !user) return;
 
-        // Vérifie et refresh si nécessaire
-        const session = await getSessionSafe();
+      const now = Date.now();
+      // Vérifie max 1 fois par 30s
+      if (now - lastCheck < 30000) {
+        Logger.debug('⏭️ [Auth] Skipping session check (too soon)');
+        return;
+      }
 
-        if (!session) {
-          Logger.warn('⚠️ [Auth] Session lost, signing out...');
-          setSession(null);
-          setUser(null);
-          setUsername(null);
-          setHasCompletedOnboarding(false);
-        }
+      lastCheck = now;
+      Logger.debug('🔄 [Auth] App active, checking session...');
+
+      const validSession = await getValidSession();
+
+      if (!validSession) {
+        Logger.warn('⚠️ [Auth] Invalid session, signing out...');
+        setSession(null);
+        setUser(null);
+        setUsername(null);
+        setHasCompletedOnboarding(false);
+      } else if (validSession !== session) {
+        // Update si changement
+        setSession(validSession);
+        setUser(validSession.user);
       }
     };
 
     const subscription = AppState.addEventListener('change', handleAppStateChange);
-
-    return () => {
-      subscription.remove();
-    };
-  }, [user]);
+    return () => subscription.remove();
+  }, [user, session]);
 
   // ============================================================================
-  // SIGN UP
+  // AUTH METHODS
   // ============================================================================
 
   const signUp = async (email: string, password: string, username?: string) => {
     try {
       setLoading(true);
-      Logger.debug('🔄 [Auth] Signing up...');
 
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -339,19 +367,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (error) throw error;
 
       if (data.user) {
-        // 2. Créer le profil (fait automatiquement par le trigger DB)
-        // Attendre un peu pour que le trigger se termine
         await new Promise((resolve) => setTimeout(resolve, 500));
-
-        // 3. 🌍 INITIALISER LA LANGUE AUTOMATIQUEMENT
         await LanguageDetectionService.initializeUserLanguage(data.user.id);
-        Logger.info('✅ User signed up with auto-detected language');
+
+        // 🌍 Mettre à jour le timezone immédiatement
+        updateUserTimezone(data.user.id).catch(() => {});
 
         RevenueCatService.setAppUserId(data.user.id).catch(() => {});
-        Logger.debug('✅ [Auth] Sign up successful');
+        Logger.info('✅ Sign up successful');
       }
     } catch (error: any) {
-      Logger.error('❌ [Auth] Sign up error:', error);
+      Logger.error('❌ Sign up error:', error);
       Alert.alert('Error', error.message);
       throw error;
     } finally {
@@ -359,14 +385,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // ============================================================================
-  // SIGN IN
-  // ============================================================================
-
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      Logger.debug('🔄 [Auth] Signing in...');
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -376,11 +397,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (error) throw error;
 
       if (data.user) {
+        // 🌍 Mettre à jour le timezone immédiatement
+        updateUserTimezone(data.user.id).catch(() => {});
+
         RevenueCatService.setAppUserId(data.user.id).catch(() => {});
-        Logger.debug('✅ [Auth] Sign in successful');
+        Logger.debug('✅ Sign in successful');
       }
     } catch (error: any) {
-      Logger.error('❌ [Auth] Sign in error:', error);
+      Logger.error('❌ Sign in error:', error);
       Alert.alert('Error', error.message);
       throw error;
     } finally {
@@ -388,37 +412,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // ============================================================================
-  // APPLE SIGN IN
-  // ============================================================================
-
   const signInWithApple = async () => {
     try {
       setLoading(true);
-      Logger.debug('🔄 [Auth] Apple Sign In...');
 
       const credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [AppleAuthentication.AppleAuthenticationScope.FULL_NAME, AppleAuthentication.AppleAuthenticationScope.EMAIL],
+        requestedScopes: [AppleAuthentication.AppleAuthenticationScope.EMAIL, AppleAuthentication.AppleAuthenticationScope.FULL_NAME],
       });
 
-      if (credential.identityToken) {
-        const { data, error } = await supabase.auth.signInWithIdToken({
-          provider: 'apple',
-          token: credential.identityToken,
-        });
+      if (!credential.identityToken) {
+        throw new Error('No identity token');
+      }
 
-        if (error) throw error;
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: 'apple',
+        token: credential.identityToken,
+      });
 
-        if (data.user) {
-          RevenueCatService.setAppUserId(data.user.id).catch(() => {});
-          Logger.debug('✅ [Auth] Apple sign in successful');
-        }
+      if (error) throw error;
+
+      if (data.user) {
+        // 🌍 Mettre à jour le timezone immédiatement
+        updateUserTimezone(data.user.id).catch(() => {});
+
+        RevenueCatService.setAppUserId(data.user.id).catch(() => {});
+        Logger.debug('✅ Apple Sign In successful');
       }
     } catch (error: any) {
-      if (error.code === 'ERR_REQUEST_CANCELED') {
-        Logger.debug('ℹ️ [Auth] Apple sign in cancelled');
-      } else {
-        Logger.error('❌ [Auth] Apple sign in error:', error);
+      if (error.code !== 'ERR_REQUEST_CANCELED') {
+        Logger.error('❌ Apple Sign In error:', error);
         Alert.alert('Error', error.message);
       }
     } finally {
@@ -426,27 +448,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // ============================================================================
-  // GOOGLE SIGN IN (placeholder)
-  // ============================================================================
-
   const signInWithGoogle = async () => {
     Alert.alert('Coming Soon', 'Google Sign In will be available soon!');
   };
 
-  // ============================================================================
-  // SIGN OUT
-  // ============================================================================
-
   const signOut = async () => {
     try {
       setLoading(true);
-      Logger.debug('🔄 [Auth] Signing out...');
 
       if (user?.id) {
-        await Promise.race([PushTokenService.unregisterDevice(user.id), new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2000))]).catch(() => {
-          Logger.warn('⚠️ [Auth] Push token unregister timeout');
-        });
+        PushTokenService.unregisterDevice(user.id).catch(() => {});
       }
 
       setHasCompletedOnboarding(false);
@@ -454,23 +465,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
 
-      Logger.debug('✅ [Auth] Sign out successful');
+      Logger.debug('✅ Sign out successful');
     } catch (error: any) {
-      Logger.error('❌ [Auth] Sign out error:', error);
+      Logger.error('❌ Sign out error:', error);
       Alert.alert('Error', error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // ============================================================================
-  // RESET PASSWORD
-  // ============================================================================
-
   const resetPassword = async (email: string) => {
     try {
       setLoading(true);
-      Logger.debug('🔄 [Auth] Resetting password...');
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: 'nuvoria://reset-password',
@@ -478,19 +484,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (error) throw error;
 
-      Alert.alert('Success', 'Password reset email sent! Please check your inbox.');
-      Logger.debug('✅ [Auth] Password reset email sent');
+      Alert.alert('Success', 'Password reset email sent!');
+      Logger.debug('✅ Password reset email sent');
     } catch (error: any) {
-      Logger.error('❌ [Auth] Reset password error:', error);
+      Logger.error('❌ Reset password error:', error);
       Alert.alert('Error', error.message);
     } finally {
       setLoading(false);
     }
   };
-
-  // ============================================================================
-  // PROVIDER
-  // ============================================================================
 
   return (
     <AuthContext.Provider

@@ -1,5 +1,5 @@
 // src/screens/HabitDetails.tsx
-// Fixed: TaskManager integration with proper callback
+// Fixed: TaskManager only visible in Overview tab
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, Dimensions, StatusBar, Alert } from 'react-native';
@@ -170,6 +170,7 @@ const HabitDetails: React.FC = () => {
   // ============================================================================
 
   const streakSaver = useStreakSaver({
+    type: 'personal',
     habitId: habitId,
     userId: user?.id || '',
     enabled: !!habit && !!user,
@@ -367,6 +368,7 @@ const HabitDetails: React.FC = () => {
                   availableSavers={streakSaver.inventory.available}
                   loading={streakSaver.using}
                   success={streakSaver.success}
+                  error={streakSaver.error}
                   newStreak={streakSaver.newStreak}
                   onUse={streakSaver.useStreakSaver}
                   onClose={streakSaver.closeModal}
@@ -397,23 +399,21 @@ const HabitDetails: React.FC = () => {
             <TabSelector tier={currentTierData.tier.name} selected={selectedTab} onChange={handleTabChange} />
           </Animated.View>
 
-          {/* Task Manager */}
-          <View style={tw`px-5`}>
-            <TaskManager
-              habitId={habit.id}
-              habitCategory={habit.category}
-              habitType={habit.type}
-              currentTier={currentTierData.tier.name}
-              tasks={habit.tasks || []}
-              onTasksUpdated={handleTasksUpdated}
-              tierColor={tierColor}
-            />
-          </View>
-
           <View style={tw`px-5`}>
             {/* OVERVIEW TAB */}
             {selectedTab === 'overview' && (
               <Animated.View entering={FadeInDown.duration(300)}>
+                {/* Task Manager - Only in Overview */}
+                <TaskManager
+                  habitId={habit.id}
+                  habitCategory={habit.category}
+                  habitType={habit.type}
+                  currentTier={currentTierData.tier.name}
+                  tasks={habit.tasks || []}
+                  onTasksUpdated={handleTasksUpdated}
+                  tierColor={tierColor}
+                />
+
                 {totalTasks > 0 && (
                   <TasksCard
                     tasks={habit.tasks || []}
