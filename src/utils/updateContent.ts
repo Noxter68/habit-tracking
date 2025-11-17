@@ -66,36 +66,49 @@ const updates_1_0_12_fr: UpdateItem[] = [
 // Version 1.1.0 - English
 const updates_1_1_0_en: UpdateItem[] = [
   {
-    title: 'Update Modal System',
-    description: 'Implemented a version tracking system that automatically displays update notes when installing a new version.',
+    title: 'Group Habits',
+    description: 'Team up with friends! Create shared habits, track collective streaks, and earn XP together. This is version 1.0 of Group Habits and may have some bugs - your feedback is welcome!',
+  },
+  {
+    title: 'Edit Habit Tasks',
+    description: 'You can now add or remove tasks from your existing habits. Adjust your habits as your routine evolves.',
   },
   {
     title: 'Multilingual Support',
-    description: 'Nuvoria is now available in English and French, automatically adapting to your device language.',
+    description: 'Nuvoria now speaks your language! Available in English and French, automatically matching your device settings.',
   },
   {
-    title: 'Enhanced User Experience',
-    description: 'Bug fixes and improved app stability.',
+    title: 'Settings Redesign',
+    description: 'The Settings screen got a fresh, cleaner look that matches the zen aesthetic of the app.',
+  },
+  {
+    title: 'Bug Fixes & Improvements',
+    description: 'Streak Savers are now working properly, along with various other fixes to make your experience smoother and more reliable.',
   },
 ];
 
 // Version 1.1.0 - French
 const updates_1_1_0_fr: UpdateItem[] = [
   {
-    title: 'Système de modal de mise à jour',
-    description: "Implémentation d'un système de suivi de version qui affiche automatiquement les notes de mise à jour lors de l'installation d'une nouvelle version.",
+    title: 'Habitudes de groupe',
+    description:
+      "Formez une équipe avec vos amis ! Créez des habitudes partagées, suivez vos streaks collectifs et gagnez de l'XP ensemble. C'est la version 1.0 des Habitudes de groupe, quelques bugs peuvent survenir - vos retours sont les bienvenus !",
+  },
+  {
+    title: 'Modification des tâches',
+    description: 'Vous pouvez maintenant ajouter ou supprimer des tâches dans vos habitudes existantes. Adaptez vos habitudes au fil de votre routine.',
   },
   {
     title: 'Support multilingue',
-    description: "Nuvoria est maintenant disponibles en anglais et en français, s'adaptant automatiquement à la langue de votre appareil.",
+    description: "Nuvoria parle maintenant votre langue ! Disponible en anglais et français, l'app s'adapte automatiquement à votre appareil.",
   },
   {
-    title: 'Expérience utilisateur améliorée',
-    description: "Amélioration de bugs et stabilité de l'application",
+    title: 'Réglages repensés',
+    description: "La page Réglages a un nouveau look plus épuré et cohérent avec l'esthétique zen de l'app.",
   },
   {
-    title: 'Réglage a un nouveau look plus sobre !',
-    description: 'Armonisation de la page Réglage',
+    title: 'Corrections et améliorations',
+    description: 'Les Streak Savers fonctionnent maintenant correctement, ainsi que diverses autres corrections pour une expérience plus fluide et fiable.',
   },
 ];
 
