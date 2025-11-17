@@ -333,7 +333,9 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
                 <ActivityIndicator size="small" color="#FFFFFF" />
               </View>
             ) : (
-              timeline.length > 0 && <GroupHabitTimeline key={`timeline-${completionsCount}-${userCompletedToday}`} timeline={timeline} accentColor={tierTheme.accent} />
+              timeline.length > 0 && (
+                <GroupHabitTimeline timeline={timeline} accentColor={tierTheme.accent} lastWeeklyCompletionDate={habit.last_weekly_completion_date} frequency={habit.frequency} habitId={habit.id} />
+              )
             )}
           </View>
         </ImageBackground>

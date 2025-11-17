@@ -46,19 +46,28 @@ export interface GroupHabit {
   created_by: string;
   created_at: string;
   updated_at: string;
-  // ✨ NOUVEAU: Streaks au niveau habit
+  frequency: 'daily' | 'weekly';
+  duration: number | null;
+  is_active: boolean;
+  xp_per_completion: number;
   current_streak: number;
   longest_streak: number;
   last_streak_break_date: string | null;
+  last_weekly_completion_date: string | null;
 }
 
 export interface GroupHabitCompletion {
   id: string;
   group_habit_id: string;
   user_id: string;
-  date: string; // Format: YYYY-MM-DD
+  date: string;
   completed_at: string;
-  profile?: UserProfile; // Populated via join
+  profile?: {
+    id: string;
+    username: string | null;
+    avatar_emoji: string | null;
+    avatar_color: string | null;
+  };
 }
 
 export interface GroupReaction {
@@ -91,10 +100,8 @@ export interface GroupWithMembers extends Group {
 }
 
 export interface GroupHabitWithCompletions extends GroupHabit {
-  completions: GroupHabitCompletion[];
   completions_today: number;
   total_members: number;
-  // current_streak déjà dans GroupHabit (pas besoin de redéfinir)
 }
 
 export interface CompletionWithReactions extends GroupHabitCompletion {
@@ -148,6 +155,8 @@ export interface CreateGroupHabitInput {
   group_id: string;
   name: string;
   emoji: string;
+  frequency: 'daily' | 'weekly';
+  duration_minutes: number | null;
 }
 
 export interface JoinGroupInput {
@@ -277,11 +286,12 @@ export interface MemberJoinedActivity {
 // ============================================
 
 export interface TimelineDay {
-  date: string; // YYYY-MM-DD
-  day_name: string; // 'Lu', 'Ma', etc.
+  date: string;
+  day_name: string;
   completions: TimelineCompletion[];
   all_completed: boolean;
   is_today: boolean;
+  week_completed?: boolean; // Pour les habitudes weekly
 }
 
 export interface TimelineCompletion {

@@ -271,6 +271,8 @@ class GroupService {
         name: input.name,
         emoji: input.emoji,
         created_by: userId,
+        frequency: input.frequency,
+        duration: input.duration_minutes,
       })
       .select()
       .single();
@@ -479,26 +481,37 @@ class GroupService {
   }
 
   /**
-   * ✅ OPTIMISÉ avec RPC: Timeline des habitudes
+   * ✅ Timeline fixe : TOUJOURS Lundi → Dimanche de la semaine en cours
    */
   async getHabitTimeline(habitId: string, groupId: string, days: number = 7): Promise<TimelineDay[]> {
-    const completions = await this.getHabitCompletions(habitId, days);
+    // Calculer le lundi de la semaine en cours
+    const today = new Date();
+    const dayOfWeek = today.getUTCDay(); // 0 = Dimanche, 1 = Lundi, etc.
+    const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Si dimanche, -6 jours, sinon -(jour - 1)
 
-    // Récupérer les membres via RPC avec toutes les infos de profil
+    const monday = new Date(today);
+    monday.setUTCDate(today.getUTCDate() - daysFromMonday);
+    monday.setUTCHours(0, 0, 0, 0);
+
+    // Récupérer les complétions pour toute la semaine
+    const completions = await this.getHabitCompletions(habitId, 7);
+
+    // Récupérer les membres via RPC
     const { data: members } = await supabase.rpc('get_group_members', {
       group_uuid: groupId,
     });
 
     const groupMembers = members || [];
     const timeline: TimelineDay[] = [];
-    const today = new Date();
-    const dayNames = ['Di', 'Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa'];
+    const dayNames = ['Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di'];
+    const todayStr = today.toISOString().split('T')[0];
 
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(today.getDate() - i);
+    // Générer Lundi (0) → Dimanche (6)
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(monday);
+      date.setUTCDate(monday.getUTCDate() + i);
       const dateStr = date.toISOString().split('T')[0];
-      const dayName = dayNames[date.getDay()];
+      const dayName = dayNames[i];
 
       const dayCompletions = completions.filter((c) => c.date === dateStr);
 
@@ -519,7 +532,7 @@ class GroupService {
         day_name: dayName,
         completions: timelineCompletions,
         all_completed: timelineCompletions.every((c) => c.completed),
-        is_today: i === 0,
+        is_today: dateStr === todayStr,
       });
     }
 
