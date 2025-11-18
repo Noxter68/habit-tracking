@@ -58,6 +58,8 @@ import JoinGroupScreen from '@/components/groups/JoinGroupScreen';
 import { GroupsNavigator } from '@/navigation/GroupsNavigator';
 import GroupTiersScreen from '@/screens/GroupTierScreen';
 import { GroupCelebrationProvider } from '@/context/GroupCelebrationContext';
+import { useTranslation } from 'react-i18next';
+import './src/i18n';
 
 // Type Definitions
 export type RootStackParamList = {
@@ -140,6 +142,8 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
 
 function MainTabs() {
+  const { t } = useTranslation();
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -180,7 +184,7 @@ function MainTabs() {
         name="Dashboard"
         component={Dashboard}
         options={{
-          tabBarLabel: 'Home',
+          tabBarLabel: t('navigation.dashboard'),
           tabBarIcon: ({ color, focused }) => <TabBarIcon name="home" color={color} focused={focused} />,
         }}
         listeners={{ tabPress: () => HapticFeedback.selection() }}
@@ -189,7 +193,7 @@ function MainTabs() {
         name="Calendar"
         component={CalendarScreen}
         options={{
-          tabBarLabel: 'Calendar',
+          tabBarLabel: t('navigation.calendar'),
           tabBarIcon: ({ color, focused }) => <TabBarIcon name="calendar" color={color} focused={focused} />,
         }}
         listeners={{ tabPress: () => HapticFeedback.selection() }}
@@ -198,7 +202,7 @@ function MainTabs() {
         name="Leaderboard"
         component={LeaderboardScreen}
         options={{
-          tabBarLabel: 'League',
+          tabBarLabel: t('navigation.league'),
           tabBarIcon: ({ color, focused }) => <TabBarIcon name="leaderboard" color={color} focused={focused} />,
         }}
         listeners={{ tabPress: () => HapticFeedback.selection() }}
@@ -207,7 +211,7 @@ function MainTabs() {
         name="Groups"
         component={GroupsNavigator}
         options={{
-          tabBarLabel: 'Groups',
+          tabBarLabel: t('navigation.groups'),
           tabBarIcon: ({ color, focused }) => <TabBarIcon name="users" color={color} focused={focused} />,
         }}
         listeners={{ tabPress: () => HapticFeedback.selection() }}
@@ -216,7 +220,7 @@ function MainTabs() {
         name="Settings"
         component={SettingsScreen}
         options={{
-          tabBarLabel: 'Settings',
+          tabBarLabel: t('navigation.settings'),
           tabBarIcon: ({ color, focused }) => <TabBarIcon name="settings" color={color} focused={focused} />,
         }}
         listeners={{ tabPress: () => HapticFeedback.selection() }}

@@ -26,6 +26,13 @@
     "premium": "Premium",
     "tier": "Tier"
   },
+  "navigation": {
+    "dashboard": "Home",
+    "calendar": "Calendar",
+    "league": "League",
+    "groups": "Groups",
+    "settings": "Settings"
+  },
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome",
@@ -184,6 +191,8 @@
     "resetsIn": "Resets in {{count}}{{unit}}",
     "daysLeft_one": "{{count}} day left",
     "daysLeft_other": "{{count}} days left",
+    "unitDay": "d",
+    "unitHour": "h",
     "weeklyTasks": "Weekly Tasks",
     "todaysTasks": "Today's Tasks",
     "tasksPaused_one": "{{count}} task paused",

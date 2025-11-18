@@ -31,7 +31,7 @@ import { HapticFeedback } from '@/utils/haptics';
 import Logger from '@/utils/logger';
 import { HolidayPeriod } from '@/types/holiday.types';
 import { StreakSaverService } from '@/services/StreakSaverService';
-import { getTodayString } from '@/utils/dateHelpers';
+import { getTodayString, getLocalDateString } from '@/utils/dateHelpers';
 import TaskBadge from '@/components/TasksBadge';
 import AddHabitButton from '@/components/dashboard/AddHabitButton';
 import i18n from '@/i18n';
@@ -292,11 +292,48 @@ const Dashboard: React.FC = () => {
 
     habits.forEach((habit) => {
       const taskCount = habit.tasks?.length || 0;
-      total += taskCount;
+      const isWeekly = habit.frequency === 'weekly';
 
-      const todayData = habit.dailyTasks?.[today];
-      if (todayData?.completedTasks) {
-        completed += todayData.completedTasks.length;
+      // Pour les habitudes weekly, vérifier si elles sont déjà complétées cette semaine
+      if (isWeekly) {
+        const created = new Date(habit.createdAt);
+        const now = new Date();
+        const daysSince = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
+        const weekStart = Math.floor(daysSince / 7) * 7;
+
+        // Vérifier si l'habitude a été complétée cette semaine
+        let weekCompleted = false;
+        for (let i = 0; i < 7; i++) {
+          const checkDate = new Date(created);
+          checkDate.setDate(created.getDate() + weekStart + i);
+          const dateStr = getLocalDateString(checkDate);
+          const dayData = habit.dailyTasks?.[dateStr];
+
+          if (dayData?.allCompleted) {
+            weekCompleted = true;
+            break;
+          }
+        }
+
+        // Si l'habitude weekly est déjà complétée cette semaine, on la compte comme "completed" mais pas dans le total du jour
+        if (weekCompleted) {
+          completed += taskCount;
+          total += taskCount;
+        } else {
+          // Si pas encore complétée, on compte normalement
+          total += taskCount;
+          const todayData = habit.dailyTasks?.[today];
+          if (todayData?.completedTasks) {
+            completed += todayData.completedTasks.length;
+          }
+        }
+      } else {
+        // Pour les habitudes daily, logique normale
+        total += taskCount;
+        const todayData = habit.dailyTasks?.[today];
+        if (todayData?.completedTasks) {
+          completed += todayData.completedTasks.length;
+        }
       }
     });
 

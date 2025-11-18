@@ -41,6 +41,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
     let dailyTasksTotal = 0;
     let dailyTasksCompleted = 0;
     let weeklyTasksTotal = 0;
+    let weeklyTasksCompletedThisWeek = 0;
 
     habits.forEach((habit) => {
       const taskCount = habit.tasks?.length || 0;
@@ -50,8 +51,34 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
       if (habit.frequency === 'daily') {
         dailyTasksTotal += taskCount;
         dailyTasksCompleted += completedCount;
-      } else {
+      } else if (habit.frequency === 'weekly') {
         weeklyTasksTotal += taskCount;
+
+        // Vérifier si l'habitude weekly est déjà complétée cette semaine
+        const created = new Date(habit.createdAt);
+        const now = new Date();
+        const daysSince = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
+        const weekStart = Math.floor(daysSince / 7) * 7;
+
+        let weekCompleted = false;
+        for (let i = 0; i < 7; i++) {
+          const checkDate = new Date(created);
+          checkDate.setDate(created.getDate() + weekStart + i);
+          const year = checkDate.getFullYear();
+          const month = String(checkDate.getMonth() + 1).padStart(2, '0');
+          const day = String(checkDate.getDate()).padStart(2, '0');
+          const dateStr = `${year}-${month}-${day}`;
+          const dayData = habit.dailyTasks?.[dateStr];
+
+          if (dayData?.allCompleted) {
+            weekCompleted = true;
+            break;
+          }
+        }
+
+        if (weekCompleted) {
+          weeklyTasksCompletedThisWeek += taskCount;
+        }
       }
     });
 
@@ -59,6 +86,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
       dailyTasksTotal,
       dailyTasksCompleted,
       weeklyTasksTotal,
+      weeklyTasksCompletedThisWeek,
       hasDaily: dailyTasksTotal > 0,
       hasWeekly: weeklyTasksTotal > 0,
       hasOnlyDaily: dailyTasksTotal > 0 && weeklyTasksTotal === 0,
@@ -66,8 +94,15 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
   }, [habits]);
 
   const canClaimChallenge = stats.dailyTasksCompleted >= stats.dailyTasksTotal && stats.dailyTasksTotal > 0;
-  const totalTasksToday = stats.dailyTasksTotal + stats.weeklyTasksTotal;
-  const completionPercentage = totalTasksToday > 0 ? Math.min(100, Math.round((stats.dailyTasksCompleted / totalTasksToday) * 100)) : 0;
+
+  // Calcul du total de tâches pour aujourd'hui : daily + weekly (sauf celles déjà complétées cette semaine)
+  const weeklyTasksToDoToday = stats.weeklyTasksTotal - stats.weeklyTasksCompletedThisWeek;
+  const totalTasksToday = stats.dailyTasksTotal + weeklyTasksToDoToday;
+
+  // Calcul du nombre de tâches complétées : daily + weekly déjà complétées cette semaine
+  const totalCompleted = stats.dailyTasksCompleted + stats.weeklyTasksCompletedThisWeek;
+
+  const completionPercentage = totalTasksToday > 0 ? Math.min(100, Math.round((totalCompleted / totalTasksToday) * 100)) : 0;
 
   const scale = useSharedValue(1);
   const cardTranslateY = useSharedValue(0);

@@ -47,16 +47,33 @@ const getGemIcon = (tier: string) => {
 };
 
 /**
- * Calculates when the next weekly reset occurs for a habit
+ * Trouve la dernière date où l'habitude a été complétée
  */
-const getNextWeeklyReset = (createdAt: Date): Date => {
-  const created = new Date(createdAt);
-  const today = new Date();
-  const daysSinceCreation = Math.floor((today.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
-  const weeksSinceCreation = Math.floor(daysSinceCreation / 7);
+const getLastCompletionDate = (habit: Habit): Date | null => {
+  if (!habit.dailyTasks) return null;
 
-  const nextReset = new Date(created);
-  nextReset.setDate(created.getDate() + (weeksSinceCreation + 1) * 7);
+  const completedDates = Object.entries(habit.dailyTasks)
+    .filter(([_, data]) => data.allCompleted)
+    .map(([dateStr, _]) => new Date(dateStr))
+    .sort((a, b) => b.getTime() - a.getTime()); // Tri décroissant
+
+  return completedDates.length > 0 ? completedDates[0] : null;
+};
+
+/**
+ * Calculates when the next weekly reset occurs for a habit
+ * Based on the last completion date, not creation date
+ */
+const getNextWeeklyReset = (habit: Habit): Date => {
+  const lastCompletion = getLastCompletionDate(habit);
+  const baseDate = lastCompletion || new Date(habit.createdAt);
+
+  const today = new Date();
+  const daysSinceBase = Math.floor((today.getTime() - baseDate.getTime()) / (1000 * 60 * 60 * 24));
+  const weeksSinceBase = Math.floor(daysSinceBase / 7);
+
+  const nextReset = new Date(baseDate);
+  nextReset.setDate(baseDate.getDate() + (weeksSinceBase + 1) * 7);
 
   return nextReset;
 };
@@ -130,7 +147,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit, completedToday, onP
   }, [habit, isWeekly, todayTasks]);
 
   const weekCompleted = isWeekly ? isWeekCompleted(habit) : false;
-  const nextReset = isWeekly ? getNextWeeklyReset(habit.createdAt) : null;
+  const nextReset = isWeekly ? getNextWeeklyReset(habit) : null;
   const daysUntilReset = nextReset ? Math.ceil((nextReset.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0;
   const hoursUntilReset = !isWeekly ? getHoursUntilMidnight() : 0;
 
@@ -194,14 +211,14 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit, completedToday, onP
                   <>
                     <View style={tw`w-1 h-1 rounded-full bg-white/50`} />
                     <Text style={tw`text-xs text-white/70 font-medium`}>
-                      {weekCompleted ? t('habits.resetsIn', { count: daysUntilReset, unit: 'd' }) : t('habits.daysLeft', { count: daysUntilReset })}
+                      {weekCompleted ? t('habits.resetsIn', { count: daysUntilReset, unit: t('habits.unitDay') }) : t('habits.daysLeft', { count: daysUntilReset })}
                     </Text>
                   </>
                 )}
                 {!isWeekly && !completedToday && hoursUntilReset > 0 && (
                   <>
                     <View style={tw`w-1 h-1 rounded-full bg-white/50`} />
-                    <Text style={tw`text-xs text-white/70 font-medium`}>{t('habits.resetsIn', { count: hoursUntilReset, unit: 'h' })}</Text>
+                    <Text style={tw`text-xs text-white/70 font-medium`}>{t('habits.resetsIn', { count: hoursUntilReset, unit: t('habits.unitHour') })}</Text>
                   </>
                 )}
               </View>

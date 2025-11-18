@@ -27,6 +27,13 @@
     "ok": "OK",
     "tier": "Rang"
   },
+  "navigation": {
+    "dashboard": "Accueil",
+    "calendar": "Routine",
+    "league": "Ligue",
+    "groups": "Groupes",
+    "settings": "Réglages"
+  },
   "dashboard": {
     "title": "Tableau de bord",
     "welcome": "Bienvenue",
@@ -185,6 +192,8 @@
     "resetsIn": "Réinit. dans {{count}}{{unit}}",
     "daysLeft_one": "{{count}} jour restant",
     "daysLeft_other": "{{count}} jours restants",
+    "unitDay": "j",
+    "unitHour": "h",
     "weeklyTasks": "Tâches Hebdomadaires",
     "todaysTasks": "Tâches du Jour",
     "tasksPaused_one": "{{count}} tâche en pause",
