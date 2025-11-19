@@ -95,11 +95,10 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
 
   const canClaimChallenge = stats.dailyTasksCompleted >= stats.dailyTasksTotal && stats.dailyTasksTotal > 0;
 
-  // Calcul du total de tâches pour aujourd'hui : daily + weekly (sauf celles déjà complétées cette semaine)
-  const weeklyTasksToDoToday = stats.weeklyTasksTotal - stats.weeklyTasksCompletedThisWeek;
-  const totalTasksToday = stats.dailyTasksTotal + weeklyTasksToDoToday;
+  // Calcul du total de tâches pour aujourd'hui : daily + weekly (toutes)
+  const totalTasksToday = stats.dailyTasksTotal + stats.weeklyTasksTotal;
 
-  // Calcul du nombre de tâches complétées : daily + weekly déjà complétées cette semaine
+  // Calcul du nombre de tâches complétées : daily complétées aujourd'hui + weekly complétées cette semaine
   const totalCompleted = stats.dailyTasksCompleted + stats.weeklyTasksCompletedThisWeek;
 
   const completionPercentage = totalTasksToday > 0 ? Math.min(100, Math.round((totalCompleted / totalTasksToday) * 100)) : 0;
@@ -469,29 +468,34 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
                 {!isCollected && (
                   <View
                     style={{
-                      height: 8,
-                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                      borderRadius: 6,
-                      overflow: 'hidden',
-                      borderWidth: 1,
-                      borderColor: 'rgba(255, 255, 255, 0.25)',
                       marginBottom: 6,
                     }}
                   >
-                    <LinearGradient
-                      colors={canClaimChallenge ? [progressColor, `${accentColor}B3`] : ['rgba(255, 255, 255, 0.95)', 'rgba(255, 255, 255, 0.75)']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
+                    <View
                       style={{
-                        width: `${Math.min(completionPercentage, 100)}%`,
-                        height: '100%',
-                        borderRadius: 6,
-                        shadowColor: canClaimChallenge ? accentColor : '#FFFFFF',
-                        shadowOffset: { width: 0, height: 0 },
-                        shadowOpacity: 0.5,
-                        shadowRadius: 4,
+                        height: 10,
+                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                        borderRadius: 8,
+                        overflow: 'hidden',
+                        borderWidth: 1,
+                        borderColor: 'rgba(255, 255, 255, 0.25)',
                       }}
-                    />
+                    >
+                      <LinearGradient
+                        colors={canClaimChallenge ? [progressColor, `${accentColor}B3`] : ['rgba(255, 255, 255, 0.95)', 'rgba(255, 255, 255, 0.75)']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={{
+                          width: `${Math.min(completionPercentage, 100)}%`,
+                          height: '100%',
+                          borderRadius: 8,
+                          shadowColor: canClaimChallenge ? accentColor : '#FFFFFF',
+                          shadowOffset: { width: 0, height: 0 },
+                          shadowOpacity: 0.5,
+                          shadowRadius: 4,
+                        }}
+                      />
+                    </View>
                   </View>
                 )}
 
