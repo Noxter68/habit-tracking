@@ -30,13 +30,13 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({ habit }) => {
 
   return (
     <ImageBackground source={theme.texture} style={tw`overflow-hidden`} imageStyle={tw`opacity-70`} resizeMode="cover">
-      <LinearGradient colors={[theme.gradient[0] + 'e6', theme.gradient[1] + 'dd', theme.gradient[2] + 'cc']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`px-5 pt-6 pb-4`}>
+      <LinearGradient colors={[theme.gradient[0] + 'e6', theme.gradient[1] + 'dd', theme.gradient[2] + 'cc']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`px-5 pt-3 pb-4`}>
         <View style={tw`flex-row items-center justify-between`}>
           <View>
-            <Text style={tw`text-2xl font-bold text-white mb-1`}>{t('calendar.title')}</Text>
-            <Text style={tw`text-sm text-white/80`}>{t('calendar.trackYourJourney')}</Text>
+            <Text style={tw`text-3xl font-black text-white mb-0.5`}>{t('calendar.title')}</Text>
+            <Text style={tw`text-sm font-bold text-white/80`}>{t('calendar.trackYourJourney')}</Text>
           </View>
-          <Image source={getGemIcon(tier.name)} style={tw`w-16 h-16`} resizeMode="contain" />
+          <Image source={getGemIcon(tier.name)} style={tw`w-14 h-14`} resizeMode="contain" />
         </View>
       </LinearGradient>
     </ImageBackground>

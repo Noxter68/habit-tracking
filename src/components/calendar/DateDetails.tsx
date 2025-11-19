@@ -1,8 +1,8 @@
 // src/components/calendar/DateDetails.tsx
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, ImageBackground } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Sun, CheckCircle2, Clock } from 'lucide-react-native';
+import { Sun, CheckCircle2, Flame, Calendar } from 'lucide-react-native';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import tw from '@/lib/tailwind';
@@ -18,9 +18,10 @@ interface DateDetailsProps {
   selectedDate: Date;
   activeHoliday?: HolidayPeriod | null;
   allHolidays?: HolidayPeriod[];
+  showStats?: boolean;
 }
 
-const DateDetails: React.FC<DateDetailsProps> = ({ habit, selectedDate, activeHoliday = null, allHolidays = [] }) => {
+const DateDetails: React.FC<DateDetailsProps> = ({ habit, selectedDate, activeHoliday = null, allHolidays = [], showStats = true }) => {
   const { t, i18n } = useTranslation();
   const dateString = getLocalDateString(selectedDate);
   const dayTasks = habit.dailyTasks[dateString];
@@ -163,130 +164,64 @@ const DateDetails: React.FC<DateDetailsProps> = ({ habit, selectedDate, activeHo
   }
 
   // ============================================================================
-  // NORMAL STATE
+  // NORMAL STATE - Minimalist & Gamified with Tier Theme
   // ============================================================================
   return (
     <Animated.View entering={FadeInDown.duration(400)} style={tw`mt-4`}>
-      <View style={tw`bg-white rounded-2xl shadow-lg overflow-hidden`}>
-        {/* Header */}
+      <ImageBackground
+        source={theme.texture}
+        style={tw`rounded-2xl overflow-hidden`}
+        imageStyle={tw`opacity-70`}
+        resizeMode="cover"
+      >
         <LinearGradient
-          colors={isCompleted ? ['#10b981', '#059669'] : isPartial ? ['#f59e0b', '#d97706'] : isPast ? ['#ef4444', '#dc2626'] : [theme.accent, theme.accent + 'dd']}
+          colors={[theme.gradient[0] + 'e6', theme.gradient[1] + 'dd', theme.gradient[2] + 'cc']}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={tw`p-3.5`}
+          end={{ x: 1, y: 1 }}
+          style={tw`p-3`}
         >
-          <View style={tw`flex-row items-center justify-between mb-2`}>
-            <View style={tw`flex-1`}>
-              <Text style={tw`text-white text-base font-bold`}>
-                {selectedDate.toLocaleDateString(i18n.language, {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
+          {/* Date Header - Duolingo Style - Compact */}
+          <View style={tw`flex-row items-center justify-between mb-3`}>
+            <View style={tw`flex-row items-center`}>
+              <Text style={tw`text-white text-3xl font-black`}>
+                {selectedDate.toLocaleDateString(i18n.language, { day: 'numeric' })}
               </Text>
-              <Text style={tw`text-white/70 text-xs`}>{selectedDate.toLocaleDateString(i18n.language, { weekday: 'long' })}</Text>
-            </View>
-
-            {/* Status Badges */}
-            <View style={tw`flex-row`}>
-              {isToday && (
-                <View style={tw`bg-white/30 px-2 py-0.5 rounded-full mr-1`}>
-                  <Text style={tw`text-white text-xs font-bold`}>{t('calendar.today').toUpperCase()}</Text>
-                </View>
-              )}
-              <View style={tw`bg-white/30 px-2 py-0.5 rounded-full flex-row items-center`}>
-                {isCompleted ? (
-                  <>
-                    <CheckCircle2 size={10} color="#ffffff" strokeWidth={3} />
-                    <Text style={tw`text-white text-xs font-bold ml-1`}>{t('calendar.status.complete').toUpperCase()}</Text>
-                  </>
-                ) : isPartial ? (
-                  <>
-                    <Clock size={10} color="#ffffff" strokeWidth={2.5} />
-                    <Text style={tw`text-white text-xs font-bold ml-1`}>
-                      {completedCount}/{totalTasks}
-                    </Text>
-                  </>
-                ) : isPast && !isHoliday ? (
-                  <Text style={tw`text-white text-xs font-bold`}>{t('calendar.status.missed').toUpperCase()}</Text>
-                ) : (
-                  <Text style={tw`text-white text-xs font-bold`}>TODO</Text>
+              <View style={tw`ml-2`}>
+                <Text style={tw`text-white/90 text-sm font-bold uppercase`}>
+                  {selectedDate.toLocaleDateString(i18n.language, { month: 'short' })}
+                </Text>
+                {isToday && (
+                  <Text style={tw`text-white/70 text-xs font-bold uppercase`}>{t('calendar.today')}</Text>
                 )}
               </View>
             </View>
+            <View style={tw`bg-white/20 rounded-full px-4 py-2`}>
+              <Text style={tw`text-white text-xl font-black`}>{percentage}%</Text>
+            </View>
           </View>
 
-          {/* Progress Bar */}
-          <View style={tw`h-1.5 bg-white/20 rounded-full overflow-hidden`}>
-            <Animated.View entering={FadeIn.duration(600)} style={[tw`h-full bg-white rounded-full`, { width: `${percentage}%` }]} />
-          </View>
-        </LinearGradient>
-
-        {/* Task List */}
-        <View style={tw`p-3.5`}>
-          {habit.tasks.length === 0 ? (
-            <Text style={tw`text-gray-400 text-xs text-center py-2`}>{t('calendar.messages.noTasksDefined')}</Text>
-          ) : (
-            <>
-              {habit.tasks.map((task: any, index: number) => {
-                const isTaskCompleted = completedTaskIds.includes(task.id);
-
-                return (
-                  <Animated.View
-                    key={`task-${task.id}-${index}`}
-                    entering={FadeIn.delay(index * 50).duration(300)}
-                    style={[tw`flex-row items-center p-2.5 rounded-xl mb-2`, isTaskCompleted ? tw`bg-green-50 border border-green-200` : tw`bg-gray-50 border border-gray-200`]}
-                  >
-                    <View style={tw`mr-2.5`}>
-                      {isTaskCompleted ? (
-                        <View style={tw`w-5 h-5 rounded-full bg-green-500 items-center justify-center`}>
-                          <CheckCircle2 size={12} color="#ffffff" strokeWidth={3} />
-                        </View>
-                      ) : (
-                        <View style={tw`w-5 h-5 rounded-full border-2 border-gray-300`} />
-                      )}
-                    </View>
-
-                    <View style={tw`flex-1`}>
-                      <Text style={[tw`text-sm font-semibold`, isTaskCompleted ? tw`text-green-700` : tw`text-gray-700`]}>{task.name}</Text>
-                      {task.description && <Text style={[tw`text-xs mt-0.5`, isTaskCompleted ? tw`text-green-600` : tw`text-gray-500`]}>{task.description}</Text>}
-                    </View>
-
-                    {task.duration && (
-                      <View style={[tw`px-1.5 py-0.5 rounded-lg ml-2`, isTaskCompleted ? tw`bg-green-100` : tw`bg-gray-100`]}>
-                        <Text style={[tw`text-xs font-medium`, isTaskCompleted ? tw`text-green-700` : tw`text-gray-600`]}>{task.duration}</Text>
-                      </View>
-                    )}
-                  </Animated.View>
-                );
-              })}
-            </>
-          )}
-
-          {/* Summary */}
-          {totalTasks > 0 && !isCompleted && (
-            <View style={tw`mt-2 pt-2 border-t border-gray-100`}>
-              {isPartial ? (
-                <View style={tw`bg-amber-50 rounded-lg p-2.5`}>
-                  <Text style={tw`text-amber-700 font-semibold text-xs`}>
-                    {t('calendar.messages.tasksRemaining', {
-                      count: totalTasks - completedCount,
-                    })}
-                  </Text>
-                </View>
-              ) : isPast && !isHoliday ? (
-                <View style={tw`bg-red-50 rounded-lg p-2.5`}>
-                  <Text style={tw`text-red-700 font-semibold text-xs`}>{t('calendar.messages.missed')}</Text>
-                </View>
-              ) : (
-                <View style={tw`bg-blue-50 rounded-lg p-2.5`}>
-                  <Text style={tw`text-blue-700 font-semibold text-xs`}>{t('calendar.messages.tasksReady', { count: totalTasks })}</Text>
-                </View>
-              )}
+          {/* Stats Row - Duolingo Style with Icons Above */}
+          {showStats && (
+            <View style={tw`flex-row justify-between`}>
+              <View style={tw`items-center flex-1`}>
+                <Flame size={22} color="#fff" fill="#fff" />
+                <Text style={tw`text-xl font-black text-white mt-1`}>{habit.currentStreak}</Text>
+                <Text style={tw`text-xs font-bold text-white/70`}>{t('calendar.stats.current')}</Text>
+              </View>
+              <View style={tw`items-center flex-1`}>
+                <Flame size={22} color="#fff" fill="#fff" />
+                <Text style={tw`text-xl font-black text-white mt-1`}>{habit.bestStreak}</Text>
+                <Text style={tw`text-xs font-bold text-white/70`}>{t('calendar.stats.best')}</Text>
+              </View>
+              <View style={tw`items-center flex-1`}>
+                <Calendar size={20} color="#fff" fill="#fff" />
+                <Text style={tw`text-xl font-black text-white mt-1`}>{habit.completedDays.length}</Text>
+                <Text style={tw`text-xs font-bold text-white/70`}>{t('calendar.stats.total')}</Text>
+              </View>
             </View>
           )}
-        </View>
-      </View>
+        </LinearGradient>
+      </ImageBackground>
     </Animated.View>
   );
 };

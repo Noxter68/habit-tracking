@@ -15,8 +15,8 @@
  * - Détails de la date sélectionnée
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, ScrollView, RefreshControl, Text, ImageBackground } from 'react-native';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { View, ScrollView, RefreshControl, Text, ImageBackground, TouchableOpacity, StatusBar, Dimensions, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -24,11 +24,11 @@ import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react-native';
 
 import CalendarHeader from '../components/calendar/CalendarHeader';
-import HabitSelector from '../components/calendar/HabitSelector';
-import StatsBar from '../components/calendar/StatsBar';
 import CalendarGrid from '../components/calendar/CalendarGrid';
 import DateDetails from '../components/calendar/DateDetails';
 import EmptyState from '../components/shared/EmptyState';
+import { HabitProgressionService } from '../services/habitProgressionService';
+import { tierThemes } from '../utils/tierTheme';
 
 import { useAuth } from '../context/AuthContext';
 import { useHabits } from '../context/HabitContext';
@@ -71,9 +71,34 @@ const CalendarScreen: React.FC = () => {
   const [holidayLoading, setHolidayLoading] = useState(false);
   const [allHolidays, setAllHolidays] = useState<HolidayPeriod[]>([]);
 
+  // Refs pour le FlatList slidable
+  const { width: screenWidth } = Dimensions.get('window');
+  const flatListRef = useRef<FlatList>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  // Config pour la visibilité des items
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 50,
+  }).current;
+
   // ============================================================================
   // HOOKS - useCallback
   // ============================================================================
+
+  /**
+   * Gérer le changement d'habitude via le slide
+   */
+  const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
+    if (viewableItems.length > 0) {
+      const visibleHabit = viewableItems[0].item;
+      setSelectedHabit((current) => {
+        if (current && visibleHabit.id !== current.id) {
+          return visibleHabit;
+        }
+        return current;
+      });
+    }
+  }).current;
 
   /**
    * Normalise les tâches d'une habitude en récupérant les détails complets
@@ -106,10 +131,7 @@ const CalendarScreen: React.FC = () => {
     try {
       setHolidayLoading(true);
 
-      const [activeHolidayData, allHolidaysData] = await Promise.all([
-        HolidayModeService.getActiveHoliday(user.id),
-        HolidayModeService.getAllHolidays(user.id)
-      ]);
+      const [activeHolidayData, allHolidaysData] = await Promise.all([HolidayModeService.getActiveHoliday(user.id), HolidayModeService.getAllHolidays(user.id)]);
 
       Logger.debug('Loaded holidays from database:', {
         active: activeHolidayData?.id,
@@ -133,17 +155,6 @@ const CalendarScreen: React.FC = () => {
       setHolidayLoading(false);
     }
   }, [user?.id]);
-
-  /**
-   * Gère la sélection d'une habitude avec normalisation des tâches
-   */
-  const handleHabitSelect = useCallback(
-    (habit: Habit) => {
-      HapticFeedback.selection();
-      setSelectedHabit(normalizeHabitTasks(habit));
-    },
-    [normalizeHabitTasks]
-  );
 
   /**
    * Gère la sélection d'une date avec retour haptique
@@ -180,11 +191,13 @@ const CalendarScreen: React.FC = () => {
     loadHoliday();
   }, [loadHoliday]);
 
-  // Rafraîchit les vacances quand l'écran reprend le focus
+  // Rafraîchit les vacances et scroll en haut quand l'écran reprend le focus
   useFocusEffect(
     useCallback(() => {
-      Logger.debug('Screen focused - reloading holidays');
+      Logger.debug('Screen focused - reloading holidays and scrolling to top');
       loadHoliday();
+      // Force scroll to top on focus
+      scrollViewRef.current?.scrollTo({ y: 0, animated: false });
     }, [loadHoliday])
   );
 
@@ -240,12 +253,7 @@ const CalendarScreen: React.FC = () => {
   // État vide - aucune habitude
   if (habits.length === 0) {
     return (
-      <ImageBackground
-        source={require('../../assets/interface/textures/texture-white.png')}
-        style={tw`flex-1`}
-        imageStyle={{ opacity: 0.1 }}
-        resizeMode="repeat"
-      >
+      <ImageBackground source={require('../../assets/interface/textures/texture-white.png')} style={tw`flex-1`} imageStyle={{ opacity: 0.1 }} resizeMode="repeat">
         <SafeAreaView style={tw`flex-1 bg-transparent`}>
           <EmptyState
             icon={Plus}
@@ -265,12 +273,7 @@ const CalendarScreen: React.FC = () => {
   // État de chargement - habitude non encore sélectionnée
   if (!selectedHabit) {
     return (
-      <ImageBackground
-        source={require('../../assets/interface/textures/texture-white.png')}
-        style={tw`flex-1`}
-        imageStyle={{ opacity: 0.15 }}
-        resizeMode="repeat"
-      >
+      <ImageBackground source={require('../../assets/interface/textures/texture-white.png')} style={tw`flex-1`} imageStyle={{ opacity: 0.15 }} resizeMode="repeat">
         <SafeAreaView style={tw`flex-1 bg-transparent items-center justify-center`}>
           <Text style={tw`text-sand-500`}>Loading...</Text>
         </SafeAreaView>
@@ -279,65 +282,94 @@ const CalendarScreen: React.FC = () => {
   }
 
   // ============================================================================
-  // RENDU PRINCIPAL
+  // RENDU PRINCIPAL - Avec Header et DateDetails slidable
   // ============================================================================
 
+  // Trouver l'index de l'habitude sélectionnée
+  const selectedIndex = habits.findIndex((h) => h.id === selectedHabit.id);
+
   return (
-    <ImageBackground
-      source={require('../../assets/interface/textures/texture-white.png')}
-      style={tw`flex-1`}
-      imageStyle={{ opacity: 0.15 }}
-      resizeMode="repeat"
-    >
-      <SafeAreaView style={tw`flex-1 bg-transparent`}>
-        <ScrollView
-          style={tw`flex-1`}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={tw`pb-20`}
-          refreshControl={
-            <RefreshControl
-              refreshing={loading || holidayLoading}
-              onRefresh={handleRefresh}
-              tintColor={tw.color('sand-400')}
-            />
-          }
-        >
-          {/* En-tête avec nom de l'habitude */}
-          <CalendarHeader habit={selectedHabit} />
+    <>
+      <StatusBar barStyle="dark-content" />
+      <SafeAreaView style={tw`flex-1 bg-transparent`} edges={['top']}>
+        <ImageBackground source={require('../../assets/interface/textures/texture-white.png')} style={tw`flex-1`} imageStyle={{ opacity: 0.05 }} resizeMode="repeat">
+          {/* Header - Commenté pour le moment */}
+          {/* <CalendarHeader habit={selectedHabit} /> */}
 
-          {/* Sélecteur d'habitude */}
-          <HabitSelector
-            habits={habits}
-            selectedHabit={selectedHabit}
-            onSelectHabit={handleHabitSelect}
-          />
+          <ScrollView
+            ref={scrollViewRef}
+            style={tw`flex-1`}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={tw`pb-24`}
+            contentInsetAdjustmentBehavior="never"
+            automaticallyAdjustContentInsets={false}
+            refreshControl={<RefreshControl refreshing={loading || holidayLoading} onRefresh={handleRefresh} tintColor={tw.color('sand-400')} />}
+          >
+            {/* Slidable DateDetails */}
+            <View style={tw`pt-2`}>
+              <FlatList
+                ref={flatListRef}
+                data={habits}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                snapToInterval={screenWidth - 32}
+                snapToAlignment="start"
+                decelerationRate="fast"
+                contentContainerStyle={{ paddingHorizontal: 16 }}
+                getItemLayout={(_, index) => ({
+                  length: screenWidth - 32,
+                  offset: (screenWidth - 32) * index,
+                  index,
+                })}
+                onViewableItemsChanged={onViewableItemsChanged}
+                viewabilityConfig={viewabilityConfig}
+                keyExtractor={(item) => item.id}
+                scrollEventThrottle={16}
+                ItemSeparatorComponent={() => <View style={{ width: 12 }} />}
+                renderItem={({ item: habit }) => (
+                  <View style={{ width: screenWidth - 32 - 12 }}>
+                    <DateDetails habit={normalizeHabitTasks(habit)} selectedDate={selectedDate} activeHoliday={activeHoliday} allHolidays={allHolidays} showStats={true} />
+                  </View>
+                )}
+              />
+            </View>
 
-          {/* Barre de statistiques */}
-          <StatsBar habit={selectedHabit} />
+            {/* Habit Indicators - Below the card */}
+            <View style={tw`flex-row justify-center py-4 gap-1.5`}>
+              {habits.map((habit, index) => {
+                const habitTier = HabitProgressionService.calculateTierFromStreak(habit.currentStreak);
+                const habitTheme = tierThemes[habitTier.tier.name];
+                const isActive = index === selectedIndex;
 
-          {/* Grille du calendrier et détails */}
-          <View style={tw`mx-5 mt-4 mb-6`}>
-            <CalendarGrid
-              habit={selectedHabit}
-              currentMonth={currentMonth}
-              selectedDate={selectedDate}
-              onSelectDate={handleDateSelect}
-              onNavigateMonth={navigateMonth}
-              activeHoliday={activeHoliday}
-              allHolidays={allHolidays}
-            />
+                return (
+                  <TouchableOpacity
+                    key={habit.id}
+                    onPress={() => {
+                      HapticFeedback.selection();
+                      flatListRef.current?.scrollToIndex({ index, animated: true });
+                    }}
+                    style={[tw`rounded-full`, isActive ? { width: 24, height: 8, backgroundColor: habitTheme.accent } : { width: 8, height: 8, backgroundColor: '#cbd5e1' }]}
+                  />
+                );
+              })}
+            </View>
 
-            {/* Détails de la date sélectionnée */}
-            <DateDetails
-              habit={selectedHabit}
-              selectedDate={selectedDate}
-              activeHoliday={activeHoliday}
-              allHolidays={allHolidays}
-            />
-          </View>
-        </ScrollView>
+            {/* Calendar Grid */}
+            <View style={tw`mx-4 mt-4`}>
+              <CalendarGrid
+                habit={selectedHabit}
+                currentMonth={currentMonth}
+                selectedDate={selectedDate}
+                onSelectDate={handleDateSelect}
+                onNavigateMonth={navigateMonth}
+                activeHoliday={activeHoliday}
+                allHolidays={allHolidays}
+              />
+            </View>
+          </ScrollView>
+        </ImageBackground>
       </SafeAreaView>
-    </ImageBackground>
+    </>
   );
 };
 

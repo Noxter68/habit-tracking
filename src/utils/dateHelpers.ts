@@ -154,21 +154,22 @@ export const getDaysInMonth = (date: Date): (Date | null)[] => {
   const year = date.getFullYear();
   const month = date.getMonth();
 
-  const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
   const daysInMonth = lastDay.getDate();
-  const startingDayOfWeek = firstDay.getDay();
 
   const days: (Date | null)[] = [];
 
-  // Ajouter des emplacements vides pour les jours avant le premier jour du mois
-  for (let i = 0; i < startingDayOfWeek; i++) {
-    days.push(null);
-  }
-
-  // Ajouter tous les jours du mois
+  // Ajouter tous les jours du mois d'abord
   for (let i = 1; i <= daysInMonth; i++) {
     days.push(new Date(year, month, i));
+  }
+
+  // Ajouter des emplacements vides à la fin pour compléter la dernière ligne
+  const remainingSlots = days.length % 7;
+  if (remainingSlots > 0) {
+    for (let i = 0; i < 7 - remainingSlots; i++) {
+      days.push(null);
+    }
   }
 
   return days;
