@@ -1,5 +1,5 @@
 // App.tsx - With RevenueCat Initialization and Unified Config
-import React, { useState, useEffect, useMemo } from 'react'; // ✅ useMemo ajouté
+import React, { useState, useEffect, useMemo } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -38,9 +38,9 @@ import { LevelUpProvider } from './src/context/LevelUpContext';
 import { SubscriptionProvider } from './src/context/SubscriptionContext';
 
 // Components
-import TabBarIcon from './src/components/TabBarIcon';
 import { EpicLevelUpModal } from '@/components/dashboard/EpicLevelUpModal';
 import BeautifulLoader from '@/components/BeautifulLoader';
+import CustomTabBar from '@/components/CustomTabBar';
 
 // Utils & Config
 import { Config } from './src/config';
@@ -48,7 +48,6 @@ import Logger from './src/utils/logger';
 import { PerformanceMonitor } from './src/utils/performanceMonitor';
 import { RevenueCatService } from '@/services/RevenueCatService';
 import { NotificationService } from '@/services/notificationService';
-import { HapticFeedback } from '@/utils/haptics';
 import notificationBadgeService from '@/services/notificationBadgeService';
 import LanguageSelectorScreen from '@/components/settings/LanguageSelector';
 import { LanguageDetectionService } from '@/services/languageDetectionService';
@@ -58,8 +57,12 @@ import JoinGroupScreen from '@/components/groups/JoinGroupScreen';
 import { GroupsNavigator } from '@/navigation/GroupsNavigator';
 import GroupTiersScreen from '@/screens/GroupTierScreen';
 import { GroupCelebrationProvider } from '@/context/GroupCelebrationContext';
-import { useTranslation } from 'react-i18next';
 import './src/i18n';
+
+// Stats Context pour la couleur du tier
+import { useStats } from '@/context/StatsContext';
+import { getAchievementByLevel } from '@/utils/achievements';
+import { achievementTierThemes } from '@/utils/tierTheme';
 
 // Type Definitions
 export type RootStackParamList = {
@@ -141,90 +144,39 @@ Notifications.setNotificationHandler({
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
 
+/**
+ * Composant de navigation principale avec tabs.
+ * Utilise la couleur du tier de l'utilisateur pour les onglets actifs
+ * et une animation heart bip au tap.
+ */
 function MainTabs() {
-  const { t } = useTranslation();
+  const { stats } = useStats();
+
+  // Obtenir la couleur du tier actuel de l'utilisateur (basé sur achievementTierThemes)
+  const tierColor = React.useMemo(() => {
+    if (stats?.level) {
+      const achievement = getAchievementByLevel(stats.level);
+      const tierKey = achievement?.tierKey as keyof typeof achievementTierThemes;
+      // Utiliser la première couleur du gradient pour le thème
+      if (tierKey && achievementTierThemes[tierKey]) {
+        return achievementTierThemes[tierKey].gradient[1]; // Couleur principale du gradient
+      }
+    }
+    return '#1e293b'; // Couleur par défaut
+  }, [stats?.level]);
 
   return (
     <Tab.Navigator
+      tabBar={(props) => <CustomTabBar {...props} tierColor={tierColor} />}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#1e293b',
-        tabBarInactiveTintColor: '#64748b',
-        tabBarStyle: {
-          position: 'absolute',
-          bottom: Platform.OS === 'ios' ? 24 : 20,
-          left: 20,
-          right: 20,
-          backgroundColor: '#FFFFFF',
-          borderRadius: 28,
-          height: Platform.OS === 'ios' ? 64 : 58,
-          paddingBottom: Platform.OS === 'ios' ? 8 : 6,
-          paddingTop: 6,
-          paddingHorizontal: 12,
-          borderWidth: 2,
-          borderColor: '#cbd5e1',
-          shadowColor: '#1e293b',
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.12,
-          shadowRadius: 16,
-          elevation: 12,
-        },
-        tabBarLabelStyle: {
-          fontSize: 9,
-          fontWeight: '600',
-          marginTop: 1,
-          letterSpacing: 0.5,
-          textTransform: 'uppercase',
-        },
-        tabBarIconStyle: { marginTop: 0 },
-        tabBarItemStyle: { paddingVertical: 2 },
       }}
     >
-      <Tab.Screen
-        name="Dashboard"
-        component={Dashboard}
-        options={{
-          tabBarLabel: t('navigation.dashboard'),
-          tabBarIcon: ({ color, focused }) => <TabBarIcon name="home" color={color} focused={focused} />,
-        }}
-        listeners={{ tabPress: () => HapticFeedback.selection() }}
-      />
-      <Tab.Screen
-        name="Calendar"
-        component={CalendarScreen}
-        options={{
-          tabBarLabel: t('navigation.calendar'),
-          tabBarIcon: ({ color, focused }) => <TabBarIcon name="calendar" color={color} focused={focused} />,
-        }}
-        listeners={{ tabPress: () => HapticFeedback.selection() }}
-      />
-      <Tab.Screen
-        name="Leaderboard"
-        component={LeaderboardScreen}
-        options={{
-          tabBarLabel: t('navigation.league'),
-          tabBarIcon: ({ color, focused }) => <TabBarIcon name="leaderboard" color={color} focused={focused} />,
-        }}
-        listeners={{ tabPress: () => HapticFeedback.selection() }}
-      />
-      <Tab.Screen
-        name="Groups"
-        component={GroupsNavigator}
-        options={{
-          tabBarLabel: t('navigation.groups'),
-          tabBarIcon: ({ color, focused }) => <TabBarIcon name="users" color={color} focused={focused} />,
-        }}
-        listeners={{ tabPress: () => HapticFeedback.selection() }}
-      />
-      <Tab.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{
-          tabBarLabel: t('navigation.settings'),
-          tabBarIcon: ({ color, focused }) => <TabBarIcon name="settings" color={color} focused={focused} />,
-        }}
-        listeners={{ tabPress: () => HapticFeedback.selection() }}
-      />
+      <Tab.Screen name="Dashboard" component={Dashboard} />
+      <Tab.Screen name="Calendar" component={CalendarScreen} />
+      <Tab.Screen name="Leaderboard" component={LeaderboardScreen} />
+      <Tab.Screen name="Groups" component={GroupsNavigator} />
+      <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
   );
 }
