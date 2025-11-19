@@ -17,6 +17,7 @@ import { supabase } from '../lib/supabase';
 // IMPORTS - Utilitaires internes
 // =============================================================================
 import Logger from '@/utils/logger';
+import { getLocalDateString } from '@/utils/dateHelpers';
 
 // =============================================================================
 // IMPORTS - Types
@@ -214,7 +215,9 @@ const calculateDaysRemaining = (endDate: string): number => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const end = new Date(endDate);
+    // Parse the date string as local time to avoid timezone issues
+    const [year, month, day] = endDate.split('-').map(Number);
+    const end = new Date(year, month - 1, day);
     end.setHours(0, 0, 0, 0);
 
     if (end <= today) {
@@ -832,7 +835,7 @@ export class HolidayModeService {
   ): boolean {
     if (!allHolidays || allHolidays.length === 0) return false;
 
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = getLocalDateString(date);
 
     for (const holiday of allHolidays) {
       let actualEndDate = holiday.endDate;
@@ -841,7 +844,7 @@ export class HolidayModeService {
         const deactivatedDate = new Date(holiday.deactivatedAt);
         const lastHolidayDay = new Date(deactivatedDate);
         lastHolidayDay.setDate(lastHolidayDay.getDate() - 1);
-        actualEndDate = lastHolidayDay.toISOString().split('T')[0];
+        actualEndDate = getLocalDateString(lastHolidayDay);
       }
 
       const isInPeriod = dateStr >= holiday.startDate && dateStr <= actualEndDate;
@@ -891,7 +894,7 @@ export class HolidayModeService {
   ): boolean {
     if (!activeHoliday) return false;
 
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = getLocalDateString(date);
     const isInPeriod = dateStr >= activeHoliday.startDate && dateStr <= activeHoliday.endDate;
 
     if (!isInPeriod) return false;

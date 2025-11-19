@@ -511,7 +511,15 @@ const SettingsScreen: React.FC = () => {
     }
 
     const daysRemaining = activeHoliday.daysRemaining || 0;
-    return t('settings.holidayDaysRemaining', { count: daysRemaining });
+    // Format the end date for display
+    const [year, month, day] = activeHoliday.endDate.split('-').map(Number);
+    const endDate = new Date(year, month - 1, day);
+    const formattedEndDate = endDate.toLocaleDateString(i18n.language, {
+      day: 'numeric',
+      month: 'long',
+    });
+
+    return t('settings.holidayDaysRemaining', { count: daysRemaining, date: formattedEndDate });
   };
 
   // ============================================================================

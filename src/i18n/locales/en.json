@@ -231,7 +231,7 @@
     "breakMode": "Break Mode",
     "holidayUnlimited": "Unlimited holiday periods available",
     "holidayLimited": "Max 14 days per period • {{periods}} period left | Max 14 days per period • {{periods}} periods left",
-    "holidayDaysRemaining": "Ending today | {{count}} day remaining | {{count}} days remaining",
+    "holidayDaysRemaining": "Ends on {{date}} • {{count}} days remaining",
     "active": "Active",
     "streakSavers": "Streak Savers",
     "support": "Support",
