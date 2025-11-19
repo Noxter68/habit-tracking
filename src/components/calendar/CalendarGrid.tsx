@@ -347,23 +347,53 @@ const CalendarDay: React.FC<{
       paddingLeft: isHolidayStreakStart ? 2 : 0,
       paddingRight: isHolidayStreakEnd ? 2 : 0,
     };
+  } else if (isPartial) {
+    // Single partial day - apply background with full rounded corners like streak endpoints
+    streakBackgroundStyle = {
+      backgroundColor: theme.accent + '40',
+      borderRadius: 20,
+      paddingLeft: 2,
+      paddingRight: 2,
+    };
+  } else if (isCompleted) {
+    // Single completed day - apply background with full rounded corners
+    streakBackgroundStyle = {
+      backgroundColor: theme.accent,
+      borderRadius: 20,
+      paddingLeft: 2,
+      paddingRight: 2,
+    };
+  } else if (isMissed && !beforeCreation) {
+    // Single missed day - apply background with full rounded corners
+    streakBackgroundStyle = {
+      backgroundColor: '#fecaca',
+      borderRadius: 20,
+      paddingLeft: 2,
+      paddingRight: 2,
+    };
+  } else if (isHoliday) {
+    // Single holiday day - apply background with full rounded corners
+    streakBackgroundStyle = {
+      backgroundColor: '#fef3c7',
+      borderRadius: 20,
+      paddingLeft: 2,
+      paddingRight: 2,
+    };
+  } else if (!beforeCreation) {
+    // Default padding for days without special state (including current day)
+    streakBackgroundStyle = {
+      paddingLeft: 2,
+      paddingRight: 2,
+    };
   }
+
+  // Determine if we should hide the inner background (when streak style has background)
+  const hasStreakBackground = streakBackgroundStyle.backgroundColor !== undefined;
 
   return (
     <View style={[tw`w-1/7 h-11 mb-1 items-center justify-center`, { overflow: 'visible' }, streakBackgroundStyle]}>
-      <Pressable
-        onPress={() => onSelect(date)}
-        style={({ pressed }) => [tw`items-center justify-center`, { overflow: 'visible' }, pressed && tw`opacity-70`]}
-        disabled={beforeCreation}
-      >
-        <View
-          style={[
-            tw`w-7 h-7 rounded-lg items-center justify-center`,
-            { backgroundColor },
-            isSelected && !beforeCreation && { borderWidth: 2, borderColor: theme.accent },
-            isCurrentDay && !isSelected && !isCompleted && { borderWidth: 1.5, borderColor: theme.accent + '80' },
-          ]}
-        >
+      <Pressable onPress={() => onSelect(date)} style={({ pressed }) => [tw`items-center justify-center`, { overflow: 'visible' }, pressed && tw`opacity-70`]} disabled={beforeCreation}>
+        <View style={[tw`w-7 h-7 rounded-lg items-center justify-center`, !hasStreakBackground && { backgroundColor }, isSelected && !beforeCreation && { borderWidth: 2, borderColor: theme.accent }]}>
           <Text style={[tw`text-sm font-black`, { color: textColor }, beforeCreation && tw`text-gray-300`]}>{date.getDate()}</Text>
         </View>
       </Pressable>
