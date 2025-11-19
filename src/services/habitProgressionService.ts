@@ -1,15 +1,41 @@
-// src/services/habitProgressionService.ts - UPDATED FOR 6 TIERS
+/**
+ * Service de gestion de la progression des habitudes
+ *
+ * Ce service gère le systeme de tiers visuels (Crystal, Ruby, Amethyst),
+ * les jalons de progression (milestones) et les metriques de performance.
+ * Il supporte deux systemes de tiers: visuels (3 tiers) et de progression (6 tiers).
+ *
+ * @module HabitProgressionService
+ */
+
+// =============================================================================
+// IMPORTS - Bibliotheques externes
+// =============================================================================
 import { supabase } from '@/lib/supabase';
+
+// =============================================================================
+// IMPORTS - Utilitaires internes
+// =============================================================================
 import { getLocalDateString } from '@/utils/dateHelpers';
 import Logger from '@/utils/logger';
 
-// ✅ Keep both tier systems!
-// Visual tiers for UI (3 tiers - gems)
+// =============================================================================
+// TYPES ET INTERFACES
+// =============================================================================
+
+/**
+ * Tiers visuels pour l'interface utilisateur (3 tiers - gemmes)
+ */
 export type HabitTier = 'Crystal' | 'Ruby' | 'Amethyst';
 
-// Progression tiers for milestones (6 tiers - more grinding!)
+/**
+ * Tiers de progression pour les jalons (6 tiers - plus de grinding!)
+ */
 export type MilestoneTier = 'Beginner' | 'Novice' | 'Adept' | 'Expert' | 'Master' | 'Legendary';
 
+/**
+ * Donnees de progression d'une habitude
+ */
 export interface HabitProgression {
   id: string;
   habit_id: string;
@@ -30,6 +56,9 @@ export interface HabitProgression {
   updated_at: string;
 }
 
+/**
+ * Jalon d'habitude
+ */
 export interface HabitMilestone {
   id: string;
   days: number;
@@ -37,9 +66,12 @@ export interface HabitMilestone {
   description: string;
   xpReward: number;
   badge?: string;
-  tier?: MilestoneTier; // ✅ Use MilestoneTier instead of HabitTier
+  tier?: MilestoneTier;
 }
 
+/**
+ * Informations sur un tier
+ */
 export interface TierInfo {
   name: HabitTier;
   minDays: number;
@@ -50,8 +82,20 @@ export interface TierInfo {
   description: string;
 }
 
+// =============================================================================
+// SERVICE PRINCIPAL
+// =============================================================================
+
+/**
+ * Service de gestion de la progression des habitudes
+ *
+ * Gere les tiers visuels, les jalons et les metriques de performance
+ */
 export class HabitProgressionService {
-  // ---------- VISUAL TIERS (3 for UI) ----------
+  // ===========================================================================
+  // CONSTANTES - Tiers visuels (3 pour l'UI)
+  // ===========================================================================
+
   static readonly TIERS: TierInfo[] = [
     {
       name: 'Crystal',
@@ -81,7 +125,10 @@ export class HabitProgressionService {
     },
   ];
 
-  // ---------- MILESTONE TIERS (6 for progression) ----------
+  // ===========================================================================
+  // CONSTANTES - Tiers de jalons (6 pour la progression)
+  // ===========================================================================
+
   static readonly MILESTONE_TIERS: Record<MilestoneTier, { minDays: number; maxDays: number; color: string }> = {
     Beginner: { minDays: 0, maxDays: 6, color: '#94a3b8' },
     Novice: { minDays: 7, maxDays: 13, color: '#60a5fa' },
@@ -91,11 +138,21 @@ export class HabitProgressionService {
     Legendary: { minDays: 100, maxDays: 999, color: '#8b5cf6' },
   };
 
-  // ---------- TIERS HELPERS ----------
-  /** Get VISUAL tier info + progress from streak (for UI) */
+  // ===========================================================================
+  // SECTION: Gestion des tiers
+  // ===========================================================================
+
+  /**
+   * Calculer le tier visuel et la progression a partir du streak
+   *
+   * @param streak - Le streak actuel
+   * @returns Le tier et le pourcentage de progression
+   */
   static calculateTierFromStreak(streak: number): { tier: TierInfo; progress: number } {
     const tiers = this.TIERS;
-    const current = tiers.find((t) => (t.maxDays ? streak >= t.minDays && streak <= t.maxDays : streak >= t.minDays)) ?? tiers[0];
+    const current = tiers.find((t) =>
+      t.maxDays ? streak >= t.minDays && streak <= t.maxDays : streak >= t.minDays
+    ) ?? tiers[0];
 
     let progress = 100;
     const idx = tiers.findIndex((t) => t.name === current.name);
@@ -109,44 +166,197 @@ export class HabitProgressionService {
     return { tier: current, progress };
   }
 
+  /**
+   * Obtenir le tier suivant
+   *
+   * @param currentTier - Le tier actuel
+   * @returns Le tier suivant ou null si dernier tier
+   */
   static getNextTier(currentTier: TierInfo): TierInfo | null {
     const i = this.TIERS.findIndex((t) => t.name === currentTier.name);
     return i >= 0 && i < this.TIERS.length - 1 ? this.TIERS[i + 1] : null;
   }
 
-  // ---------- FETCH MILESTONES FROM DB ----------
+  // ===========================================================================
+  // SECTION: Gestion des jalons
+  // ===========================================================================
+
+  /**
+   * Recuperer les jalons depuis la base de donnees
+   *
+   * @returns Liste des jalons disponibles
+   */
   static async getMilestones(): Promise<HabitMilestone[]> {
-    const { data, error } = await supabase.from('habit_milestones').select('id, days, title, description, xp_reward, badge, tier, icon').order('days', { ascending: true });
+    const { data, error } = await supabase
+      .from('habit_milestones')
+      .select('id, days, title, description, xp_reward, badge, tier, icon')
+      .order('days', { ascending: true });
 
     if (error) {
       Logger.error('Error fetching milestones:', error);
       return [];
     }
 
-    // ✅ Map xp_reward to xpReward
     return data.map((m) => ({
       id: m.id,
       days: m.days,
       title: m.title,
       description: m.description,
-      xpReward: m.xp_reward, // ✅ snake_case to camelCase
+      xpReward: m.xp_reward,
       badge: m.badge,
-      tier: m.tier as MilestoneTier, // ✅ Use MilestoneTier type
+      tier: m.tier as MilestoneTier,
     }));
   }
 
-  // ---------- STATUS ----------
+  /**
+   * Obtenir le statut des jalons pour un streak donne
+   *
+   * @param currentStreak - Le streak actuel
+   * @param unlockedMilestones - Liste des jalons deja debloques
+   * @returns Les jalons debloques, a venir et le prochain
+   */
   static async getMilestoneStatus(currentStreak: number, unlockedMilestones: string[]) {
     const milestones = await this.getMilestones();
 
-    const unlocked = milestones.filter((m) => unlockedMilestones.includes(m.title) || m.days <= currentStreak);
-    const upcoming = milestones.filter((m) => m.days > currentStreak && !unlockedMilestones.includes(m.title));
+    const unlocked = milestones.filter(
+      (m) => unlockedMilestones.includes(m.title) || m.days <= currentStreak
+    );
+    const upcoming = milestones.filter(
+      (m) => m.days > currentStreak && !unlockedMilestones.includes(m.title)
+    );
     const next = upcoming[0] ?? null;
 
     return { all: milestones, unlocked, next, upcoming: upcoming.slice(0, 3) };
   }
 
-  // ---------- CONSISTENCY METRICS ----------
+  /**
+   * Verifier et debloquer un jalon
+   *
+   * @param habitId - L'identifiant de l'habitude
+   * @param userId - L'identifiant de l'utilisateur
+   * @param options - Options avec streak optionnel
+   * @returns Le jalon debloque et les XP accordes
+   */
+  static async checkMilestoneUnlock(
+    habitId: string,
+    userId: string,
+    options?: { overrideStreak?: number }
+  ): Promise<{ unlocked: HabitMilestone | null; xpAwarded: number }> {
+    try {
+      const progression = await this.getOrCreateProgression(habitId, userId);
+      if (!progression) {
+        Logger.debug('No progression found');
+        return { unlocked: null, xpAwarded: 0 };
+      }
+
+      let streak = options?.overrideStreak ?? 0;
+      if (!streak) {
+        const { data } = await supabase
+          .from('habits')
+          .select('current_streak')
+          .eq('id', habitId)
+          .single();
+        streak = data?.current_streak ?? 0;
+      }
+
+      Logger.debug('Checking milestones for streak:', streak);
+
+      const { data: milestones, error } = await supabase
+        .from('habit_milestones')
+        .select('id, days, title, description, xp_reward, badge, tier, icon')
+        .order('days', { ascending: true });
+
+      if (error) {
+        Logger.error('Error fetching milestones:', error);
+        throw error;
+      }
+
+      const unlockedList = progression.milestones_unlocked ?? [];
+      Logger.debug('Already unlocked (from DB):', unlockedList);
+
+      const milestoneData = milestones?.find(
+        (m: any) =>
+          m.days === streak &&
+          !unlockedList.includes(m.id) &&
+          !unlockedList.includes(m.title)
+      );
+
+      if (!milestoneData) {
+        Logger.debug('No new milestone for streak', streak);
+        return { unlocked: null, xpAwarded: 0 };
+      }
+
+      Logger.debug('FOUND NEW MILESTONE:', milestoneData.title);
+
+      const xpReward = milestoneData.xp_reward;
+
+      if (xpReward === undefined || xpReward === null || xpReward <= 0) {
+        Logger.error('XP REWARD IS INVALID!');
+        return { unlocked: null, xpAwarded: 0 };
+      }
+
+      const milestone: HabitMilestone = {
+        id: milestoneData.id,
+        days: milestoneData.days,
+        title: milestoneData.title,
+        description: milestoneData.description,
+        xpReward: xpReward,
+        badge: milestoneData.badge,
+        tier: milestoneData.tier as MilestoneTier,
+      };
+
+      Logger.debug('Awarding milestone XP:', {
+        title: milestone.title,
+        xpReward: milestone.xpReward,
+      });
+
+      const { XPService } = await import('./xpService');
+
+      const success = await XPService.awardXP(userId, {
+        amount: milestone.xpReward,
+        source_type: 'achievement_unlock',
+        source_id: habitId,
+        description: `Milestone: ${milestone.title}`,
+        habit_id: habitId,
+      });
+
+      if (!success) {
+        Logger.error('Failed to award XP');
+        return { unlocked: null, xpAwarded: 0 };
+      }
+
+      const { error: updateError } = await supabase
+        .from('habit_progression')
+        .update({
+          milestones_unlocked: [...unlockedList, milestone.title],
+          last_milestone_date: new Date().toISOString(),
+        })
+        .eq('id', progression.id);
+
+      if (updateError) {
+        Logger.error('Error updating progression:', updateError);
+        throw updateError;
+      }
+
+      Logger.debug('Milestone unlocked successfully!');
+      return { unlocked: milestone, xpAwarded: milestone.xpReward };
+    } catch (err) {
+      Logger.error('checkMilestoneUnlock error:', err);
+      return { unlocked: null, xpAwarded: 0 };
+    }
+  }
+
+  // ===========================================================================
+  // SECTION: Metriques de performance
+  // ===========================================================================
+
+  /**
+   * Calculer le score de consistance sur 30 jours
+   *
+   * @param habitId - L'identifiant de l'habitude
+   * @param userId - L'identifiant de l'utilisateur
+   * @returns Le score de consistance (0-100)
+   */
   static async calculateConsistencyScore(habitId: string, userId: string): Promise<number> {
     try {
       const from = new Date();
@@ -176,7 +386,13 @@ export class HabitProgressionService {
     }
   }
 
-  // ---------- PERFORMANCE METRICS ----------
+  /**
+   * Obtenir les metriques de performance detaillees
+   *
+   * @param habitId - L'identifiant de l'habitude
+   * @param userId - L'identifiant de l'utilisateur
+   * @returns Les metriques de performance ou null
+   */
   static async getPerformanceMetrics(
     habitId: string,
     userId: string
@@ -191,7 +407,11 @@ export class HabitProgressionService {
     bestStreak: number;
   } | null> {
     try {
-      const { data: completions, error } = await supabase.from('task_completions').select('completed_tasks, all_completed, xp_earned').eq('habit_id', habitId).eq('user_id', userId);
+      const { data: completions, error } = await supabase
+        .from('task_completions')
+        .select('completed_tasks, all_completed, xp_earned')
+        .eq('habit_id', habitId)
+        .eq('user_id', userId);
 
       if (error) {
         Logger.error('getPerformanceMetrics error', error);
@@ -199,11 +419,18 @@ export class HabitProgressionService {
       }
 
       const totalDays = completions?.length ?? 0;
-      const totalTasks = completions?.reduce((s, c) => s + ((c.completed_tasks as string[])?.length ?? 0), 0) ?? 0;
+      const totalTasks = completions?.reduce(
+        (s, c) => s + ((c.completed_tasks as string[])?.length ?? 0),
+        0
+      ) ?? 0;
       const perfectDays = completions?.filter((c) => c.all_completed).length ?? 0;
       const totalXP = completions?.reduce((s, c) => s + (c.xp_earned ?? 0), 0) ?? 0;
 
-      const { data: habit, error: streakError } = await supabase.from('habits').select('current_streak, best_streak').eq('id', habitId).single();
+      const { data: habit, error: streakError } = await supabase
+        .from('habits')
+        .select('current_streak, best_streak')
+        .eq('id', habitId)
+        .single();
 
       if (streakError) {
         Logger.error('getPerformanceMetrics streak error', streakError);
@@ -232,121 +459,34 @@ export class HabitProgressionService {
     }
   }
 
-  // ---------- MILESTONES ----------
-  // TEMPORARY DEBUG VERSION of checkMilestoneUnlock
-  // Add this to habitProgressionService.ts to replace the existing function
+  // ===========================================================================
+  // SECTION: Gestion de la progression
+  // ===========================================================================
 
-  // FIXED checkMilestoneUnlock - Replace in habitProgressionService.ts
-
-  static async checkMilestoneUnlock(habitId: string, userId: string, options?: { overrideStreak?: number }): Promise<{ unlocked: HabitMilestone | null; xpAwarded: number }> {
-    try {
-      const progression = await this.getOrCreateProgression(habitId, userId);
-      if (!progression) {
-        Logger.debug('❌ No progression found');
-        return { unlocked: null, xpAwarded: 0 };
-      }
-
-      let streak = options?.overrideStreak ?? 0;
-      if (!streak) {
-        const { data } = await supabase.from('habits').select('current_streak').eq('id', habitId).single();
-        streak = data?.current_streak ?? 0;
-      }
-
-      Logger.debug('🔍 Checking milestones for streak:', streak);
-
-      const { data: milestones, error } = await supabase.from('habit_milestones').select('id, days, title, description, xp_reward, badge, tier, icon').order('days', { ascending: true });
-
-      if (error) {
-        Logger.error('❌ Error fetching milestones:', error);
-        throw error;
-      }
-
-      const unlockedList = progression.milestones_unlocked ?? [];
-      Logger.debug('🔓 Already unlocked (from DB):', unlockedList);
-
-      // ✅ FIX: Check if the milestone days <= current streak AND not already unlocked
-      // The unlocked list can contain either IDs or titles (depends on your DB)
-      const milestoneData = milestones?.find(
-        (m: any) =>
-          m.days === streak &&
-          !unlockedList.includes(m.id) && // Check by ID
-          !unlockedList.includes(m.title) // Also check by title for backwards compatibility
-      );
-
-      if (!milestoneData) {
-        Logger.debug('ℹ️ No new milestone for streak', streak);
-        return { unlocked: null, xpAwarded: 0 };
-      }
-
-      Logger.debug('🎯 FOUND NEW MILESTONE:', milestoneData.title);
-
-      const xpReward = milestoneData.xp_reward;
-
-      if (xpReward === undefined || xpReward === null || xpReward <= 0) {
-        Logger.error('❌ XP REWARD IS INVALID!');
-        return { unlocked: null, xpAwarded: 0 };
-      }
-
-      const milestone: HabitMilestone = {
-        id: milestoneData.id,
-        days: milestoneData.days,
-        title: milestoneData.title,
-        description: milestoneData.description,
-        xpReward: xpReward,
-        badge: milestoneData.badge,
-        tier: milestoneData.tier as MilestoneTier,
-      };
-
-      Logger.debug('💫 Awarding milestone XP:', {
-        title: milestone.title,
-        xpReward: milestone.xpReward,
-      });
-
-      const { XPService } = await import('./xpService');
-
-      const success = await XPService.awardXP(userId, {
-        amount: milestone.xpReward,
-        source_type: 'achievement_unlock',
-        source_id: habitId,
-        description: `Milestone: ${milestone.title}`,
-        habit_id: habitId,
-      });
-
-      if (!success) {
-        Logger.error('❌ Failed to award XP');
-        return { unlocked: null, xpAwarded: 0 };
-      }
-
-      // ✅ Store the milestone TITLE (not ID) for consistency
-      const { error: updateError } = await supabase
-        .from('habit_progression')
-        .update({
-          milestones_unlocked: [...unlockedList, milestone.title], // Use title
-          last_milestone_date: new Date().toISOString(),
-        })
-        .eq('id', progression.id);
-
-      if (updateError) {
-        Logger.error('❌ Error updating progression:', updateError);
-        throw updateError;
-      }
-
-      Logger.debug('🎉 Milestone unlocked successfully!');
-      return { unlocked: milestone, xpAwarded: milestone.xpReward };
-    } catch (err) {
-      Logger.error('❌ checkMilestoneUnlock error:', err);
-      return { unlocked: null, xpAwarded: 0 };
-    }
-  }
-
-  static async updateProgression(habitId: string, userId: string, options?: { allTasksCompleted?: boolean; overrideStreak?: number }): Promise<HabitProgression | null> {
+  /**
+   * Mettre a jour la progression d'une habitude
+   *
+   * @param habitId - L'identifiant de l'habitude
+   * @param userId - L'identifiant de l'utilisateur
+   * @param options - Options de mise a jour
+   * @returns La progression mise a jour ou null
+   */
+  static async updateProgression(
+    habitId: string,
+    userId: string,
+    options?: { allTasksCompleted?: boolean; overrideStreak?: number }
+  ): Promise<HabitProgression | null> {
     try {
       const progression = await this.getOrCreateProgression(habitId, userId);
       if (!progression) return null;
 
       let streak = options?.overrideStreak ?? 0;
       if (!streak) {
-        const { data } = await supabase.from('habits').select('current_streak').eq('id', habitId).single();
+        const { data } = await supabase
+          .from('habits')
+          .select('current_streak')
+          .eq('id', habitId)
+          .single();
         streak = data?.current_streak ?? 0;
       }
 
@@ -387,13 +527,29 @@ export class HabitProgressionService {
     }
   }
 
+  /**
+   * Obtenir ou creer la progression d'une habitude
+   *
+   * @param habitId - L'identifiant de l'habitude
+   * @param userId - L'identifiant de l'utilisateur
+   * @returns La progression existante ou nouvellement creee
+   */
   static async getOrCreateProgression(habitId: string, userId: string): Promise<HabitProgression | null> {
     try {
-      const { data, error } = await supabase.from('habit_progression').select('*').eq('habit_id', habitId).eq('user_id', userId).single();
+      const { data, error } = await supabase
+        .from('habit_progression')
+        .select('*')
+        .eq('habit_id', habitId)
+        .eq('user_id', userId)
+        .single();
 
       if (!error && data) return data as HabitProgression;
 
-      const { data: habitRow } = await supabase.from('habits').select('current_streak').eq('id', habitId).single();
+      const { data: habitRow } = await supabase
+        .from('habits')
+        .select('current_streak')
+        .eq('id', habitId)
+        .single();
 
       const streak = habitRow?.current_streak ?? 0;
       const { tier } = this.calculateTierFromStreak(streak);

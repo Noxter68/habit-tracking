@@ -1,11 +1,37 @@
+/**
+ * AchievementCard.tsx
+ *
+ * Carte d'affichage d'un achievement individuel.
+ * Gère les états verrouillé/déverrouillé avec gradient selon le tier.
+ *
+ * @author HabitTracker Team
+ */
+
+// =============================================================================
+// IMPORTS
+// =============================================================================
+
+// React et React Native
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
+
+// Bibliothèques externes
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import tw from '../../lib/tailwind';
-import { Achievement } from '../../types/achievement.types';
+
+// Composants internes
 import { AchievementBadge } from '../shared/AchievementBadge';
+
+// Utilitaires
+import tw from '../../lib/tailwind';
 import { getAchievementTierTheme } from '../../utils/tierTheme';
+
+// Types
+import { Achievement, TierKey } from '../../types/achievement.types';
+
+// =============================================================================
+// TYPES ET INTERFACES
+// =============================================================================
 
 interface AchievementCardProps {
   achievement: Achievement;
@@ -16,29 +42,64 @@ interface AchievementCardProps {
   tierName?: string;
 }
 
-export const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, isUnlocked, isFromBackend, index, onPress, tierName }) => {
-  // Get tier theme for gradient colors
-  const tierTheme = tierName ? getAchievementTierTheme(tierName as any) : null;
+// =============================================================================
+// COMPOSANT PRINCIPAL
+// =============================================================================
 
-  // Create lighter versions of tier gradients for unlocked state
-  const getLightGradient = (tierGradient: string[]) => {
-    return [tierGradient[0] + '15', tierGradient[1] + '20', tierGradient[2] + '15'];
+export const AchievementCard: React.FC<AchievementCardProps> = ({
+  achievement,
+  isUnlocked,
+  isFromBackend,
+  index,
+  onPress,
+  tierName,
+}) => {
+  // ---------------------------------------------------------------------------
+  // Valeurs calculées
+  // ---------------------------------------------------------------------------
+
+  // Récupère le thème du tier pour les couleurs du gradient
+  const tierTheme = tierName ? getAchievementTierTheme(tierName as TierKey) : null;
+
+  /**
+   * Crée une version plus claire du gradient pour l'état déverrouillé
+   * @param tierGradient - Couleurs du gradient du tier
+   * @returns Gradient avec opacité réduite
+   */
+  const getLightGradient = (tierGradient: string[]): string[] => {
+    return [
+      tierGradient[0] + '15',
+      tierGradient[1] + '20',
+      tierGradient[2] + '15',
+    ];
   };
 
-  // Gradient colors based on state
-  const unlockedGradient = tierTheme ? getLightGradient(tierTheme.gradient) : ['#F3F4F610', '#E5E7EB15', '#F9FAFB10'];
+  // Couleurs du gradient selon l'état
+  const unlockedGradient = tierTheme
+    ? getLightGradient(tierTheme.gradient)
+    : ['#F3F4F610', '#E5E7EB15', '#F9FAFB10'];
 
   const lockedGradient = ['#FAFAFA', '#F5F5F5', '#EEEEEE'];
 
-  // Border and accent colors
-  const borderColor = isUnlocked ? (tierTheme ? tierTheme.gradient[1] + '40' : '#E5E7EB') : '#E0E0E0';
+  // Couleurs de bordure et d'accent
+  const borderColor = isUnlocked
+    ? tierTheme
+      ? tierTheme.gradient[1] + '40'
+      : '#E5E7EB'
+    : '#E0E0E0';
 
   const accentColor = tierTheme ? tierTheme.gradient[1] : '#6B7280';
 
+  // ---------------------------------------------------------------------------
+  // Rendu
+  // ---------------------------------------------------------------------------
   return (
     <Animated.View entering={FadeIn.delay(index * 50)} style={tw`mb-3`}>
-      <Pressable onPress={() => onPress(achievement)} style={({ pressed }) => [pressed && tw`scale-[0.98]`, tw`relative`]}>
-        {/* Outer glow effect for unlocked achievements */}
+      <Pressable
+        onPress={() => onPress(achievement)}
+        style={({ pressed }) => [pressed && tw`scale-[0.98]`, tw`relative`]}
+      >
+        {/* Effet de lueur externe pour les achievements déverrouillés */}
         {isUnlocked && tierTheme && (
           <View
             style={[
@@ -61,7 +122,9 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, i
               width: '100%',
               borderWidth: 2,
               borderColor: borderColor,
-              backgroundColor: isUnlocked ? 'rgba(255, 255, 255, 0.95)' : 'rgba(245, 245, 245, 1)',
+              backgroundColor: isUnlocked
+                ? 'rgba(255, 255, 255, 0.95)'
+                : 'rgba(245, 245, 245, 1)',
               shadowColor: isUnlocked ? accentColor : '#000',
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: isUnlocked ? 0.2 : 0.08,
@@ -70,10 +133,15 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, i
             },
           ]}
         >
-          {/* Top shine effect for unlocked */}
-          {isUnlocked && tierTheme && <LinearGradient colors={['rgba(255, 255, 255, 0.6)', 'rgba(255, 255, 255, 0)']} style={[tw`absolute top-0 left-0 right-0 rounded-t-2xl`, { height: '40%' }]} />}
+          {/* Effet de brillance en haut pour l'état déverrouillé */}
+          {isUnlocked && tierTheme && (
+            <LinearGradient
+              colors={['rgba(255, 255, 255, 0.6)', 'rgba(255, 255, 255, 0)']}
+              style={[tw`absolute top-0 left-0 right-0 rounded-t-2xl`, { height: '40%' }]}
+            />
+          )}
 
-          {/* Content container - flexbox for consistent spacing */}
+          {/* Conteneur du contenu - flexbox pour espacement cohérent */}
           <View
             style={{
               flex: 1,
@@ -83,7 +151,7 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, i
               paddingHorizontal: 12,
             }}
           >
-            {/* Badge - FIXED 60x60 size with opacity for locked */}
+            {/* Badge - taille fixe 60x60 avec opacité pour l'état verrouillé */}
             <View
               style={{
                 opacity: isUnlocked ? 1 : 0.3,
@@ -94,10 +162,15 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, i
                 overflow: 'hidden',
               }}
             >
-              <AchievementBadge level={achievement.level} achievement={achievement} isUnlocked={true} size={60} />
+              <AchievementBadge
+                level={achievement.level}
+                achievement={achievement}
+                isUnlocked={true}
+                size={60}
+              />
             </View>
 
-            {/* Title - FIXED 32px height */}
+            {/* Titre - hauteur fixe 32px */}
             <View
               style={{
                 height: 32,
@@ -122,9 +195,13 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, i
               </Text>
             </View>
 
-            {/* Level badge */}
+            {/* Badge de niveau */}
             <LinearGradient
-              colors={isUnlocked && tierTheme ? [tierTheme.gradient[0], tierTheme.gradient[1]] : ['#D1D5DB', '#9CA3AF']}
+              colors={
+                isUnlocked && tierTheme
+                  ? [tierTheme.gradient[0], tierTheme.gradient[1]]
+                  : ['#D1D5DB', '#9CA3AF']
+              }
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={{
@@ -151,7 +228,7 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, i
             </LinearGradient>
           </View>
 
-          {/* Backend indicator */}
+          {/* Indicateur de synchronisation backend */}
           {isFromBackend && (
             <View
               style={{

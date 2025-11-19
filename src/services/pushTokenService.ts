@@ -1,32 +1,61 @@
-// src/services/pushTokenService.ts
+/**
+ * Service de gestion des tokens push
+ *
+ * Ce service gere l'enregistrement et la desinscription des appareils
+ * pour les notifications push. Il stocke les tokens Expo dans la base
+ * de donnees pour permettre au backend d'envoyer des notifications.
+ *
+ * @module PushTokenService
+ */
+
+// =============================================================================
+// IMPORTS - Bibliotheques externes
+// =============================================================================
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
-import { supabase } from '../lib/supabase';
 import Constants from 'expo-constants';
+
+// =============================================================================
+// IMPORTS - Utilitaires internes
+// =============================================================================
+import { supabase } from '../lib/supabase';
 import Logger from '@/utils/logger';
 
+// =============================================================================
+// SERVICE PRINCIPAL
+// =============================================================================
+
+/**
+ * Service de gestion des tokens push
+ *
+ * Gere l'enregistrement des appareils pour les notifications push
+ */
 export class PushTokenService {
+  // ===========================================================================
+  // SECTION: Enregistrement des appareils
+  // ===========================================================================
+
   /**
-   * Register device for push notifications and store token
-   * Call this after user logs in
-   * DOES NOT REQUEST PERMISSIONS - only registers if already granted
+   * Enregistrer l'appareil pour les notifications push et stocker le token
+   * A appeler apres la connexion de l'utilisateur
+   * NE DEMANDE PAS les permissions - enregistre seulement si deja accordees
+   *
+   * @param userId - L'identifiant de l'utilisateur
+   * @returns Vrai si l'enregistrement a reussi
    */
   static async registerDevice(userId: string): Promise<boolean> {
     try {
-      // 1. Check permissions (WITHOUT requesting)
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
 
-      // ✅ Ne demande PAS les permissions ici !
       if (existingStatus !== 'granted') {
-        Logger.debug('⚠️ Push notification permissions not granted yet');
+        Logger.debug('Push notification permissions not granted yet');
         return false;
       }
 
-      // 2. Get Expo Push Token
       const projectId = Constants.expoConfig?.extra?.eas?.projectId;
 
       if (!projectId) {
-        Logger.error('❌ Project ID not found in app.json');
+        Logger.error('Project ID not found in app.json');
         return false;
       }
 
@@ -37,9 +66,8 @@ export class PushTokenService {
       const token = tokenData.data;
       const platform = Platform.OS;
 
-      Logger.debug('📱 Device token:', token);
+      Logger.debug('Device token:', token);
 
-      // 3. Store token in database
       const { error } = await supabase.from('push_tokens').upsert(
         {
           user_id: userId,
@@ -53,20 +81,22 @@ export class PushTokenService {
       );
 
       if (error) {
-        Logger.error('❌ Error storing push token:', error);
+        Logger.error('Error storing push token:', error);
         return false;
       }
 
-      Logger.debug('✅ Device registered for push notifications');
+      Logger.debug('Device registered for push notifications');
       return true;
     } catch (error) {
-      Logger.error('❌ Error registering device:', error);
+      Logger.error('Error registering device:', error);
       return false;
     }
   }
 
   /**
-   * Remove device token (call on logout)
+   * Supprimer le token de l'appareil (a appeler lors de la deconnexion)
+   *
+   * @param userId - L'identifiant de l'utilisateur
    */
   static async unregisterDevice(userId: string): Promise<void> {
     try {
@@ -78,16 +108,23 @@ export class PushTokenService {
         projectId: projectId,
       });
 
-      await supabase.from('push_tokens').delete().eq('user_id', userId).eq('token', tokenData.data);
+      await supabase
+        .from('push_tokens')
+        .delete()
+        .eq('user_id', userId)
+        .eq('token', tokenData.data);
 
-      Logger.debug('✅ Device unregistered');
+      Logger.debug('Device unregistered');
     } catch (error) {
-      Logger.error('❌ Error unregistering device:', error);
+      Logger.error('Error unregistering device:', error);
     }
   }
 
   /**
-   * Check if device is registered
+   * Verifier si l'appareil est enregistre
+   *
+   * @param userId - L'identifiant de l'utilisateur
+   * @returns Vrai si l'appareil est enregistre
    */
   static async isDeviceRegistered(userId: string): Promise<boolean> {
     try {
@@ -99,10 +136,15 @@ export class PushTokenService {
         projectId: projectId,
       });
 
-      const { data, error } = await supabase.from('push_tokens').select('id').eq('user_id', userId).eq('token', tokenData.data).single();
+      const { data, error } = await supabase
+        .from('push_tokens')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('token', tokenData.data)
+        .single();
 
       return !error && !!data;
-    } catch (error) {
+    } catch {
       return false;
     }
   }

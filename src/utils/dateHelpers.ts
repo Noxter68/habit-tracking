@@ -1,7 +1,24 @@
-// src/utils/dateHelpers.ts
+/**
+ * @file dateHelpers.ts
+ * @description Utilitaires pour la manipulation et le formatage des dates.
+ * Fournit des fonctions pour la comparaison de dates, le formatage d'affichage
+ * et les calculs liés au calendrier.
+ */
+
+// =============================================================================
+// FONCTIONS DE FORMATAGE
+// =============================================================================
 
 /**
- * Get local date string in YYYY-MM-DD format
+ * Convertit une date en chaîne de caractères au format YYYY-MM-DD
+ * en utilisant le fuseau horaire local.
+ *
+ * @param date - La date à convertir
+ * @returns La date formatée au format YYYY-MM-DD
+ *
+ * @example
+ * const dateStr = getLocalDateString(new Date('2024-01-15'));
+ * // Retourne: "2024-01-15"
  */
 export const getLocalDateString = (date: Date): string => {
   const year = date.getFullYear();
@@ -11,29 +28,127 @@ export const getLocalDateString = (date: Date): string => {
 };
 
 /**
- * Get today's date in local timezone (shorthand)
+ * Retourne la date d'aujourd'hui au format YYYY-MM-DD.
+ *
+ * @returns La date du jour formatée
+ *
+ * @example
+ * const today = getTodayString();
+ * // Retourne: "2024-01-15" (si aujourd'hui est le 15 janvier 2024)
  */
 export const getTodayString = (): string => {
   return getLocalDateString(new Date());
 };
 
 /**
- * Check if a date is today
+ * Formate une date pour un affichage long (jour de la semaine, mois, numéro).
+ *
+ * @param date - La date à formater
+ * @returns La date formatée en anglais
+ *
+ * @example
+ * const formatted = formatDateLong(new Date('2024-01-15'));
+ * // Retourne: "Monday, January 15"
+ */
+export const formatDateLong = (date: Date): string => {
+  return date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
+};
+
+/**
+ * Formate une date en affichant uniquement le mois et l'année.
+ *
+ * @param date - La date à formater
+ * @returns Le mois et l'année formatés
+ *
+ * @example
+ * const monthYear = formatMonthYear(new Date('2024-01-15'));
+ * // Retourne: "January 2024"
+ */
+export const formatMonthYear = (date: Date): string => {
+  return date.toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric',
+  });
+};
+
+// =============================================================================
+// FONCTIONS DE COMPARAISON
+// =============================================================================
+
+/**
+ * Vérifie si une date correspond à aujourd'hui.
+ *
+ * @param date - La date à vérifier
+ * @returns true si la date est aujourd'hui, false sinon
+ *
+ * @example
+ * const todayCheck = isToday(new Date());
+ * // Retourne: true
  */
 export const isToday = (date: Date): boolean => {
   const today = new Date();
-  return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
+  return (
+    date.getDate() === today.getDate() &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear()
+  );
 };
 
 /**
- * Check if two dates are the same day
+ * Vérifie si deux dates correspondent au même jour.
+ *
+ * @param date1 - La première date
+ * @param date2 - La deuxième date
+ * @returns true si les deux dates sont le même jour, false sinon
+ *
+ * @example
+ * const same = isSameDay(new Date('2024-01-15'), new Date('2024-01-15'));
+ * // Retourne: true
  */
 export const isSameDay = (date1: Date, date2: Date): boolean => {
-  return date1.getDate() === date2.getDate() && date1.getMonth() === date2.getMonth() && date1.getFullYear() === date2.getFullYear();
+  return (
+    date1.getDate() === date2.getDate() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getFullYear() === date2.getFullYear()
+  );
 };
 
 /**
- * Get all days in a month (including empty slots for calendar grid)
+ * Vérifie si une date est dans le passé (excluant aujourd'hui).
+ *
+ * @param date - La date à vérifier
+ * @returns true si la date est passée, false sinon
+ *
+ * @example
+ * const past = isPastDate(new Date('2020-01-01'));
+ * // Retourne: true
+ */
+export const isPastDate = (date: Date): boolean => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const checkDate = new Date(date);
+  checkDate.setHours(0, 0, 0, 0);
+  return checkDate < today;
+};
+
+// =============================================================================
+// FONCTIONS DE CALENDRIER
+// =============================================================================
+
+/**
+ * Retourne tous les jours d'un mois avec des emplacements vides pour la grille du calendrier.
+ * Les emplacements vides représentent les jours avant le premier jour du mois.
+ *
+ * @param date - Une date dans le mois souhaité
+ * @returns Un tableau de dates (ou null pour les emplacements vides)
+ *
+ * @example
+ * const days = getDaysInMonth(new Date('2024-01-01'));
+ * // Retourne un tableau avec des nulls au début suivi des dates du mois
  */
 export const getDaysInMonth = (date: Date): (Date | null)[] => {
   const year = date.getFullYear();
@@ -46,12 +161,12 @@ export const getDaysInMonth = (date: Date): (Date | null)[] => {
 
   const days: (Date | null)[] = [];
 
-  // Add empty slots for days before the first day of the month
+  // Ajouter des emplacements vides pour les jours avant le premier jour du mois
   for (let i = 0; i < startingDayOfWeek; i++) {
     days.push(null);
   }
 
-  // Add all days of the month
+  // Ajouter tous les jours du mois
   for (let i = 1; i <= daysInMonth; i++) {
     days.push(new Date(year, month, i));
   }
@@ -59,50 +174,25 @@ export const getDaysInMonth = (date: Date): (Date | null)[] => {
   return days;
 };
 
-/**
- * Check if date is in the past (not including today)
- */
-export const isPastDate = (date: Date): boolean => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const checkDate = new Date(date);
-  checkDate.setHours(0, 0, 0, 0);
-  return checkDate < today;
-};
+// =============================================================================
+// FONCTIONS DE CALCUL TEMPOREL
+// =============================================================================
 
 /**
- * Format date for display
- */
-export const formatDateLong = (date: Date): string => {
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
-};
-
-/**
- * Format month and year
- */
-export const formatMonthYear = (date: Date): string => {
-  return date.toLocaleDateString('en-US', {
-    month: 'long',
-    year: 'numeric',
-  });
-};
-
-/**
- * Calculate hours remaining until midnight (for daily habit reset timer)
- * Returns the number of hours from now until 00:00 of the next day
+ * Calcule le nombre d'heures restantes jusqu'à minuit.
+ * Utilisé pour le minuteur de réinitialisation des habitudes quotidiennes.
+ *
+ * @returns Le nombre d'heures jusqu'à minuit (arrondi au supérieur)
  *
  * @example
- * // At 10:00 AM -> returns 14 (14 hours until midnight)
- * // At 11:30 PM -> returns 1 (30 minutes rounded up to 1 hour)
+ * // À 10h00 -> retourne 14 (14 heures jusqu'à minuit)
+ * // À 23h30 -> retourne 1 (30 minutes arrondies à 1 heure)
+ * const hours = getHoursUntilMidnight();
  */
 export const getHoursUntilMidnight = (): number => {
   const now = new Date();
   const midnight = new Date();
-  midnight.setHours(24, 0, 0, 0); // Set to next midnight
+  midnight.setHours(24, 0, 0, 0);
 
   const diffMs = midnight.getTime() - now.getTime();
   const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));

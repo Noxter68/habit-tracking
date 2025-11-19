@@ -1,17 +1,63 @@
-// src/utils/tierTheme.ts
+/**
+ * @file tierTheme.ts
+ * @description Thèmes visuels pour les tiers d'habitudes et d'achievements.
+ * Définit les couleurs, dégradés et textures pour chaque niveau de progression.
+ */
+
 import { HabitTier } from '@/services/habitProgressionService';
 import Logger from './logger';
 import type { TierKey } from '@/types/achievement.types';
 
-// Habit Tier Themes (3 tiers for habits)
-export const tierThemes: Record<
-  HabitTier,
-  {
-    gradient: string[];
-    texture: any;
-    accent: string;
-  }
-> = {
+// =============================================================================
+// TYPES
+// =============================================================================
+
+/**
+ * Type alias pour les noms de tiers d'achievements.
+ * Utilisé pour la compatibilité avec les composants existants.
+ */
+export type AchievementTierName = TierKey;
+
+/**
+ * Configuration du thème pour un tier d'habitude.
+ */
+interface HabitTierTheme {
+  /** Couleurs du dégradé */
+  gradient: string[];
+  /** Texture de fond */
+  texture: any;
+  /** Couleur d'accent */
+  accent: string;
+}
+
+/**
+ * Configuration complète du thème pour un tier d'achievement.
+ */
+interface AchievementTierTheme {
+  /** Couleurs du dégradé principal */
+  gradient: string[];
+  /** Couleur d'accent */
+  accent: string;
+  /** Nom de la gemme associée */
+  gemName: string;
+  /** Texture de fond */
+  texture: any;
+  /** Image pour les streaks */
+  streakImage: any;
+  /** Image pour les quêtes */
+  questImage: any;
+  /** Dégradé pour les arrière-plans */
+  backgroundGradient: string[];
+}
+
+// =============================================================================
+// CONSTANTES - THÈMES DES TIERS D'HABITUDES
+// =============================================================================
+
+/**
+ * Thèmes pour les 3 tiers d'habitudes (Crystal, Ruby, Amethyst).
+ */
+export const tierThemes: Record<HabitTier, HabitTierTheme> = {
   Crystal: {
     gradient: ['#60a5fa', '#3b82f6', '#1d4ed8'],
     texture: require('../../assets/interface/progressBar/crystal.png'),
@@ -29,19 +75,15 @@ export const tierThemes: Record<
   },
 };
 
-// ✅ Use TierKey from achievement.types.ts for consistency
-export const achievementTierThemes: Record<
-  TierKey,
-  {
-    gradient: string[];
-    accent: string;
-    gemName: string;
-    texture: any;
-    streakImage: any;
-    questImage: any;
-    backgroundGradient: string[];
-  }
-> = {
+// =============================================================================
+// CONSTANTES - THÈMES DES TIERS D'ACHIEVEMENTS
+// =============================================================================
+
+/**
+ * Thèmes complets pour les 6 tiers d'achievements.
+ * Chaque tier est associé à une gemme et un ensemble de couleurs.
+ */
+export const achievementTierThemes: Record<TierKey, AchievementTierTheme> = {
   novice: {
     gradient: ['#60a5fa', '#3b82f6', '#1d4ed8'],
     accent: '#3b82f6',
@@ -98,24 +140,60 @@ export const achievementTierThemes: Record<
   },
 };
 
-// ✅ Helper function to get achievement tier theme using i18n key
-export const getAchievementTierTheme = (tierKey: TierKey | string) => {
-  // Direct key lookup
+// =============================================================================
+// FONCTIONS - RÉCUPÉRATION DES THÈMES
+// =============================================================================
+
+/**
+ * Récupère le thème d'un tier d'achievement par sa clé.
+ *
+ * @param tierKey - Clé du tier (novice, risingHero, etc.)
+ * @returns Le thème complet du tier
+ *
+ * @example
+ * const theme = getAchievementTierTheme('novice');
+ * console.log(theme.gemName); // "Crystal"
+ * console.log(theme.accent);  // "#3b82f6"
+ */
+export const getAchievementTierTheme = (tierKey: TierKey | string): AchievementTierTheme => {
+  // Recherche directe par clé
   if (tierKey in achievementTierThemes) {
     return achievementTierThemes[tierKey as TierKey];
   }
 
-  Logger.warn(`Unknown tier key: "${tierKey}", defaulting to novice`);
+  Logger.warn(`Clé de tier inconnue: "${tierKey}", utilisation de novice par défaut`);
   return achievementTierThemes.novice;
 };
 
-// Helper function to get habit tier theme
-export const getHabitTierTheme = (tierName: HabitTier) => {
+/**
+ * Récupère le thème d'un tier d'habitude par son nom.
+ *
+ * @param tierName - Nom du tier (Crystal, Ruby, Amethyst)
+ * @returns Le thème du tier d'habitude
+ *
+ * @example
+ * const theme = getHabitTierTheme('Ruby');
+ * console.log(theme.accent); // "#dc2626"
+ */
+export const getHabitTierTheme = (tierName: HabitTier): HabitTierTheme => {
   return tierThemes[tierName] || tierThemes.Crystal;
 };
 
-// NEW: Helper to create light tint gradients for backgrounds
-export const getLightTintGradient = (baseGradient: string[], opacity = 0.1) => {
+// =============================================================================
+// FONCTIONS - UTILITAIRES DE COULEURS
+// =============================================================================
+
+/**
+ * Crée un dégradé léger pour les arrière-plans à partir d'un dégradé de base.
+ *
+ * @param baseGradient - Tableau de couleurs du dégradé de base
+ * @param opacity - Opacité souhaitée (0-1)
+ * @returns Tableau de couleurs avec opacité appliquée
+ *
+ * @example
+ * const lightGradient = getLightTintGradient(['#3b82f6', '#1d4ed8'], 0.1);
+ */
+export const getLightTintGradient = (baseGradient: string[], opacity = 0.1): string[] => {
   return [
     `${baseGradient[0]}${Math.round(opacity * 255)
       .toString(16)
@@ -127,8 +205,18 @@ export const getLightTintGradient = (baseGradient: string[], opacity = 0.1) => {
   ];
 };
 
-// NEW: Helper to get accent with opacity
-export const getAccentWithOpacity = (accent: string, opacity: number) => {
+/**
+ * Ajoute une opacité à une couleur d'accent.
+ *
+ * @param accent - Couleur hexadécimale
+ * @param opacity - Opacité souhaitée (0-1)
+ * @returns Couleur avec opacité au format hex
+ *
+ * @example
+ * const transparentAccent = getAccentWithOpacity('#3b82f6', 0.5);
+ * // Retourne: "#3b82f680"
+ */
+export const getAccentWithOpacity = (accent: string, opacity: number): string => {
   const hex = opacity * 255;
   return `${accent}${Math.round(hex).toString(16).padStart(2, '0')}`;
 };

@@ -1,14 +1,37 @@
-// src/services/RevenueCatService.ts
+/**
+ * Service de gestion des abonnements RevenueCat
+ *
+ * Ce service gere toutes les operations liees aux abonnements et achats in-app:
+ * initialisation du SDK, authentification, recuperation des offres,
+ * traitement des achats et verification du statut d'abonnement.
+ *
+ * @module RevenueCatService
+ */
+
+// =============================================================================
+// IMPORTS - Bibliotheques externes
+// =============================================================================
 import Purchases, { LOG_LEVEL, CustomerInfo, PurchasesPackage } from 'react-native-purchases';
 import { Platform } from 'react-native';
+
+// =============================================================================
+// IMPORTS - Utilitaires internes
+// =============================================================================
 import Logger from '@/utils/logger';
+
+// =============================================================================
+// CONSTANTES
+// =============================================================================
 
 const REVENUECAT_API_KEY = process.env.REVENUECAT_API_KEY || '';
 
-// ============================================================================
-// Types & Interfaces
-// ============================================================================
+// =============================================================================
+// TYPES ET INTERFACES
+// =============================================================================
 
+/**
+ * Etat de l'abonnement
+ */
 interface SubscriptionState {
   isSubscribed: boolean;
   entitlementId: string | null;
@@ -16,25 +39,25 @@ interface SubscriptionState {
 }
 
 /**
- * Simplified subscription package for UI consumption
- * Maps RevenueCat's complex package structure to a simpler format
+ * Package d'abonnement simplifie pour l'UI
+ * Mappe la structure complexe de RevenueCat vers un format plus simple
  */
 export interface SubscriptionPackage {
-  identifier: string; // e.g., '$rc_monthly'
-  packageType: string; // 'MONTHLY' | 'ANNUAL'
+  identifier: string;
+  packageType: string;
   product: {
-    identifier: string; // e.g., 'premium_monthly'
+    identifier: string;
     title: string;
     description: string;
     price: number;
-    priceString: string; // Formatted price with currency
+    priceString: string;
     currencyCode: string;
   };
-  rcPackage: PurchasesPackage; // Original package for purchase operations
+  rcPackage: PurchasesPackage;
 }
 
 /**
- * Result object returned after purchase or restore operations
+ * Resultat d'une operation d'achat ou de restauration
  */
 export interface PurchaseResult {
   success: boolean;
@@ -43,55 +66,46 @@ export interface PurchaseResult {
   hasPremium?: boolean;
 }
 
-// ============================================================================
-// RevenueCat Service
-// ============================================================================
+// =============================================================================
+// SERVICE PRINCIPAL
+// =============================================================================
 
 /**
- * Service class for managing RevenueCat subscriptions and purchases
+ * Service de gestion des abonnements RevenueCat
  *
- * This service handles:
- * - SDK initialization
- * - User authentication
- * - Product offerings retrieval
- * - Purchase processing
- * - Subscription status checking
- * - Purchase restoration
+ * Gere l'initialisation du SDK, les achats et le statut d'abonnement
  */
 export class RevenueCatService {
   private static initialized = false;
   private static initializationPromise: Promise<void> | null = null;
 
-  // ==========================================================================
-  // Initialization
-  // ==========================================================================
+  // ===========================================================================
+  // SECTION: Initialisation
+  // ===========================================================================
 
   /**
-   * Initialize RevenueCat SDK
-   * Should be called once on app startup
+   * Initialiser le SDK RevenueCat
+   * A appeler une fois au demarrage de l'application
    *
-   * @param userId - Optional user ID for identifying the user in RevenueCat
-   * @returns Promise that resolves when initialization is complete
+   * @param userId - ID utilisateur optionnel pour l'identification
+   * @returns Promise resolue quand l'initialisation est complete
    */
   static initialize(userId?: string): Promise<void> {
-    // Return existing promise if already initializing
     if (this.initializationPromise) {
       return this.initializationPromise;
     }
 
-    // Return immediately if already initialized
     if (this.initialized) {
       return Promise.resolve();
     }
 
-    // Create and store initialization promise
     this.initializationPromise = this.performInitialization(userId);
     return this.initializationPromise;
   }
 
   /**
-   * Internal initialization logic
-   * Configures the SDK and verifies connection
+   * Logique d'initialisation interne
+   * Configure le SDK et verifie la connexion
    */
   private static async performInitialization(userId?: string): Promise<void> {
     try {
@@ -101,29 +115,26 @@ export class RevenueCatService {
 
       const expectedPrefix = Platform.OS === 'ios' ? 'appl_' : 'goog_';
       if (!REVENUECAT_API_KEY.startsWith(expectedPrefix)) {
-        Logger.warn(`⚠️ [RevenueCat] API key doesn't match expected prefix`);
+        Logger.warn('[RevenueCat] API key doesnt match expected prefix');
       }
 
       Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.DEBUG : LOG_LEVEL.INFO);
 
-      // ✅ Configure seulement (instantané)
       Purchases.configure({
         apiKey: REVENUECAT_API_KEY,
         appUserID: userId,
       });
 
       this.initialized = true;
-      Logger.debug('✅ [RevenueCat] SDK configured (verification in background)');
+      Logger.debug('[RevenueCat] SDK configured (verification in background)');
 
-      // ✅ Vérifie en arrière-plan SANS bloquer
       Purchases.getCustomerInfo()
-        .then(() => Logger.debug('✅ [RevenueCat] Verification successful'))
-        .catch((error) => Logger.warn('⚠️ [RevenueCat] Verification failed:', error));
+        .then(() => Logger.debug('[RevenueCat] Verification successful'))
+        .catch((error) => Logger.warn('[RevenueCat] Verification failed:', error));
 
-      // ✅ Écoute les changements
       Purchases.addCustomerInfoUpdateListener(this.handleCustomerInfoUpdate);
     } catch (error) {
-      Logger.error('❌ [RevenueCat] Initialization failed:', error);
+      Logger.error('[RevenueCat] Initialization failed:', error);
       this.initialized = false;
       this.initializationPromise = null;
       throw error;
@@ -131,32 +142,34 @@ export class RevenueCatService {
   }
 
   /**
-   * Callback for customer info updates
-   * Triggered when subscription status changes
+   * Callback pour les mises a jour des informations client
+   * Declenche quand le statut d'abonnement change
    */
-  private static handleCustomerInfoUpdate = (customerInfo: CustomerInfo) => {
+  private static handleCustomerInfoUpdate = (customerInfo: CustomerInfo): void => {
     const activeEntitlements = Object.keys(customerInfo.entitlements.active);
     if (activeEntitlements.length > 0) {
-      Logger.debug('🔔 [RevenueCat] Subscription status updated:', activeEntitlements);
+      Logger.debug('[RevenueCat] Subscription status updated:', activeEntitlements);
     }
   };
 
   /**
-   * Check if SDK is initialized
+   * Verifier si le SDK est initialise
+   *
+   * @returns Vrai si initialise
    */
   static isInitialized(): boolean {
     return this.initialized;
   }
 
-  // ==========================================================================
-  // Offerings & Products
-  // ==========================================================================
+  // ===========================================================================
+  // SECTION: Offres et produits
+  // ===========================================================================
 
   /**
-   * Fetch available subscription offerings
-   * Returns a simplified array of packages ready for UI display
+   * Recuperer les offres d'abonnement disponibles
+   * Retourne un tableau simplifie de packages prets pour l'UI
    *
-   * @returns Array of subscription packages, empty array if none available
+   * @returns Les abonnements et consommables disponibles
    */
   static async getAllOfferings(): Promise<{
     subscriptions: SubscriptionPackage[];
@@ -174,12 +187,12 @@ export class RevenueCatService {
 
       Object.values(offeringsResponse.all).forEach((offering) => {
         offering.availablePackages?.forEach((pkg) => {
-          const mapped = {
+          const mapped: SubscriptionPackage = {
             identifier: pkg.identifier,
             packageType: pkg.packageType,
             product: {
               identifier: pkg.product.identifier,
-              title: pkg.product.title || getDefaultTitle(pkg),
+              title: pkg.product.title || this.getDefaultTitle(pkg),
               description: pkg.product.description || '',
               price: pkg.product.price,
               priceString: pkg.product.priceString,
@@ -188,7 +201,6 @@ export class RevenueCatService {
             rcPackage: pkg,
           };
 
-          // Separate by product type
           if (pkg.product.identifier.includes('streak_saver')) {
             consumables.push(mapped);
           } else {
@@ -199,20 +211,32 @@ export class RevenueCatService {
 
       return { subscriptions, consumables };
     } catch (error) {
-      Logger.error('❌ [RevenueCat] Error:', error);
+      Logger.error('[RevenueCat] Error fetching offerings:', error);
       return { subscriptions: [], consumables: [] };
     }
   }
 
-  // ==========================================================================
-  // Purchase Operations
-  // ==========================================================================
+  /**
+   * Obtenir un titre par defaut pour un package
+   */
+  private static getDefaultTitle(pkg: PurchasesPackage): string {
+    if (pkg.packageType === 'ANNUAL') return 'Yearly Plan';
+    if (pkg.packageType === 'MONTHLY') return 'Monthly Plan';
+    if (pkg.product.identifier.includes('streak_saver_3')) return '3 Streak Savers';
+    if (pkg.product.identifier.includes('streak_saver_10')) return '10 Streak Savers';
+    if (pkg.product.identifier.includes('streak_saver_25')) return '25 Streak Savers';
+    return pkg.product.identifier;
+  }
+
+  // ===========================================================================
+  // SECTION: Operations d'achat
+  // ===========================================================================
 
   /**
-   * Purchase a subscription package
+   * Acheter un package d'abonnement
    *
-   * @param pkg - The subscription package to purchase
-   * @returns Result object with success status and customer info
+   * @param pkg - Le package a acheter
+   * @returns Resultat de l'operation avec le statut et les infos client
    */
   static async purchasePackage(pkg: SubscriptionPackage): Promise<PurchaseResult> {
     try {
@@ -220,7 +244,7 @@ export class RevenueCatService {
 
       const hasPremium = !!customerInfo.entitlements.active['premium'];
 
-      Logger.debug('✅ [RevenueCat] Purchase successful');
+      Logger.debug('[RevenueCat] Purchase successful');
 
       return {
         success: true,
@@ -235,7 +259,7 @@ export class RevenueCatService {
         };
       }
 
-      Logger.error('❌ [RevenueCat] Purchase failed:', error.message);
+      Logger.error('[RevenueCat] Purchase failed:', error.message);
       return {
         success: false,
         error: error.message || 'Purchase failed',
@@ -244,10 +268,10 @@ export class RevenueCatService {
   }
 
   /**
-   * Restore previous purchases
-   * Useful for users who reinstalled the app or switched devices
+   * Restaurer les achats precedents
+   * Utile pour les utilisateurs qui ont reinstalle l'app ou change d'appareil
    *
-   * @returns Result object with success status
+   * @returns Resultat de l'operation
    */
   static async restorePurchases(): Promise<PurchaseResult> {
     try {
@@ -255,7 +279,7 @@ export class RevenueCatService {
       const hasPremium = !!customerInfo.entitlements.active['premium'];
 
       if (hasPremium) {
-        Logger.debug('✅ [RevenueCat] Purchases restored successfully');
+        Logger.debug('[RevenueCat] Purchases restored successfully');
       }
 
       return {
@@ -264,7 +288,7 @@ export class RevenueCatService {
         error: hasPremium ? undefined : 'No purchases found',
       };
     } catch (error: any) {
-      Logger.error('❌ [RevenueCat] Restore failed:', error.message);
+      Logger.error('[RevenueCat] Restore failed:', error.message);
       return {
         success: false,
         error: error.message || 'Restore failed',
@@ -272,15 +296,15 @@ export class RevenueCatService {
     }
   }
 
-  // ==========================================================================
-  // Subscription Status
-  // ==========================================================================
+  // ===========================================================================
+  // SECTION: Statut d'abonnement
+  // ===========================================================================
 
   /**
-   * Get current subscription status
-   * Checks if user has active premium entitlement
+   * Obtenir le statut d'abonnement actuel
+   * Verifie si l'utilisateur a l'entitlement premium actif
    *
-   * @returns Subscription state with entitlement details
+   * @returns L'etat de l'abonnement avec les details
    */
   static async getSubscriptionStatus(): Promise<SubscriptionState> {
     try {
@@ -293,7 +317,7 @@ export class RevenueCatService {
         expirationDate: premiumEntitlement?.expirationDate || null,
       };
     } catch (error) {
-      Logger.error('❌ [RevenueCat] Error fetching subscription status');
+      Logger.error('[RevenueCat] Error fetching subscription status');
       return {
         isSubscribed: false,
         entitlementId: null,
@@ -303,60 +327,51 @@ export class RevenueCatService {
   }
 
   /**
-   * Check subscription status and return boolean
-   * Convenience method for quick premium checks
+   * Verifier le statut d'abonnement et retourner un booleen
+   * Methode pratique pour les verifications rapides
    *
-   * @param userId - User ID to check
-   * @returns True if user has active premium subscription
+   * @param userId - L'ID utilisateur a verifier
+   * @returns Vrai si l'utilisateur a un abonnement premium actif
    */
   static async checkAndSyncSubscription(userId: string): Promise<boolean> {
     try {
       const status = await this.getSubscriptionStatus();
       return status.isSubscribed;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
 
-  // ==========================================================================
-  // User Management
-  // ==========================================================================
+  // ===========================================================================
+  // SECTION: Gestion des utilisateurs
+  // ===========================================================================
 
   /**
-   * Associate user ID with RevenueCat
-   * Call this after user logs in
+   * Associer un ID utilisateur avec RevenueCat
+   * A appeler apres la connexion de l'utilisateur
    *
-   * @param userId - The user's unique identifier
+   * @param userId - L'identifiant unique de l'utilisateur
    */
   static async setAppUserId(userId: string): Promise<void> {
     try {
       await Purchases.logIn(userId);
-      Logger.debug('✅ [RevenueCat] User authenticated');
+      Logger.debug('[RevenueCat] User authenticated');
     } catch (error) {
-      Logger.error('❌ [RevenueCat] Error setting user ID');
+      Logger.error('[RevenueCat] Error setting user ID');
       throw error;
     }
   }
 
   /**
-   * Clear user ID from RevenueCat
-   * Call this when user logs out
+   * Dissocier l'ID utilisateur de RevenueCat
+   * A appeler lors de la deconnexion de l'utilisateur
    */
   static async clearAppUserId(): Promise<void> {
     try {
       await Purchases.logOut();
-      Logger.debug('✅ [RevenueCat] User logged out');
+      Logger.debug('[RevenueCat] User logged out');
     } catch (error) {
-      Logger.error('❌ [RevenueCat] Error logging out');
+      Logger.error('[RevenueCat] Error logging out');
     }
   }
-}
-
-function getDefaultTitle(pkg: any): string {
-  if (pkg.packageType === 'ANNUAL') return 'Yearly Plan';
-  if (pkg.packageType === 'MONTHLY') return 'Monthly Plan';
-  if (pkg.product.identifier.includes('streak_saver_3')) return '3 Streak Savers';
-  if (pkg.product.identifier.includes('streak_saver_10')) return '10 Streak Savers';
-  if (pkg.product.identifier.includes('streak_saver_25')) return '25 Streak Savers';
-  return pkg.product.identifier;
 }

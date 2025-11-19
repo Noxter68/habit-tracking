@@ -1,7 +1,30 @@
-// src/services/LeaderboardService.ts
+/**
+ * Service de gestion du classement (leaderboard)
+ *
+ * Ce service gere les classements globaux et hebdomadaires des utilisateurs
+ * bases sur leurs XP totaux et hebdomadaires. Il inclut les statistiques
+ * detaillees comme les streaks, les jours parfaits et les XP de la semaine.
+ *
+ * @module LeaderboardService
+ */
+
+// =============================================================================
+// IMPORTS - Bibliotheques externes
+// =============================================================================
 import { supabase } from '@/lib/supabase';
+
+// =============================================================================
+// IMPORTS - Utilitaires internes
+// =============================================================================
 import Logger from '@/utils/logger';
 
+// =============================================================================
+// TYPES ET INTERFACES
+// =============================================================================
+
+/**
+ * Entree du classement
+ */
 export interface LeaderboardEntry {
   id: string;
   username: string;
@@ -16,16 +39,36 @@ export interface LeaderboardEntry {
   isCurrentUser?: boolean;
 }
 
+/**
+ * Statistiques du classement
+ */
 export interface LeaderboardStats {
   totalUsers: number;
   averageXP: number;
   topXP: number;
 }
 
+// =============================================================================
+// SERVICE PRINCIPAL
+// =============================================================================
+
+/**
+ * Service de gestion du classement
+ *
+ * Gere les classements globaux et hebdomadaires
+ */
 export class LeaderboardService {
+  // ===========================================================================
+  // SECTION: Classement global
+  // ===========================================================================
+
   /**
-   * Get global leaderboard ranked by total XP
-   * Shows top 20 + current user if outside top 20
+   * Recuperer le classement global par XP total
+   * Affiche le top 20 + l'utilisateur courant s'il est en dehors du top 20
+   *
+   * @param userId - L'identifiant de l'utilisateur
+   * @param limit - Le nombre maximum d'entrees (par defaut 20)
+   * @returns Le classement, le rang de l'utilisateur et les statistiques
    */
   static async getGlobalLeaderboard(
     userId: string,
@@ -36,7 +79,11 @@ export class LeaderboardService {
     stats: LeaderboardStats;
   }> {
     try {
-      const { data: topUsers, error: topError } = await supabase.from('profiles').select('id, username, email, total_xp, current_level').order('total_xp', { ascending: false }).limit(limit);
+      const { data: topUsers, error: topError } = await supabase
+        .from('profiles')
+        .select('id, username, email, total_xp, current_level')
+        .order('total_xp', { ascending: false })
+        .limit(limit);
 
       if (topError) throw topError;
 
@@ -101,14 +148,24 @@ export class LeaderboardService {
 
       const userInTop = leaderboard.some((u) => u.id === userId);
       if (!userInTop && currentUserRank > 0) {
-        const { data: currentUser } = await supabase.from('profiles').select('id, username, email, total_xp, current_level').eq('id', userId).single();
+        const { data: currentUser } = await supabase
+          .from('profiles')
+          .select('id, username, email, total_xp, current_level')
+          .eq('id', userId)
+          .single();
 
         if (currentUser) {
-          const { data: userStreakData } = await supabase.from('habits').select('current_streak').eq('user_id', userId);
+          const { data: userStreakData } = await supabase
+            .from('habits')
+            .select('current_streak')
+            .eq('user_id', userId);
 
           const maxStreak = Math.max(...(userStreakData?.map((h) => h.current_streak || 0) || [0]));
 
-          const { data: userProgressionData } = await supabase.from('habit_progression').select('performance_metrics').eq('user_id', userId);
+          const { data: userProgressionData } = await supabase
+            .from('habit_progression')
+            .select('performance_metrics')
+            .eq('user_id', userId);
 
           const totalPerfectDays =
             userProgressionData?.reduce((sum, p) => {
@@ -116,7 +173,11 @@ export class LeaderboardService {
               return sum + (metrics?.perfectDays || 0);
             }, 0) || 0;
 
-          const { data: userWeeklyXPData } = await supabase.from('xp_transactions').select('amount').eq('user_id', userId).gte('created_at', weekAgo.toISOString());
+          const { data: userWeeklyXPData } = await supabase
+            .from('xp_transactions')
+            .select('amount')
+            .eq('user_id', userId)
+            .gte('created_at', weekAgo.toISOString());
 
           const userWeeklyXP = userWeeklyXPData?.reduce((sum, xp) => sum + xp.amount, 0) || 0;
 
@@ -138,7 +199,9 @@ export class LeaderboardService {
 
       const stats: LeaderboardStats = {
         totalUsers: topUsers?.length || 0,
-        averageXP: topUsers?.length ? Math.round(topUsers.reduce((sum, u) => sum + (u.total_xp || 0), 0) / topUsers.length) : 0,
+        averageXP: topUsers?.length
+          ? Math.round(topUsers.reduce((sum, u) => sum + (u.total_xp || 0), 0) / topUsers.length)
+          : 0,
         topXP: topUsers?.[0]?.total_xp || 0,
       };
 
@@ -153,9 +216,18 @@ export class LeaderboardService {
     }
   }
 
+  // ===========================================================================
+  // SECTION: Classement hebdomadaire
+  // ===========================================================================
+
   /**
-   * Get weekly leaderboard - ONLY users who earned XP in the last 7 days
-   * Shows top 20 + current user if outside top 20
+   * Recuperer le classement hebdomadaire
+   * UNIQUEMENT les utilisateurs ayant gagne des XP dans les 7 derniers jours
+   * Affiche le top 20 + l'utilisateur courant s'il est en dehors du top 20
+   *
+   * @param userId - L'identifiant de l'utilisateur
+   * @param limit - Le nombre maximum d'entrees (par defaut 20)
+   * @returns Le classement et le rang de l'utilisateur
    */
   static async getWeeklyLeaderboard(
     userId: string,
@@ -168,49 +240,44 @@ export class LeaderboardService {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
 
-      // Get ALL XP transactions from the last 7 days
-      const { data: weeklyXP, error } = await supabase.from('xp_transactions').select('user_id, amount').gte('created_at', weekAgo.toISOString());
+      const { data: weeklyXP, error } = await supabase
+        .from('xp_transactions')
+        .select('user_id, amount')
+        .gte('created_at', weekAgo.toISOString());
 
       if (error) throw error;
 
-      // If no XP earned this week, return empty
       if (!weeklyXP || weeklyXP.length === 0) {
         return { leaderboard: [], currentUserRank: 0 };
       }
 
-      // Aggregate XP by user
       const xpByUser = new Map<string, number>();
       weeklyXP.forEach((xp) => {
         const current = xpByUser.get(xp.user_id) || 0;
         xpByUser.set(xp.user_id, current + xp.amount);
       });
 
-      // Sort ALL users by weekly XP to calculate ranks
-      const sortedEntries = Array.from(xpByUser.entries()).sort((a, b) => b[1] - a[1]); // Sort by XP descending
+      const sortedEntries = Array.from(xpByUser.entries()).sort((a, b) => b[1] - a[1]);
+      const sortedUserIds = sortedEntries.map(([id]) => id);
 
-      const sortedUserIds = sortedEntries.map(([userId]) => userId);
-
-      // Find current user's rank among all active users
       const currentUserRank = sortedUserIds.indexOf(userId) + 1;
-
-      // Get top N user IDs
       const topUserIds = sortedUserIds.slice(0, limit);
 
-      // Add current user if not in top N but has XP this week
       const userInTop = topUserIds.includes(userId);
       if (!userInTop && currentUserRank > 0) {
         topUserIds.push(userId);
       }
 
-      // Fetch profiles for these users
-      const { data: users, error: profilesError } = await supabase.from('profiles').select('id, username, email, total_xp, current_level').in('id', topUserIds);
+      const { data: users, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, email, total_xp, current_level')
+        .in('id', topUserIds);
 
       if (profilesError) throw profilesError;
       if (!users) {
         return { leaderboard: [], currentUserRank: 0 };
       }
 
-      // Build leaderboard with proper ranks
       const leaderboard: LeaderboardEntry[] = users
         .map((user) => ({
           id: user.id,
@@ -232,6 +299,16 @@ export class LeaderboardService {
     }
   }
 
+  // ===========================================================================
+  // SECTION: Utilitaires prives
+  // ===========================================================================
+
+  /**
+   * Generer les initiales pour l'avatar a partir du nom
+   *
+   * @param name - Le nom ou email de l'utilisateur
+   * @returns Les initiales en majuscules
+   */
   private static generateAvatar(name: string): string {
     const words = name.split(/[\s@._-]/);
     if (words.length >= 2) {

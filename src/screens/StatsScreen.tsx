@@ -1,43 +1,88 @@
-// src/screens/StatsScreen.tsx
+/**
+ * ============================================================================
+ * StatsScreen.tsx
+ * ============================================================================
+ *
+ * Ecran de statistiques affichant les analyses et prédictions de l'utilisateur.
+ * Présente le niveau actuel, les prédictions de succès et les analytics premium.
+ *
+ * Fonctionnalités principales:
+ * - Affichage du niveau et progression de l'utilisateur
+ * - Carte de prédiction de succès basée sur les habitudes
+ * - Section analytics premium avec différentes périodes
+ * - Support multilingue pour les dates
+ */
+
 import React, { useState } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, RefreshControl, ImageBackground } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BarChart3 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import tw from '@/lib/tailwind';
+import { BarChart3 } from 'lucide-react-native';
 import { format } from 'date-fns';
 import { enUS, fr } from 'date-fns/locale';
 
-// Import components
 import PremiumStatsSection from '@/components/premium/PremiumStatsSection';
 import PredictionCard from '@/components/stats/PredictionCard';
+
 import { useHabits } from '@/context/HabitContext';
 import { useStats } from '@/context/StatsContext';
-import { useAuth } from '@/context/AuthContext';
+
+import tw from '@/lib/tailwind';
+
+// ============================================================================
+// TYPES
+// ============================================================================
 
 type TimeRange = 'week' | 'month' | '4weeks';
 
+// ============================================================================
+// COMPOSANT PRINCIPAL
+// ============================================================================
+
 const StatsScreen: React.FC = () => {
   const { t, i18n } = useTranslation();
-  const { user } = useAuth();
   const { habits, loading: habitsLoading, refreshHabits } = useHabits();
   const { stats, refreshStats } = useStats();
+
+  // ============================================================================
+  // HOOKS - State
+  // ============================================================================
 
   const [refreshing, setRefreshing] = useState(false);
   const [selectedRange, setSelectedRange] = useState<TimeRange>('week');
 
-  // Get date-fns locale
-  const dateLocale = i18n.language === 'fr' ? fr : enUS;
+  // ============================================================================
+  // VARIABLES DERIVEES
+  // ============================================================================
 
+  const dateLocale = i18n.language === 'fr' ? fr : enUS;
+  const safeHabits = Array.isArray(habits) ? habits : [];
+
+  // ============================================================================
+  // GESTIONNAIRES D'EVENEMENTS
+  // ============================================================================
+
+  /**
+   * Rafraîchit les données des habitudes et statistiques
+   */
   const onRefresh = async () => {
     setRefreshing(true);
     await Promise.all([refreshHabits(), refreshStats(true)]);
     setRefreshing(false);
   };
 
+  // ============================================================================
+  // RENDU - État de chargement
+  // ============================================================================
+
   if (habitsLoading || !habits) {
     return (
-      <ImageBackground source={require('../../assets/interface/textures/texture-white.png')} style={tw`flex-1`} imageStyle={{ opacity: 0.15 }} resizeMode="repeat">
+      <ImageBackground
+        source={require('../../assets/interface/textures/texture-white.png')}
+        style={tw`flex-1`}
+        imageStyle={{ opacity: 0.15 }}
+        resizeMode="repeat"
+      >
         <View style={tw`flex-1 bg-transparent items-center justify-center`}>
           <ActivityIndicator size="large" color="#9333EA" />
           <Text style={tw`text-stone-500 mt-4`}>{t('stats.loading')}</Text>
@@ -46,16 +91,38 @@ const StatsScreen: React.FC = () => {
     );
   }
 
-  // Ensure habits is an array
-  const safeHabits = Array.isArray(habits) ? habits : [];
+  // ============================================================================
+  // RENDU PRINCIPAL
+  // ============================================================================
 
   return (
-    <ImageBackground source={require('../../assets/interface/textures/texture-white.png')} style={{ flex: 1 }} imageStyle={{ opacity: 0.15 }} resizeMode="repeat">
+    <ImageBackground
+      source={require('../../assets/interface/textures/texture-white.png')}
+      style={{ flex: 1 }}
+      imageStyle={{ opacity: 0.15 }}
+      resizeMode="repeat"
+    >
       <View style={{ flex: 1, backgroundColor: 'transparent' }}>
-        <ScrollView style={{ flex: 1, marginTop: 45 }} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#059669" />}>
-          {/* Elegant Header Section - Jade Green */}
-          <LinearGradient colors={['#d1fae5', '#a7f3d0', '#6ee7b7']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ paddingHorizontal: 20, paddingTop: 40, paddingBottom: 20 }}>
+        <ScrollView
+          style={{ flex: 1, marginTop: 45 }}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#059669"
+            />
+          }
+        >
+          {/* En-tête avec dégradé jade */}
+          <LinearGradient
+            colors={['#d1fae5', '#a7f3d0', '#6ee7b7']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ paddingHorizontal: 20, paddingTop: 40, paddingBottom: 20 }}
+          >
             <View style={{ alignItems: 'center' }}>
+              {/* Badge sous-titre */}
               <View
                 style={{
                   backgroundColor: 'rgba(5, 150, 105, 0.15)',
@@ -76,6 +143,8 @@ const StatsScreen: React.FC = () => {
                   {t('stats.subtitle')}
                 </Text>
               </View>
+
+              {/* Titre principal */}
               <Text
                 style={{
                   fontSize: 32,
@@ -86,6 +155,8 @@ const StatsScreen: React.FC = () => {
               >
                 {t('stats.title')}
               </Text>
+
+              {/* Date du jour */}
               <Text
                 style={{
                   fontSize: 13,
@@ -98,7 +169,7 @@ const StatsScreen: React.FC = () => {
               </Text>
             </View>
 
-            {/* Level Badge - Jade Gradient */}
+            {/* Badge du niveau */}
             <View style={{ alignItems: 'center', marginTop: 12 }}>
               <LinearGradient
                 colors={['#059669', '#047857']}
@@ -128,12 +199,12 @@ const StatsScreen: React.FC = () => {
             </View>
           </LinearGradient>
 
-          {/* Success Prediction Card */}
+          {/* Carte de prédiction de succès */}
           <View style={{ paddingHorizontal: 24, marginBottom: 20, paddingTop: 20 }}>
             <PredictionCard habits={safeHabits} />
           </View>
 
-          {/* Analytics Section Header */}
+          {/* En-tête section Analytics */}
           <View style={{ paddingHorizontal: 24, marginBottom: 16 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <BarChart3 size={18} color="#60a5fa" />
@@ -150,12 +221,16 @@ const StatsScreen: React.FC = () => {
             </View>
           </View>
 
-          {/* Premium Analytics Section */}
+          {/* Section Analytics Premium */}
           <View style={{ paddingHorizontal: 24, marginBottom: 28 }}>
-            <PremiumStatsSection habits={safeHabits} selectedRange={selectedRange} onRangeChange={setSelectedRange} />
+            <PremiumStatsSection
+              habits={safeHabits}
+              selectedRange={selectedRange}
+              onRangeChange={setSelectedRange}
+            />
           </View>
 
-          {/* Bottom Spacing */}
+          {/* Espacement bas de page */}
           <View style={{ height: 80 }} />
         </ScrollView>
       </View>

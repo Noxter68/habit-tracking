@@ -1,34 +1,74 @@
-// src/services/notificationPreferencesService.ts
-import { supabase } from '@/lib/supabase';
+/**
+ * Service de gestion des preferences de notification
+ *
+ * Ce service gere les preferences globales de notification de l'utilisateur.
+ * Il coordonne entre les parametres globaux et les notifications par habitude,
+ * incluant la gestion des permissions systeme.
+ *
+ * @module NotificationPreferencesService
+ */
+
+// =============================================================================
+// IMPORTS - Bibliotheques externes
+// =============================================================================
 import * as Notifications from 'expo-notifications';
+
+// =============================================================================
+// IMPORTS - Utilitaires internes
+// =============================================================================
+import { supabase } from '@/lib/supabase';
+import Logger from '@/utils/logger';
+
+// =============================================================================
+// IMPORTS - Services internes
+// =============================================================================
 import { NotificationService } from './notificationService';
 import { HabitService } from './habitService';
 import { NotificationScheduleService } from './notificationScheduleService';
-import Logger from '@/utils/logger';
 
+// =============================================================================
+// TYPES ET INTERFACES
+// =============================================================================
+
+/**
+ * Preferences de notification de l'utilisateur
+ */
 export interface NotificationPreferences {
   globalEnabled: boolean;
   lastPermissionRequest?: string;
   permissionStatus?: 'granted' | 'denied' | 'undetermined';
 }
 
+// =============================================================================
+// SERVICE PRINCIPAL
+// =============================================================================
+
 /**
- * Service to manage global notification preferences
- * Handles the coordination between global settings and per-habit notifications
+ * Service de gestion des preferences de notification
+ *
+ * Gere la coordination entre les parametres globaux et les notifications par habitude
  */
 export class NotificationPreferencesService {
-  private static readonly STORAGE_KEY = 'notification_preferences';
+  // ===========================================================================
+  // SECTION: Recuperation des preferences
+  // ===========================================================================
 
   /**
-   * Get current notification preferences from user profile
+   * Recuperer les preferences de notification depuis le profil utilisateur
+   *
+   * @param userId - L'identifiant de l'utilisateur
+   * @returns Les preferences de notification
    */
   static async getPreferences(userId: string): Promise<NotificationPreferences> {
     try {
-      const { data, error } = await supabase.from('profiles').select('notification_preferences').eq('id', userId).maybeSingle();
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('notification_preferences')
+        .eq('id', userId)
+        .maybeSingle();
 
       if (error) throw error;
 
-      // ✅ Gère le cas où data est null
       if (!data) {
         return {
           globalEnabled: false,
@@ -52,9 +92,15 @@ export class NotificationPreferencesService {
   }
 
   /**
-   * Update notification preferences in database
+   * Mettre a jour les preferences de notification
+   *
+   * @param userId - L'identifiant de l'utilisateur
+   * @param preferences - Les nouvelles preferences
    */
-  static async updatePreferences(userId: string, preferences: Partial<NotificationPreferences>): Promise<void> {
+  static async updatePreferences(
+    userId: string,
+    preferences: Partial<NotificationPreferences>
+  ): Promise<void> {
     try {
       const current = await this.getPreferences(userId);
       const updated = { ...current, ...preferences };
@@ -74,8 +120,14 @@ export class NotificationPreferencesService {
     }
   }
 
+  // ===========================================================================
+  // SECTION: Verification des permissions
+  // ===========================================================================
+
   /**
-   * Check current system permission status
+   * Verifier le statut actuel des permissions systeme
+   *
+   * @returns Le statut des permissions
    */
   static async checkPermissionStatus(): Promise<'granted' | 'denied' | 'undetermined'> {
     const { status } = await Notifications.getPermissionsAsync();
@@ -85,12 +137,18 @@ export class NotificationPreferencesService {
     return 'undetermined';
   }
 
+  // ===========================================================================
+  // SECTION: Activation/Desactivation des notifications
+  // ===========================================================================
+
   /**
-   * Enable global notifications
-   * This will:
-   * 1. Request permissions if needed
-   * 2. Update preference in database
-   * 3. Re-schedule all enabled habit notifications
+   * Activer les notifications globales
+   * 1. Demande les permissions si necessaire
+   * 2. Met a jour les preferences en base
+   * 3. Replanifie toutes les notifications d'habitudes
+   *
+   * @param userId - L'identifiant de l'utilisateur
+   * @returns Le resultat de l'operation
    */
   static async enableNotifications(userId: string): Promise<{
     success: boolean;
@@ -98,11 +156,9 @@ export class NotificationPreferencesService {
     needsSettings?: boolean;
   }> {
     try {
-      // Check if permission was previously denied
       const currentStatus = await this.checkPermissionStatus();
 
       if (currentStatus === 'denied') {
-        // Permission was explicitly denied - user needs to go to settings
         return {
           success: false,
           permissionGranted: false,
@@ -110,11 +166,9 @@ export class NotificationPreferencesService {
         };
       }
 
-      // Request permission
       const permissionGranted = await NotificationService.registerForPushNotifications();
 
       if (!permissionGranted) {
-        // User denied permission in the prompt
         await this.updatePreferences(userId, {
           globalEnabled: false,
           permissionStatus: 'denied',
@@ -128,14 +182,12 @@ export class NotificationPreferencesService {
         };
       }
 
-      // Update preferences
       await this.updatePreferences(userId, {
         globalEnabled: true,
         permissionStatus: 'granted',
         lastPermissionRequest: new Date().toISOString(),
       });
 
-      // Re-schedule all habit notifications that have notifications enabled
       await this.rescheduleAllNotifications(userId);
 
       return {
@@ -152,17 +204,16 @@ export class NotificationPreferencesService {
   }
 
   /**
-   * Disable global notifications
-   * This will:
-   * 1. Cancel all scheduled notifications
-   * 2. Update preference in database
+   * Desactiver les notifications globales
+   * 1. Annule toutes les notifications planifiees
+   * 2. Met a jour les preferences en base
+   *
+   * @param userId - L'identifiant de l'utilisateur
    */
   static async disableNotifications(userId: string): Promise<void> {
     try {
-      // Cancel all scheduled notifications
       await NotificationService.cancelAllNotifications();
 
-      // Update preferences
       await this.updatePreferences(userId, {
         globalEnabled: false,
       });
@@ -175,7 +226,9 @@ export class NotificationPreferencesService {
   }
 
   /**
-   * Re-schedule all notifications for habits that have notifications enabled
+   * Replanifier toutes les notifications pour les habitudes avec notifications activees
+   *
+   * @param userId - L'identifiant de l'utilisateur
    */
   private static async rescheduleAllNotifications(userId: string): Promise<void> {
     try {
@@ -183,13 +236,16 @@ export class NotificationPreferencesService {
 
       for (const habit of habits) {
         if (habit.notifications && habit.notificationTime) {
-          // ❌ REMOVE LOCAL SCHEDULING
-          // await NotificationService.scheduleSmartHabitNotifications(habit, userId);
+          const timeWithSeconds = habit.notificationTime.includes(':00:')
+            ? habit.notificationTime
+            : `${habit.notificationTime}:00`;
 
-          // ✅ ONLY update database
-          const timeWithSeconds = habit.notificationTime.includes(':00:') ? habit.notificationTime : `${habit.notificationTime}:00`;
-
-          await NotificationScheduleService.scheduleHabitNotification(habit.id, userId, timeWithSeconds, true);
+          await NotificationScheduleService.scheduleHabitNotification(
+            habit.id,
+            userId,
+            timeWithSeconds,
+            true
+          );
         }
       }
 
@@ -200,9 +256,16 @@ export class NotificationPreferencesService {
     }
   }
 
+  // ===========================================================================
+  // SECTION: Gestion de la premiere habitude
+  // ===========================================================================
+
   /**
-   * Check if this is the user's first habit and request permissions
-   * Should be called AFTER creating a new habit
+   * Gerer la creation de la premiere habitude et demander les permissions
+   * A appeler APRES la creation d'une nouvelle habitude
+   *
+   * @param userId - L'identifiant de l'utilisateur
+   * @returns Le resultat de l'operation
    */
   static async handleFirstHabitCreation(userId: string): Promise<{
     isFirstHabit: boolean;
@@ -210,9 +273,8 @@ export class NotificationPreferencesService {
     permissionGranted: boolean;
   }> {
     try {
-      // Check if user has any existing habits
       const habits = await HabitService.fetchHabits(userId);
-      const isFirstHabit = habits.length === 1; // ✅ Changed from === 0 to === 1
+      const isFirstHabit = habits.length === 1;
 
       if (!isFirstHabit) {
         return {
@@ -222,10 +284,8 @@ export class NotificationPreferencesService {
         };
       }
 
-      // Check if we've already requested permission
       const prefs = await this.getPreferences(userId);
 
-      // Don't request again if we already have permission or were denied
       if (prefs.permissionStatus === 'granted' || prefs.permissionStatus === 'denied') {
         return {
           isFirstHabit: true,
@@ -234,10 +294,8 @@ export class NotificationPreferencesService {
         };
       }
 
-      // Request permission for first habit
       const permissionGranted = await NotificationService.registerForPushNotifications();
 
-      // Update preferences with proper error handling
       try {
         await this.updatePreferences(userId, {
           globalEnabled: permissionGranted,
@@ -246,7 +304,6 @@ export class NotificationPreferencesService {
         });
       } catch (updateError) {
         Logger.error('Error updating notification preferences:', updateError);
-        // Don't throw - the habit was created successfully
       }
 
       return {
@@ -256,7 +313,6 @@ export class NotificationPreferencesService {
       };
     } catch (error) {
       Logger.error('Error handling first habit creation:', error);
-      // Return safe defaults instead of throwing
       return {
         isFirstHabit: false,
         permissionRequested: false,
@@ -265,15 +321,21 @@ export class NotificationPreferencesService {
     }
   }
 
+  // ===========================================================================
+  // SECTION: Verification du statut
+  // ===========================================================================
+
   /**
-   * Check if global notifications are enabled
+   * Verifier si les notifications globales sont activees
+   *
+   * @param userId - L'identifiant de l'utilisateur
+   * @returns Vrai si les notifications sont activees
    */
   static async areNotificationsEnabled(userId: string): Promise<boolean> {
     try {
       const prefs = await this.getPreferences(userId);
       const systemStatus = await this.checkPermissionStatus();
 
-      // Both global preference and system permission must be enabled
       return prefs.globalEnabled && systemStatus === 'granted';
     } catch (error) {
       Logger.error('Error checking notification status:', error);
@@ -282,7 +344,10 @@ export class NotificationPreferencesService {
   }
 
   /**
-   * Get a summary of notification status for debugging
+   * Obtenir un resume du statut des notifications pour le debug
+   *
+   * @param userId - L'identifiant de l'utilisateur
+   * @returns Le resume du statut
    */
   static async getNotificationStatus(userId: string): Promise<{
     globalEnabled: boolean;

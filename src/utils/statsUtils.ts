@@ -1,6 +1,16 @@
 // src/utils/statsUtils.ts
-import { Habit } from '../types/habit';
+// Statistiques générales pour l'écran Stats
+// Utilise le module core pour les calculs de base
+
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, differenceInDays, format } from 'date-fns';
+import {
+  getDateRangeForPeriod as coreGetDateRangeForPeriod,
+  calculateHabitStreak,
+  calculateBestStreak as coreCalculateBestStreak,
+  calculateConsistency as coreCalculateConsistency,
+  type DateRange,
+} from './stats/core';
+import { Habit } from '@/types';
 
 export interface Stats {
   currentMaxStreak: number;
@@ -286,31 +296,12 @@ const calculateWeeklyAverage = (habits: Habit[]): number => {
   return Math.min(100, Math.round(average)); // Cap at 100%
 };
 
+/**
+ * Obtient la plage de dates pour une période donnée
+ * @deprecated Utiliser getDateRangeForPeriod depuis '@/utils/stats' à la place
+ */
 export const getDateRangeForPeriod = (period: 'week' | 'month' | 'all') => {
-  const now = new Date();
-
-  switch (period) {
-    case 'week':
-      return {
-        start: startOfWeek(now, { weekStartsOn: 1 }),
-        end: endOfWeek(now, { weekStartsOn: 1 }),
-      };
-    case 'month':
-      return {
-        start: startOfMonth(now),
-        end: endOfMonth(now),
-      };
-    case 'all':
-      return {
-        start: new Date(2020, 0, 1), // Arbitrary old date
-        end: new Date(2030, 11, 31), // Arbitrary future date
-      };
-    default:
-      return {
-        start: startOfMonth(now),
-        end: endOfMonth(now),
-      };
-  }
+  return coreGetDateRangeForPeriod(period);
 };
 
 export const formatPercentage = (value: number): string => {

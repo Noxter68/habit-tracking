@@ -1,14 +1,16 @@
 // src/screens/Dashboard.tsx
-// Main dashboard screen with habit tracking, holiday mode, and streak savers
+// Écran principal du tableau de bord avec suivi des habitudes,
+// mode vacances, et sauvegarde de streaks
 
 import React, { useCallback, useRef, useEffect, useState, useMemo } from 'react';
-import { ScrollView, RefreshControl, View, Text, ActivityIndicator, Pressable, Alert, StatusBar, Image, ImageBackground, TouchableOpacity } from 'react-native';
+import { ScrollView, RefreshControl, View, Text, ActivityIndicator, Pressable, Alert, StatusBar, ImageBackground, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Lock, Plus, Zap, PauseCircle } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
+import { getLocales } from 'expo-localization';
 import tw from '../lib/tailwind';
 
 // Components
@@ -18,30 +20,33 @@ import { HolidayModeDisplay } from '../components/dashboard/HolidayModeDisplay';
 import { DebugButton } from '@/components/debug/DebugButton';
 import { StreakSaverBadge } from '@/components/streakSaver/StreakSaverBadge';
 import { StreakSaverShopModal } from '@/components/streakSaver/StreakSaverShopModal';
+import TaskBadge from '@/components/TasksBadge';
+import AddHabitButton from '@/components/dashboard/AddHabitButton';
+import { UpdateModal } from '@/components/updateModal';
 
-// Contexts & Services
+// Contexts
 import { useAuth } from '../context/AuthContext';
 import { useHabits } from '../context/HabitContext';
 import { useStats } from '../context/StatsContext';
 import { useLevelUp } from '@/context/LevelUpContext';
 import { useSubscription } from '@/context/SubscriptionContext';
+
+// Services
 import { HolidayModeService } from '@/services/holidayModeService';
+import { StreakSaverService } from '@/services/StreakSaverService';
+
+// Utils
 import { getAchievementByLevel, getAchievementTitle } from '@/utils/achievements';
 import { HapticFeedback } from '@/utils/haptics';
 import Logger from '@/utils/logger';
-import { HolidayPeriod } from '@/types/holiday.types';
-import { StreakSaverService } from '@/services/StreakSaverService';
 import { getTodayString, getLocalDateString } from '@/utils/dateHelpers';
-import TaskBadge from '@/components/TasksBadge';
-import AddHabitButton from '@/components/dashboard/AddHabitButton';
-import i18n from '@/i18n';
-import { UpdateModal } from '@/components/updateModal';
-import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { versionManager } from '@/utils/versionManager';
-import { getLocales } from 'expo-localization';
 import { getModalTexts, getUpdatesForVersion } from '@/utils/updateContent';
+
+// Types & Config
+import { HolidayPeriod } from '@/types/holiday.types';
 import { Config } from '@/config';
-import { runPushTokenDiagnostic } from '@/utils/pushTokenDiagnostic';
+import { useVersionCheck } from '@/hooks/useVersionCheck';
 
 // ============================================================================
 // Main Component
@@ -55,19 +60,6 @@ const Dashboard: React.FC = () => {
   const { stats, loading: statsLoading, refreshStats } = useStats();
   const { triggerLevelUp } = useLevelUp();
   const { checkHabitLimit, habitCount, maxHabits, isPremium, refreshSubscription } = useSubscription();
-
-  // ============================================================================
-  // Diagnostic Push_Token Notification
-  // ============================================================================
-
-  // useEffect(() => {
-  //   if (user?.id) {
-  //     // Lance le diagnostic (en dev seulement)
-  //     if (__DEV__) {
-  //       runPushTokenDiagnostic(user.id);
-  //     }
-  //   }
-  // }, [user]);
 
   // State: Loading & UI
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -372,17 +364,6 @@ const Dashboard: React.FC = () => {
       Logger.error('Error handling streak saver press:', error);
     }
   };
-
-  // const handleStreakSaverPress = async () => {
-  //   if (!user) return;
-
-  //   // Au lieu de naviguer, force l'ouverture de la modal
-  //   navigation.navigate('HabitDetails', {
-  //     habitId: habits[0]?.id, // Premier habit
-  //     pausedTasks: {},
-  //     forceStreakSaver: true, // Flag custom
-  //   });
-  // };
 
   // ============================================================================
   // Effects

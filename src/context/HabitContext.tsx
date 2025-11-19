@@ -1,17 +1,69 @@
-// src/context/HabitContext.tsx
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
+/**
+ * ============================================================================
+ * HabitContext.tsx
+ * ============================================================================
+ *
+ * Contexte de gestion des habitudes de l'utilisateur.
+ *
+ * Ce contexte centralise toutes les opérations CRUD sur les habitudes,
+ * la gestion des taches quotidiennes, le suivi des streaks et la
+ * synchronisation avec le backend Supabase.
+ *
+ * Fonctionnalites principales:
+ * - Chargement et rafraichissement des habitudes
+ * - Creation, modification et suppression d'habitudes
+ * - Toggle des taches individuelles avec calcul XP
+ * - Gestion des notifications d'habitudes
+ * - Synchronisation temps reel avec Supabase
+ *
+ * @module HabitContext
+ */
+
+// ============================================================================
+// IMPORTS - React
+// ============================================================================
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useCallback,
+  useMemo,
+} from 'react';
+
+// ============================================================================
+// IMPORTS - Bibliotheques externes
+// ============================================================================
 import { Alert } from 'react-native';
-import { Habit } from '../types';
-import { useAuth } from './AuthContext';
+
+// ============================================================================
+// IMPORTS - Services
+// ============================================================================
 import { HabitService } from '../services/habitService';
 import { HabitProgressionService } from '@/services/habitProgressionService';
-import { useStats } from './StatsContext';
-import { supabase } from '@/lib/supabase';
-import { getTodayString } from '@/utils/dateHelpers';
-import { NotificationService } from '@/services/notificationService';
 import { NotificationScheduleService } from '@/services/notificationScheduleService';
+import { supabase } from '@/lib/supabase';
+
+// ============================================================================
+// IMPORTS - Utils
+// ============================================================================
 import Logger from '@/utils/logger';
 
+// ============================================================================
+// IMPORTS - Types et Contextes
+// ============================================================================
+import { Habit } from '../types';
+import { useAuth } from './AuthContext';
+import { useStats } from './StatsContext';
+
+// ============================================================================
+// TYPES ET INTERFACES
+// ============================================================================
+
+/**
+ * Resultat du toggle d'une tache
+ */
 interface ToggleTaskResult {
   success: boolean;
   xpEarned: number;
@@ -22,31 +74,70 @@ interface ToggleTaskResult {
   completedTasks?: string[];
 }
 
+/**
+ * Type du contexte des habitudes
+ */
 interface HabitContextType {
+  /** Liste des habitudes de l'utilisateur */
   habits: Habit[];
+  /** Indicateur de chargement */
   loading: boolean;
+  /** Ajoute une nouvelle habitude */
   addHabit: (habit: Partial<Habit>) => Promise<void>;
+  /** Met a jour une habitude existante */
   updateHabit: (habitId: string, updates: Partial<Habit>) => Promise<void>;
+  /** Supprime une habitude */
   deleteHabit: (habitId: string) => Promise<void>;
+  /** Toggle une tache specifique d'une habitude */
   toggleTask: (habitId: string, date: string, taskId: string) => Promise<ToggleTaskResult | undefined>;
+  /** Toggle toutes les taches d'une habitude pour un jour */
   toggleHabitDay: (habitId: string, date: string) => Promise<void>;
+  /** Rafraichit la liste des habitudes */
   refreshHabits: () => Promise<void>;
+  /** Met a jour les parametres de notification d'une habitude */
   updateHabitNotification: (habitId: string, enabled: boolean, time?: string) => Promise<void>;
 }
 
+// ============================================================================
+// CREATION DU CONTEXTE
+// ============================================================================
+
 const HabitContext = createContext<HabitContextType | undefined>(undefined);
 
+// ============================================================================
+// PROVIDER COMPONENT
+// ============================================================================
+
+/**
+ * Provider du contexte des habitudes
+ *
+ * Gere l'etat global des habitudes et fournit les methodes
+ * pour interagir avec les donnees.
+ *
+ * @param children - Composants enfants
+ */
 export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  // ==========================================================================
+  // STATE HOOKS
+  // ==========================================================================
+
   const [habits, setHabits] = useState<Habit[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // ==========================================================================
+  // CONTEXT HOOKS
+  // ==========================================================================
 
   const { user } = useAuth();
   const { refreshStats } = useStats();
 
-  // ============================================================================
-  // LOAD HABITS
-  // ============================================================================
+  // ==========================================================================
+  // FONCTIONS INTERNES
+  // ==========================================================================
 
+  /**
+   * Charge les habitudes depuis le backend
+   */
   const loadHabits = async () => {
     if (!user) return;
 
@@ -60,7 +151,13 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   };
 
-  // Load habits when user logs in
+  // ==========================================================================
+  // EFFECTS
+  // ==========================================================================
+
+  /**
+   * Charge les habitudes quand l'utilisateur se connecte
+   */
   useEffect(() => {
     if (user) {
       loadHabits();
@@ -69,7 +166,9 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   }, [user]);
 
-  // Subscribe to XP updates
+  /**
+   * Souscrit aux mises a jour XP en temps reel
+   */
   useEffect(() => {
     const subscription = supabase
       .channel('xp_updates')
@@ -92,16 +191,22 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
   }, [user?.id]);
 
-  // ============================================================================
-  // HABIT CRUD OPERATIONS
-  // ============================================================================
+  // ==========================================================================
+  // CALLBACKS - OPERATIONS CRUD
+  // ==========================================================================
 
+  /**
+   * Rafraichit la liste des habitudes
+   */
   const refreshHabits = useCallback(async () => {
     await loadHabits();
   }, [user]);
 
-  // In src/context/HabitContext.tsx, update the addHabit function:
-
+  /**
+   * Ajoute une nouvelle habitude
+   *
+   * @param habitData - Donnees de l'habitude a creer
+   */
   const addHabit = useCallback(
     async (habitData: Habit | Partial<Habit>) => {
       if (!user) {
@@ -113,7 +218,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         setLoading(true);
 
         const newHabit: Habit = {
-          id: habitData.id || Date.now().toString(), // ⚠️ Temporary - will be replaced by database UUID
+          id: habitData.id || Date.now().toString(),
           name: habitData.name || 'New Habit',
           type: habitData.type || 'good',
           category: habitData.category || 'health',
@@ -132,26 +237,24 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           createdAt: habitData.createdAt || new Date(),
         };
 
-        // ✅ Create in database FIRST to get the real UUID
+        // Cree dans la base de donnees pour obtenir le vrai UUID
         const createdHabit = await HabitService.createHabit(newHabit, user.id);
 
-        // ✅ NOW schedule notifications with the real UUID from database
+        // Planifie les notifications avec le vrai UUID
         if (createdHabit.notifications && createdHabit.notificationTime) {
-          // Schedule local device notifications
-          // await NotificationService.scheduleSmartHabitNotifications(createdHabit, user.id);
-
-          // Save to database for backend notifications
-          const timeWithSeconds = createdHabit.notificationTime.includes(':00:') ? createdHabit.notificationTime : `${createdHabit.notificationTime}:00`;
+          const timeWithSeconds = createdHabit.notificationTime.includes(':00:')
+            ? createdHabit.notificationTime
+            : `${createdHabit.notificationTime}:00`;
 
           await NotificationScheduleService.scheduleHabitNotification(
-            createdHabit.id, // ✅ Use the real UUID from database
+            createdHabit.id,
             user.id,
             timeWithSeconds,
             true
           );
         }
 
-        // Add to local state
+        // Ajoute a l'etat local
         setHabits([createdHabit, ...habits]);
       } catch (error: any) {
         Logger.error('Error adding habit:', error);
@@ -170,66 +273,77 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     [user, habits]
   );
 
-  const updateHabitNotification = async (habitId: string, enabled: boolean, time?: string) => {
-    if (!user) return;
+  /**
+   * Met a jour les parametres de notification d'une habitude
+   *
+   * @param habitId - ID de l'habitude
+   * @param enabled - Notifications activees ou non
+   * @param time - Heure de notification optionnelle
+   */
+  const updateHabitNotification = useCallback(
+    async (habitId: string, enabled: boolean, time?: string) => {
+      if (!user) return;
 
-    try {
-      await HabitService.updateHabitNotification(habitId, user.id, enabled, time);
+      try {
+        await HabitService.updateHabitNotification(habitId, user.id, enabled, time);
 
-      // Update local state
-      setHabits((prevHabits) =>
-        prevHabits.map((habit) =>
-          habit.id === habitId
-            ? {
-                ...habit,
-                notifications: enabled,
-                notificationTime: time,
-              }
-            : habit
-        )
-      );
-    } catch (error) {
-      Logger.error('Error updating habit notification:', error);
-      Alert.alert('Error', 'Failed to update notification settings');
-    }
-  };
+        setHabits((prevHabits) =>
+          prevHabits.map((habit) =>
+            habit.id === habitId
+              ? {
+                  ...habit,
+                  notifications: enabled,
+                  notificationTime: time,
+                }
+              : habit
+          )
+        );
+      } catch (error) {
+        Logger.error('Error updating habit notification:', error);
+        Alert.alert('Error', 'Failed to update notification settings');
+      }
+    },
+    [user]
+  );
 
+  /**
+   * Met a jour une habitude existante
+   *
+   * @param habitId - ID de l'habitude
+   * @param updates - Mises a jour a appliquer
+   */
   const updateHabit = useCallback(
     async (habitId: string, updates: Partial<Habit>) => {
       if (!user) return;
 
       try {
-        // Update in database first
         await HabitService.updateHabit(habitId, user.id, updates);
-
-        // Then update local state
         setHabits(habits.map((habit) => (habit.id === habitId ? { ...habit, ...updates } : habit)));
       } catch (error: any) {
         Logger.error('Error updating habit:', error);
         Alert.alert('Error', 'Failed to update habit');
-        // Reload habits to get correct state
         await loadHabits();
       }
     },
     [user, habits]
   );
 
+  /**
+   * Supprime une habitude
+   *
+   * @param habitId - ID de l'habitude a supprimer
+   */
   const deleteHabit = useCallback(
     async (habitId: string) => {
       if (!user) return;
 
       try {
         setLoading(true);
-
-        // Delete from database first
         await HabitService.deleteHabit(habitId, user.id);
-
-        // Then remove from local state
         setHabits(habits.filter((h) => h.id !== habitId));
       } catch (error: any) {
         Logger.error('Error deleting habit:', error);
         Alert.alert('Error', 'Failed to delete habit');
-        // Reload habits to restore state
         await loadHabits();
       } finally {
         setLoading(false);
@@ -238,10 +352,21 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     [user, habits]
   );
 
-  // ============================================================================
-  // TASK OPERATIONS - CLEAN BACKEND SYNC
-  // ============================================================================
+  // ==========================================================================
+  // CALLBACKS - OPERATIONS SUR LES TACHES
+  // ==========================================================================
 
+  /**
+   * Toggle une tache specifique d'une habitude
+   *
+   * Gere la logique complete: mise a jour backend, calcul XP,
+   * mise a jour des streaks et progression.
+   *
+   * @param habitId - ID de l'habitude
+   * @param date - Date au format string
+   * @param taskId - ID de la tache
+   * @returns Resultat du toggle avec XP gagne et etat de completion
+   */
   const toggleTask = useCallback(
     async (habitId: string, date: string, taskId: string): Promise<ToggleTaskResult | undefined> => {
       if (!user) return;
@@ -250,35 +375,37 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       if (!habit) return;
 
       try {
-        // Call backend - this handles ALL logic including XP, streaks, etc.
+        // Appelle le backend qui gere toute la logique
         const result = await HabitService.toggleTask(habitId, user.id, date, taskId);
 
         if (!result.success) {
           throw new Error('Failed to update task');
         }
 
-        // Update progression if streak changed
+        // Met a jour la progression si le streak a change
         if (result.streakUpdated !== undefined) {
           await HabitProgressionService.updateProgression(habitId, user.id, {
             overrideStreak: result.streakUpdated,
             allTasksCompleted: result.allTasksComplete,
           });
 
-          // Check for milestone unlocks
+          // Verifie les milestones debloques
           const milestoneRes = await HabitProgressionService.checkMilestoneUnlock(habitId, user.id, {
             overrideStreak: result.streakUpdated,
           });
 
           if (milestoneRes.unlocked) {
-            Alert.alert('🎉 Milestone Reached!', `You've unlocked: ${milestoneRes.unlocked.title}`);
+            Alert.alert('Milestone Reached!', `You've unlocked: ${milestoneRes.unlocked.title}`);
           }
         }
 
-        // Update local state with backend truth
+        // Met a jour l'etat local avec les donnees du backend
         const actualCompletedTasks = Array.isArray(result.completedTasks) ? result.completedTasks : [];
         const actualAllCompleted = result.allTasksComplete;
 
-        const updatedCompletedDays = actualAllCompleted ? [...habit.completedDays, date].filter((v, i, a) => a.indexOf(v) === i).sort() : habit.completedDays.filter((d) => d !== date);
+        const updatedCompletedDays = actualAllCompleted
+          ? [...habit.completedDays, date].filter((v, i, a) => a.indexOf(v) === i).sort()
+          : habit.completedDays.filter((d) => d !== date);
 
         setHabits(
           habits.map((h) =>
@@ -293,7 +420,6 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                     },
                   },
                   completedDays: updatedCompletedDays,
-                  // ✅ ONLY update streak if backend explicitly returns a new value
                   ...(result.streakUpdated !== undefined && result.streakUpdated !== null
                     ? {
                         currentStreak: result.streakUpdated,
@@ -305,21 +431,25 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           )
         );
 
-        // Refresh global stats
+        // Rafraichit les stats globales
         await refreshStats(true);
 
         return result;
       } catch (error) {
         Logger.error('Error toggling task:', error);
         Alert.alert('Error', 'Failed to update task');
-
-        // Reload habits to get correct state from backend
         await loadHabits();
       }
     },
     [user, habits, refreshStats]
   );
 
+  /**
+   * Toggle toutes les taches d'une habitude pour un jour
+   *
+   * @param habitId - ID de l'habitude
+   * @param date - Date au format string
+   */
   const toggleHabitDay = useCallback(
     async (habitId: string, date: string) => {
       if (!user) return;
@@ -332,7 +462,6 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const completedTasks = isCurrentlyCompleted ? [] : habit.tasks;
         const allCompleted = !isCurrentlyCompleted && habit.tasks.length > 0;
 
-        // Update daily tasks
         const updatedDailyTasks = {
           ...habit.dailyTasks,
           [date]: {
@@ -341,13 +470,17 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           },
         };
 
-        // Update completed days
-        const completedDays = isCurrentlyCompleted ? habit.completedDays.filter((d) => d !== date) : [...habit.completedDays, date].sort();
+        const completedDays = isCurrentlyCompleted
+          ? habit.completedDays.filter((d) => d !== date)
+          : [...habit.completedDays, date].sort();
 
-        // Calculate streak
-        const { currentStreak, bestStreak } = await HabitService.calculateStreaks(habitId, user.id, date, allCompleted);
+        const { currentStreak, bestStreak } = await HabitService.calculateStreaks(
+          habitId,
+          user.id,
+          date,
+          allCompleted
+        );
 
-        // Update local state
         setHabits(
           habits.map((h) =>
             h.id === habitId
@@ -362,7 +495,6 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           )
         );
 
-        // Sync with database
         await HabitService.updateTaskCompletion(habitId, user.id, date, completedTasks, habit.tasks.length);
       } catch (error: any) {
         Logger.error('Error toggling habit day:', error);
@@ -373,9 +505,9 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     [user, habits]
   );
 
-  // ============================================================================
-  // CONTEXT VALUE
-  // ============================================================================
+  // ==========================================================================
+  // MEMOIZATION DE LA VALEUR DU CONTEXTE
+  // ==========================================================================
 
   const value = useMemo(
     () => ({
@@ -392,9 +524,23 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     [habits, loading, addHabit, updateHabit, deleteHabit, toggleTask, toggleHabitDay, refreshHabits, updateHabitNotification]
   );
 
+  // ==========================================================================
+  // RENDER
+  // ==========================================================================
+
   return <HabitContext.Provider value={value}>{children}</HabitContext.Provider>;
 };
 
+// ============================================================================
+// HOOK D'UTILISATION
+// ============================================================================
+
+/**
+ * Hook pour acceder au contexte des habitudes
+ *
+ * @throws Error si utilise en dehors du HabitProvider
+ * @returns Contexte des habitudes
+ */
 export const useHabits = () => {
   const context = useContext(HabitContext);
   if (!context) {

@@ -1,19 +1,49 @@
-// src/components/SwipeableHabitCard.tsx
+/**
+ * SwipeableHabitCard.tsx
+ *
+ * Carte d'habitude avec gestion du swipe pour suppression.
+ * Utilise PanGestureHandler pour les interactions gestuelles.
+ *
+ * @author HabitTracker Team
+ */
+
+// =============================================================================
+// IMPORTS
+// =============================================================================
+
+// React et React Native
 import React, { useRef } from 'react';
 import { View, Alert, Animated as RNAnimated, Dimensions } from 'react-native';
+
+// Bibliothèques externes
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import { Trash2 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
-import tw from '../lib/tailwind';
 
-import { Habit } from '../types';
-import { HapticFeedback } from '@/utils/haptics';
-import { getTodayString } from '@/utils/dateHelpers';
+// Composants internes
 import { HabitCard } from './habits/HabitCard';
 
+// Utilitaires
+import tw from '../lib/tailwind';
+import { HapticFeedback } from '@/utils/haptics';
+import { getTodayString } from '@/utils/dateHelpers';
+
+// Types
+import { Habit } from '../types';
+
+// =============================================================================
+// CONSTANTES
+// =============================================================================
+
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+/** Seuil de swipe pour déclencher la suppression (25% de la largeur) */
 const SWIPE_THRESHOLD = -SCREEN_WIDTH * 0.25;
+
+// =============================================================================
+// TYPES ET INTERFACES
+// =============================================================================
 
 interface SwipeableHabitCardProps {
   habit: Habit;
@@ -25,24 +55,56 @@ interface SwipeableHabitCardProps {
   pausedTasks?: Record<string, { pausedUntil: string; reason?: string }>;
 }
 
-const SwipeableHabitCard: React.FC<SwipeableHabitCardProps> = ({ habit, onDelete, onToggleDay, onToggleTask, onPress, index = 0, pausedTasks = {} }) => {
+// =============================================================================
+// COMPOSANT PRINCIPAL
+// =============================================================================
+
+const SwipeableHabitCard: React.FC<SwipeableHabitCardProps> = ({
+  habit,
+  onDelete,
+  onPress,
+  index = 0,
+  pausedTasks = {},
+}) => {
+  // ---------------------------------------------------------------------------
+  // Hooks
+  // ---------------------------------------------------------------------------
   const { t } = useTranslation();
+
+  // ---------------------------------------------------------------------------
+  // Refs
+  // ---------------------------------------------------------------------------
   const translateX = useRef(new RNAnimated.Value(0)).current;
+
+  // ---------------------------------------------------------------------------
+  // Valeurs calculées
+  // ---------------------------------------------------------------------------
   const today = getTodayString();
   const todayTasks = habit.dailyTasks?.[today];
   const completedToday = todayTasks?.allCompleted || false;
 
-  const handleGestureEvent = RNAnimated.event([{ nativeEvent: { translationX: translateX } }], { useNativeDriver: true });
+  // ---------------------------------------------------------------------------
+  // Handlers
+  // ---------------------------------------------------------------------------
 
+  /**
+   * Gère l'événement de geste pan
+   */
+  const handleGestureEvent = RNAnimated.event(
+    [{ nativeEvent: { translationX: translateX } }],
+    { useNativeDriver: true }
+  );
+
+  /**
+   * Gère le changement d'état du geste
+   * Affiche une alerte de confirmation si le seuil est atteint
+   */
   const handleStateChange = (event: any) => {
     if (event.nativeEvent.state === State.END) {
       const { translationX: translation } = event.nativeEvent;
 
       if (translation < SWIPE_THRESHOLD) {
         HapticFeedback.medium();
-
-        // Détermine le type de streak (day/week)
-        const streakUnit = habit.frequency === 'weekly' ? 'week' : 'day';
 
         Alert.alert(
           t('dashboard.removeHabit'),
@@ -82,6 +144,7 @@ const SwipeableHabitCard: React.FC<SwipeableHabitCardProps> = ({ habit, onDelete
           { cancelable: true }
         );
       } else {
+        // Retour à la position initiale
         RNAnimated.spring(translateX, {
           toValue: 0,
           useNativeDriver: true,
@@ -92,12 +155,9 @@ const SwipeableHabitCard: React.FC<SwipeableHabitCardProps> = ({ habit, onDelete
     }
   };
 
-  const deleteOpacity = translateX.interpolate({
-    inputRange: [-SCREEN_WIDTH * 0.25, 0],
-    outputRange: [1, 0],
-    extrapolate: 'clamp',
-  });
-
+  /**
+   * Gère le press sur la carte
+   */
   const handlePress = onPress
     ? () => {
         HapticFeedback.light();
@@ -105,20 +165,60 @@ const SwipeableHabitCard: React.FC<SwipeableHabitCardProps> = ({ habit, onDelete
       }
     : undefined;
 
+  // ---------------------------------------------------------------------------
+  // Valeurs animées
+  // ---------------------------------------------------------------------------
+
+  /** Opacité du fond de suppression */
+  const deleteOpacity = translateX.interpolate({
+    inputRange: [-SCREEN_WIDTH * 0.25, 0],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
+
+  // ---------------------------------------------------------------------------
+  // Rendu
+  // ---------------------------------------------------------------------------
   return (
     <View style={tw`relative`}>
-      {/* Delete Background */}
-      <RNAnimated.View style={[tw`absolute inset-0 justify-center items-end pr-6 rounded-3xl overflow-hidden`, { opacity: deleteOpacity }]}>
-        <LinearGradient colors={['#ef4444', '#dc2626']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`absolute inset-0`} />
+      {/* Fond de suppression */}
+      <RNAnimated.View
+        style={[
+          tw`absolute inset-0 justify-center items-end pr-6 rounded-3xl overflow-hidden`,
+          { opacity: deleteOpacity },
+        ]}
+      >
+        <LinearGradient
+          colors={['#ef4444', '#dc2626']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={tw`absolute inset-0`}
+        />
         <View style={tw`bg-white/20 rounded-xl p-3`}>
           <Trash2 size={24} color="#ffffff" />
         </View>
       </RNAnimated.View>
 
-      {/* Swipeable Habit Card */}
-      <PanGestureHandler onGestureEvent={handleGestureEvent} onHandlerStateChange={handleStateChange} activeOffsetX={[-10, 10]} failOffsetY={[-5, 5]}>
-        <RNAnimated.View style={[{ transform: [{ translateX }] }, tw`bg-transparent rounded-3xl`]}>
-          <HabitCard habit={habit} completedToday={completedToday} onPress={handlePress} index={index} pausedTasks={pausedTasks} />
+      {/* Carte d'habitude swipeable */}
+      <PanGestureHandler
+        onGestureEvent={handleGestureEvent}
+        onHandlerStateChange={handleStateChange}
+        activeOffsetX={[-10, 10]}
+        failOffsetY={[-5, 5]}
+      >
+        <RNAnimated.View
+          style={[
+            { transform: [{ translateX }] },
+            tw`bg-transparent rounded-3xl`,
+          ]}
+        >
+          <HabitCard
+            habit={habit}
+            completedToday={completedToday}
+            onPress={handlePress}
+            index={index}
+            pausedTasks={pausedTasks}
+          />
         </RNAnimated.View>
       </PanGestureHandler>
     </View>

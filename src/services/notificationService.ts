@@ -1,25 +1,51 @@
+/**
+ * Service de gestion des notifications
+ *
+ * Ce service gere les notifications push de l'application, incluant
+ * les rappels d'habitudes, les alertes de streak a risque, les coffres
+ * quotidiens et la fonctionnalite de snooze.
+ *
+ * @module NotificationService
+ */
+
+// =============================================================================
+// IMPORTS - Bibliotheques externes
+// =============================================================================
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
-import { Habit } from '../types';
-import { NotificationMessages } from '../utils/notificationMessages';
+
+// =============================================================================
+// IMPORTS - Utilitaires internes
+// =============================================================================
 import { supabase } from '../lib/supabase';
 import { getLocalDateString } from '../utils/dateHelpers';
+import { NotificationMessages } from '../utils/notificationMessages';
 import Logger from '@/utils/logger';
 
-interface TaskInfo {
-  id: string;
-  name: string;
-  isCompleted: boolean;
-}
+// =============================================================================
+// IMPORTS - Types
+// =============================================================================
+import { Habit } from '../types';
+
+// =============================================================================
+// SERVICE PRINCIPAL
+// =============================================================================
 
 /**
- * Enhanced notification service with dynamic content generation
- * Checks task completion status at notification time and adjusts message
+ * Service de notification avec generation de contenu dynamique
+ * Verifie le statut de completion des taches au moment de la notification
  */
 export class NotificationService {
-  // ========== INITIALIZATION ==========
+  // ===========================================================================
+  // SECTION: Initialisation
+  // ===========================================================================
 
-  static async initialize() {
+  /**
+   * Initialiser le service de notifications
+   *
+   * @returns Vrai si l'initialisation a reussi
+   */
+  static async initialize(): Promise<boolean> {
     const registered = await this.registerForPushNotifications();
 
     if (registered) {
@@ -31,6 +57,11 @@ export class NotificationService {
     return registered;
   }
 
+  /**
+   * Enregistrer l'appareil pour les notifications push
+   *
+   * @returns Vrai si les permissions sont accordees
+   */
   static async registerForPushNotifications(): Promise<boolean> {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
@@ -58,7 +89,10 @@ export class NotificationService {
     return true;
   }
 
-  private static async setupNotificationCategories() {
+  /**
+   * Configurer les categories de notification avec actions
+   */
+  private static async setupNotificationCategories(): Promise<void> {
     await Notifications.setNotificationCategoryAsync('habit_reminder', [
       {
         identifier: 'snooze',
@@ -89,7 +123,10 @@ export class NotificationService {
     ]);
   }
 
-  private static setupNotificationHandler() {
+  /**
+   * Configurer le gestionnaire de notifications
+   */
+  private static setupNotificationHandler(): void {
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
         shouldShowAlert: true,
@@ -99,26 +136,33 @@ export class NotificationService {
     });
   }
 
-  private static setupNotificationResponseListener() {
+  /**
+   * Configurer l'ecouteur de reponses aux notifications
+   */
+  private static setupNotificationResponseListener(): void {
     Notifications.addNotificationResponseReceivedListener(async (response) => {
       const { notification, actionIdentifier } = response;
       const habitId = notification.request.content.data.habitId as string;
       const habitName = notification.request.content.title;
 
       if (actionIdentifier === 'snooze') {
-        await this.snoozeNotification(habitId, habitName);
+        await this.snoozeNotification(habitId, habitName ?? undefined);
       }
-      // Handle other actions as needed
     });
   }
 
-  // ========== SMART HABIT NOTIFICATIONS ==========
+  // ===========================================================================
+  // SECTION: Notifications intelligentes d'habitudes
+  // ===========================================================================
 
   /**
-   * Schedule notifications that dynamically check task completion
-   * This is the main method to replace NotificationService.scheduleHabitNotifications
+   * Planifier des notifications qui verifient dynamiquement la completion
+   * Methode principale pour remplacer les anciennes notifications
+   *
+   * @param habit - L'habitude pour laquelle planifier
+   * @param userId - L'identifiant de l'utilisateur
    */
-  static async scheduleSmartHabitNotifications(habit: Habit, userId: string) {
+  static async scheduleSmartHabitNotifications(habit: Habit, userId: string): Promise<void> {
     if (!habit.notifications || !habit.notificationTime) {
       return;
     }
@@ -133,11 +177,15 @@ export class NotificationService {
     }
   }
 
-  private static async scheduleDailySmartNotification(habit: Habit, userId: string, hours: number, minutes: number) {
-    // Note: React Native doesn't support dynamic content at trigger time
-    // We schedule with a generic message and handle dynamic updates via foreground notifications
-    // For a production solution, consider using a background task or server-side push
-
+  /**
+   * Planifier une notification quotidienne intelligente
+   */
+  private static async scheduleDailySmartNotification(
+    habit: Habit,
+    userId: string,
+    hours: number,
+    minutes: number
+  ): Promise<void> {
     const message = NotificationMessages.habitReminder({
       habitName: habit.name,
       incompleteTasks: habit.tasks.map((t: any) => t.name || t),
@@ -154,7 +202,7 @@ export class NotificationService {
         data: {
           habitId: habit.id,
           userId: userId,
-          isDynamic: true, // Flag to regenerate message on foreground
+          isDynamic: true,
         },
         sound: true,
         categoryIdentifier: 'habit_reminder',
@@ -168,7 +216,15 @@ export class NotificationService {
     });
   }
 
-  private static async scheduleCustomDaysSmartNotifications(habit: Habit, userId: string, hours: number, minutes: number) {
+  /**
+   * Planifier des notifications pour des jours personnalises
+   */
+  private static async scheduleCustomDaysSmartNotifications(
+    habit: Habit,
+    userId: string,
+    hours: number,
+    minutes: number
+  ): Promise<void> {
     const dayMap: { [key: string]: number } = {
       Sunday: 0,
       Monday: 1,
@@ -185,16 +241,14 @@ export class NotificationService {
       const targetDayOfWeek = dayMap[day];
       if (targetDayOfWeek === undefined) continue;
 
-      // Calculate next occurrence of this day of week
       const scheduledTime = new Date();
       scheduledTime.setHours(hours, minutes, 0, 0);
 
       const currentDayOfWeek = now.getDay();
       let daysUntilTarget = targetDayOfWeek - currentDayOfWeek;
 
-      // If target day is today but time has passed, or target day is in the past this week
       if (daysUntilTarget < 0 || (daysUntilTarget === 0 && scheduledTime <= now)) {
-        daysUntilTarget += 7; // Schedule for next week
+        daysUntilTarget += 7;
       }
 
       scheduledTime.setDate(now.getDate() + daysUntilTarget);
@@ -207,7 +261,7 @@ export class NotificationService {
         type: habit.type,
       });
 
-      Logger.debug(`📅 Scheduling ${day} notification for ${habit.name} at ${scheduledTime.toLocaleString()}`);
+      Logger.debug(`Scheduling ${day} notification for ${habit.name} at ${scheduledTime.toLocaleString()}`);
 
       await Notifications.scheduleNotificationAsync({
         identifier: `${habit.id}_${day}`,
@@ -223,7 +277,7 @@ export class NotificationService {
           categoryIdentifier: 'habit_reminder',
         },
         trigger: {
-          weekday: targetDayOfWeek + 1, // Expo uses 1-7 (Sunday = 1)
+          weekday: targetDayOfWeek + 1,
           hour: hours,
           minute: minutes,
           repeats: true,
@@ -232,31 +286,42 @@ export class NotificationService {
       });
     }
   }
+
   /**
-   * Generate dynamic notification content based on current task status
-   * Call this when app is in foreground to update notification content
+   * Generer une notification dynamique basee sur le statut actuel
+   * Appeler quand l'app est au premier plan pour mettre a jour le contenu
+   *
+   * @param habitId - L'identifiant de l'habitude
+   * @param userId - L'identifiant de l'utilisateur
    */
   static async generateDynamicNotification(habitId: string, userId: string): Promise<void> {
     try {
-      // Fetch habit details
-      const { data: habitData, error: habitError } = await supabase.from('habits').select('*').eq('id', habitId).eq('user_id', userId).single();
+      const { data: habitData, error: habitError } = await supabase
+        .from('habits')
+        .select('*')
+        .eq('id', habitId)
+        .eq('user_id', userId)
+        .single();
 
       if (habitError || !habitData) {
         Logger.error('Error fetching habit:', habitError);
         return;
       }
 
-      // Fetch today's task completion
       const today = getLocalDateString(new Date());
-      const { data: completionData } = await supabase.from('task_completions').select('completed_tasks').eq('habit_id', habitId).eq('user_id', userId).eq('date', today).single();
+      const { data: completionData } = await supabase
+        .from('task_completions')
+        .select('completed_tasks')
+        .eq('habit_id', habitId)
+        .eq('user_id', userId)
+        .eq('date', today)
+        .single();
 
       const completedTaskIds = completionData?.completed_tasks || [];
       const allTasks = habitData.tasks || [];
 
-      // Determine incomplete tasks
       const incompleteTasks = allTasks.filter((taskId: string) => !completedTaskIds.includes(taskId));
 
-      // Generate smart message
       const message = NotificationMessages.habitReminder({
         habitName: habitData.name,
         incompleteTasks: incompleteTasks,
@@ -265,7 +330,6 @@ export class NotificationService {
         type: habitData.type,
       });
 
-      // Send immediate notification with updated content
       await Notifications.scheduleNotificationAsync({
         content: {
           title: message.title,
@@ -274,16 +338,29 @@ export class NotificationService {
           sound: true,
           categoryIdentifier: 'habit_reminder',
         },
-        trigger: null, // Immediate delivery
+        trigger: null,
       });
     } catch (error) {
       Logger.error('Error generating dynamic notification:', error);
     }
   }
 
-  // ========== DAILY CHEST NOTIFICATIONS ==========
+  // ===========================================================================
+  // SECTION: Notifications de coffre quotidien
+  // ===========================================================================
 
-  static async scheduleDailyChestReminder(userId: string, xpAvailable: number, hour: number = 20) {
+  /**
+   * Planifier un rappel de coffre quotidien
+   *
+   * @param userId - L'identifiant de l'utilisateur
+   * @param xpAvailable - Les XP disponibles
+   * @param hour - L'heure du rappel (par defaut 20h)
+   */
+  static async scheduleDailyChestReminder(
+    userId: string,
+    xpAvailable: number,
+    hour: number = 20
+  ): Promise<void> {
     const message = NotificationMessages.dailyChestReminder({ xpAvailable });
 
     await Notifications.scheduleNotificationAsync({
@@ -304,13 +381,33 @@ export class NotificationService {
     });
   }
 
-  static async cancelDailyChestReminder(userId: string) {
+  /**
+   * Annuler le rappel de coffre quotidien
+   *
+   * @param userId - L'identifiant de l'utilisateur
+   */
+  static async cancelDailyChestReminder(userId: string): Promise<void> {
     await Notifications.cancelScheduledNotificationAsync(`daily_chest_${userId}`);
   }
 
-  // ========== STREAK RISK NOTIFICATIONS ==========
+  // ===========================================================================
+  // SECTION: Notifications de streak a risque
+  // ===========================================================================
 
-  static async sendStreakRiskNotification(habitId: string, habitName: string, streakCount: number, hoursRemaining: number) {
+  /**
+   * Envoyer une notification de streak a risque
+   *
+   * @param habitId - L'identifiant de l'habitude
+   * @param habitName - Le nom de l'habitude
+   * @param streakCount - Le nombre de jours de streak
+   * @param hoursRemaining - Les heures restantes
+   */
+  static async sendStreakRiskNotification(
+    habitId: string,
+    habitName: string,
+    streakCount: number,
+    hoursRemaining: number
+  ): Promise<void> {
     const message = NotificationMessages.streakRisk({
       habitName,
       streakCount,
@@ -326,13 +423,21 @@ export class NotificationService {
         sound: true,
         categoryIdentifier: 'streak_risk',
       },
-      trigger: null, // Immediate
+      trigger: null,
     });
   }
 
-  // ========== SNOOZE FUNCTIONALITY ==========
+  // ===========================================================================
+  // SECTION: Fonctionnalite de snooze
+  // ===========================================================================
 
-  private static async snoozeNotification(habitId: string, habitName?: string) {
+  /**
+   * Reporter une notification de 2 heures
+   *
+   * @param habitId - L'identifiant de l'habitude
+   * @param habitName - Le nom de l'habitude
+   */
+  private static async snoozeNotification(habitId: string, habitName?: string): Promise<void> {
     try {
       const triggerDate = new Date();
       triggerDate.setHours(triggerDate.getHours() + 2);
@@ -358,9 +463,16 @@ export class NotificationService {
     }
   }
 
-  // ========== UTILITY METHODS ==========
+  // ===========================================================================
+  // SECTION: Methodes utilitaires
+  // ===========================================================================
 
-  static async cancelHabitNotifications(habitId: string) {
+  /**
+   * Annuler les notifications pour une habitude
+   *
+   * @param habitId - L'identifiant de l'habitude
+   */
+  static async cancelHabitNotifications(habitId: string): Promise<void> {
     try {
       await Notifications.cancelScheduledNotificationAsync(habitId);
 
@@ -368,12 +480,11 @@ export class NotificationService {
       for (const day of days) {
         try {
           await Notifications.cancelScheduledNotificationAsync(`${habitId}_${day}`);
-        } catch (e) {
-          // Ignore if doesn't exist
+        } catch {
+          // Ignorer si n'existe pas
         }
       }
 
-      // Cancel snoozed notifications
       const scheduled = await Notifications.getAllScheduledNotificationsAsync();
       for (const notification of scheduled) {
         if (notification.identifier.startsWith(`${habitId}_snoozed_`)) {
@@ -385,21 +496,43 @@ export class NotificationService {
     }
   }
 
-  static async cancelAllNotifications() {
+  /**
+   * Annuler toutes les notifications planifiees
+   */
+  static async cancelAllNotifications(): Promise<void> {
     await Notifications.cancelAllScheduledNotificationsAsync();
   }
 
-  static async getScheduledNotifications() {
+  /**
+   * Recuperer toutes les notifications planifiees
+   *
+   * @returns Liste des notifications planifiees
+   */
+  static async getScheduledNotifications(): Promise<Notifications.NotificationRequest[]> {
     return await Notifications.getAllScheduledNotificationsAsync();
   }
 
-  static async updateHabitNotificationTime(habit: Habit, userId: string, newTime: string) {
+  /**
+   * Mettre a jour l'heure de notification d'une habitude
+   *
+   * @param habit - L'habitude
+   * @param userId - L'identifiant de l'utilisateur
+   * @param newTime - La nouvelle heure
+   */
+  static async updateHabitNotificationTime(
+    habit: Habit,
+    userId: string,
+    newTime: string
+  ): Promise<void> {
     await this.cancelHabitNotifications(habit.id);
     const updatedHabit = { ...habit, notificationTime: newTime };
     await this.scheduleSmartHabitNotifications(updatedHabit, userId);
   }
 
-  static async sendTestNotification() {
+  /**
+   * Envoyer une notification de test
+   */
+  static async sendTestNotification(): Promise<void> {
     const permission = await this.registerForPushNotifications();
     if (!permission) {
       throw new Error('Notification permissions not granted');

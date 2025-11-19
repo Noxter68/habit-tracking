@@ -1,28 +1,78 @@
-// src/components/modals/EpicLevelUpModal.tsx
+/**
+ * EpicLevelUpModal.tsx
+ *
+ * Modal de célébration pour le passage de niveau.
+ * Affiche des animations épiques avec particules et effets visuels.
+ *
+ * @author HabitTracker Team
+ */
+
+// =============================================================================
+// IMPORTS
+// =============================================================================
+
+// React et React Native
 import React, { useEffect, useState } from 'react';
 import { View, Text, Modal, Pressable, Dimensions, StyleSheet, ImageBackground } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSequence, withDelay, withTiming, withSpring, interpolate, Easing, runOnJS, withRepeat } from 'react-native-reanimated';
+
+// Bibliothèques externes
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withDelay,
+  withTiming,
+  withSpring,
+  interpolate,
+  Easing,
+  runOnJS,
+  withRepeat,
+} from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { Audio } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
+
+// Composants internes
 import { AchievementBadge } from '../shared/AchievementBadge';
+
+// Contextes et Hooks
 import { useLevelUp } from '../../context/LevelUpContext';
+
+// Utilitaires
 import { getAchievementTierTheme } from '@/utils/tierTheme';
-import type { TierKey } from '@/types/achievement.types';
 import Logger from '@/utils/logger';
+
+// Types
+import type { TierKey } from '@/types/achievement.types';
+
+// =============================================================================
+// CONSTANTES
+// =============================================================================
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// Réduit à 40 particules pour de meilleures performances
+/** Nombre de particules d'énergie (optimisé pour les performances) */
 const ENERGY_PARTICLES = 40;
 
-// Energy Particle - Version optimisée
-const EnergyParticle: React.FC<{ index: number; isActive: boolean; tierColor: string }> = React.memo(({ index, isActive, tierColor }) => {
+// =============================================================================
+// SOUS-COMPOSANTS
+// =============================================================================
+
+/**
+ * Particule d'énergie animée
+ * Version optimisée pour de meilleures performances
+ */
+const EnergyParticle: React.FC<{
+  index: number;
+  isActive: boolean;
+  tierColor: string;
+}> = React.memo(({ index, isActive, tierColor }) => {
   const progress = useSharedValue(0);
   const flicker = useSharedValue(1);
 
-  const angle = (index / ENERGY_PARTICLES) * 360 + Math.random() * 20; // Distribution plus uniforme
+  // Calcul de la position et direction
+  const angle = (index / ENERGY_PARTICLES) * 360 + Math.random() * 20;
   const radian = (angle * Math.PI) / 180;
   const distance = 80 + Math.random() * 80;
 
@@ -31,16 +81,29 @@ const EnergyParticle: React.FC<{ index: number; isActive: boolean; tierColor: st
   const endX = SCREEN_WIDTH / 2 + Math.cos(radian) * distance;
   const endY = SCREEN_HEIGHT / 2 + Math.sin(radian) * distance;
 
-  const particleSize = 3 + Math.random() * 4; // Particules légèrement plus petites
+  const particleSize = 3 + Math.random() * 4;
   const delay = Math.random() * 300;
   const duration = 700 + Math.random() * 400;
 
   useEffect(() => {
     if (isActive) {
-      progress.value = withDelay(200 + delay, withTiming(1, { duration, easing: Easing.out(Easing.quad) }));
+      progress.value = withDelay(
+        200 + delay,
+        withTiming(1, { duration, easing: Easing.out(Easing.quad) })
+      );
 
-      // Flicker simplifié
-      flicker.value = withDelay(200 + delay, withRepeat(withSequence(withTiming(1.3, { duration: 150 }), withTiming(0.9, { duration: 150 })), -1, true));
+      // Animation de scintillement simplifiée
+      flicker.value = withDelay(
+        200 + delay,
+        withRepeat(
+          withSequence(
+            withTiming(1.3, { duration: 150 }),
+            withTiming(0.9, { duration: 150 })
+          ),
+          -1,
+          true
+        )
+      );
     }
   }, [isActive]);
 
@@ -58,18 +121,34 @@ const EnergyParticle: React.FC<{ index: number; isActive: boolean; tierColor: st
   return <Animated.View style={particleStyle} />;
 });
 
-// Shockwave Ring - Version optimisée
-const ShockwaveRing: React.FC<{ index: number; isActive: boolean; tierColor: string }> = React.memo(({ index, isActive, tierColor }) => {
+/**
+ * Anneau d'onde de choc
+ * Version optimisée pour de meilleures performances
+ */
+const ShockwaveRing: React.FC<{
+  index: number;
+  isActive: boolean;
+  tierColor: string;
+}> = React.memo(({ index, isActive, tierColor }) => {
   const scale = useSharedValue(0);
   const opacity = useSharedValue(0);
 
   useEffect(() => {
     if (isActive) {
-      const delay = index * 150;
+      const ringDelay = index * 150;
 
-      scale.value = withDelay(delay, withTiming(2.5, { duration: 1000, easing: Easing.out(Easing.cubic) }));
+      scale.value = withDelay(
+        ringDelay,
+        withTiming(2.5, { duration: 1000, easing: Easing.out(Easing.cubic) })
+      );
 
-      opacity.value = withDelay(delay, withSequence(withTiming(0.5, { duration: 150 }), withTiming(0, { duration: 850 })));
+      opacity.value = withDelay(
+        ringDelay,
+        withSequence(
+          withTiming(0.5, { duration: 150 }),
+          withTiming(0, { duration: 850 })
+        )
+      );
     }
   }, [isActive]);
 
@@ -87,23 +166,50 @@ const ShockwaveRing: React.FC<{ index: number; isActive: boolean; tierColor: str
   return <Animated.View style={ringStyle} />;
 });
 
-// Main Component
+// =============================================================================
+// COMPOSANT PRINCIPAL
+// =============================================================================
+
 export const EpicLevelUpModal: React.FC = () => {
+  // ---------------------------------------------------------------------------
+  // Hooks
+  // ---------------------------------------------------------------------------
   const { t } = useTranslation();
   const { showLevelUpModal, levelUpData, closeLevelUpModal } = useLevelUp();
+
+  // ---------------------------------------------------------------------------
+  // State
+  // ---------------------------------------------------------------------------
   const [countdown, setCountdown] = useState(8);
 
-  // Animation values
+  // ---------------------------------------------------------------------------
+  // Valeurs d'animation
+  // ---------------------------------------------------------------------------
   const cardOpacity = useSharedValue(0);
   const cardScale = useSharedValue(0.5);
   const shake = useSharedValue(0);
   const levelBounce = useSharedValue(0);
 
-  const tierTheme = levelUpData?.achievement?.tierKey ? getAchievementTierTheme(levelUpData.achievement.tierKey as TierKey) : getAchievementTierTheme('novice');
+  // ---------------------------------------------------------------------------
+  // Valeurs calculées
+  // ---------------------------------------------------------------------------
+  const tierTheme = levelUpData?.achievement?.tierKey
+    ? getAchievementTierTheme(levelUpData.achievement.tierKey as TierKey)
+    : getAchievementTierTheme('novice');
 
+  // ---------------------------------------------------------------------------
+  // Fonctions utilitaires
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Joue le son de passage de niveau
+   */
   const playLevelUpSound = async () => {
     try {
-      const { sound } = await Audio.Sound.createAsync(require('../../../assets/sounds/level-up.mp3'), { shouldPlay: true, volume: 0.5 });
+      const { sound } = await Audio.Sound.createAsync(
+        require('../../../assets/sounds/level-up.mp3'),
+        { shouldPlay: true, volume: 0.5 }
+      );
       await sound.playAsync();
       sound.setOnPlaybackStatusUpdate((status) => {
         if (status.isLoaded && status.didJustFinish) {
@@ -115,14 +221,25 @@ export const EpicLevelUpModal: React.FC = () => {
     }
   };
 
+  /**
+   * Déclenche un retour haptique fort
+   */
   const triggerHaptic = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
   };
 
+  /**
+   * Déclenche un retour haptique léger
+   */
   const triggerLightHaptic = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
+  /**
+   * Retourne un message motivationnel selon le niveau
+   * @param level - Niveau actuel
+   * @returns Message traduit
+   */
   const getMotivationalMessage = (level: number): string => {
     if (level <= 5) return t('levelUp.motivational.level5');
     if (level <= 10) return t('levelUp.motivational.level10');
@@ -132,9 +249,12 @@ export const EpicLevelUpModal: React.FC = () => {
     return t('levelUp.motivational.levelMax');
   };
 
+  // ---------------------------------------------------------------------------
+  // Effets
+  // ---------------------------------------------------------------------------
   useEffect(() => {
     if (showLevelUpModal && levelUpData) {
-      // Reset all animations to initial state
+      // Réinitialisation des animations
       cardOpacity.value = 0;
       cardScale.value = 0.5;
       shake.value = 0;
@@ -144,7 +264,7 @@ export const EpicLevelUpModal: React.FC = () => {
       runOnJS(triggerHaptic)();
       runOnJS(playLevelUpSound)();
 
-      // Screen shake
+      // Animation de secousse
       shake.value = withSequence(
         withTiming(10, { duration: 50 }),
         withTiming(-10, { duration: 50 }),
@@ -153,7 +273,7 @@ export const EpicLevelUpModal: React.FC = () => {
         withTiming(0, { duration: 100 })
       );
 
-      // Card entrance
+      // Animation d'entrée de la carte
       cardOpacity.value = withTiming(1, { duration: 300 });
       cardScale.value = withSpring(1, {
         damping: 12,
@@ -161,21 +281,22 @@ export const EpicLevelUpModal: React.FC = () => {
         mass: 0.8,
       });
 
-      // Level bounce - Jump rapide et continu
+      // Animation de rebond du niveau
       levelBounce.value = withRepeat(
         withSequence(
-          withTiming(-20, { duration: 300, easing: Easing.out(Easing.quad) }), // Monte rapidement
-          withTiming(0, { duration: 300, easing: Easing.in(Easing.quad) }) // Redescend rapidement
+          withTiming(-20, { duration: 300, easing: Easing.out(Easing.quad) }),
+          withTiming(0, { duration: 300, easing: Easing.in(Easing.quad) })
         ),
         -1,
         false
       );
 
+      // Retours haptiques séquentiels
       setTimeout(() => runOnJS(triggerLightHaptic)(), 400);
       setTimeout(() => runOnJS(triggerLightHaptic)(), 600);
       setTimeout(() => runOnJS(triggerLightHaptic)(), 800);
 
-      // Countdown interval
+      // Compte à rebours
       const interval = setInterval(() => {
         setCountdown((prev) => {
           if (prev <= 1) {
@@ -186,7 +307,7 @@ export const EpicLevelUpModal: React.FC = () => {
         });
       }, 1000);
 
-      // Auto-close after 8 seconds
+      // Fermeture automatique après 8 secondes
       const timer = setTimeout(() => {
         handleClose();
       }, 8000);
@@ -199,6 +320,13 @@ export const EpicLevelUpModal: React.FC = () => {
     }
   }, [showLevelUpModal, levelUpData]);
 
+  // ---------------------------------------------------------------------------
+  // Handlers
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Gère la fermeture du modal avec animation
+   */
   const handleClose = () => {
     cardOpacity.value = withTiming(0, { duration: 300 });
     cardScale.value = withTiming(0.8, { duration: 300 });
@@ -206,6 +334,9 @@ export const EpicLevelUpModal: React.FC = () => {
     setTimeout(() => closeLevelUpModal(), 300);
   };
 
+  // ---------------------------------------------------------------------------
+  // Styles animés
+  // ---------------------------------------------------------------------------
   const containerStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: shake.value }],
   }));
@@ -219,58 +350,94 @@ export const EpicLevelUpModal: React.FC = () => {
     transform: [{ translateY: levelBounce.value }],
   }));
 
+  // ---------------------------------------------------------------------------
+  // Rendu conditionnel
+  // ---------------------------------------------------------------------------
   if (!showLevelUpModal || !levelUpData) return null;
 
+  // ---------------------------------------------------------------------------
+  // Rendu
+  // ---------------------------------------------------------------------------
   return (
     <Modal visible={showLevelUpModal} transparent animationType="none" statusBarTranslucent>
       <View style={StyleSheet.absoluteFillObject}>
         <View style={styles.backdrop} />
 
-        {/* Electric Field Effects - Optimisé */}
+        {/* Effets visuels - Particules et ondes */}
         <View style={styles.effectsContainer} pointerEvents="none">
-          {/* Shockwave rings */}
+          {/* Anneaux d'onde de choc */}
           <View style={styles.shockwaveContainer}>
             {Array.from({ length: 3 }).map((_, i) => (
-              <ShockwaveRing key={`shockwave-${i}`} index={i} isActive={showLevelUpModal} tierColor={tierTheme.accent} />
+              <ShockwaveRing
+                key={`shockwave-${i}`}
+                index={i}
+                isActive={showLevelUpModal}
+                tierColor={tierTheme.accent}
+              />
             ))}
           </View>
 
-          {/* Energy particles - Réduit à 40 */}
+          {/* Particules d'énergie */}
           {Array.from({ length: ENERGY_PARTICLES }).map((_, i) => (
-            <EnergyParticle key={`particle-${i}`} index={i} isActive={showLevelUpModal} tierColor={tierTheme.accent} />
+            <EnergyParticle
+              key={`particle-${i}`}
+              index={i}
+              isActive={showLevelUpModal}
+              tierColor={tierTheme.accent}
+            />
           ))}
         </View>
 
-        {/* Main content */}
+        {/* Contenu principal */}
         <Pressable style={styles.container} onPress={handleClose} activeOpacity={1}>
           <Animated.View style={[styles.contentWrapper, containerStyle]}>
             <Animated.View style={[styles.cardWrapper, cardStyle]}>
-              <LinearGradient colors={tierTheme.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.gradientBorder}>
-                <ImageBackground source={tierTheme.texture} style={styles.card} imageStyle={{ borderRadius: 24, opacity: 0.7 }} resizeMode="cover">
-                  {/* Overlay gradient matching tier colors */}
+              <LinearGradient
+                colors={tierTheme.gradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.gradientBorder}
+              >
+                <ImageBackground
+                  source={tierTheme.texture}
+                  style={styles.card}
+                  imageStyle={{ borderRadius: 24, opacity: 0.7 }}
+                  resizeMode="cover"
+                >
+                  {/* Overlay avec couleurs du tier */}
                   <LinearGradient
-                    colors={[`${tierTheme.gradient[0]}e6`, `${tierTheme.gradient[1]}dd`, `${tierTheme.gradient[2]}cc`]}
+                    colors={[
+                      `${tierTheme.gradient[0]}e6`,
+                      `${tierTheme.gradient[1]}dd`,
+                      `${tierTheme.gradient[2]}cc`,
+                    ]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={StyleSheet.absoluteFillObject}
                   />
 
                   <View style={styles.cardContent}>
-                    {/* Header - Centered on one line */}
+                    {/* En-tête */}
                     <View style={styles.header}>
                       <Text style={styles.headerText} numberOfLines={1} adjustsFontSizeToFit>
                         {t('levelUp.title')}
                       </Text>
                     </View>
 
-                    {/* Badge without rotation */}
+                    {/* Badge */}
                     <View style={styles.badgeContainer}>
                       <View style={styles.badgeShadow}>
-                        <AchievementBadge level={levelUpData.newLevel} achievement={levelUpData.achievement} isUnlocked={true} size={140} showLock={false} />
+                        <AchievementBadge
+                          level={levelUpData.newLevel}
+                          achievement={levelUpData.achievement}
+                          isUnlocked={true}
+                          size={140}
+                          showLock={false}
+                        />
                       </View>
                     </View>
 
-                    {/* Level with bounce */}
+                    {/* Niveau avec animation de rebond */}
                     <Animated.View style={[styles.levelInfo, levelBounceStyle]}>
                       <Text style={styles.levelLabel}>{t('levelUp.levelLabel')}</Text>
                       <Text style={styles.levelNumber} allowFontScaling={false}>
@@ -278,19 +445,26 @@ export const EpicLevelUpModal: React.FC = () => {
                       </Text>
                     </Animated.View>
 
+                    {/* Titre de l'achievement */}
                     <View style={styles.titleContainer}>
                       <Text style={styles.achievementTitle} numberOfLines={2}>
                         {levelUpData.achievement?.title || t('levelUp.newAchievement')}
                       </Text>
                     </View>
 
+                    {/* Message motivationnel */}
                     <View style={styles.messageContainer}>
-                      <Text style={styles.message}>{getMotivationalMessage(levelUpData.newLevel)}</Text>
+                      <Text style={styles.message}>
+                        {getMotivationalMessage(levelUpData.newLevel)}
+                      </Text>
                     </View>
 
+                    {/* Indication de fermeture */}
                     <View style={styles.hintContainer}>
                       <Text style={styles.hint}>{t('levelUp.tapToContinue')}</Text>
-                      <Text style={styles.countdown}>{t('levelUp.closingIn', { seconds: countdown })}</Text>
+                      <Text style={styles.countdown}>
+                        {t('levelUp.closingIn', { seconds: countdown })}
+                      </Text>
                     </View>
                   </View>
                 </ImageBackground>
@@ -303,7 +477,10 @@ export const EpicLevelUpModal: React.FC = () => {
   );
 };
 
-// Styles identiques...
+// =============================================================================
+// STYLES
+// =============================================================================
+
 const styles = StyleSheet.create({
   backdrop: {
     ...StyleSheet.absoluteFillObject,

@@ -1,6 +1,14 @@
 // src/utils/dashboardStats.ts
+// Statistiques spécifiques au Dashboard
+// Utilise le module core pour les calculs de base
+
 import { Habit } from '../types';
-import { getLocalDateString, getTodayString } from './dateHelpers';
+import { getTodayString } from './dateHelpers';
+import {
+  calculateGlobalStreak,
+  calculateWeekProgress as coreCalculateWeekProgress,
+  calculateTodayCompleted as coreCalculateTodayCompleted
+} from './stats/core';
 
 export interface DashboardStats {
   currentStreak: number;
@@ -15,109 +23,24 @@ export interface DashboardStats {
 /**
  * Calculate GLOBAL streak - consecutive days where ALL habits were completed
  * This is different from individual habit streaks
+ * @deprecated Utiliser calculateGlobalStreak depuis '@/utils/stats' à la place
  */
 export const calculateTotalStreak = (habits: Habit[]): number => {
-  // Ensure habits is an array
-  if (!Array.isArray(habits) || habits.length === 0) {
-    return 0;
-  }
-
-  let streak = 0;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  // Check backwards from today
-  for (let i = 0; i < 365; i++) {
-    // Max 365 days to prevent infinite loop
-    const checkDate = new Date(today);
-    checkDate.setDate(checkDate.getDate() - i);
-    const dateStr = getLocalDateString(checkDate);
-
-    // Check if ALL active habits were completed on this date
-    const allCompletedOnDate = habits.every((habit) => {
-      if (!habit) return false;
-
-      // Check dailyTasks first (more accurate)
-      if (habit.dailyTasks && typeof habit.dailyTasks === 'object') {
-        const dayData = habit.dailyTasks[dateStr];
-        if (dayData) {
-          return dayData.allCompleted === true;
-        }
-      }
-
-      // Fallback to completedDays array
-      if (habit.completedDays && Array.isArray(habit.completedDays)) {
-        return habit.completedDays.includes(dateStr);
-      }
-
-      // If no data, treat as not completed
-      return false;
-    });
-
-    if (allCompletedOnDate) {
-      streak++;
-    } else {
-      // Stop at first day where not all habits were completed
-      break;
-    }
-  }
-
-  return streak;
+  return calculateGlobalStreak(habits);
 };
 
+/**
+ * @deprecated Utiliser calculateWeekProgress depuis '@/utils/stats' à la place
+ */
 export const calculateWeekProgress = (habits: Habit[]): number => {
-  // Ensure habits is an array
-  if (!Array.isArray(habits) || habits.length === 0) {
-    return 0;
-  }
-
-  const last7Days = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    return getLocalDateString(date);
-  });
-
-  const completions = last7Days.map((date) => {
-    return habits.filter((h) => {
-      // Safe check for completedDays
-      return h?.completedDays && Array.isArray(h.completedDays) && h.completedDays.includes(date);
-    }).length;
-  });
-
-  const totalPossible = habits.length * 7;
-  const totalCompleted = completions.reduce((a, b) => a + b, 0);
-
-  if (totalPossible === 0) {
-    return 0;
-  }
-
-  return Math.round((totalCompleted / totalPossible) * 100);
+  return coreCalculateWeekProgress(habits);
 };
 
+/**
+ * @deprecated Utiliser calculateTodayCompleted depuis '@/utils/stats' à la place
+ */
 export const calculateTodayCompleted = (habits: Habit[]): number => {
-  // Ensure habits is an array
-  if (!Array.isArray(habits) || habits.length === 0) {
-    return 0;
-  }
-
-  const today = getTodayString();
-
-  return habits.filter((habit) => {
-    if (!habit) return false;
-
-    // Check if habit has dailyTasks
-    if (habit.dailyTasks && typeof habit.dailyTasks === 'object') {
-      const todayTasks = habit.dailyTasks[today];
-      return todayTasks?.allCompleted === true;
-    }
-
-    // Fallback: check completedDays array
-    if (habit.completedDays && Array.isArray(habit.completedDays)) {
-      return habit.completedDays.includes(today);
-    }
-
-    return false;
-  }).length;
+  return coreCalculateTodayCompleted(habits);
 };
 
 export const getDashboardStats = (habits: Habit[] | null | undefined): DashboardStats => {

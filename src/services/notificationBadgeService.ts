@@ -1,10 +1,40 @@
-// services/notificationBadgeService.ts
+/**
+ * Service de gestion des badges de notification
+ *
+ * Ce service gere les badges de notification sur l'icone de l'application,
+ * permettant de definir, recuperer et effacer le compteur de badges.
+ * Supporte les specificites iOS et Android.
+ *
+ * @module NotificationBadgeService
+ */
+
+// =============================================================================
+// IMPORTS - Bibliotheques externes
+// =============================================================================
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
+// =============================================================================
+// IMPORTS - Utilitaires internes
+// =============================================================================
+import Logger from '@/utils/logger';
+
+// =============================================================================
+// SERVICE PRINCIPAL
+// =============================================================================
+
+/**
+ * Service de gestion des badges de notification
+ *
+ * Gere l'affichage des badges sur l'icone de l'application
+ */
 class NotificationBadgeService {
+  // ===========================================================================
+  // SECTION: Gestion des badges
+  // ===========================================================================
+
   /**
-   * Réinitialise le badge de notification à 0
+   * Reinitialiser le badge de notification a 0
    */
   async clearBadge(): Promise<void> {
     try {
@@ -14,12 +44,14 @@ class NotificationBadgeService {
         await Notifications.dismissAllNotificationsAsync();
       }
     } catch (error) {
-      console.error('Error clearing notification badge:', error);
+      Logger.error('Error clearing notification badge:', error);
     }
   }
 
   /**
-   * Définit le badge à un nombre spécifique (iOS uniquement)
+   * Definir le badge a un nombre specifique (iOS uniquement)
+   *
+   * @param count - Le nombre a afficher sur le badge
    */
   async setBadge(count: number): Promise<void> {
     try {
@@ -27,12 +59,14 @@ class NotificationBadgeService {
         await Notifications.setBadgeCountAsync(count);
       }
     } catch (error) {
-      console.error('Error setting notification badge:', error);
+      Logger.error('Error setting notification badge:', error);
     }
   }
 
   /**
-   * Récupère le nombre actuel de badges (iOS uniquement)
+   * Recuperer le nombre actuel de badges (iOS uniquement)
+   *
+   * @returns Le nombre de badges actuels
    */
   async getBadgeCount(): Promise<number> {
     try {
@@ -41,20 +75,20 @@ class NotificationBadgeService {
       }
       return 0;
     } catch (error) {
-      console.error('Error getting notification badge:', error);
+      Logger.error('Error getting notification badge:', error);
       return 0;
     }
   }
 
   /**
-   * Efface toutes les notifications et réinitialise le badge
+   * Effacer toutes les notifications et reinitialiser le badge
    */
   async clearAllNotifications(): Promise<void> {
     try {
       await Notifications.dismissAllNotificationsAsync();
       await this.clearBadge();
     } catch (error) {
-      console.error('Error clearing all notifications:', error);
+      Logger.error('Error clearing all notifications:', error);
     }
   }
 }

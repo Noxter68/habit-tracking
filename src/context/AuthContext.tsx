@@ -1,57 +1,145 @@
-// src/context/AuthContext.tsx - AVEC TIMEZONE UPDATE
-import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
+/**
+ * ============================================================================
+ * AuthContext.tsx
+ * ============================================================================
+ *
+ * Contexte d'authentification de l'application.
+ *
+ * Ce contexte gere l'etat d'authentification de l'utilisateur, les sessions
+ * Supabase, et fournit les methodes de connexion/deconnexion.
+ *
+ * Fonctionnalites principales:
+ * - Gestion des sessions Supabase avec refresh automatique
+ * - Connexion par email/mot de passe
+ * - Connexion Apple Sign In
+ * - Mise a jour du timezone utilisateur
+ * - Gestion de l'onboarding
+ * - Integration RevenueCat et Push Notifications
+ *
+ * @module AuthContext
+ */
+
+// ============================================================================
+// IMPORTS - React
+// ============================================================================
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useRef,
+} from 'react';
+
+// ============================================================================
+// IMPORTS - Bibliotheques externes
+// ============================================================================
 import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
 import { Alert, AppState, AppStateStatus } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
+
+// ============================================================================
+// IMPORTS - Services
+// ============================================================================
+import { supabase } from '../lib/supabase';
 import { RevenueCatService } from '@/services/RevenueCatService';
 import { PushTokenService } from '@/services/pushTokenService';
-import Logger from '@/utils/logger';
 import { OnboardingService } from '@/services/onboardingService';
 import { LanguageDetectionService } from '@/services/languageDetectionService';
 
+// ============================================================================
+// IMPORTS - Utils
+// ============================================================================
+import Logger from '@/utils/logger';
+
+// ============================================================================
+// TYPES ET INTERFACES
+// ============================================================================
+
+/**
+ * Type du contexte d'authentification
+ */
 interface AuthContextType {
+  /** Utilisateur connecte */
   user: User | null;
+  /** Session Supabase active */
   session: Session | null;
+  /** Nom d'utilisateur */
   username: string | null;
+  /** Indicateur de chargement */
   loading: boolean;
+  /** Inscription par email */
   signUp: (email: string, password: string, username?: string) => Promise<void>;
+  /** Connexion par email */
   signIn: (email: string, password: string) => Promise<void>;
+  /** Connexion Google (a venir) */
   signInWithGoogle: () => Promise<void>;
+  /** Connexion Apple */
   signInWithApple: () => Promise<void>;
+  /** Deconnexion */
   signOut: () => Promise<void>;
+  /** Reinitialisation du mot de passe */
   resetPassword: (email: string) => Promise<void>;
+  /** Onboarding complete */
   hasCompletedOnboarding: boolean;
+  /** Marque l'onboarding comme complete */
   completeOnboarding: () => Promise<void>;
+  /** Verifie le statut de l'onboarding */
   checkOnboardingStatus: () => Promise<void>;
 }
 
+// ============================================================================
+// CREATION DU CONTEXTE
+// ============================================================================
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// ============================================================================
+// PROVIDER COMPONENT
+// ============================================================================
+
+/**
+ * Provider du contexte d'authentification
+ *
+ * Gere l'etat global d'authentification et fournit les methodes
+ * de connexion/deconnexion.
+ *
+ * @param children - Composants enfants
+ */
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  // ==========================================================================
+  // STATE HOOKS
+  // ==========================================================================
+
   const [user, setUser] = useState<User | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
-  // 🔧 Refs pour éviter race conditions
+  // ==========================================================================
+  // REFS - Prevention des race conditions
+  // ==========================================================================
+
   const profileFetchInProgress = useRef(false);
   const sessionRefreshInProgress = useRef(false);
   const lastProfileFetch = useRef<number>(0);
   const initInProgress = useRef(false);
 
-  // ============================================================================
-  // TIMEZONE UPDATE - Nouveau
-  // ============================================================================
+  // ==========================================================================
+  // FONCTIONS INTERNES - Timezone
+  // ==========================================================================
 
+  /**
+   * Met a jour le timezone de l'utilisateur dans la base de donnees
+   *
+   * @param userId - ID de l'utilisateur
+   */
   const updateUserTimezone = async (userId: string): Promise<void> => {
     try {
-      // Récupérer le timezone offset du device
-      // getTimezoneOffset() retourne l'inverse (négatif = positif en UTC)
       const timezoneOffset = -new Date().getTimezoneOffset() / 60;
 
-      Logger.debug(`🌍 [Auth] Updating timezone: UTC${timezoneOffset >= 0 ? '+' : ''}${timezoneOffset}`);
+      Logger.debug(`[Auth] Updating timezone: UTC${timezoneOffset >= 0 ? '+' : ''}${timezoneOffset}`);
 
       const { error } = await supabase
         .from('profiles')
@@ -62,26 +150,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         .eq('id', userId);
 
       if (error) {
-        Logger.error('❌ [Auth] Timezone update error:', error);
+        Logger.error('[Auth] Timezone update error:', error);
         return;
       }
 
-      Logger.debug('✅ [Auth] Timezone updated successfully');
+      Logger.debug('[Auth] Timezone updated successfully');
     } catch (error: any) {
-      Logger.error('❌ [Auth] Timezone update failed:', error);
+      Logger.error('[Auth] Timezone update failed:', error);
     }
   };
 
-  // ============================================================================
-  // FETCH PROFILE - Ultra optimisé
-  // ============================================================================
+  // ==========================================================================
+  // FONCTIONS INTERNES - Profile
+  // ==========================================================================
 
+  /**
+   * Recupere le profil utilisateur depuis la base de donnees
+   * Optimise pour eviter les double-fetch
+   *
+   * @param userId - ID de l'utilisateur
+   */
   const fetchUserProfile = async (userId: string): Promise<void> => {
     const now = Date.now();
 
-    // Évite les double-fetch rapprochés
+    // Evite les double-fetch rapproches
     if (profileFetchInProgress.current || now - lastProfileFetch.current < 2000) {
-      Logger.debug('⏭️ [Auth] Skipping profile fetch (debounced)');
+      Logger.debug('[Auth] Skipping profile fetch (debounced)');
       return;
     }
 
@@ -89,52 +183,61 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     lastProfileFetch.current = now;
 
     try {
-      Logger.debug('🔄 [Auth] Fetching profile...');
+      Logger.debug('[Auth] Fetching profile...');
 
-      const { data, error } = await supabase.from('profiles').select('username, has_completed_onboarding').eq('id', userId).maybeSingle();
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username, has_completed_onboarding')
+        .eq('id', userId)
+        .maybeSingle();
 
       if (error) {
-        Logger.error('❌ [Auth] Profile fetch error:', error);
+        Logger.error('[Auth] Profile fetch error:', error);
         return;
       }
 
       if (!data) {
-        Logger.warn('⚠️ [Auth] No profile found');
+        Logger.warn('[Auth] No profile found');
         return;
       }
 
       setUsername(data.username || null);
       setHasCompletedOnboarding(data.has_completed_onboarding === true);
 
-      // 🌍 Mettre à jour le timezone en arrière-plan
+      // Met a jour le timezone en arriere-plan
       updateUserTimezone(userId).catch(() => {});
 
-      // Langue en arrière-plan
+      // Charge la langue en arriere-plan
       LanguageDetectionService.loadUserLanguage(userId).catch(() => {});
 
-      Logger.debug('✅ [Auth] Profile loaded');
+      Logger.debug('[Auth] Profile loaded');
     } catch (error: any) {
-      Logger.error('❌ [Auth] Fetch profile error:', error.message);
+      Logger.error('[Auth] Fetch profile error:', error.message);
     } finally {
       profileFetchInProgress.current = false;
     }
   };
 
-  // ============================================================================
-  // SESSION MANAGEMENT - Single source of truth
-  // ============================================================================
+  // ==========================================================================
+  // FONCTIONS INTERNES - Session
+  // ==========================================================================
 
+  /**
+   * Recupere et valide la session courante
+   * Rafraichit automatiquement si proche de l'expiration
+   *
+   * @returns Session valide ou null
+   */
   const getValidSession = async (): Promise<Session | null> => {
-    // 🔧 Un seul refresh à la fois
     if (sessionRefreshInProgress.current) {
-      Logger.debug('⏭️ [Auth] Session refresh already in progress');
+      Logger.debug('[Auth] Session refresh already in progress');
       await new Promise((resolve) => setTimeout(resolve, 500));
       return session;
     }
 
     try {
       sessionRefreshInProgress.current = true;
-      Logger.debug('🔄 [Auth] Checking session...');
+      Logger.debug('[Auth] Checking session...');
 
       const {
         data: { session: currentSession },
@@ -142,26 +245,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } = await supabase.auth.getSession();
 
       if (error) {
-        Logger.error('❌ [Auth] Session error:', error);
+        Logger.error('[Auth] Session error:', error);
         return null;
       }
 
       if (!currentSession) {
-        Logger.debug('ℹ️ [Auth] No session');
+        Logger.debug('[Auth] No session');
         return null;
       }
 
-      // Vérifie expiration
+      // Verifie l'expiration
       const expiresAt = currentSession.expires_at;
       if (expiresAt) {
         const now = Math.floor(Date.now() / 1000);
         const timeUntilExpiry = expiresAt - now;
 
-        Logger.debug(`⏱️ [Auth] Session expires in ${timeUntilExpiry}s`);
+        Logger.debug(`[Auth] Session expires in ${timeUntilExpiry}s`);
 
-        // Si expiré ou expire dans < 60s, refresh
+        // Si expire dans < 60s, refresh
         if (timeUntilExpiry < 60) {
-          Logger.debug('🔄 [Auth] Refreshing session...');
+          Logger.debug('[Auth] Refreshing session...');
 
           const {
             data: { session: newSession },
@@ -169,29 +272,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           } = await supabase.auth.refreshSession();
 
           if (refreshError || !newSession) {
-            Logger.error('❌ [Auth] Refresh failed:', refreshError);
+            Logger.error('[Auth] Refresh failed:', refreshError);
             await supabase.auth.signOut();
             return null;
           }
 
-          Logger.debug('✅ [Auth] Session refreshed');
+          Logger.debug('[Auth] Session refreshed');
           return newSession;
         }
       }
 
       return currentSession;
     } catch (error) {
-      Logger.error('❌ [Auth] Session check failed:', error);
+      Logger.error('[Auth] Session check failed:', error);
       return null;
     } finally {
       sessionRefreshInProgress.current = false;
     }
   };
 
-  // ============================================================================
-  // ONBOARDING
-  // ============================================================================
+  // ==========================================================================
+  // CALLBACKS - Onboarding
+  // ==========================================================================
 
+  /**
+   * Verifie si l'utilisateur a complete l'onboarding
+   */
   const checkOnboardingStatus = async () => {
     if (!user) {
       setHasCompletedOnboarding(false);
@@ -202,11 +308,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const completed = await OnboardingService.hasCompletedOnboarding(user.id);
       setHasCompletedOnboarding(completed);
     } catch (error) {
-      Logger.error('❌ [Auth] Onboarding check error:', error);
+      Logger.error('[Auth] Onboarding check error:', error);
       setHasCompletedOnboarding(false);
     }
   };
 
+  /**
+   * Marque l'onboarding comme complete
+   */
   const completeOnboarding = async () => {
     if (!user) return;
 
@@ -216,39 +325,44 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setHasCompletedOnboarding(true);
       }
     } catch (error) {
-      Logger.error('❌ [Auth] Complete onboarding error:', error);
+      Logger.error('[Auth] Complete onboarding error:', error);
     }
   };
 
-  // ============================================================================
-  // PUSH NOTIFICATIONS
-  // ============================================================================
+  // ==========================================================================
+  // EFFECTS - Push Notifications
+  // ==========================================================================
 
+  /**
+   * Enregistre le device pour les push notifications
+   */
   useEffect(() => {
     if (user?.id) {
       PushTokenService.registerDevice(user.id).catch(() => {});
     }
   }, [user?.id]);
 
-  // ============================================================================
-  // INITIALIZATION - Ultra simplifié
-  // ============================================================================
+  // ==========================================================================
+  // EFFECTS - Initialisation
+  // ==========================================================================
 
+  /**
+   * Initialise l'authentification au montage
+   */
   useEffect(() => {
     let isMounted = true;
 
     const initializeAuth = async () => {
       if (initInProgress.current) {
-        Logger.debug('⏭️ [Auth] Init already in progress');
+        Logger.debug('[Auth] Init already in progress');
         return;
       }
 
       initInProgress.current = true;
 
       try {
-        Logger.debug('🔄 [Auth] Initializing...');
+        Logger.debug('[Auth] Initializing...');
 
-        // Simple get session (pas de refresh ici)
         const {
           data: { session: currentSession },
         } = await supabase.auth.getSession();
@@ -262,9 +376,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           await fetchUserProfile(currentSession.user.id);
         }
 
-        Logger.debug('✅ [Auth] Initialized');
+        Logger.debug('[Auth] Initialized');
       } catch (error) {
-        Logger.error('❌ [Auth] Init error:', error);
+        Logger.error('[Auth] Init error:', error);
         if (isMounted) {
           setSession(null);
           setUser(null);
@@ -279,24 +393,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     initializeAuth();
 
-    // Listener simplifié
+    // Listener pour les changements d'etat d'authentification
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       if (!isMounted) return;
 
-      Logger.debug('🔄 [Auth] State changed:', event);
+      Logger.debug('[Auth] State changed:', event);
 
-      // Update immédiat
       setSession(newSession);
       setUser(newSession?.user ?? null);
 
-      // Fetch profile seulement si SIGNED_IN
       if (event === 'SIGNED_IN' && newSession?.user?.id) {
         await fetchUserProfile(newSession.user.id);
       }
 
-      // Clear si SIGNED_OUT
       if (event === 'SIGNED_OUT') {
         setUsername(null);
         setHasCompletedOnboarding(false);
@@ -309,10 +420,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, []);
 
-  // ============================================================================
-  // APP STATE - Smart refresh
-  // ============================================================================
+  // ==========================================================================
+  // EFFECTS - App State
+  // ==========================================================================
 
+  /**
+   * Verifie la session quand l'app revient au premier plan
+   */
   useEffect(() => {
     let lastCheck = 0;
 
@@ -320,25 +434,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (nextAppState !== 'active' || !user) return;
 
       const now = Date.now();
-      // Vérifie max 1 fois par 30s
+      // Verifie max 1 fois par 30s
       if (now - lastCheck < 30000) {
-        Logger.debug('⏭️ [Auth] Skipping session check (too soon)');
+        Logger.debug('[Auth] Skipping session check (too soon)');
         return;
       }
 
       lastCheck = now;
-      Logger.debug('🔄 [Auth] App active, checking session...');
+      Logger.debug('[Auth] App active, checking session...');
 
       const validSession = await getValidSession();
 
       if (!validSession) {
-        Logger.warn('⚠️ [Auth] Invalid session, signing out...');
+        Logger.warn('[Auth] Invalid session, signing out...');
         setSession(null);
         setUser(null);
         setUsername(null);
         setHasCompletedOnboarding(false);
       } else if (validSession !== session) {
-        // Update si changement
         setSession(validSession);
         setUser(validSession.user);
       }
@@ -348,10 +461,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => subscription.remove();
   }, [user, session]);
 
-  // ============================================================================
-  // AUTH METHODS
-  // ============================================================================
+  // ==========================================================================
+  // CALLBACKS - Methodes d'authentification
+  // ==========================================================================
 
+  /**
+   * Inscription par email/mot de passe
+   *
+   * @param email - Adresse email
+   * @param password - Mot de passe
+   * @param username - Nom d'utilisateur optionnel
+   */
   const signUp = async (email: string, password: string, username?: string) => {
     try {
       setLoading(true);
@@ -370,14 +490,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         await new Promise((resolve) => setTimeout(resolve, 500));
         await LanguageDetectionService.initializeUserLanguage(data.user.id);
 
-        // 🌍 Mettre à jour le timezone immédiatement
         updateUserTimezone(data.user.id).catch(() => {});
-
         RevenueCatService.setAppUserId(data.user.id).catch(() => {});
-        Logger.info('✅ Sign up successful');
+
+        Logger.info('Sign up successful');
       }
     } catch (error: any) {
-      Logger.error('❌ Sign up error:', error);
+      Logger.error('Sign up error:', error);
       Alert.alert('Error', error.message);
       throw error;
     } finally {
@@ -385,6 +504,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  /**
+   * Connexion par email/mot de passe
+   *
+   * @param email - Adresse email
+   * @param password - Mot de passe
+   */
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
@@ -397,14 +522,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (error) throw error;
 
       if (data.user) {
-        // 🌍 Mettre à jour le timezone immédiatement
         updateUserTimezone(data.user.id).catch(() => {});
-
         RevenueCatService.setAppUserId(data.user.id).catch(() => {});
-        Logger.debug('✅ Sign in successful');
+        Logger.debug('Sign in successful');
       }
     } catch (error: any) {
-      Logger.error('❌ Sign in error:', error);
+      Logger.error('Sign in error:', error);
       Alert.alert('Error', error.message);
       throw error;
     } finally {
@@ -412,12 +535,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  /**
+   * Connexion avec Apple Sign In
+   */
   const signInWithApple = async () => {
     try {
       setLoading(true);
 
       const credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [AppleAuthentication.AppleAuthenticationScope.EMAIL, AppleAuthentication.AppleAuthenticationScope.FULL_NAME],
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+        ],
       });
 
       if (!credential.identityToken) {
@@ -432,15 +561,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (error) throw error;
 
       if (data.user) {
-        // 🌍 Mettre à jour le timezone immédiatement
         updateUserTimezone(data.user.id).catch(() => {});
-
         RevenueCatService.setAppUserId(data.user.id).catch(() => {});
-        Logger.debug('✅ Apple Sign In successful');
+        Logger.debug('Apple Sign In successful');
       }
     } catch (error: any) {
       if (error.code !== 'ERR_REQUEST_CANCELED') {
-        Logger.error('❌ Apple Sign In error:', error);
+        Logger.error('Apple Sign In error:', error);
         Alert.alert('Error', error.message);
       }
     } finally {
@@ -448,10 +575,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  /**
+   * Connexion avec Google (a venir)
+   */
   const signInWithGoogle = async () => {
     Alert.alert('Coming Soon', 'Google Sign In will be available soon!');
   };
 
+  /**
+   * Deconnexion
+   */
   const signOut = async () => {
     try {
       setLoading(true);
@@ -465,15 +598,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
 
-      Logger.debug('✅ Sign out successful');
+      Logger.debug('Sign out successful');
     } catch (error: any) {
-      Logger.error('❌ Sign out error:', error);
+      Logger.error('Sign out error:', error);
       Alert.alert('Error', error.message);
     } finally {
       setLoading(false);
     }
   };
 
+  /**
+   * Reinitialisation du mot de passe
+   *
+   * @param email - Adresse email
+   */
   const resetPassword = async (email: string) => {
     try {
       setLoading(true);
@@ -485,14 +623,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (error) throw error;
 
       Alert.alert('Success', 'Password reset email sent!');
-      Logger.debug('✅ Password reset email sent');
+      Logger.debug('Password reset email sent');
     } catch (error: any) {
-      Logger.error('❌ Reset password error:', error);
+      Logger.error('Reset password error:', error);
       Alert.alert('Error', error.message);
     } finally {
       setLoading(false);
     }
   };
+
+  // ==========================================================================
+  // RENDER
+  // ==========================================================================
 
   return (
     <AuthContext.Provider
@@ -517,6 +659,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   );
 };
 
+// ============================================================================
+// HOOK D'UTILISATION
+// ============================================================================
+
+/**
+ * Hook pour acceder au contexte d'authentification
+ *
+ * @throws Error si utilise en dehors du AuthProvider
+ * @returns Contexte d'authentification
+ */
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

@@ -1,8 +1,23 @@
-// src/screens/HabitDetails.tsx
-// Fixed: TaskManager only visible in Overview tab
+/**
+ * ============================================================================
+ * HabitDetails.tsx
+ * ============================================================================
+ *
+ * Ecran de détails d'une habitude affichant la progression, les tiers,
+ * les tâches quotidiennes et les jalons. Permet de gérer les tâches
+ * et de visualiser la progression de l'utilisateur.
+ *
+ * Fonctionnalités principales:
+ * - Affichage du héros avec informations de tier et XP
+ * - Gestion des tâches quotidiennes avec toggle
+ * - Visualisation des jalons et progression
+ * - Célébration de montée de tier
+ * - Intégration du Streak Saver
+ * - Support des habitudes hebdomadaires
+ */
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, Dimensions, StatusBar, Alert } from 'react-native';
+import { View, Text, ScrollView, Pressable, Dimensions, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
@@ -11,22 +26,6 @@ import Animated, { FadeInDown, FadeInUp, useAnimatedStyle, useSharedValue } from
 import * as Haptics from 'expo-haptics';
 import { ArrowLeft, Zap } from 'lucide-react-native';
 
-// Utils & Services
-import tw from '@/lib/tailwind';
-import { getTodayString, getLocalDateString } from '@/utils/dateHelpers';
-import { tierThemes } from '@/utils/tierTheme';
-
-// Types
-import { Habit, DailyTaskProgress } from '@/types';
-import { RootStackParamList } from '@/navigation/types';
-
-// Contexts & Hooks
-import { useHabits } from '@/context/HabitContext';
-import { useAuth } from '@/context/AuthContext';
-import { useHabitDetails } from '@/hooks/useHabitDetails';
-import { useStreakSaver } from '@/hooks/useStreakSaver';
-
-// Components
 import { HabitHero } from '@/components/habits/HabitHero';
 import { TabSelector } from '@/components/habits/TabSelector';
 import { TasksCard } from '@/components/habits/TasksCard';
@@ -36,9 +35,21 @@ import { StreakSaverModal } from '@/components/streakSaver/StreakSaverModal';
 import { DebugButton } from '@/components/debug/DebugButton';
 import TaskManager from '@/components/tasks/TaskManager';
 
-// Services
+import { useHabits } from '@/context/HabitContext';
+import { useAuth } from '@/context/AuthContext';
+
+import { useHabitDetails } from '@/hooks/useHabitDetails';
+import { useStreakSaver } from '@/hooks/useStreakSaver';
+
 import { HabitProgressionService } from '@/services/habitProgressionService';
+
+import tw from '@/lib/tailwind';
+import { getTodayString, getLocalDateString } from '@/utils/dateHelpers';
+import { tierThemes } from '@/utils/tierTheme';
 import Logger from '@/utils/logger';
+
+import { Habit, DailyTaskProgress } from '@/types';
+import { RootStackParamList } from '@/navigation/types';
 import { Config } from '@/config';
 
 // ============================================================================
@@ -49,10 +60,14 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'HabitDetail
 type RouteProps = RouteProp<RootStackParamList, 'HabitDetails'>;
 type TabType = 'overview' | 'tiers';
 
+// ============================================================================
+// CONSTANTES
+// ============================================================================
+
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ============================================================================
-// MAIN COMPONENT
+// COMPOSANT PRINCIPAL
 // ============================================================================
 
 const HabitDetails: React.FC = () => {
@@ -62,7 +77,7 @@ const HabitDetails: React.FC = () => {
   const { habits, toggleTask, refreshHabits } = useHabits();
 
   // ============================================================================
-  // STATE
+  // HOOKS - State
   // ============================================================================
 
   const [selectedTab, setSelectedTab] = useState<TabType>('overview');
@@ -73,48 +88,43 @@ const HabitDetails: React.FC = () => {
   const [isTogglingTask, setIsTogglingTask] = useState(false);
   const [loadingTaskId, setLoadingTaskId] = useState<string | null>(null);
 
-  // DEV MODE: Test Modal
+  // État pour le modal de test en mode développeur
   const [showTestModal, setShowTestModal] = useState(false);
   const [testModalLoading, setTestModalLoading] = useState(false);
   const [testModalSuccess, setTestModalSuccess] = useState(false);
   const [testNewStreak, setTestNewStreak] = useState(0);
 
-  const handleTestUseStreakSaver = () => {
-    setTestModalLoading(true);
-    setTimeout(() => {
-      setTestModalLoading(false);
-      setTestModalSuccess(true);
-      setTestNewStreak(15);
-    }, 2000);
-  };
-
-  const handleTestCloseModal = () => {
-    setShowTestModal(false);
-    setTestModalLoading(false);
-    setTestModalSuccess(false);
-    setTestNewStreak(0);
-  };
+  // ============================================================================
+  // HOOKS - Refs & Shared Values
+  // ============================================================================
 
   const heroScale = useSharedValue(1);
 
-  // Extract route params
+  // ============================================================================
+  // VARIABLES DERIVEES - Paramètres de route
+  // ============================================================================
+
   const { habitId } = route.params;
   const pausedTasks = route.params.pausedTasks || {};
 
   // ============================================================================
-  // DATA FETCHING
+  // VARIABLES DERIVEES - Données d'habitude
   // ============================================================================
 
   const habit = habits.find((h: Habit) => h.id === habitId);
 
-  // Calculate current tier reactively
+  /**
+   * Calcule les données du tier actuel de manière réactive
+   */
   const currentTierData = useMemo(() => {
     const streak = debugStreak !== null ? debugStreak : habit?.currentStreak || 0;
     const { tier, progress } = HabitProgressionService.calculateTierFromStreak(streak);
     return { tier, progress };
   }, [habit?.currentStreak, debugStreak]);
 
-  // Get tier color from theme
+  /**
+   * Récupère la couleur du tier depuis le thème
+   */
   const tierColor = useMemo(() => {
     return tierThemes[currentTierData.tier.name]?.accent || '#3b82f6';
   }, [currentTierData.tier.name]);
@@ -126,9 +136,9 @@ const HabitDetails: React.FC = () => {
     allCompleted: false,
   };
 
-  // ============================================================================
-  // 🔧 WEEKLY HABITS: Check if week is completed
-  // ============================================================================
+  /**
+   * Vérifie si la semaine est complétée pour les habitudes hebdomadaires
+   */
   const isWeekCompleted = useMemo(() => {
     if (habit?.frequency !== 'weekly') return false;
 
@@ -154,11 +164,26 @@ const HabitDetails: React.FC = () => {
   const completedTasksToday = todayTasks.completedTasks?.length || 0;
   const totalTasks = habit?.tasks?.length || 0;
 
-  // Fetch detailed habit progression data
-  const { tierInfo, nextTier, milestoneStatus, performanceMetrics, refreshProgression, loading } = useHabitDetails(habit?.id || '', user?.id || '', habit?.currentStreak || 0, completedTasksToday);
+  // ============================================================================
+  // HOOKS - Données de progression
+  // ============================================================================
+
+  const {
+    tierInfo,
+    nextTier,
+    milestoneStatus,
+    performanceMetrics,
+    refreshProgression,
+    loading
+  } = useHabitDetails(
+    habit?.id || '',
+    user?.id || '',
+    habit?.currentStreak || 0,
+    completedTasksToday
+  );
 
   // ============================================================================
-  // DERIVED VALUES
+  // VARIABLES DERIVEES - Métriques
   // ============================================================================
 
   const tierMultiplier = tierInfo?.multiplier ?? 1.0;
@@ -166,7 +191,7 @@ const HabitDetails: React.FC = () => {
   const completionRate = performanceMetrics?.consistency || 0;
 
   // ============================================================================
-  // STREAK SAVER INTEGRATION
+  // HOOKS - Streak Saver
   // ============================================================================
 
   const streakSaver = useStreakSaver({
@@ -184,23 +209,12 @@ const HabitDetails: React.FC = () => {
   });
 
   // ============================================================================
-  // EFFECTS
+  // HOOKS - useCallback
   // ============================================================================
 
-  useEffect(() => {
-    if (prevTier && prevTier !== currentTierData.tier.name) {
-      Logger.debug(`🎉 TIER UP! ${prevTier} → ${currentTierData.tier.name}`);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setCelebrationTier(currentTierData.tier);
-      setShowCelebration(true);
-    }
-    setPrevTier(currentTierData.tier.name);
-  }, [currentTierData.tier.name, prevTier]);
-
-  // ============================================================================
-  // HANDLERS
-  // ============================================================================
-
+  /**
+   * Gère le toggle d'une tâche avec retour haptique
+   */
   const handleToggleTask = useCallback(
     async (taskId: string): Promise<void> => {
       if (!habit || isTogglingTask) return;
@@ -213,7 +227,7 @@ const HabitDetails: React.FC = () => {
         await toggleTask(habit.id, today, taskId);
         await new Promise((resolve) => setTimeout(resolve, 150));
       } catch (error) {
-        Logger.error('❌ Task toggle failed:', error);
+        Logger.error('Task toggle failed:', error);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       } finally {
         setIsTogglingTask(false);
@@ -223,31 +237,46 @@ const HabitDetails: React.FC = () => {
     [habit, today, toggleTask, isTogglingTask]
   );
 
+  /**
+   * Rafraîchit les habitudes après mise à jour des tâches
+   */
   const handleTasksUpdated = useCallback(async () => {
     try {
       await refreshHabits();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Logger.debug('✅ Tasks updated, habits refreshed');
+      Logger.debug('Tasks updated, habits refreshed');
     } catch (error) {
-      Logger.error('❌ Failed to refresh habits after task update:', error);
+      Logger.error('Failed to refresh habits after task update:', error);
     }
   }, [refreshHabits]);
 
+  /**
+   * Retourne à l'écran précédent
+   */
   const handleGoBack = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.goBack();
   }, [navigation]);
 
+  /**
+   * Change d'onglet avec retour haptique
+   */
   const handleTabChange = useCallback((tab: TabType) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedTab(tab);
   }, []);
 
+  /**
+   * Ferme la célébration de tier
+   */
   const handleCelebrationClose = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setShowCelebration(false);
   }, []);
 
+  /**
+   * Cycle à travers les valeurs de test pour le debug
+   */
   const handleDebugStreakCycle = useCallback(() => {
     const testValues = [10, 49, 50, 100, 149, 150];
     const currentDebug = debugStreak !== null ? debugStreak : habit?.currentStreak || 0;
@@ -258,8 +287,45 @@ const HabitDetails: React.FC = () => {
     setDebugStreak(testValues[nextIndex]);
   }, [debugStreak, habit?.currentStreak]);
 
+  /**
+   * Simule l'utilisation du Streak Saver pour le test
+   */
+  const handleTestUseStreakSaver = () => {
+    setTestModalLoading(true);
+    setTimeout(() => {
+      setTestModalLoading(false);
+      setTestModalSuccess(true);
+      setTestNewStreak(15);
+    }, 2000);
+  };
+
+  /**
+   * Ferme le modal de test
+   */
+  const handleTestCloseModal = () => {
+    setShowTestModal(false);
+    setTestModalLoading(false);
+    setTestModalSuccess(false);
+    setTestNewStreak(0);
+  };
+
   // ============================================================================
-  // ANIMATED STYLES
+  // HOOKS - useEffect
+  // ============================================================================
+
+  // Détecte et célèbre les montées de tier
+  useEffect(() => {
+    if (prevTier && prevTier !== currentTierData.tier.name) {
+      Logger.debug(`TIER UP! ${prevTier} -> ${currentTierData.tier.name}`);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setCelebrationTier(currentTierData.tier);
+      setShowCelebration(true);
+    }
+    setPrevTier(currentTierData.tier.name);
+  }, [currentTierData.tier.name, prevTier]);
+
+  // ============================================================================
+  // HOOKS - Styles animés
   // ============================================================================
 
   const animatedGradientStyle = useAnimatedStyle(() => {
@@ -271,7 +337,7 @@ const HabitDetails: React.FC = () => {
   });
 
   // ============================================================================
-  // EARLY RETURNS
+  // RENDU - États spéciaux
   // ============================================================================
 
   if (!habit || !user) {
@@ -283,7 +349,7 @@ const HabitDetails: React.FC = () => {
   }
 
   // ============================================================================
-  // RENDER
+  // RENDU PRINCIPAL
   // ============================================================================
 
   return (
@@ -291,12 +357,24 @@ const HabitDetails: React.FC = () => {
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
       <ScrollView contentContainerStyle={tw`pb-8`} showsVerticalScrollIndicator={false}>
+        {/* En-tête avec dégradé du tier */}
         <Animated.View style={animatedGradientStyle}>
-          <LinearGradient colors={tierThemes[currentTierData.tier.name].gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`pb-10`}>
+          <LinearGradient
+            colors={tierThemes[currentTierData.tier.name].gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={tw`pb-10`}
+          >
             <SafeAreaView edges={['top']}>
-              {/* Navigation Header */}
+              {/* Barre de navigation */}
               <View style={tw`px-8 py-5 flex-row items-center justify-between`}>
-                <Pressable onPress={handleGoBack} style={({ pressed }) => [tw`w-11 h-11 rounded-2xl items-center justify-center bg-sand/20`, pressed && tw`scale-95`]}>
+                <Pressable
+                  onPress={handleGoBack}
+                  style={({ pressed }) => [
+                    tw`w-11 h-11 rounded-2xl items-center justify-center bg-sand/20`,
+                    pressed && tw`scale-95`
+                  ]}
+                >
                   <ArrowLeft size={22} color="#fff" strokeWidth={2.5} />
                 </Pressable>
 
@@ -305,24 +383,30 @@ const HabitDetails: React.FC = () => {
                 <View style={tw`w-11`}>
                   <DebugButton
                     onPress={handleDebugStreakCycle}
-                    label={debugStreak !== null ? debugStreak.toString() : '🔧'}
+                    label={debugStreak !== null ? debugStreak.toString() : ''}
                     variant="secondary"
                     customStyle={tw`w-11 h-11 rounded-2xl bg-sand/20 px-0 py-0 mb-0`}
                   />
                 </View>
               </View>
 
-              {/* DEV: Test Button */}
+              {/* Bouton de test en mode développeur */}
               {Config.debug.enabled && (
                 <View style={tw`px-8 mb-4`}>
-                  <Pressable onPress={() => setShowTestModal(true)} style={({ pressed }) => [tw`bg-purple-500 rounded-2xl py-3 px-4 flex-row items-center justify-center`, pressed && tw`opacity-80`]}>
+                  <Pressable
+                    onPress={() => setShowTestModal(true)}
+                    style={({ pressed }) => [
+                      tw`bg-purple-500 rounded-2xl py-3 px-4 flex-row items-center justify-center`,
+                      pressed && tw`opacity-80`
+                    ]}
+                  >
                     <Zap size={18} color="white" fill="white" style={tw`mr-2`} />
                     <Text style={tw`text-white font-black text-sm`}>Test Streak Saver Modal</Text>
                   </Pressable>
                 </View>
               )}
 
-              {/* Hero Card */}
+              {/* Carte héros */}
               <Animated.View
                 entering={FadeInDown.delay(100).springify()}
                 style={[
@@ -360,7 +444,7 @@ const HabitDetails: React.FC = () => {
                   />
                 </View>
 
-                {/* Real Modal */}
+                {/* Modal Streak Saver réel */}
                 <StreakSaverModal
                   visible={streakSaver.showModal}
                   habitName={streakSaver.eligibility.habitName || habit?.name || 'Habit'}
@@ -374,7 +458,7 @@ const HabitDetails: React.FC = () => {
                   onClose={streakSaver.closeModal}
                 />
 
-                {/* Dev Modal */}
+                {/* Modal de test en mode développeur */}
                 {Config.debug.enabled && (
                   <StreakSaverModal
                     visible={showTestModal}
@@ -393,17 +477,25 @@ const HabitDetails: React.FC = () => {
           </LinearGradient>
         </Animated.View>
 
-        {/* TAB CONTENT */}
-        <ScrollView contentContainerStyle={[tw`pb-8 pt-5`]} showsVerticalScrollIndicator={false}>
+        {/* Contenu des onglets */}
+        <ScrollView
+          contentContainerStyle={[tw`pb-8 pt-5`]}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Sélecteur d'onglets */}
           <Animated.View entering={FadeInUp.delay(200).springify()} style={tw`px-5 mb-5 mt-2`}>
-            <TabSelector tier={currentTierData.tier.name} selected={selectedTab} onChange={handleTabChange} />
+            <TabSelector
+              tier={currentTierData.tier.name}
+              selected={selectedTab}
+              onChange={handleTabChange}
+            />
           </Animated.View>
 
           <View style={tw`px-5`}>
-            {/* OVERVIEW TAB */}
+            {/* Onglet Vue d'ensemble */}
             {selectedTab === 'overview' && (
               <Animated.View entering={FadeInDown.duration(300)}>
-                {/* Task Manager - Only in Overview */}
+                {/* Gestionnaire de tâches */}
                 <TaskManager
                   habitId={habit.id}
                   habitCategory={habit.category}
@@ -414,6 +506,7 @@ const HabitDetails: React.FC = () => {
                   tierColor={tierColor}
                 />
 
+                {/* Carte des tâches */}
                 {totalTasks > 0 && (
                   <TasksCard
                     tasks={habit.tasks || []}
@@ -432,18 +525,28 @@ const HabitDetails: React.FC = () => {
               </Animated.View>
             )}
 
-            {/* TIERS TAB */}
+            {/* Onglet Tiers */}
             {selectedTab === 'tiers' && (
               <Animated.View entering={FadeInDown.duration(300)}>
-                <MilestonesCard milestones={milestoneStatus?.all || []} currentStreak={debugStreak !== null ? debugStreak : habit.currentStreak} unlockedMilestones={milestoneStatus?.unlocked || []} />
+                <MilestonesCard
+                  milestones={milestoneStatus?.all || []}
+                  currentStreak={debugStreak !== null ? debugStreak : habit.currentStreak}
+                  unlockedMilestones={milestoneStatus?.unlocked || []}
+                />
               </Animated.View>
             )}
           </View>
         </ScrollView>
       </ScrollView>
 
-      {/* CELEBRATION */}
-      {celebrationTier && <TierCelebration visible={showCelebration} newTier={celebrationTier} onClose={handleCelebrationClose} />}
+      {/* Animation de célébration de tier */}
+      {celebrationTier && (
+        <TierCelebration
+          visible={showCelebration}
+          newTier={celebrationTier}
+          onClose={handleCelebrationClose}
+        />
+      )}
     </View>
   );
 };

@@ -1,36 +1,68 @@
-// src/screens/CalendarScreen.tsx
+/**
+ * ============================================================================
+ * CalendarScreen.tsx
+ * ============================================================================
+ *
+ * Ecran calendrier affichant l'historique des habitudes sous forme de grille
+ * mensuelle. Permet de visualiser la progression, les séries et les périodes
+ * de vacances pour chaque habitude.
+ *
+ * Fonctionnalités principales:
+ * - Affichage du calendrier mensuel avec navigation
+ * - Sélection et changement d'habitude
+ * - Visualisation des statistiques de l'habitude
+ * - Gestion des périodes de vacances (Holiday Mode)
+ * - Détails de la date sélectionnée
+ */
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, ScrollView, RefreshControl, Text, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import tw from '../lib/tailwind';
-import { useAuth } from '../context/AuthContext';
-import { useHabits } from '../context/HabitContext';
-import { Habit } from '../types';
-import { HolidayPeriod } from '../types/holiday.types';
-import { RootStackParamList } from '../navigation/types';
-import { HolidayModeService } from '../services/holidayModeService';
-import { getTaskDetails } from '../utils/taskHelpers';
-import { HapticFeedback } from '../utils/haptics';
-
 import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react-native';
+
 import CalendarHeader from '../components/calendar/CalendarHeader';
 import HabitSelector from '../components/calendar/HabitSelector';
 import StatsBar from '../components/calendar/StatsBar';
 import CalendarGrid from '../components/calendar/CalendarGrid';
 import DateDetails from '../components/calendar/DateDetails';
 import EmptyState from '../components/shared/EmptyState';
+
+import { useAuth } from '../context/AuthContext';
+import { useHabits } from '../context/HabitContext';
+
+import { HolidayModeService } from '../services/holidayModeService';
+
+import tw from '../lib/tailwind';
+import { getTaskDetails } from '../utils/taskHelpers';
+import { HapticFeedback } from '../utils/haptics';
 import Logger from '@/utils/logger';
+
+import { Habit } from '../types';
+import { HolidayPeriod } from '../types/holiday.types';
+import { RootStackParamList } from '../navigation/types';
+
+// ============================================================================
+// TYPES
+// ============================================================================
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
+// ============================================================================
+// COMPOSANT PRINCIPAL
+// ============================================================================
+
 const CalendarScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { habits, loading, refreshHabits } = useHabits();
-  const { t } = useTranslation();
+
+  // ============================================================================
+  // HOOKS - State
+  // ============================================================================
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
@@ -39,16 +71,21 @@ const CalendarScreen: React.FC = () => {
   const [holidayLoading, setHolidayLoading] = useState(false);
   const [allHolidays, setAllHolidays] = useState<HolidayPeriod[]>([]);
 
-  // Helper function to normalize habit tasks
+  // ============================================================================
+  // HOOKS - useCallback
+  // ============================================================================
+
+  /**
+   * Normalise les tâches d'une habitude en récupérant les détails complets
+   * si elles sont stockées sous forme d'IDs
+   */
   const normalizeHabitTasks = useCallback((habit: Habit): Habit => {
     if (!habit || !Array.isArray(habit.tasks) || habit.tasks.length === 0) {
       return habit;
     }
 
-    // Check if tasks are strings (IDs) or already objects
     const firstTask = habit.tasks[0];
     if (typeof firstTask === 'string') {
-      // Tasks are IDs, need to get full task details
       const normalizedTasks = getTaskDetails(habit.tasks, habit.category, habit.type);
       return {
         ...habit,
@@ -56,24 +93,28 @@ const CalendarScreen: React.FC = () => {
       };
     }
 
-    // Tasks are already objects, return as is
     return habit;
   }, []);
 
-  // ✅ FIX: Force reload holidays from database (no cache)
+  /**
+   * Charge les périodes de vacances depuis la base de données
+   * Récupère à la fois la période active et l'historique complet
+   */
   const loadHoliday = useCallback(async () => {
     if (!user?.id) return;
 
     try {
       setHolidayLoading(true);
 
-      // Fetch both active and all holidays in parallel - FRESH from DB
-      const [activeHoliday, allHolidays] = await Promise.all([HolidayModeService.getActiveHoliday(user.id), HolidayModeService.getAllHolidays(user.id)]);
+      const [activeHolidayData, allHolidaysData] = await Promise.all([
+        HolidayModeService.getActiveHoliday(user.id),
+        HolidayModeService.getAllHolidays(user.id)
+      ]);
 
-      Logger.debug('📅 Loaded holidays from database:', {
-        active: activeHoliday?.id,
-        total: allHolidays.length,
-        allHolidays: allHolidays.map((h) => ({
+      Logger.debug('Loaded holidays from database:', {
+        active: activeHolidayData?.id,
+        total: allHolidaysData.length,
+        allHolidays: allHolidaysData.map((h) => ({
           id: h.id,
           startDate: h.startDate,
           endDate: h.endDate,
@@ -82,8 +123,8 @@ const CalendarScreen: React.FC = () => {
         })),
       });
 
-      setActiveHoliday(activeHoliday);
-      setAllHolidays(allHolidays);
+      setActiveHoliday(activeHolidayData);
+      setAllHolidays(allHolidaysData);
     } catch (error) {
       Logger.error('Error loading holidays:', error);
       setActiveHoliday(null);
@@ -93,19 +134,39 @@ const CalendarScreen: React.FC = () => {
     }
   }, [user?.id]);
 
-  // Initialize selected habit with normalized tasks
+  /**
+   * Gère la sélection d'une habitude avec normalisation des tâches
+   */
+  const handleHabitSelect = useCallback(
+    (habit: Habit) => {
+      HapticFeedback.selection();
+      setSelectedHabit(normalizeHabitTasks(habit));
+    },
+    [normalizeHabitTasks]
+  );
+
+  /**
+   * Gère la sélection d'une date avec retour haptique
+   */
+  const handleDateSelect = useCallback((date: Date) => {
+    HapticFeedback.light();
+    setSelectedDate(date);
+  }, []);
+
+  // ============================================================================
+  // HOOKS - useEffect
+  // ============================================================================
+
+  // Initialise et met à jour l'habitude sélectionnée
   useEffect(() => {
     if (habits.length > 0) {
       if (!selectedHabit) {
-        // Set first habit with normalized tasks
         setSelectedHabit(normalizeHabitTasks(habits[0]));
       } else {
-        // Find and update the selected habit
         const updatedHabit = habits.find((h) => h.id === selectedHabit.id);
         if (updatedHabit) {
           setSelectedHabit(normalizeHabitTasks(updatedHabit));
         } else {
-          // If selected habit no longer exists, select first habit
           setSelectedHabit(normalizeHabitTasks(habits[0]));
         }
       }
@@ -114,31 +175,43 @@ const CalendarScreen: React.FC = () => {
     }
   }, [habits, normalizeHabitTasks]);
 
-  // Load holiday on mount and when user changes
+  // Charge les vacances au montage et quand l'utilisateur change
   useEffect(() => {
     loadHoliday();
   }, [loadHoliday]);
 
-  // ✅ FIX: Refresh holiday data when screen comes into focus (clears cache)
+  // Rafraîchit les vacances quand l'écran reprend le focus
   useFocusEffect(
     useCallback(() => {
-      Logger.debug('🔄 Screen focused - reloading holidays');
+      Logger.debug('Screen focused - reloading holidays');
       loadHoliday();
     }, [loadHoliday])
   );
 
+  // ============================================================================
+  // GESTIONNAIRES D'EVENEMENTS
+  // ============================================================================
+
+  /**
+   * Navigue vers l'écran de création d'habitude
+   */
   const handleCreateHabit = () => {
     HapticFeedback.light();
     navigation.navigate('HabitWizard');
   };
 
+  /**
+   * Rafraîchit les données (habitudes et vacances)
+   */
   const handleRefresh = async () => {
     HapticFeedback.light();
-    Logger.debug('🔄 Manual refresh triggered');
+    Logger.debug('Manual refresh triggered');
     await Promise.all([refreshHabits(), loadHoliday()]);
   };
 
-  // ✅ FIX: Proper month navigation using Date object methods
+  /**
+   * Navigue au mois précédent ou suivant
+   */
   const navigateMonth = (direction: 'prev' | 'next') => {
     HapticFeedback.light();
     setCurrentMonth((prev) => {
@@ -150,7 +223,7 @@ const CalendarScreen: React.FC = () => {
         newMonth.setMonth(newMonth.getMonth() + 1);
       }
 
-      Logger.debug('📆 Month navigation:', {
+      Logger.debug('Month navigation:', {
         from: prev.toISOString().split('T')[0],
         to: newMonth.toISOString().split('T')[0],
         direction,
@@ -160,25 +233,19 @@ const CalendarScreen: React.FC = () => {
     });
   };
 
-  // Handle habit selection with task normalization
-  const handleHabitSelect = useCallback(
-    (habit: Habit) => {
-      HapticFeedback.selection();
-      setSelectedHabit(normalizeHabitTasks(habit));
-    },
-    [normalizeHabitTasks]
-  );
+  // ============================================================================
+  // RENDU - États spéciaux
+  // ============================================================================
 
-  // Handle date selection with haptic
-  const handleDateSelect = useCallback((date: Date) => {
-    HapticFeedback.light();
-    setSelectedDate(date);
-  }, []);
-
-  // Empty state
+  // État vide - aucune habitude
   if (habits.length === 0) {
     return (
-      <ImageBackground source={require('../../assets/interface/textures/texture-white.png')} style={tw`flex-1`} imageStyle={{ opacity: 0.1 }} resizeMode="repeat">
+      <ImageBackground
+        source={require('../../assets/interface/textures/texture-white.png')}
+        style={tw`flex-1`}
+        imageStyle={{ opacity: 0.1 }}
+        resizeMode="repeat"
+      >
         <SafeAreaView style={tw`flex-1 bg-transparent`}>
           <EmptyState
             icon={Plus}
@@ -195,9 +262,15 @@ const CalendarScreen: React.FC = () => {
     );
   }
 
+  // État de chargement - habitude non encore sélectionnée
   if (!selectedHabit) {
     return (
-      <ImageBackground source={require('../../assets/interface/textures/texture-white.png')} style={tw`flex-1`} imageStyle={{ opacity: 0.15 }} resizeMode="repeat">
+      <ImageBackground
+        source={require('../../assets/interface/textures/texture-white.png')}
+        style={tw`flex-1`}
+        imageStyle={{ opacity: 0.15 }}
+        resizeMode="repeat"
+      >
         <SafeAreaView style={tw`flex-1 bg-transparent items-center justify-center`}>
           <Text style={tw`text-sand-500`}>Loading...</Text>
         </SafeAreaView>
@@ -205,25 +278,44 @@ const CalendarScreen: React.FC = () => {
     );
   }
 
+  // ============================================================================
+  // RENDU PRINCIPAL
+  // ============================================================================
+
   return (
-    <ImageBackground source={require('../../assets/interface/textures/texture-white.png')} style={tw`flex-1`} imageStyle={{ opacity: 0.15 }} resizeMode="repeat">
+    <ImageBackground
+      source={require('../../assets/interface/textures/texture-white.png')}
+      style={tw`flex-1`}
+      imageStyle={{ opacity: 0.15 }}
+      resizeMode="repeat"
+    >
       <SafeAreaView style={tw`flex-1 bg-transparent`}>
         <ScrollView
           style={tw`flex-1`}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={tw`pb-20`}
-          refreshControl={<RefreshControl refreshing={loading || holidayLoading} onRefresh={handleRefresh} tintColor={tw.color('sand-400')} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={loading || holidayLoading}
+              onRefresh={handleRefresh}
+              tintColor={tw.color('sand-400')}
+            />
+          }
         >
-          {/* Header */}
+          {/* En-tête avec nom de l'habitude */}
           <CalendarHeader habit={selectedHabit} />
 
-          {/* Habit Selector */}
-          <HabitSelector habits={habits} selectedHabit={selectedHabit} onSelectHabit={handleHabitSelect} />
+          {/* Sélecteur d'habitude */}
+          <HabitSelector
+            habits={habits}
+            selectedHabit={selectedHabit}
+            onSelectHabit={handleHabitSelect}
+          />
 
-          {/* Stats */}
+          {/* Barre de statistiques */}
           <StatsBar habit={selectedHabit} />
 
-          {/* Calendar with Holiday Support */}
+          {/* Grille du calendrier et détails */}
           <View style={tw`mx-5 mt-4 mb-6`}>
             <CalendarGrid
               habit={selectedHabit}
@@ -235,8 +327,13 @@ const CalendarScreen: React.FC = () => {
               allHolidays={allHolidays}
             />
 
-            {/* Selected Date Details with Holiday Info */}
-            <DateDetails habit={selectedHabit} selectedDate={selectedDate} activeHoliday={activeHoliday} allHolidays={allHolidays} />
+            {/* Détails de la date sélectionnée */}
+            <DateDetails
+              habit={selectedHabit}
+              selectedDate={selectedDate}
+              activeHoliday={activeHoliday}
+              allHolidays={allHolidays}
+            />
           </View>
         </ScrollView>
       </SafeAreaView>

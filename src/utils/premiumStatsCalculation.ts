@@ -1,6 +1,14 @@
 // utils/premiumStatsCalculations.ts
+// Statistiques premium pour les graphiques et analyses avancées
+// Utilise le module core pour les calculs de base
+
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, subDays, differenceInDays } from 'date-fns';
 import { Habit } from '@/types';
+import {
+  calculateTrend as coreCalculateTrend,
+  getCompletionColor as coreGetCompletionColor,
+  type TrendDirection
+} from './stats/core';
 
 export type PeriodType = 'week' | 'month' | '4weeks';
 export type ChartType = 'area' | 'stacked' | 'ring' | 'heatmap';
@@ -396,30 +404,19 @@ export const getDateLabels = (dailyStats: DailyStat[], formatType: 'short' | 'lo
 
 /**
  * Calculate completion trend (increasing, stable, decreasing)
+ * Utilise le module core pour le calcul
  */
-export const calculateTrend = (dailyStats: DailyStat[]): 'increasing' | 'stable' | 'decreasing' => {
+export const calculateTrend = (dailyStats: DailyStat[]): TrendDirection => {
   if (!dailyStats || dailyStats.length < 2) return 'stable';
 
-  const halfPoint = Math.floor(dailyStats.length / 2);
-  const firstHalf = dailyStats.slice(0, halfPoint);
-  const secondHalf = dailyStats.slice(halfPoint);
-
-  const firstHalfAvg = firstHalf.reduce((sum, d) => sum + (d.progressRate || 0), 0) / firstHalf.length;
-  const secondHalfAvg = secondHalf.reduce((sum, d) => sum + (d.progressRate || 0), 0) / secondHalf.length;
-
-  const difference = secondHalfAvg - firstHalfAvg;
-
-  if (difference > 5) return 'increasing';
-  if (difference < -5) return 'decreasing';
-  return 'stable';
+  const progressValues = dailyStats.map(d => d.progressRate || 0);
+  return coreCalculateTrend(progressValues);
 };
 
 /**
  * Get color based on completion percentage
+ * @deprecated Utiliser getCompletionColor depuis '@/utils/stats' à la place
  */
 export const getCompletionColor = (percentage: number): string => {
-  if (percentage >= 80) return '#6B7280'; // quartz-400 - excellent
-  if (percentage >= 60) return '#9CA3AF'; // quartz-300 - good
-  if (percentage >= 40) return '#D1D5DB'; // quartz-200 - fair
-  return '#E5E7EB'; // quartz-100 - needs improvement
+  return coreGetCompletionColor(percentage);
 };

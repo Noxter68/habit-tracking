@@ -1,7 +1,30 @@
-// src/services/achievementService.ts
-import Logger from '@/utils/logger';
+/**
+ * Service de gestion des succes (achievements)
+ *
+ * Ce service gere le systeme de succes de l'application, incluant
+ * les succes bases sur les streaks, les completions, les jours parfaits
+ * et le nombre d'habitudes suivies.
+ *
+ * @module AchievementService
+ */
+
+// =============================================================================
+// IMPORTS - Bibliotheques externes
+// =============================================================================
 import { supabase } from '../lib/supabase';
 
+// =============================================================================
+// IMPORTS - Utilitaires internes
+// =============================================================================
+import Logger from '@/utils/logger';
+
+// =============================================================================
+// TYPES ET INTERFACES
+// =============================================================================
+
+/**
+ * Definition d'un succes
+ */
 export interface Achievement {
   id: string;
   title: string;
@@ -16,6 +39,9 @@ export interface Achievement {
   createdAt: Date;
 }
 
+/**
+ * Succes deverrouille par un utilisateur
+ */
 export interface UserAchievement {
   id: string;
   userId: string;
@@ -27,6 +53,9 @@ export interface UserAchievement {
   unlockedAt: Date;
 }
 
+/**
+ * Statistiques utilisateur pour le calcul des succes
+ */
 interface UserStats {
   streak: number;
   totalCompletions: number;
@@ -34,10 +63,22 @@ interface UserStats {
   totalHabits: number;
 }
 
+// =============================================================================
+// SERVICE PRINCIPAL
+// =============================================================================
+
+/**
+ * Service de gestion des succes
+ *
+ * Gere la definition, le deblocage et le suivi des succes utilisateur
+ */
 export class AchievementService {
-  // Predefined achievements
+  // ===========================================================================
+  // CONSTANTES - Liste des succes predefinis
+  // ===========================================================================
+
   static achievements: Achievement[] = [
-    // Streak-based achievements
+    // Succes bases sur les streaks
     {
       id: 'streak-3',
       title: 'Starter',
@@ -98,8 +139,7 @@ export class AchievementService {
       level: 6,
       createdAt: new Date(),
     },
-
-    // Completion-based achievements
+    // Succes bases sur les completions
     {
       id: 'completions-50',
       title: 'Achiever',
@@ -140,8 +180,7 @@ export class AchievementService {
       level: 10,
       createdAt: new Date(),
     },
-
-    // Perfect days achievements
+    // Succes bases sur les jours parfaits
     {
       id: 'perfect-7',
       title: 'Perfectionist',
@@ -162,8 +201,7 @@ export class AchievementService {
       level: 6,
       createdAt: new Date(),
     },
-
-    // Habit count achievements
+    // Succes bases sur le nombre d'habitudes
     {
       id: 'habits-3',
       title: 'Multi-tasker',
@@ -196,10 +234,16 @@ export class AchievementService {
     },
   ];
 
-  // Initialize achievements table
+  // ===========================================================================
+  // SECTION: Initialisation
+  // ===========================================================================
+
+  /**
+   * Initialiser la table des succes
+   * Insere tous les succes predefinis dans la base de donnees
+   */
   static async initializeAchievements() {
     try {
-      // Check if achievements table exists and populate
       for (const achievement of this.achievements) {
         const { error } = await supabase
           .from('achievements')
@@ -217,7 +261,6 @@ export class AchievementService {
           .single();
 
         if (error && error.code !== '23505') {
-          // Ignore duplicate key errors
           Logger.error('Error inserting achievement:', error);
         }
       }
@@ -226,10 +269,21 @@ export class AchievementService {
     }
   }
 
-  // Get all achievements
+  // ===========================================================================
+  // SECTION: Recuperation des succes
+  // ===========================================================================
+
+  /**
+   * Recuperer tous les succes disponibles
+   *
+   * @returns Liste de tous les succes
+   */
   static async getAllAchievements(): Promise<Achievement[]> {
     try {
-      const { data, error } = await supabase.from('achievements').select('*').order('level', { ascending: true });
+      const { data, error } = await supabase
+        .from('achievements')
+        .select('*')
+        .order('level', { ascending: true });
 
       if (error) throw error;
 
@@ -250,17 +304,21 @@ export class AchievementService {
       );
     } catch (error) {
       Logger.error('Error fetching achievements:', error);
-      return this.achievements; // Fallback to local achievements
+      return this.achievements;
     }
   }
 
-  // Get user achievements
+  /**
+   * Recuperer les succes d'un utilisateur
+   *
+   * @param userId - L'identifiant de l'utilisateur
+   * @returns Liste des succes deverrouilles
+   */
   static async getUserAchievements(userId: string): Promise<UserAchievement[]> {
     try {
       const { data, error } = await supabase
         .from('user_achievements')
-        .select(
-          `
+        .select(`
           *,
           achievements (
             title,
@@ -268,8 +326,7 @@ export class AchievementService {
             icon,
             color
           )
-        `
-        )
+        `)
         .eq('user_id', userId)
         .order('unlocked_at', { ascending: false });
 
@@ -293,8 +350,21 @@ export class AchievementService {
     }
   }
 
-  // Check and unlock achievements
-  static async checkAndUnlockAchievements(userId: string, stats: UserStats): Promise<Achievement[]> {
+  // ===========================================================================
+  // SECTION: Verification et deblocage
+  // ===========================================================================
+
+  /**
+   * Verifier et debloquer les succes en fonction des statistiques
+   *
+   * @param userId - L'identifiant de l'utilisateur
+   * @param stats - Les statistiques de l'utilisateur
+   * @returns Liste des nouveaux succes deverrouilles
+   */
+  static async checkAndUnlockAchievements(
+    userId: string,
+    stats: UserStats
+  ): Promise<Achievement[]> {
     try {
       const unlockedAchievements: Achievement[] = [];
       const allAchievements = await this.getAllAchievements();
@@ -302,12 +372,10 @@ export class AchievementService {
       const unlockedIds = userAchievements.map((ua) => ua.achievementId);
 
       for (const achievement of allAchievements) {
-        // Skip if already unlocked
         if (unlockedIds.includes(achievement.id)) continue;
 
         let shouldUnlock = false;
 
-        // Check requirements
         switch (achievement.requirement.type) {
           case 'streak':
             shouldUnlock = stats.streak >= achievement.requirement.value;
@@ -324,12 +392,13 @@ export class AchievementService {
         }
 
         if (shouldUnlock) {
-          // Unlock achievement
-          const { error } = await supabase.from('user_achievements').insert({
-            user_id: userId,
-            achievement_id: achievement.id,
-            unlocked_at: new Date().toISOString(),
-          });
+          const { error } = await supabase
+            .from('user_achievements')
+            .insert({
+              user_id: userId,
+              achievement_id: achievement.id,
+              unlocked_at: new Date().toISOString(),
+            });
 
           if (!error) {
             unlockedAchievements.push(achievement);
@@ -344,7 +413,17 @@ export class AchievementService {
     }
   }
 
-  // Get user's current title
+  // ===========================================================================
+  // SECTION: Titre utilisateur
+  // ===========================================================================
+
+  /**
+   * Obtenir le titre actuel de l'utilisateur
+   * Base sur le succes de plus haut niveau deverrouille
+   *
+   * @param userId - L'identifiant de l'utilisateur
+   * @returns Le titre de l'utilisateur
+   */
   static async getUserTitle(userId: string): Promise<string> {
     try {
       const userAchievements = await this.getUserAchievements(userId);
@@ -353,7 +432,6 @@ export class AchievementService {
         return 'Newcomer';
       }
 
-      // Return the highest level achievement title
       const sortedByLevel = userAchievements.sort((a, b) => {
         const aAch = this.achievements.find((ach) => ach.id === a.achievementId);
         const bAch = this.achievements.find((ach) => ach.id === b.achievementId);

@@ -1,37 +1,77 @@
-// src/screens/SettingsScreen.tsx
+/**
+ * ============================================================================
+ * SettingsScreen.tsx
+ * ============================================================================
+ *
+ * Ecran des paramètres de l'application permettant la configuration
+ * du compte utilisateur et des préférences de l'application.
+ *
+ * Fonctionnalités principales:
+ * - Gestion du profil utilisateur (nom, avatar)
+ * - Gestion de l'abonnement premium
+ * - Configuration des notifications
+ * - Mode vacances (Holiday Mode)
+ * - Sélection de la langue
+ * - Outils de développement (debug)
+ * - Déconnexion
+ */
+
 import React, { JSX, useCallback, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Switch, SafeAreaView, StatusBar, ActivityIndicator, Linking, Alert, Pressable, Image, ImageBackground } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Switch,
+  SafeAreaView,
+  StatusBar,
+  ActivityIndicator,
+  Linking,
+  Alert,
+  Pressable,
+  Image,
+  ImageBackground
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
-import tw from 'twrnc';
-import { useAuth } from '@/context/AuthContext';
-import { useSubscription } from '@/context/SubscriptionContext';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '@/navigation/types';
-import { HolidayModeService } from '@/services/holidayModeService';
-import { NotificationPreferencesService } from '@/services/notificationPreferenceService';
-import { Config } from '@/config';
-import Logger from '@/utils/logger';
-import { OnboardingService } from '@/services/onboardingService';
-import { ChevronRight, Pencil, GraduationCap } from 'lucide-react-native';
-import { HolidayPeriod } from '@/types/holiday.types';
-import { supabase } from '@/lib/supabase';
-import EditUsernameModal from '@/components/settings/EditUserModal';
 import { useTranslation } from 'react-i18next';
-import Constants from 'expo-constants';
-import { useGroupCelebration } from '@/context/GroupCelebrationContext';
+import { ChevronRight, Pencil, GraduationCap } from 'lucide-react-native';
+import tw from 'twrnc';
+
+import EditUsernameModal from '@/components/settings/EditUserModal';
 import { GroupTierUpModal } from '@/components/groups/GroupTierUpModal';
 import { GroupLevelUpModal } from '@/components/groups/GroupLevelUpModal';
+
+import { useAuth } from '@/context/AuthContext';
+import { useSubscription } from '@/context/SubscriptionContext';
+import { useGroupCelebration } from '@/context/GroupCelebrationContext';
+
+import { HolidayModeService } from '@/services/holidayModeService';
+import { NotificationPreferencesService } from '@/services/notificationPreferenceService';
+import { OnboardingService } from '@/services/onboardingService';
+
+import Logger from '@/utils/logger';
+import { supabase } from '@/lib/supabase';
+
+import { HolidayPeriod } from '@/types/holiday.types';
+import { RootStackParamList } from '@/navigation/types';
+import { Config } from '@/config';
+
+// ============================================================================
+// CONSTANTES
+// ============================================================================
 
 const APP_ICON = require('../../assets/icon/icon-v2.png');
 const TEXTURE_BG = require('../../assets/interface/textures/texture-white.png');
 
 // ============================================================================
-// Types
+// TYPES
 // ============================================================================
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -73,9 +113,12 @@ interface SettingsItemProps {
 }
 
 // ============================================================================
-// Icon Components
+// COMPOSANT - Icônes SVG
 // ============================================================================
 
+/**
+ * Composant d'icône SVG personnalisé pour les paramètres
+ */
 const Icon: React.FC<IconProps> = ({ name, size = 22, color = '#52525B' }) => {
   const icons: Record<IconName, JSX.Element> = {
     'notifications-outline': (
@@ -161,15 +204,27 @@ const Icon: React.FC<IconProps> = ({ name, size = 22, color = '#52525B' }) => {
 };
 
 // ============================================================================
-// Profile Header Component
+// COMPOSANT - En-tête du profil
 // ============================================================================
 
+/**
+ * Affiche l'en-tête du profil avec avatar, nom et statut premium
+ */
 const ProfileHeader: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { isPremium } = useSubscription();
+
+  // ============================================================================
+  // HOOKS - State
+  // ============================================================================
+
   const [showEditModal, setShowEditModal] = useState(false);
   const [currentUsername, setCurrentUsername] = useState<string>('');
+
+  // ============================================================================
+  // HOOKS - useEffect
+  // ============================================================================
 
   useEffect(() => {
     if (user?.id) {
@@ -177,11 +232,22 @@ const ProfileHeader: React.FC = () => {
     }
   }, [user?.id]);
 
+  // ============================================================================
+  // FONCTIONS UTILITAIRES
+  // ============================================================================
+
+  /**
+   * Récupère le nom d'utilisateur depuis la base de données
+   */
   const fetchUsername = async () => {
     if (!user?.id) return;
 
     try {
-      const { data, error } = await supabase.from('profiles').select('username').eq('id', user.id).single();
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', user.id)
+        .single();
 
       if (!error && data) {
         setCurrentUsername(data.username || getDisplayName());
@@ -191,23 +257,37 @@ const ProfileHeader: React.FC = () => {
     }
   };
 
+  /**
+   * Retourne les initiales de l'utilisateur
+   */
   const getInitials = () => {
     const name = currentUsername || user?.email || 'User';
     return name.substring(0, 2).toUpperCase();
   };
 
+  /**
+   * Retourne le nom d'affichage de l'utilisateur
+   */
   const getDisplayName = () => {
     return currentUsername || user?.email?.split('@')[0] || 'User';
   };
 
+  /**
+   * Met à jour le nom d'utilisateur local après modification
+   */
   const handleUsernameUpdate = (newUsername: string) => {
     setCurrentUsername(newUsername);
   };
+
+  // ============================================================================
+  // RENDU
+  // ============================================================================
 
   return (
     <>
       <Animated.View entering={FadeInDown.delay(100).duration(600).springify()} style={tw`mx-6 mb-6`}>
         <View style={tw`bg-white/90 rounded-3xl p-6 shadow-lg`}>
+          {/* Bouton d'édition */}
           <TouchableOpacity
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -219,11 +299,13 @@ const ProfileHeader: React.FC = () => {
           </TouchableOpacity>
 
           <View style={tw`flex-row items-center pr-10`}>
+            {/* Avatar */}
             <View style={[tw`w-16 h-16 rounded-2xl items-center justify-center`, { backgroundColor: isPremium ? '#52525B' : '#A1A1AA' }]}>
               <Text style={tw`text-white text-2xl font-extrabold`}>{getInitials()}</Text>
             </View>
 
             <View style={tw`flex-1 ml-4`}>
+              {/* Nom et badge premium */}
               <View style={tw`flex-row items-center mb-1`}>
                 <Text style={tw`text-zinc-800 font-bold text-lg`}>{getDisplayName()}</Text>
                 {isPremium && (
@@ -233,8 +315,10 @@ const ProfileHeader: React.FC = () => {
                 )}
               </View>
 
+              {/* Email */}
               <Text style={tw`text-zinc-500 text-xs mb-1`}>{user?.email || 'user@example.com'}</Text>
 
+              {/* Badge du plan */}
               <View style={tw`mt-1`}>
                 {isPremium ? (
                   <View style={tw`px-2.5 py-1 bg-zinc-200 rounded-lg self-start`}>
@@ -251,23 +335,35 @@ const ProfileHeader: React.FC = () => {
         </View>
       </Animated.View>
 
-      <EditUsernameModal visible={showEditModal} currentUsername={currentUsername} userId={user?.id || ''} onClose={() => setShowEditModal(false)} onSuccess={handleUsernameUpdate} />
+      {/* Modal d'édition du nom */}
+      <EditUsernameModal
+        visible={showEditModal}
+        currentUsername={currentUsername}
+        userId={user?.id || ''}
+        onClose={() => setShowEditModal(false)}
+        onSuccess={handleUsernameUpdate}
+      />
     </>
   );
 };
 
 // ============================================================================
-// Settings Section Component
+// COMPOSANT - Section de paramètres
 // ============================================================================
 
+/**
+ * Conteneur pour grouper les éléments de paramètres
+ */
 const SettingsSection: React.FC<SettingsSectionProps> = ({ title, children, delay = 0 }) => {
   return (
     <Animated.View entering={FadeInDown.delay(delay).duration(600).springify()} style={tw`mb-6`}>
+      {/* Titre de section */}
       <View style={tw`flex-row items-center gap-2 mb-3 ml-1`}>
         <View style={tw`w-0.75 h-3 rounded-sm bg-zinc-400`} />
         <Text style={tw`text-xs font-extrabold uppercase tracking-widest text-zinc-500`}>{title}</Text>
       </View>
 
+      {/* Contenu */}
       <View style={tw`bg-white/90 rounded-2xl overflow-hidden shadow-md`}>
         {React.Children.map(children, (child, index) => {
           if (React.isValidElement<SettingsItemProps>(child)) {
@@ -283,21 +379,34 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({ title, children, dela
 };
 
 // ============================================================================
-// Settings Item Component
+// COMPOSANT - Élément de paramètre
 // ============================================================================
 
-const SettingsItem: React.FC<SettingsItemProps> = ({ icon, title, subtitle, trailing, onPress, isLast = false }) => {
+/**
+ * Élément individuel dans une section de paramètres
+ */
+const SettingsItem: React.FC<SettingsItemProps> = ({
+  icon,
+  title,
+  subtitle,
+  trailing,
+  onPress,
+  isLast = false
+}) => {
   const content = (
     <View style={[tw`flex-row items-center py-4 px-4`, !isLast && tw`border-b border-zinc-100`]}>
+      {/* Icône */}
       <View style={tw`w-10 h-10 rounded-xl items-center justify-center mr-3.5 bg-zinc-100`}>
         <Icon name={icon} size={22} color="#52525B" />
       </View>
 
+      {/* Texte */}
       <View style={tw`flex-1`}>
         <Text style={tw`text-zinc-800 font-semibold text-base`}>{title}</Text>
         {subtitle && <Text style={tw`text-zinc-500 text-sm mt-0.5`}>{subtitle}</Text>}
       </View>
 
+      {/* Élément à droite */}
       {trailing && <View style={tw`ml-3`}>{trailing}</View>}
     </View>
   );
@@ -314,32 +423,41 @@ const SettingsItem: React.FC<SettingsItemProps> = ({ icon, title, subtitle, trai
 };
 
 // ============================================================================
-// Main Settings Screen
+// COMPOSANT PRINCIPAL
 // ============================================================================
 
 const SettingsScreen: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const { signOut, user, checkOnboardingStatus } = useAuth();
+  const { isPremium } = useSubscription();
+  const navigation = useNavigation<NavigationProp>();
+  const { triggerTierUp, triggerLevelUp } = useGroupCelebration();
+
+  // ============================================================================
+  // HOOKS - State
+  // ============================================================================
+
   const [notifications, setNotifications] = useState(false);
   const [notificationLoading, setNotificationLoading] = useState(false);
   const [activeHoliday, setActiveHoliday] = useState<HolidayPeriod | null>(null);
   const [holidayStats, setHolidayStats] = useState<any>(null);
   const [signingOut, setSigningOut] = useState(false);
 
-  const { signOut, loading, user, checkOnboardingStatus } = useAuth();
-  const { isPremium } = useSubscription();
-  const navigation = useNavigation<NavigationProp>();
+  // ============================================================================
+  // HOOKS - useCallback
+  // ============================================================================
 
-  const { triggerTierUp, triggerLevelUp } = useGroupCelebration();
-
-  useEffect(() => {
-    loadNotificationPreferences();
-  }, [user]);
-
+  /**
+   * Charge le statut du mode vacances
+   */
   const loadHolidayStatus = useCallback(async () => {
     if (!user) return;
 
     try {
-      const [holiday, stats] = await Promise.all([HolidayModeService.getActiveHoliday(user.id), HolidayModeService.getHolidayStats(user.id)]);
+      const [holiday, stats] = await Promise.all([
+        HolidayModeService.getActiveHoliday(user.id),
+        HolidayModeService.getHolidayStats(user.id)
+      ]);
       setActiveHoliday(holiday);
       setHolidayStats(stats);
     } catch (error) {
@@ -347,12 +465,62 @@ const SettingsScreen: React.FC = () => {
     }
   }, [user?.id]);
 
+  // ============================================================================
+  // HOOKS - useEffect
+  // ============================================================================
+
+  useEffect(() => {
+    loadNotificationPreferences();
+  }, [user]);
+
   useFocusEffect(
     useCallback(() => {
       loadHolidayStatus();
     }, [loadHolidayStatus])
   );
 
+  // ============================================================================
+  // FONCTIONS UTILITAIRES
+  // ============================================================================
+
+  /**
+   * Charge les préférences de notification
+   */
+  const loadNotificationPreferences = async () => {
+    if (!user) return;
+
+    try {
+      const prefs = await NotificationPreferencesService.getPreferences(user.id);
+      setNotifications(prefs.globalEnabled);
+    } catch (error) {
+      Logger.error('Error loading notification preferences:', error);
+    }
+  };
+
+  /**
+   * Retourne le sous-titre pour le mode vacances
+   */
+  const getHolidaySubtitle = () => {
+    if (!activeHoliday) {
+      if (isPremium) {
+        return t('settings.holidayUnlimited');
+      } else {
+        const periodsLeft = holidayStats?.remainingAllowance ?? 1;
+        return t('settings.holidayLimited', { periods: periodsLeft });
+      }
+    }
+
+    const daysRemaining = activeHoliday.daysRemaining || 0;
+    return t('settings.holidayDaysRemaining', { count: daysRemaining });
+  };
+
+  // ============================================================================
+  // GESTIONNAIRES D'EVENEMENTS
+  // ============================================================================
+
+  /**
+   * Relance le tutoriel d'onboarding
+   */
   const handleReviewOnboarding = async () => {
     if (!user) return;
 
@@ -369,17 +537,9 @@ const SettingsScreen: React.FC = () => {
     ]);
   };
 
-  const loadNotificationPreferences = async () => {
-    if (!user) return;
-
-    try {
-      const prefs = await NotificationPreferencesService.getPreferences(user.id);
-      setNotifications(prefs.globalEnabled);
-    } catch (error) {
-      Logger.error('Error loading notification preferences:', error);
-    }
-  };
-
+  /**
+   * Gère le toggle des notifications
+   */
   const handleNotificationToggle = async (value: boolean) => {
     if (!user) return;
 
@@ -430,23 +590,29 @@ const SettingsScreen: React.FC = () => {
     }
   };
 
+  /**
+   * Gère la déconnexion
+   */
   const handleSignOut = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    Logger.debug('🔘 Sign Out button pressed');
+    Logger.debug('Sign Out button pressed');
     setSigningOut(true);
 
     try {
       await signOut();
-      Logger.debug('✅ SignOut completed in SettingsScreen');
+      Logger.debug('SignOut completed in SettingsScreen');
     } catch (error) {
-      Logger.error('❌ SignOut error in SettingsScreen:', error);
+      Logger.error('SignOut error in SettingsScreen:', error);
     } finally {
-      Logger.debug('🔓 SettingsScreen: Resetting signingOut to false');
+      Logger.debug('SettingsScreen: Resetting signingOut to false');
       setSigningOut(false);
     }
   };
 
+  /**
+   * Gère la navigation vers la gestion d'abonnement
+   */
   const handleManageSubscription = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
@@ -457,19 +623,9 @@ const SettingsScreen: React.FC = () => {
     }
   };
 
-  const getHolidaySubtitle = () => {
-    if (!activeHoliday) {
-      if (isPremium) {
-        return t('settings.holidayUnlimited');
-      } else {
-        const periodsLeft = holidayStats?.remainingAllowance ?? 1;
-        return t('settings.holidayLimited', { periods: periodsLeft });
-      }
-    }
-
-    const daysRemaining = activeHoliday.daysRemaining || 0;
-    return t('settings.holidayDaysRemaining', { count: daysRemaining });
-  };
+  // ============================================================================
+  // RENDU PRINCIPAL
+  // ============================================================================
 
   return (
     <ImageBackground source={TEXTURE_BG} style={tw`flex-1`} resizeMode="repeat" imageStyle={{ opacity: 0.15 }}>
@@ -477,6 +633,7 @@ const SettingsScreen: React.FC = () => {
         <StatusBar barStyle="dark-content" />
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`pb-24`}>
+          {/* En-tête avec icône de l'app */}
           <Animated.View entering={FadeInDown.duration(600).springify()} style={tw`px-6 pt-15 pb-8`}>
             <View style={tw`items-center`}>
               <View style={tw`mb-4`}>
@@ -490,9 +647,11 @@ const SettingsScreen: React.FC = () => {
             </View>
           </Animated.View>
 
+          {/* En-tête du profil */}
           <ProfileHeader />
 
           <View style={tw`px-6`}>
+            {/* Section Abonnement */}
             <SettingsSection title={t('settings.subscription')} delay={200}>
               <SettingsItem
                 icon={isPremium ? 'credit-card' : 'sparkles'}
@@ -512,6 +671,7 @@ const SettingsScreen: React.FC = () => {
               />
             </SettingsSection>
 
+            {/* Section Mode Vacances */}
             <SettingsSection title={t('settings.breakMode')} delay={200}>
               <SettingsItem
                 icon="beach-outline"
@@ -534,7 +694,9 @@ const SettingsScreen: React.FC = () => {
               />
             </SettingsSection>
 
+            {/* Section Général */}
             <SettingsSection title={t('settings.general')} delay={300}>
+              {/* Notifications */}
               <SettingsItem
                 icon="notifications-outline"
                 title={t('settings.notifications')}
@@ -555,6 +717,7 @@ const SettingsScreen: React.FC = () => {
                 }
               />
 
+              {/* Gestion des notifications (visible si activées) */}
               {notifications && (
                 <SettingsItem
                   icon="notifications-outline"
@@ -568,6 +731,7 @@ const SettingsScreen: React.FC = () => {
                 />
               )}
 
+              {/* Langue */}
               <SettingsItem
                 icon="language-outline"
                 title={t('settings.language')}
@@ -577,6 +741,7 @@ const SettingsScreen: React.FC = () => {
               />
             </SettingsSection>
 
+            {/* Section Outils développeur */}
             {Config.debug.showDebugScreen && (
               <SettingsSection title={t('settings.developerTools')} delay={450}>
                 <SettingsItem
@@ -603,21 +768,42 @@ const SettingsScreen: React.FC = () => {
               </SettingsSection>
             )}
 
+            {/* Section Debug Tools (tests) */}
             {Config.debug.showDebugScreen && (
-              <SettingsSection title="🧪 Debug Tools" delay={0.8}>
-                <SettingsItem icon="bug" title="Test Level Up" subtitle="Célébration simple (5s)" onPress={() => triggerLevelUp(30, 14)} />
-                <SettingsItem icon="sparkles" title="Test Tier Up" subtitle="Célébration épique (8s)" onPress={() => triggerTierUp(50, 9)} isLast />
+              <SettingsSection title="Debug Tools" delay={500}>
+                <SettingsItem
+                  icon="bug"
+                  title="Test Level Up"
+                  subtitle="Celebration simple (5s)"
+                  onPress={() => triggerLevelUp(30, 14)}
+                />
+                <SettingsItem
+                  icon="sparkles"
+                  title="Test Tier Up"
+                  subtitle="Celebration epique (8s)"
+                  onPress={() => triggerTierUp(50, 9)}
+                  isLast
+                />
               </SettingsSection>
             )}
 
+            {/* Section Support */}
             <SettingsSection title={t('settings.support')} delay={400}>
-              <SettingsItem icon="information-circle-outline" title={t('settings.version')} subtitle={Constants.expoConfig?.version || '1.0.0'} />
+              <SettingsItem
+                icon="information-circle-outline"
+                title={t('settings.version')}
+                subtitle={Constants.expoConfig?.version || '1.0.0'}
+              />
             </SettingsSection>
 
+            {/* Bouton Revoir le tutoriel */}
             <View style={tw`mt-6`}>
               <Text style={tw`text-sm font-bold text-zinc-500 uppercase tracking-wider mb-3 px-1`}>{t('settings.help')}</Text>
 
-              <Pressable onPress={handleReviewOnboarding} style={tw`bg-white/90 rounded-2xl px-4 py-4 flex-row items-center justify-between shadow-md`}>
+              <Pressable
+                onPress={handleReviewOnboarding}
+                style={tw`bg-white/90 rounded-2xl px-4 py-4 flex-row items-center justify-between shadow-md`}
+              >
                 <View style={tw`flex-row items-center gap-3`}>
                   <View style={tw`w-10 h-10 rounded-xl bg-zinc-100 items-center justify-center`}>
                     <GraduationCap size={20} color="#52525B" strokeWidth={2.5} />
@@ -628,12 +814,19 @@ const SettingsScreen: React.FC = () => {
               </Pressable>
             </View>
 
+            {/* Modals de célébration de groupe */}
             <GroupTierUpModal />
             <GroupLevelUpModal />
 
+            {/* Bouton de déconnexion */}
             <Animated.View entering={FadeInDown.delay(500).duration(600).springify()} style={tw`mt-8 mb-6`}>
               <TouchableOpacity activeOpacity={0.8} disabled={signingOut} onPress={handleSignOut}>
-                <LinearGradient colors={['#DC2626', '#B91C1C']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[tw`rounded-2xl p-4.5 shadow-lg`, { opacity: signingOut ? 0.6 : 1 }]}>
+                <LinearGradient
+                  colors={['#DC2626', '#B91C1C']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[tw`rounded-2xl p-4.5 shadow-lg`, { opacity: signingOut ? 0.6 : 1 }]}
+                >
                   <View style={tw`flex-row items-center justify-center`}>
                     {signingOut ? (
                       <ActivityIndicator color="#FFFFFF" size="small" />

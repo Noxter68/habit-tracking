@@ -1,7 +1,30 @@
-// src/services/streakSaverService.ts
+/**
+ * Service de gestion des Streak Savers
+ *
+ * Ce service gere le systeme de sauvegarde de streak, permettant aux utilisateurs
+ * de recuperer leur streak apres avoir manque un jour. Il inclut la gestion
+ * de l'inventaire, la verification d'eligibilite et l'utilisation des savers.
+ *
+ * @module StreakSaverService
+ */
+
+// =============================================================================
+// IMPORTS - Bibliotheques externes
+// =============================================================================
 import { supabase } from '@/lib/supabase';
+
+// =============================================================================
+// IMPORTS - Utilitaires internes
+// =============================================================================
 import Logger from '@/utils/logger';
 
+// =============================================================================
+// TYPES ET INTERFACES
+// =============================================================================
+
+/**
+ * Resultat de la verification d'eligibilite pour sauvegarder un streak
+ */
 export interface StreakSaveEligibility {
   canSave: boolean;
   reason?: string;
@@ -10,15 +33,41 @@ export interface StreakSaveEligibility {
   missedDate?: string;
 }
 
+/**
+ * Inventaire des Streak Savers de l'utilisateur
+ */
 export interface StreakSaverInventory {
   available: number;
   totalUsed: number;
 }
 
+// =============================================================================
+// SERVICE PRINCIPAL
+// =============================================================================
+
+/**
+ * Service de gestion des Streak Savers
+ *
+ * Gere l'inventaire, l'eligibilite et l'utilisation des sauvegardeurs de streak
+ */
 export class StreakSaverService {
+  // ===========================================================================
+  // SECTION: Inventaire
+  // ===========================================================================
+
+  /**
+   * Recuperer l'inventaire de Streak Savers de l'utilisateur
+   *
+   * @param userId - L'identifiant de l'utilisateur
+   * @returns L'inventaire avec le nombre disponible et utilise
+   */
   static async getInventory(userId: string): Promise<StreakSaverInventory> {
     try {
-      const { data, error } = await supabase.from('profiles').select('streak_savers, total_streak_savers_used').eq('id', userId).maybeSingle();
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('streak_savers, total_streak_savers_used')
+        .eq('id', userId)
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -32,7 +81,36 @@ export class StreakSaverService {
     }
   }
 
-  static async checkEligibility(habitId: string, userId: string): Promise<StreakSaveEligibility> {
+  /**
+   * Ajouter des Streak Savers a l'inventaire de l'utilisateur
+   *
+   * @param userId - L'identifiant de l'utilisateur
+   * @param quantity - Le nombre de savers a ajouter
+   */
+  static async addStreakSavers(userId: string, quantity: number): Promise<void> {
+    const { error } = await supabase.rpc('add_streak_savers', {
+      p_user_id: userId,
+      p_quantity: quantity,
+    });
+
+    if (error) throw error;
+  }
+
+  // ===========================================================================
+  // SECTION: Verification d'eligibilite
+  // ===========================================================================
+
+  /**
+   * Verifier si une habitude est eligible pour une sauvegarde de streak
+   *
+   * @param habitId - L'identifiant de l'habitude
+   * @param userId - L'identifiant de l'utilisateur
+   * @returns L'eligibilite avec les details
+   */
+  static async checkEligibility(
+    habitId: string,
+    userId: string
+  ): Promise<StreakSaveEligibility> {
     try {
       const { data, error } = await supabase.rpc('check_streak_save_eligibility', {
         p_habit_id: habitId,
@@ -41,14 +119,12 @@ export class StreakSaverService {
 
       if (error) throw error;
 
-      // ✅ FIX: Database returns array, take first element
       const result = Array.isArray(data) ? data[0] : data;
 
       if (!result) {
         return { canSave: false, reason: 'No data returned' };
       }
 
-      // ✅ FIX: Map snake_case to camelCase
       return {
         canSave: result.can_save || false,
         reason: result.reason,
@@ -62,7 +138,21 @@ export class StreakSaverService {
     }
   }
 
-  static async useStreakSaver(habitId: string, userId: string): Promise<{ success: boolean; message: string; newStreak?: number }> {
+  // ===========================================================================
+  // SECTION: Utilisation des Streak Savers
+  // ===========================================================================
+
+  /**
+   * Utiliser un Streak Saver pour recuperer un streak
+   *
+   * @param habitId - L'identifiant de l'habitude
+   * @param userId - L'identifiant de l'utilisateur
+   * @returns Le resultat de l'operation avec le nouveau streak
+   */
+  static async useStreakSaver(
+    habitId: string,
+    userId: string
+  ): Promise<{ success: boolean; message: string; newStreak?: number }> {
     try {
       const { data, error } = await supabase.rpc('use_streak_saver', {
         p_habit_id: habitId,
@@ -71,7 +161,6 @@ export class StreakSaverService {
 
       if (error) throw error;
 
-      // ✅ FIX: Database returns array, take first element
       const result = Array.isArray(data) ? data[0] : data;
 
       if (!result) {
@@ -92,15 +181,16 @@ export class StreakSaverService {
     }
   }
 
-  static async addStreakSavers(userId: string, quantity: number): Promise<void> {
-    const { error } = await supabase.rpc('add_streak_savers', {
-      p_user_id: userId,
-      p_quantity: quantity,
-    });
+  // ===========================================================================
+  // SECTION: Habitudes sauvegardables
+  // ===========================================================================
 
-    if (error) throw error;
-  }
-
+  /**
+   * Recuperer les habitudes eligibles pour une sauvegarde de streak
+   *
+   * @param userId - L'identifiant de l'utilisateur
+   * @returns Liste des habitudes sauvegardables
+   */
   static async getSaveableHabits(userId: string): Promise<
     Array<{
       habitId: string;
@@ -116,7 +206,6 @@ export class StreakSaverService {
 
       if (error) throw error;
 
-      // ✅ FIX: Map snake_case to camelCase
       return (data || []).map((item: any) => ({
         habitId: item.habit_id,
         habitName: item.habit_name,
