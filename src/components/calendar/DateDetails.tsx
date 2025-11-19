@@ -180,6 +180,11 @@ const DateDetails: React.FC<DateDetailsProps> = ({ habit, selectedDate, activeHo
           end={{ x: 1, y: 1 }}
           style={tw`p-3`}
         >
+          {/* Habit Name */}
+          <Text style={tw`text-white font-bold text-base mb-2`} numberOfLines={1}>
+            {habit.name}
+          </Text>
+
           {/* Date Header - Duolingo Style - Compact */}
           <View style={tw`flex-row items-center justify-between mb-3`}>
             <View style={tw`flex-row items-center`}>
