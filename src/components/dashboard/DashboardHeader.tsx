@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 
 // Components
-import AchievementBadge from './AchievementBadge';
+import AchievementBadge from '../shared/AchievementBadge';
 import DailyChallenge from './DailyChallenge';
 import LevelProgress from './LevelProgress';
 import StatsCard from './statsCard';

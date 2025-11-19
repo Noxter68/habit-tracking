@@ -6,7 +6,7 @@ import * as Haptics from 'expo-haptics';
 import { Audio } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
-import { AchievementBadge } from '../achievements/AchievementBadge';
+import { AchievementBadge } from '../shared/AchievementBadge';
 import { useLevelUp } from '../../context/LevelUpContext';
 import { getAchievementTierTheme } from '@/utils/tierTheme';
 import type { TierKey } from '@/types/achievement.types';

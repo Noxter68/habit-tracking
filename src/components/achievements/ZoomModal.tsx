@@ -3,7 +3,7 @@ import { View, Text, Modal, Pressable, Dimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import tw from '../../lib/tailwind';
 import { Achievement } from '../../types/achievement.types';
-import { AchievementBadge } from './AchievementBadge';
+import { AchievementBadge } from '../shared/AchievementBadge';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 

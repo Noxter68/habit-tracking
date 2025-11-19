@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import tw from '../../lib/tailwind';
 import { Achievement } from '../../types/achievement.types';
-import { AchievementBadge } from './AchievementBadge';
+import { AchievementBadge } from '../shared/AchievementBadge';
 import { getAchievementTierTheme } from '../../utils/tierTheme';
 
 interface AchievementCardProps {

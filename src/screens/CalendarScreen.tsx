@@ -14,12 +14,14 @@ import { HolidayModeService } from '../services/holidayModeService';
 import { getTaskDetails } from '../utils/taskHelpers';
 import { HapticFeedback } from '../utils/haptics';
 
+import { useTranslation } from 'react-i18next';
+import { Plus } from 'lucide-react-native';
 import CalendarHeader from '../components/calendar/CalendarHeader';
 import HabitSelector from '../components/calendar/HabitSelector';
 import StatsBar from '../components/calendar/StatsBar';
 import CalendarGrid from '../components/calendar/CalendarGrid';
 import DateDetails from '../components/calendar/DateDetails';
-import EmptyState from '../components/calendar/EmptyState';
+import EmptyState from '../components/shared/EmptyState';
 import Logger from '@/utils/logger';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -28,6 +30,7 @@ const CalendarScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { user } = useAuth();
   const { habits, loading, refreshHabits } = useHabits();
+  const { t } = useTranslation();
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
@@ -177,7 +180,16 @@ const CalendarScreen: React.FC = () => {
     return (
       <ImageBackground source={require('../../assets/interface/textures/texture-white.png')} style={tw`flex-1`} imageStyle={{ opacity: 0.1 }} resizeMode="repeat">
         <SafeAreaView style={tw`flex-1 bg-transparent`}>
-          <EmptyState onCreateHabit={handleCreateHabit} />
+          <EmptyState
+            icon={Plus}
+            iconColor="#9ca3af"
+            title={t('calendar.emptyState.title')}
+            description={t('calendar.emptyState.description')}
+            actions={[{ label: t('calendar.emptyState.button'), onPress: handleCreateHabit }]}
+            useGradient
+            gradientColors={['#9CA3AF', '#6B7280']}
+            animated
+          />
         </SafeAreaView>
       </ImageBackground>
     );

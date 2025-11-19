@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import tw from '../../lib/tailwind';
 import { Achievement } from '../../types/achievement.types';
-import { AchievementBadge } from './AchievementBadge';
+import { AchievementBadge } from '../shared/AchievementBadge';
 import { getAchievementTierTheme, AchievementTierName } from '../../utils/tierTheme';
 
 interface CurrentLevelHeroProps {
