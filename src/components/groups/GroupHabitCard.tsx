@@ -60,18 +60,32 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
       setTimeline(data);
 
       if (habit.frequency === 'weekly') {
-        // Pour weekly: vérifier si l'utilisateur a complété dans les 7 derniers jours
-        const hasCompletedThisWeek = data.some((day) => day.completions.find((c) => c.user_id === user?.id)?.completed);
+        // Pour weekly: utiliser last_weekly_completion_date pour vérifier si c'est dans la semaine courante
+        const now = new Date();
+        const dayOfWeek = now.getUTCDay();
+        const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        const monday = new Date(now);
+        monday.setUTCDate(now.getUTCDate() - daysFromMonday);
+        monday.setUTCHours(0, 0, 0, 0);
+
+        // Vérifier si l'utilisateur a complété cette semaine (depuis lundi)
+        const hasCompletedThisWeek = data.some((day) => {
+          const dayDate = new Date(day.date);
+          return dayDate >= monday && day.completions.find((c) => c.user_id === user?.id)?.completed;
+        });
         setUserCompletedThisWeek(hasCompletedThisWeek);
 
         // Compter combien de membres ont complété cette semaine
-        const membersWhoCompleted = new Set();
+        const membersWhoCompleted = new Set<string>();
         data.forEach((day) => {
-          day.completions.forEach((c) => {
-            if (c.completed) {
-              membersWhoCompleted.add(c.user_id);
-            }
-          });
+          const dayDate = new Date(day.date);
+          if (dayDate >= monday) {
+            day.completions.forEach((c) => {
+              if (c.completed) {
+                membersWhoCompleted.add(c.user_id);
+              }
+            });
+          }
         });
         setWeekCompletionsCount(membersWhoCompleted.size);
       } else {
@@ -266,16 +280,15 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
 
                 <View
                   style={[
-                    tw`rounded-full px-2.5 py-1 flex-row items-center`,
+                    tw`rounded-full px-2 py-0.5`,
                     {
-                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      backgroundColor: habit.frequency === 'weekly' ? 'rgba(59, 130, 246, 0.9)' : 'rgba(16, 185, 129, 0.9)',
                       borderWidth: 1,
                       borderColor: 'rgba(255, 255, 255, 0.3)',
                     },
                   ]}
                 >
-                  <Flame size={14} color="#FFFFFF" fill="#FFFFFF" />
-                  <Text style={tw`text-xs font-semibold text-white ml-1`}>{habit.current_streak || 0}</Text>
+                  <Text style={tw`text-[11px] font-bold text-white`}>{habit.frequency === 'weekly' ? t('groups.card.weekly') : t('groups.card.daily')}</Text>
                 </View>
               </View>
 
@@ -303,11 +316,11 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
               </TouchableOpacity>
             </View>
 
-            {bonusBadge && (
-              <View style={tw`mb-2`}>
+            <View style={tw`mb-2 flex-row items-center gap-2`}>
+              {bonusBadge && (
                 <View
                   style={[
-                    tw`rounded-full px-2.5 py-1 self-start`,
+                    tw`rounded-full px-2.5 py-1`,
                     {
                       backgroundColor: 'rgba(255, 255, 255, 0.2)',
                       borderWidth: 1,
@@ -317,8 +330,22 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
                 >
                   <Text style={tw`text-xs font-semibold text-white`}>{bonusBadge.text}</Text>
                 </View>
+              )}
+
+              <View
+                style={[
+                  tw`rounded-full px-2.5 py-1 flex-row items-center`,
+                  {
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    borderWidth: 1,
+                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                  },
+                ]}
+              >
+                <Flame size={14} color="#FFFFFF" fill="#FFFFFF" />
+                <Text style={tw`text-xs font-semibold text-white ml-1`}>{habit.current_streak || 0}</Text>
               </View>
-            )}
+            </View>
 
             {today && today.completions.length > 0 && (
               <View style={tw`flex-row -space-x-1.5 gap-1 mb-2`}>
@@ -333,10 +360,7 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
                   });
 
                   // Pour weekly: si un membre a complété cette semaine, on l'affiche comme complété
-                  const isCompleted =
-                    habit.frequency === 'weekly'
-                      ? timeline.some((day) => day.completions.find((c) => c.user_id === completion.user_id && c.completed))
-                      : completion.completed;
+                  const isCompleted = habit.frequency === 'weekly' ? timeline.some((day) => day.completions.find((c) => c.user_id === completion.user_id && c.completed)) : completion.completed;
                   const bgColor = isCompleted ? tierTheme.accent : 'rgba(255, 255, 255, 0.3)';
                   const borderColor = isCompleted ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.4)';
 

@@ -435,7 +435,7 @@ class GroupService {
 
     const { data: habit } = await supabase
       .from('group_habits')
-      .select('group_id')
+      .select('group_id, frequency')
       .eq('id', input.group_habit_id)
       .single();
 
@@ -451,6 +451,14 @@ class GroupService {
       await supabase.rpc('update_group_xp_and_level', {
         group_uuid: habit.group_id,
       });
+
+      // Mettre à jour last_weekly_completion_date pour les habitudes weekly
+      if (habit.frequency === 'weekly') {
+        await supabase
+          .from('group_habits')
+          .update({ last_weekly_completion_date: date })
+          .eq('id', input.group_habit_id);
+      }
     }
 
     return completion;
@@ -468,7 +476,7 @@ class GroupService {
 
     const { data: habit } = await supabase
       .from('group_habits')
-      .select('group_id')
+      .select('group_id, frequency, last_weekly_completion_date')
       .eq('id', habitId)
       .single();
 
@@ -500,6 +508,14 @@ class GroupService {
     });
 
     if (updateError) console.error('Update XP error:', updateError);
+
+    // Réinitialiser last_weekly_completion_date si c'était la dernière completion de cette semaine
+    if (habit.frequency === 'weekly' && habit.last_weekly_completion_date === targetDate) {
+      await supabase
+        .from('group_habits')
+        .update({ last_weekly_completion_date: null })
+        .eq('id', habitId);
+    }
   }
 
   /**

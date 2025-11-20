@@ -8,7 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useNavigation, useRoute, RouteProp as RNRouteProp } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ArrowLeft, Plus, Settings, Share2, Flame, Trophy } from 'lucide-react-native';
+import { ArrowLeft, Plus, Settings, UserRoundPlus, Flame, Trophy } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { groupService } from '@/services/groupTypeService';
@@ -413,7 +413,7 @@ export default function GroupDashboardScreen() {
                   ]}
                   activeOpacity={0.7}
                 >
-                  <Share2 size={15} color="#FFFFFF" strokeWidth={2.5} />
+                  <UserRoundPlus size={15} color="#FFFFFF" strokeWidth={2.5} />
                 </TouchableOpacity>
 
                 <TouchableOpacity

@@ -2231,7 +2231,9 @@
       "bonusXpPossible": "+{{xp}} XP possible",
       "errorToggle": "Unable to modify completion",
       "deleteConfirm": "Delete habit",
-      "deleteMessage": "Do you want to delete \"{{name}}\"?"
+      "deleteMessage": "Do you want to delete \"{{name}}\"?",
+      "weekly": "WEEKLY",
+      "daily": "DAILY"
     },
 
     "timeline": {

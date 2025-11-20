@@ -197,7 +197,7 @@ export function GroupHabitTimeline({ timeline, accentColor = '#10b981', frequenc
             },
           ]}
         >
-          <ThumbsUp size={14} color="#FFFFFF" strokeWidth={2.5} fill="#FFFFFF" />
+          <ThumbsUp size={12} color="#FFFFFF" strokeWidth={2.5} fill="#FFFFFF" />
         </View>
       );
     }

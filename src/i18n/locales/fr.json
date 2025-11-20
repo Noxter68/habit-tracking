@@ -2202,7 +2202,9 @@
       "bonusXpPossible": "+{{xp}} XP possible",
       "errorToggle": "Impossible de modifier la complétion",
       "deleteConfirm": "Supprimer l'habitude",
-      "deleteMessage": "Voulez-vous supprimer \"{{name}}\" ?"
+      "deleteMessage": "Voulez-vous supprimer \"{{name}}\" ?",
+      "weekly": "HEBDO",
+      "daily": "QUOTIDIEN"
     },
 
     "timeline": {
