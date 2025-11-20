@@ -52,8 +52,6 @@ import notificationBadgeService from '@/services/notificationBadgeService';
 import LanguageSelectorScreen from '@/components/settings/LanguageSelector';
 import { LanguageDetectionService } from '@/services/languageDetectionService';
 import ResetPasswordScreen from '@/screens/ResetPasswordScreen';
-import CreateGroupScreen from '@/components/groups/CreateGroupScreen';
-import JoinGroupScreen from '@/components/groups/JoinGroupScreen';
 import { GroupsNavigator } from '@/navigation/GroupsNavigator';
 import GroupTiersScreen from '@/screens/GroupTierScreen';
 import { GroupCelebrationProvider } from '@/context/GroupCelebrationContext';
@@ -422,7 +420,7 @@ const linking = {
   config: {
     screens: {
       Auth: 'auth',
-      ResetPassword: 'reset-password', // ✅ Important !
+      ResetPassword: 'reset-password',
       MainTabs: {
         screens: {
           Dashboard: 'dashboard',
