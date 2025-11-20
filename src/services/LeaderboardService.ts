@@ -17,6 +17,7 @@ import { supabase } from '@/lib/supabase';
 // IMPORTS - Utilitaires internes
 // =============================================================================
 import Logger from '@/utils/logger';
+import { getCountryFromTimezone } from '@/utils/timezoneToCountry';
 
 // =============================================================================
 // TYPES ET INTERFACES
@@ -37,6 +38,8 @@ export interface LeaderboardEntry {
   perfectDays?: number;
   weeklyXP?: number;
   isCurrentUser?: boolean;
+  timezone_offset?: number;
+  localRank?: number; // Rang dans le classement local (même pays)
 }
 
 /**
@@ -46,6 +49,17 @@ export interface LeaderboardStats {
   totalUsers: number;
   averageXP: number;
   topXP: number;
+}
+
+/**
+ * Statistiques globales et locales de l'utilisateur
+ */
+export interface UserRankStats {
+  globalRank: number; // Rang mondial
+  globalTotal: number; // Nombre total d'utilisateurs dans le monde
+  localRank: number; // Rang dans le pays
+  localTotal: number; // Nombre total d'utilisateurs dans le pays
+  percentile: number; // Pourcentage (ex: "meilleur que 85% des utilisateurs")
 }
 
 // =============================================================================
@@ -81,7 +95,7 @@ export class LeaderboardService {
     try {
       const { data: topUsers, error: topError } = await supabase
         .from('profiles')
-        .select('id, username, email, total_xp, current_level')
+        .select('id, username, email, total_xp, current_level, timezone_offset')
         .order('total_xp', { ascending: false })
         .limit(limit);
 
@@ -144,13 +158,14 @@ export class LeaderboardService {
         perfectDays: perfectDaysMap.get(user.id) || 0,
         weeklyXP: weeklyXPMap.get(user.id) || 0,
         isCurrentUser: user.id === userId,
+        timezone_offset: (user as any).timezone_offset,
       }));
 
       const userInTop = leaderboard.some((u) => u.id === userId);
       if (!userInTop && currentUserRank > 0) {
         const { data: currentUser } = await supabase
           .from('profiles')
-          .select('id, username, email, total_xp, current_level')
+          .select('id, username, email, total_xp, current_level, timezone_offset')
           .eq('id', userId)
           .single();
 
@@ -193,6 +208,7 @@ export class LeaderboardService {
             perfectDays: totalPerfectDays,
             weeklyXP: userWeeklyXP,
             isCurrentUser: true,
+            timezone_offset: (currentUser as any).timezone_offset,
           });
         }
       }
@@ -270,7 +286,7 @@ export class LeaderboardService {
 
       const { data: users, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, username, email, total_xp, current_level')
+        .select('id, username, email, total_xp, current_level, timezone_offset')
         .in('id', topUserIds);
 
       if (profilesError) throw profilesError;
@@ -289,6 +305,7 @@ export class LeaderboardService {
           weeklyXP: xpByUser.get(user.id) || 0,
           isCurrentUser: user.id === userId,
           avatar: this.generateAvatar(user.username || user.email),
+          timezone_offset: (user as any).timezone_offset,
         }))
         .sort((a, b) => (b.weeklyXP || 0) - (a.weeklyXP || 0));
 
@@ -315,5 +332,177 @@ export class LeaderboardService {
       return (words[0][0] + words[1][0]).toUpperCase();
     }
     return name.slice(0, 2).toUpperCase();
+  }
+
+  // ===========================================================================
+  // SECTION: Statistiques utilisateur (Global + Local)
+  // ===========================================================================
+
+  /**
+   * Récupère les statistiques globales et locales de l'utilisateur
+   * Inclut le rang global, le rang local (par pays), et le percentile
+   *
+   * @param userId - L'identifiant de l'utilisateur
+   * @returns Les statistiques de l'utilisateur
+   */
+  static async getUserRankStats(userId: string): Promise<UserRankStats | null> {
+    try {
+      // 1. Récupérer le profil de l'utilisateur
+      const { data: userProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, total_xp, timezone_offset')
+        .eq('id', userId)
+        .single();
+
+      if (profileError || !userProfile) {
+        Logger.error('Error fetching user profile:', profileError);
+        return null;
+      }
+
+      // 2. Calculer le rang global
+      const { data: rankData, error: rankError } = await supabase.rpc('get_user_rank', {
+        p_user_id: userId,
+      });
+
+      if (rankError) {
+        Logger.error('Error getting user rank:', rankError);
+        return null;
+      }
+
+      const globalRank = rankData || 0;
+
+      // 3. Compter le nombre total d'utilisateurs
+      const { count: globalTotal, error: countError } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      if (countError) {
+        Logger.error('Error counting users:', countError);
+        return null;
+      }
+
+      // 4. Calculer le rang local (par pays basé sur timezone)
+      const userCountry = getCountryFromTimezone(userProfile.timezone_offset);
+
+      // Récupérer tous les utilisateurs du même pays
+      const { data: localUsers, error: localError } = await supabase
+        .from('profiles')
+        .select('id, total_xp, timezone_offset')
+        .order('total_xp', { ascending: false });
+
+      if (localError || !localUsers) {
+        Logger.error('Error fetching local users:', localError);
+        return null;
+      }
+
+      // Filtrer par pays et calculer le rang local
+      const sameCountryUsers = localUsers.filter((user) => {
+        const country = getCountryFromTimezone((user as any).timezone_offset);
+        return country.code === userCountry.code;
+      });
+
+      const localRank = sameCountryUsers.findIndex((user) => user.id === userId) + 1;
+      const localTotal = sameCountryUsers.length;
+
+      // 5. Calculer le percentile (meilleur que X% des utilisateurs)
+      const percentile = globalTotal && globalTotal > 0
+        ? Math.round(((globalTotal - globalRank) / globalTotal) * 100)
+        : 0;
+
+      return {
+        globalRank,
+        globalTotal: globalTotal || 0,
+        localRank,
+        localTotal,
+        percentile,
+      };
+    } catch (error) {
+      Logger.error('Error fetching user rank stats:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Récupère le classement local (par pays) pour l'utilisateur
+   *
+   * @param userId - L'identifiant de l'utilisateur
+   * @param limit - Nombre maximum d'entrées
+   * @returns Le classement local et le rang de l'utilisateur
+   */
+  static async getLocalLeaderboard(
+    userId: string,
+    limit: number = 20
+  ): Promise<{
+    leaderboard: LeaderboardEntry[];
+    currentUserRank: number;
+  }> {
+    try {
+      // 1. Récupérer le timezone de l'utilisateur
+      const { data: userProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('timezone_offset')
+        .eq('id', userId)
+        .single();
+
+      if (profileError || !userProfile) {
+        Logger.error('Error fetching user profile:', profileError);
+        return { leaderboard: [], currentUserRank: 0 };
+      }
+
+      const userCountry = getCountryFromTimezone((userProfile as any).timezone_offset);
+
+      // 2. Récupérer tous les utilisateurs
+      const { data: allUsers, error: usersError } = await supabase
+        .from('profiles')
+        .select('id, username, email, total_xp, current_level, timezone_offset')
+        .order('total_xp', { ascending: false });
+
+      if (usersError || !allUsers) {
+        Logger.error('Error fetching users:', usersError);
+        return { leaderboard: [], currentUserRank: 0 };
+      }
+
+      // 3. Filtrer par pays
+      const sameCountryUsers = allUsers.filter((user) => {
+        const country = getCountryFromTimezone((user as any).timezone_offset);
+        return country.code === userCountry.code;
+      });
+
+      // 4. Calculer le rang de l'utilisateur
+      const currentUserRank = sameCountryUsers.findIndex((user) => user.id === userId) + 1;
+
+      // 5. Prendre le top N
+      const topUsers = sameCountryUsers.slice(0, limit);
+
+      // 6. Ajouter l'utilisateur s'il n'est pas dans le top
+      const userInTop = topUsers.some((u) => u.id === userId);
+      if (!userInTop && currentUserRank > 0) {
+        const currentUser = sameCountryUsers.find((u) => u.id === userId);
+        if (currentUser) {
+          topUsers.push(currentUser);
+        }
+      }
+
+      // 7. Mapper vers LeaderboardEntry
+      const leaderboard: LeaderboardEntry[] = topUsers.map((user, index) => {
+        const rank = sameCountryUsers.findIndex((u) => u.id === user.id) + 1;
+        return {
+          id: user.id,
+          username: user.username || user.email.split('@')[0],
+          email: user.email,
+          total_xp: user.total_xp || 0,
+          current_level: user.current_level || 1,
+          rank,
+          avatar: this.generateAvatar(user.username || user.email),
+          isCurrentUser: user.id === userId,
+          timezone_offset: (user as any).timezone_offset,
+        };
+      });
+
+      return { leaderboard, currentUserRank };
+    } catch (error) {
+      Logger.error('Error fetching local leaderboard:', error);
+      return { leaderboard: [], currentUserRank: 0 };
+    }
   }
 }

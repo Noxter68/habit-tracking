@@ -1573,7 +1573,8 @@
 
     "modes": {
       "global": "TOUT TEMPS",
-      "weekly": "CETTE SEMAINE"
+      "weekly": "CETTE SEMAINE",
+      "local": "LOCAL"
     },
 
     "labels": {

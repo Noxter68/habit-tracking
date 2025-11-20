@@ -1526,7 +1526,8 @@
 
     "modes": {
       "global": "ALL TIME",
-      "weekly": "THIS WEEK"
+      "weekly": "THIS WEEK",
+      "local": "LOCAL"
     },
 
     "labels": {

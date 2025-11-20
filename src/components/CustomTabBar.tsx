@@ -66,7 +66,7 @@ export const CustomTabBar: React.FC<CustomTabBarProps> = ({ state, navigation, t
         backgroundColor: '#FFFFFF',
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
-        height: Platform.OS === 'ios' ? 70 : 56,
+        height: Platform.OS === 'ios' ? 80 : 56,
         paddingBottom: Platform.OS === 'ios' ? (insets.bottom > 0 ? insets.bottom - 10 : 6) : 6,
         paddingTop: 20,
         paddingHorizontal: 16,
@@ -88,7 +88,7 @@ export const CustomTabBar: React.FC<CustomTabBarProps> = ({ state, navigation, t
         style={[
           {
             position: 'absolute',
-            top: 11,
+            top: 17,
             left: 16,
             width: indicatorWidth,
             height: indicatorHeight,
