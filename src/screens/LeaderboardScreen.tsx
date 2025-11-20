@@ -193,7 +193,7 @@ const LeaderboardScreen = () => {
                         },
                       ]}
                     >
-                      <ImageBackground source={tierThemes.Ruby.texture} resizeMode="cover" style={[tw`w-full items-center py-3`, { minHeight: 135, paddingTop: 40 }]} imageStyle={{ opacity: 0.5 }}>
+                      <ImageBackground source={tierThemes.Ruby.texture} resizeMode="cover" style={[tw`w-full items-center py-2`, { minHeight: 110, paddingTop: 35 }]} imageStyle={{ opacity: 0.5 }}>
                         <View style={[tw`rounded-full px-2.5  mb-2`, { backgroundColor: `${tierThemes.Ruby.accent}50` }]}>
                           <Text style={tw`text-xl font-black text-white`}>#2</Text>
                         </View>
@@ -240,7 +240,7 @@ const LeaderboardScreen = () => {
                       <ImageBackground
                         source={tierThemes.Amethyst.texture}
                         resizeMode="cover"
-                        style={[tw`w-full items-center pb-8 `, { minHeight: 175, paddingTop: 35 }]}
+                        style={[tw`w-full items-center pb-3 `, { minHeight: 140, paddingTop: 35 }]}
                         imageStyle={{ opacity: 0.5 }}
                       >
                         <View style={[tw`rounded-full px-3 py-1 mb-2`, { backgroundColor: `${tierThemes.Amethyst.accent}60` }]}>
@@ -286,7 +286,7 @@ const LeaderboardScreen = () => {
                         },
                       ]}
                     >
-                      <ImageBackground source={tierThemes.Crystal.texture} resizeMode="cover" style={[tw`w-full items-center py-3`, { minHeight: 115, paddingTop: 30 }]} imageStyle={{ opacity: 0.5 }}>
+                      <ImageBackground source={tierThemes.Crystal.texture} resizeMode="cover" style={[tw`w-full items-center py-2`, { minHeight: 95, paddingTop: 30 }]} imageStyle={{ opacity: 0.5 }}>
                         <View style={[tw`rounded-full px-2.5  mb-2`, { backgroundColor: `${tierThemes.Crystal.accent}50` }]}>
                           <Text style={tw`text-xl font-black text-white`}>#3</Text>
                         </View>
