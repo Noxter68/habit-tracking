@@ -197,6 +197,7 @@ const HabitDetails: React.FC = () => {
   const streakSaver = useStreakSaver({
     type: 'personal',
     habitId: habitId,
+    habitFrequency: habit?.frequency,
     userId: user?.id || '',
     enabled: !!habit && !!user,
     onStreakRestored: (newStreak) => {

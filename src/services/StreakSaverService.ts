@@ -206,12 +206,46 @@ export class StreakSaverService {
 
       if (error) throw error;
 
-      return (data || []).map((item: any) => ({
-        habitId: item.habit_id,
-        habitName: item.habit_name,
-        previousStreak: item.previous_streak,
-        missedDate: item.missed_date,
-      }));
+      // ✅ Fetch habit frequencies to exclude weekly habits
+      const habits = data || [];
+      if (habits.length === 0) return [];
+
+      const habitIds = habits.map((h: any) => h.habit_id);
+      const { data: habitData } = await supabase
+        .from('habits')
+        .select('id, frequency')
+        .in('id', habitIds);
+
+      const frequencyMap = new Map(
+        (habitData || []).map((h: any) => [h.id, h.frequency])
+      );
+
+      // ✅ Filter: only include habits with previousStreak >= 1 and NOT weekly
+      return habits
+        .filter((item: any) => {
+          const frequency = frequencyMap.get(item.habit_id);
+          const previousStreak = item.previous_streak || 0;
+
+          // Exclude weekly habits (they don't break daily streaks)
+          if (frequency === 'weekly') {
+            Logger.debug(`⏭️ Excluding weekly habit: ${item.habit_name}`);
+            return false;
+          }
+
+          // Exclude habits with previousStreak < 1 (no active streak to save)
+          if (previousStreak < 1) {
+            Logger.debug(`⏭️ Excluding habit with streak 0: ${item.habit_name}`);
+            return false;
+          }
+
+          return true;
+        })
+        .map((item: any) => ({
+          habitId: item.habit_id,
+          habitName: item.habit_name,
+          previousStreak: item.previous_streak,
+          missedDate: item.missed_date,
+        }));
     } catch (error) {
       Logger.error('Error fetching saveable habits:', error);
       return [];

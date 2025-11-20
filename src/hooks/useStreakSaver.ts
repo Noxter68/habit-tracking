@@ -21,6 +21,7 @@ interface BaseStreakSaverProps {
 interface PersonalStreakSaverProps extends BaseStreakSaverProps {
   type: 'personal';
   habitId: string;
+  habitFrequency?: 'daily' | 'weekly' | 'monthly' | 'custom';
 }
 
 interface GroupStreakSaverProps extends BaseStreakSaverProps {
@@ -94,6 +95,17 @@ export const useStreakSaver = (props: UseStreakSaverProps) => {
   const checkPersonalEligibility = useCallback(async () => {
     try {
       setLoading(true);
+
+      // ✅ Skip eligibility check for weekly habits - they can't break daily streaks
+      const habitFrequency = type === 'personal' ? props.habitFrequency : undefined;
+      if (habitFrequency === 'weekly') {
+        Logger.debug('⏭️ [PERSONAL] Skipping streak saver for weekly habit');
+        setEligibility({ canSave: false, reason: 'Weekly habits are not eligible' });
+        setInventory({ available: 0, totalUsed: 0 });
+        setLoading(false);
+        return;
+      }
+
       const [result, inv] = await Promise.all([StreakSaverService.checkEligibility(habitId, userId), StreakSaverService.getInventory(userId)]);
 
       Logger.debug('✅ [PERSONAL] Eligibility check result:', result);
@@ -102,16 +114,19 @@ export const useStreakSaver = (props: UseStreakSaverProps) => {
       setEligibility(result);
       setInventory(inv);
 
-      if (result.canSave && inv.available > 0) {
+      // ✅ Only show modal if previousStreak >= 1 (streak was active before breaking)
+      if (result.canSave && inv.available > 0 && (result.previousStreak || 0) >= 1) {
         Logger.debug('🎯 [PERSONAL] Auto-showing streak saver modal');
         setShowModal(true);
+      } else if (result.canSave && (result.previousStreak || 0) === 0) {
+        Logger.debug('⏭️ [PERSONAL] Streak was 0, not showing modal');
       }
     } catch (error) {
       Logger.error('❌ [PERSONAL] Error checking eligibility:', error);
     } finally {
       setLoading(false);
     }
-  }, [habitId, userId]);
+  }, [habitId, userId, type, props]);
 
   // ==========================================================================
   // ELIGIBILITY - GROUP HABITS
@@ -388,9 +403,12 @@ export const useStreakSaver = (props: UseStreakSaverProps) => {
   }, [type]);
 
   const openModal = useCallback(() => {
-    if (eligibility.canSave && inventory.available > 0) {
+    // ✅ Only open if previousStreak >= 1
+    if (eligibility.canSave && inventory.available > 0 && (eligibility.previousStreak || 0) >= 1) {
       Logger.debug(`🎯 [${type.toUpperCase()}] Manually opening streak saver modal`);
       setShowModal(true);
+    } else if (eligibility.canSave && (eligibility.previousStreak || 0) === 0) {
+      Logger.debug(`⏭️ [${type.toUpperCase()}] Cannot open modal - streak was 0`);
     }
   }, [eligibility, inventory, type]);
 
