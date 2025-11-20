@@ -1,7 +1,7 @@
 // src/components/calendar/CalendarGrid.tsx
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
-import { ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Flame } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import tw from '@/lib/tailwind';
 import { Habit } from '@/types';
@@ -254,14 +254,8 @@ const CalendarDay: React.FC<{
   activeHoliday = null,
   allHolidays = [],
   isInStreak = false,
-  isStreakStart = false,
-  isStreakEnd = false,
   isInMissedStreak = false,
-  isMissedStreakStart = false,
-  isMissedStreakEnd = false,
   isInHolidayStreak = false,
-  isHolidayStreakStart = false,
-  isHolidayStreakEnd = false,
 }) => {
   if (!date) {
     return <View style={tw`w-1/7 h-11 mb-1`} />;
@@ -292,109 +286,93 @@ const CalendarDay: React.FC<{
   const taskIds = habit.tasks.map((t) => t.id);
   const isHoliday = HolidayModeService.isDateInAnyHoliday(date, allHolidays, habit.id, taskIds);
 
-  // Priority order: Holiday > Complete > Partial > Missed > Before Creation
+  // ✨ NEW MINIMALIST DESIGN
+  // Determine background color and border
   let backgroundColor = 'transparent';
   let textColor = tw.color('slate-600');
+  let borderColor = 'transparent';
+  let borderWidth = 0;
 
   if (beforeCreation) {
     textColor = tw.color('gray-300');
   } else if (isHoliday) {
-    // Holiday state - Amber theme
     backgroundColor = '#fef3c7'; // amber-100
     textColor = '#d97706'; // amber-600
+    if (isInHolidayStreak) {
+      borderColor = '#f59e0b'; // amber-500
+      borderWidth = 1.5;
+    }
   } else if (isCompleted) {
-    // Use tier color for completed days
     backgroundColor = theme.accent;
     textColor = '#ffffff';
+    if (isInStreak) {
+      borderColor = theme.accent;
+      borderWidth = 1.5;
+    }
   } else if (isPartial) {
-    backgroundColor = theme.accent + '40'; // 25% opacity
+    backgroundColor = theme.accent + '40';
     textColor = theme.accent;
   } else if (isMissed) {
     backgroundColor = '#fecaca'; // red-200
     textColor = '#dc2626'; // red-600
+    if (isInMissedStreak) {
+      borderColor = '#ef4444'; // red-500
+      borderWidth = 1.5;
+    }
   }
-
-  // Streak background styles - continuous background connecting days
-  let streakBackgroundStyle: any = {};
-
-  if (isInStreak && isCompleted) {
-    streakBackgroundStyle = {
-      backgroundColor: theme.accent,
-      borderTopLeftRadius: isStreakStart ? 20 : 0,
-      borderBottomLeftRadius: isStreakStart ? 20 : 0,
-      borderTopRightRadius: isStreakEnd ? 20 : 0,
-      borderBottomRightRadius: isStreakEnd ? 20 : 0,
-      paddingLeft: isStreakStart ? 2 : 0,
-      paddingRight: isStreakEnd ? 2 : 0,
-    };
-  } else if (isInMissedStreak && isMissed) {
-    streakBackgroundStyle = {
-      backgroundColor: '#fecaca',
-      borderTopLeftRadius: isMissedStreakStart ? 20 : 0,
-      borderBottomLeftRadius: isMissedStreakStart ? 20 : 0,
-      borderTopRightRadius: isMissedStreakEnd ? 20 : 0,
-      borderBottomRightRadius: isMissedStreakEnd ? 20 : 0,
-      paddingLeft: isMissedStreakStart ? 2 : 0,
-      paddingRight: isMissedStreakEnd ? 2 : 0,
-    };
-  } else if (isInHolidayStreak && isHoliday) {
-    streakBackgroundStyle = {
-      backgroundColor: '#fef3c7',
-      borderTopLeftRadius: isHolidayStreakStart ? 20 : 0,
-      borderBottomLeftRadius: isHolidayStreakStart ? 20 : 0,
-      borderTopRightRadius: isHolidayStreakEnd ? 20 : 0,
-      borderBottomRightRadius: isHolidayStreakEnd ? 20 : 0,
-      paddingLeft: isHolidayStreakStart ? 2 : 0,
-      paddingRight: isHolidayStreakEnd ? 2 : 0,
-    };
-  } else if (isPartial) {
-    // Single partial day - apply background with full rounded corners like streak endpoints
-    streakBackgroundStyle = {
-      backgroundColor: theme.accent + '40',
-      borderRadius: 20,
-      paddingLeft: 2,
-      paddingRight: 2,
-    };
-  } else if (isCompleted) {
-    // Single completed day - apply background with full rounded corners
-    streakBackgroundStyle = {
-      backgroundColor: theme.accent,
-      borderRadius: 20,
-      paddingLeft: 2,
-      paddingRight: 2,
-    };
-  } else if (isMissed && !beforeCreation) {
-    // Single missed day - apply background with full rounded corners
-    streakBackgroundStyle = {
-      backgroundColor: '#fecaca',
-      borderRadius: 20,
-      paddingLeft: 2,
-      paddingRight: 2,
-    };
-  } else if (isHoliday) {
-    // Single holiday day - apply background with full rounded corners
-    streakBackgroundStyle = {
-      backgroundColor: '#fef3c7',
-      borderRadius: 20,
-      paddingLeft: 2,
-      paddingRight: 2,
-    };
-  } else if (!beforeCreation) {
-    // Default padding for days without special state (including current day)
-    streakBackgroundStyle = {
-      paddingLeft: 2,
-      paddingRight: 2,
-    };
-  }
-
-  // Determine if we should hide the inner background (when streak style has background)
-  const hasStreakBackground = streakBackgroundStyle.backgroundColor !== undefined;
 
   return (
-    <View style={[tw`w-1/7 h-11 mb-1 items-center justify-center`, { overflow: 'visible' }, streakBackgroundStyle]}>
-      <Pressable onPress={() => onSelect(date)} style={({ pressed }) => [tw`items-center justify-center`, { overflow: 'visible' }, pressed && tw`opacity-70`]} disabled={beforeCreation}>
-        <View style={[tw`w-7 h-7 rounded-lg items-center justify-center`, !hasStreakBackground && { backgroundColor }, isSelected && !beforeCreation && { borderWidth: 2, borderColor: theme.accent }]}>
-          <Text style={[tw`text-sm font-black`, { color: textColor }, beforeCreation && tw`text-gray-300`]}>{date.getDate()}</Text>
+    <View style={tw`w-1/7 h-11 mb-1 items-center justify-center px-0.5`}>
+      <Pressable
+        onPress={() => onSelect(date)}
+        style={({ pressed }) => [
+          tw`items-center justify-center`,
+          pressed && tw`opacity-70`
+        ]}
+        disabled={beforeCreation}
+      >
+        <View style={tw`relative`}>
+          <View
+            style={[
+              tw`w-9 h-9 rounded-xl items-center justify-center`,
+              {
+                backgroundColor,
+                borderWidth,
+                borderColor,
+              },
+              isSelected && !beforeCreation && {
+                borderWidth: 2,
+                borderColor: theme.accent,
+                shadowColor: theme.accent,
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+                elevation: 4,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                tw`text-base font-black`,
+                { color: textColor },
+                beforeCreation && tw`text-gray-300`,
+              ]}
+            >
+              {date.getDate()}
+            </Text>
+          </View>
+
+          {/* Flame icon for streak days */}
+          {(isInStreak && isCompleted) && (
+            <View
+              style={[
+                tw`absolute -top-1 -right-1 w-4 h-4 rounded-full items-center justify-center`,
+                { backgroundColor: theme.accent }
+              ]}
+            >
+              <Flame size={10} color="#ffffff" fill="#ffffff" />
+            </View>
+          )}
         </View>
       </Pressable>
     </View>
