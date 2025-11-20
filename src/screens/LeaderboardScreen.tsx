@@ -194,7 +194,7 @@ const LeaderboardScreen = () => {
                       ]}
                     >
                       <ImageBackground source={tierThemes.Ruby.texture} resizeMode="cover" style={[tw`w-full items-center py-3`, { minHeight: 135, paddingTop: 40 }]} imageStyle={{ opacity: 0.5 }}>
-                        <View style={[tw`rounded-full px-2.5 py-0.5 mb-2`, { backgroundColor: `${tierThemes.Ruby.accent}50` }]}>
+                        <View style={[tw`rounded-full px-2.5  mb-2`, { backgroundColor: `${tierThemes.Ruby.accent}50` }]}>
                           <Text style={tw`text-xl font-black text-white`}>#2</Text>
                         </View>
 
@@ -213,7 +213,7 @@ const LeaderboardScreen = () => {
                           </Text>
                           <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: '600', marginBottom: 8 }}>XP</Text>
                           <Text style={{ fontSize: 20, fontWeight: '900', color: '#FFFFFF' }}>{topThree[1].current_level}</Text>
-                          <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>NIVEAU</Text>
+                          <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>{t('leaderboard.labels.levelFull')}</Text>
                         </View>
                       </ImageBackground>
                     </View>
@@ -262,7 +262,7 @@ const LeaderboardScreen = () => {
                           </Text>
                           <Text style={{ fontSize: 10, color: 'rgba(253,224,71,0.9)', fontWeight: '700', marginBottom: 10 }}>XP</Text>
                           <Text style={{ fontSize: 20, fontWeight: '900', color: '#FFFFFF' }}>{topThree[0].current_level}</Text>
-                          <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.8)', fontWeight: '700' }}>NIVEAU</Text>
+                          <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.8)', fontWeight: '700' }}>{t('leaderboard.labels.levelFull')}</Text>
                         </View>
                       </ImageBackground>
                     </View>
@@ -287,7 +287,7 @@ const LeaderboardScreen = () => {
                       ]}
                     >
                       <ImageBackground source={tierThemes.Crystal.texture} resizeMode="cover" style={[tw`w-full items-center py-3`, { minHeight: 115, paddingTop: 30 }]} imageStyle={{ opacity: 0.5 }}>
-                        <View style={[tw`rounded-full px-2.5 py-0.5 mb-2`, { backgroundColor: `${tierThemes.Crystal.accent}50` }]}>
+                        <View style={[tw`rounded-full px-2.5  mb-2`, { backgroundColor: `${tierThemes.Crystal.accent}50` }]}>
                           <Text style={tw`text-xl font-black text-white`}>#3</Text>
                         </View>
 
@@ -306,7 +306,7 @@ const LeaderboardScreen = () => {
                           </Text>
                           <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: '600', marginBottom: 8 }}>XP</Text>
                           <Text style={{ fontSize: 20, fontWeight: '900', color: '#FFFFFF' }}>{topThree[2].current_level}</Text>
-                          <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>NIVEAU</Text>
+                          <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>{t('leaderboard.labels.levelFull')}</Text>
                         </View>
                       </ImageBackground>
                     </View>
@@ -336,15 +336,17 @@ const LeaderboardScreen = () => {
 
                   {/* Message d'encouragement à droite */}
                   <View style={tw`flex-1`}>
-                    <Text style={tw`text-white/90 text-xs font-bold mb-1`}>{mode === 'local' ? 'LOCAL RANK' : mode === 'weekly' ? 'WEEKLY RANK' : 'GLOBAL RANK'}</Text>
+                    <Text style={tw`text-white/90 text-xs font-bold mb-1`}>
+                      {mode === 'local' ? t('leaderboard.rankTypes.local') : mode === 'weekly' ? t('leaderboard.rankTypes.weekly') : t('leaderboard.rankTypes.global')}
+                    </Text>
                     <Text style={tw`text-white text-sm font-bold leading-5`}>
                       {userStats.percentile >= 90
-                        ? `Incroyable ! Vous êtes meilleur que ${userStats.percentile}% des utilisateurs !`
+                        ? t('leaderboard.encouragement.top10', { percentile: userStats.percentile })
                         : userStats.percentile >= 75
-                        ? `Excellent ! Vous dépassez ${userStats.percentile}% des utilisateurs !`
+                        ? t('leaderboard.encouragement.top25', { percentile: userStats.percentile })
                         : userStats.percentile >= 50
-                        ? `Bien joué ! Vous êtes dans le top ${100 - userStats.percentile}% !`
-                        : `Continue ! Tu es meilleur que ${userStats.percentile}% !`}
+                        ? t('leaderboard.encouragement.top50', { topPercent: 100 - userStats.percentile })
+                        : t('leaderboard.encouragement.other', { percentile: userStats.percentile })}
                     </Text>
                   </View>
                 </View>

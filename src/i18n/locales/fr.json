@@ -1580,6 +1580,7 @@
     "labels": {
       "xp": "XP",
       "level": "NIV",
+      "levelFull": "NIVEAU",
       "you": "VOUS",
       "rank": "Rang",
       "position": "Position"
@@ -1595,6 +1596,19 @@
       "totalXp": "{{xp}} XP",
       "weeklyXp": "{{xp}} XP",
       "levelWithXp": "{{xp}} XP • Niv.{{level}}"
+    },
+
+    "rankTypes": {
+      "local": "RANG LOCAL",
+      "weekly": "RANG HEBDO",
+      "global": "RANG GLOBAL"
+    },
+
+    "encouragement": {
+      "top10": "Incroyable ! Vous êtes meilleur que {{percentile}}% des utilisateurs !",
+      "top25": "Excellent ! Vous dépassez {{percentile}}% des utilisateurs !",
+      "top50": "Bien joué ! Vous êtes dans le top {{topPercent}}% !",
+      "other": "Continue ! Tu es meilleur que {{percentile}}% !"
     },
 
     "loading": "Chargement du classement...",

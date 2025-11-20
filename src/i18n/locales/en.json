@@ -1533,6 +1533,7 @@
     "labels": {
       "xp": "XP",
       "level": "LVL",
+      "levelFull": "LEVEL",
       "you": "YOU",
       "rank": "Rank",
       "position": "Position"
@@ -1548,6 +1549,19 @@
       "totalXp": "{{xp}} XP",
       "weeklyXp": "{{xp}} XP",
       "levelWithXp": "{{xp}} XP • Lv.{{level}}"
+    },
+
+    "rankTypes": {
+      "local": "LOCAL RANK",
+      "weekly": "WEEKLY RANK",
+      "global": "GLOBAL RANK"
+    },
+
+    "encouragement": {
+      "top10": "Incredible! You're better than {{percentile}}% of users!",
+      "top25": "Excellent! You surpass {{percentile}}% of users!",
+      "top50": "Well done! You're in the top {{topPercent}}%!",
+      "other": "Keep going! You're better than {{percentile}}%!"
     },
 
     "loading": "Loading leaderboard...",
