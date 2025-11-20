@@ -2236,6 +2236,7 @@
 
     "timeline": {
       "today": "TODAY",
+      "thisWeek": "THIS WEEK",
       "completions": "{{completed}}/{{total}}"
     },
 

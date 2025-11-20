@@ -2207,6 +2207,7 @@
 
     "timeline": {
       "today": "AUJOURD'HUI",
+      "thisWeek": "CETTE SEMAINE",
       "completions": "{{completed}}/{{total}}"
     },
 

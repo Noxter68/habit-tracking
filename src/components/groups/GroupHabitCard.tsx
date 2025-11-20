@@ -38,6 +38,8 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
   const [completing, setCompleting] = useState(false);
   const [userCompletedToday, setUserCompletedToday] = useState(false);
   const [completionsCount, setCompletionsCount] = useState(habit.completions_today || 0);
+  const [userCompletedThisWeek, setUserCompletedThisWeek] = useState(false);
+  const [weekCompletionsCount, setWeekCompletionsCount] = useState(0);
 
   const currentTierNumber = calculateGroupTierFromLevel(groupLevel);
   const tierTheme =
@@ -57,12 +59,30 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
       const data = await groupService.getHabitTimeline(habit.id, groupId, 7);
       setTimeline(data);
 
-      const today = data.find((day) => day.is_today);
-      const isCompleted = today?.completions.find((c) => c.user_id === user?.id)?.completed || false;
-      setUserCompletedToday(isCompleted);
+      if (habit.frequency === 'weekly') {
+        // Pour weekly: vérifier si l'utilisateur a complété dans les 7 derniers jours
+        const hasCompletedThisWeek = data.some((day) => day.completions.find((c) => c.user_id === user?.id)?.completed);
+        setUserCompletedThisWeek(hasCompletedThisWeek);
 
-      const realCount = today?.completions.filter((c) => c.completed).length || 0;
-      setCompletionsCount(realCount);
+        // Compter combien de membres ont complété cette semaine
+        const membersWhoCompleted = new Set();
+        data.forEach((day) => {
+          day.completions.forEach((c) => {
+            if (c.completed) {
+              membersWhoCompleted.add(c.user_id);
+            }
+          });
+        });
+        setWeekCompletionsCount(membersWhoCompleted.size);
+      } else {
+        // Pour daily: logique existante
+        const today = data.find((day) => day.is_today);
+        const isCompleted = today?.completions.find((c) => c.user_id === user?.id)?.completed || false;
+        setUserCompletedToday(isCompleted);
+
+        const realCount = today?.completions.filter((c) => c.completed).length || 0;
+        setCompletionsCount(realCount);
+      }
     } catch (error) {
       console.error('Error loading timeline:', error);
     } finally {
@@ -89,11 +109,19 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
   const handleToggleComplete = async () => {
     if (!user?.id || completing) return;
 
-    setCompleting(true);
-    const wasCompleted = userCompletedToday;
+    // Pour weekly: si déjà complété cette semaine, ne rien faire
+    if (habit.frequency === 'weekly' && userCompletedThisWeek) return;
 
-    setUserCompletedToday(!wasCompleted);
-    setCompletionsCount((prev) => (wasCompleted ? Math.max(0, prev - 1) : prev + 1));
+    setCompleting(true);
+    const wasCompleted = habit.frequency === 'weekly' ? userCompletedThisWeek : userCompletedToday;
+
+    if (habit.frequency === 'weekly') {
+      setUserCompletedThisWeek(!wasCompleted);
+      setWeekCompletionsCount((prev) => (wasCompleted ? Math.max(0, prev - 1) : prev + 1));
+    } else {
+      setUserCompletedToday(!wasCompleted);
+      setCompletionsCount((prev) => (wasCompleted ? Math.max(0, prev - 1) : prev + 1));
+    }
 
     const optimisticTimeline = timeline.map((day) => {
       if (!day.is_today) return day;
@@ -124,8 +152,13 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
     } catch (error) {
       console.error('Error toggling completion:', error);
 
-      setUserCompletedToday(wasCompleted);
-      setCompletionsCount((prev) => (wasCompleted ? prev + 1 : Math.max(0, prev - 1)));
+      if (habit.frequency === 'weekly') {
+        setUserCompletedThisWeek(wasCompleted);
+        setWeekCompletionsCount((prev) => (wasCompleted ? prev + 1 : Math.max(0, prev - 1)));
+      } else {
+        setUserCompletedToday(wasCompleted);
+        setCompletionsCount((prev) => (wasCompleted ? prev + 1 : Math.max(0, prev - 1)));
+      }
       await loadTimeline();
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -148,10 +181,12 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
   };
 
   const totalMembers = members.length;
-  const completionRate = totalMembers > 0 ? (completionsCount / totalMembers) * 100 : 0;
+  const displayCompletionsCount = habit.frequency === 'weekly' ? weekCompletionsCount : completionsCount;
+  const completionRate = totalMembers > 0 ? (displayCompletionsCount / totalMembers) * 100 : 0;
+  const isUserCompleted = habit.frequency === 'weekly' ? userCompletedThisWeek : userCompletedToday;
 
   const getBonusBadge = () => {
-    if (completionsCount === 0) return null;
+    if (displayCompletionsCount === 0) return null;
 
     if (completionRate === 100) {
       return {
@@ -246,22 +281,23 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
 
               <TouchableOpacity
                 onPress={handleToggleComplete}
-                disabled={completing}
+                disabled={completing || (habit.frequency === 'weekly' && userCompletedThisWeek)}
                 style={[
                   tw`w-8 h-8 rounded-full items-center justify-center`,
-                  userCompletedToday
+                  isUserCompleted
                     ? { backgroundColor: '#FFFFFF' }
                     : {
                         backgroundColor: 'rgba(255, 255, 255, 0.25)',
                         borderWidth: 2,
                         borderColor: 'rgba(255, 255, 255, 0.6)',
                       },
+                  habit.frequency === 'weekly' && userCompletedThisWeek && { opacity: 0.6 },
                 ]}
                 activeOpacity={0.8}
               >
                 {completing ? (
-                  <ActivityIndicator size="small" color={userCompletedToday ? tierTheme.accent : '#FFFFFF'} />
-                ) : userCompletedToday ? (
+                  <ActivityIndicator size="small" color={isUserCompleted ? tierTheme.accent : '#FFFFFF'} />
+                ) : isUserCompleted ? (
                   <Check size={24} color={tierTheme.accent} strokeWidth={3} />
                 ) : null}
               </TouchableOpacity>
@@ -296,7 +332,11 @@ export function GroupHabitCard({ habit, groupId, groupLevel, members, onRefresh,
                     subscription_tier: 'free',
                   });
 
-                  const isCompleted = completion.completed;
+                  // Pour weekly: si un membre a complété cette semaine, on l'affiche comme complété
+                  const isCompleted =
+                    habit.frequency === 'weekly'
+                      ? timeline.some((day) => day.completions.find((c) => c.user_id === completion.user_id && c.completed))
+                      : completion.completed;
                   const bgColor = isCompleted ? tierTheme.accent : 'rgba(255, 255, 255, 0.3)';
                   const borderColor = isCompleted ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.4)';
 

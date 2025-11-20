@@ -282,20 +282,42 @@ export function GroupHabitTimeline({ timeline, accentColor = '#10b981', frequenc
     );
   };
 
+  // Pour weekly: compter les membres qui ont complété cette semaine
+  const completedThisWeek = frequency === 'weekly'
+    ? (() => {
+        const membersCompleted = new Set();
+        timeline.forEach((day) => {
+          day.completions.forEach((c) => {
+            if (c.completed) {
+              membersCompleted.add(c.user_id);
+            }
+          });
+        });
+        return membersCompleted.size;
+      })()
+    : 0;
+
   const completedToday = todayData ? todayData.completions.filter((c) => c.completed).length : 0;
   const totalToday = todayData?.completions.length || 0;
+
+  const displayCompleted = frequency === 'weekly' ? completedThisWeek : completedToday;
+  const displayTotal = totalToday;
 
   return (
     <View style={tw`bg-stone-50/60 rounded-2xl p-3 mt-2`}>
       {todayData && (
         <View style={tw`flex-row items-center justify-center gap-1.5 mb-2.5`}>
           <View style={[tw`rounded-full px-2 py-0.5`, { backgroundColor: accentColor + '15' }]}>
-            <Text style={[tw`text-[9px] font-bold`, { color: accentColor }]}>{t('groups.timeline.today')}</Text>
+            <Text style={[tw`text-[9px] font-bold`, { color: accentColor }]}>
+              {frequency === 'weekly' ? t('groups.timeline.thisWeek') : t('groups.timeline.today')}
+            </Text>
           </View>
 
           <View style={tw`flex-row items-center gap-1`}>
             <View style={[tw`w-1.5 h-1.5 rounded-full`, { backgroundColor: accentColor }]} />
-            <Text style={tw`text-[10px] font-semibold text-stone-700`}>{t('groups.timeline.completions', { completed: completedToday, total: totalToday })}</Text>
+            <Text style={tw`text-[10px] font-semibold text-stone-700`}>
+              {t('groups.timeline.completions', { completed: displayCompleted, total: displayTotal })}
+            </Text>
           </View>
         </View>
       )}
