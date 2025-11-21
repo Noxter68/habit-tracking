@@ -1604,10 +1604,14 @@
     },
 
     "encouragement": {
-      "top10": "Incredible! You're better than {{percentile}}% of users!",
-      "top25": "Excellent! You surpass {{percentile}}% of users!",
-      "top50": "Well done! You're in the top {{topPercent}}%!",
-      "other": "Keep going! You're better than {{percentile}}%!"
+      "rank1": "You're #1! The absolute champion!",
+      "rank2": "Amazing! You're on the podium!",
+      "rank3": "Incredible! Bronze medal!",
+      "top5": "Elite! You're in the Top {{topPercent}}%!",
+      "top10": "Amazing! You're in the Top {{topPercent}}%!",
+      "top25": "Excellent! You're in the Top {{topPercent}}%!",
+      "top50": "Well done! You're in the Top {{topPercent}}%!",
+      "other": "Keep going! You're in the Top {{topPercent}}%!"
     },
 
     "loading": "Loading leaderboard...",

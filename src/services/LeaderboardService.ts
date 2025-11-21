@@ -251,6 +251,7 @@ export class LeaderboardService {
   ): Promise<{
     leaderboard: LeaderboardEntry[];
     currentUserRank: number;
+    totalActiveUsers: number;
   }> {
     try {
       const weekAgo = new Date();
@@ -264,7 +265,7 @@ export class LeaderboardService {
       if (error) throw error;
 
       if (!weeklyXP || weeklyXP.length === 0) {
-        return { leaderboard: [], currentUserRank: 0 };
+        return { leaderboard: [], currentUserRank: 0, totalActiveUsers: 0 };
       }
 
       const xpByUser = new Map<string, number>();
@@ -275,6 +276,7 @@ export class LeaderboardService {
 
       const sortedEntries = Array.from(xpByUser.entries()).sort((a, b) => b[1] - a[1]);
       const sortedUserIds = sortedEntries.map(([id]) => id);
+      const totalActiveUsers = sortedUserIds.length;
 
       const currentUserRank = sortedUserIds.indexOf(userId) + 1;
       const topUserIds = sortedUserIds.slice(0, limit);
@@ -291,7 +293,7 @@ export class LeaderboardService {
 
       if (profilesError) throw profilesError;
       if (!users) {
-        return { leaderboard: [], currentUserRank: 0 };
+        return { leaderboard: [], currentUserRank: 0, totalActiveUsers: 0 };
       }
 
       const leaderboard: LeaderboardEntry[] = users
@@ -309,10 +311,10 @@ export class LeaderboardService {
         }))
         .sort((a, b) => (b.weeklyXP || 0) - (a.weeklyXP || 0));
 
-      return { leaderboard, currentUserRank };
+      return { leaderboard, currentUserRank, totalActiveUsers };
     } catch (error) {
       Logger.error('Error fetching weekly leaderboard:', error);
-      return { leaderboard: [], currentUserRank: 0 };
+      return { leaderboard: [], currentUserRank: 0, totalActiveUsers: 0 };
     }
   }
 
@@ -404,10 +406,24 @@ export class LeaderboardService {
       const localRank = sameCountryUsers.findIndex((user) => user.id === userId) + 1;
       const localTotal = sameCountryUsers.length;
 
-      // 5. Calculer le percentile (meilleur que X% des utilisateurs)
-      const percentile = globalTotal && globalTotal > 0
-        ? Math.round(((globalTotal - globalRank) / globalTotal) * 100)
-        : 0;
+      // 5. Calculer le percentile (top X% des utilisateurs)
+      // Cas spéciaux pour les premiers rangs (pour éviter "Top 7%" quand il y a peu d'utilisateurs)
+      // Rang 1 = toujours Top 1%, Rang 2-3 = Top 5% max, etc.
+      let percentile = 100;
+      if (globalTotal && globalTotal > 0 && globalRank > 0) {
+        const rawPercentile = (globalRank / globalTotal) * 100;
+
+        // Garantir des valeurs significatives pour les premiers rangs
+        if (globalRank === 1) {
+          percentile = 1; // #1 = toujours Top 1%
+        } else if (globalRank <= 3) {
+          percentile = Math.max(Math.round(rawPercentile), 5); // Top 3 = minimum Top 5%
+        } else if (globalRank <= 5) {
+          percentile = Math.max(Math.round(rawPercentile), 10); // Top 5 = minimum Top 10%
+        } else {
+          percentile = Math.max(Math.round(rawPercentile), 1); // Au moins 1%
+        }
+      }
 
       return {
         globalRank,

@@ -1651,10 +1651,14 @@
     },
 
     "encouragement": {
-      "top10": "Incroyable ! Vous êtes meilleur que {{percentile}}% des utilisateurs !",
-      "top25": "Excellent ! Vous dépassez {{percentile}}% des utilisateurs !",
-      "top50": "Bien joué ! Vous êtes dans le top {{topPercent}}% !",
-      "other": "Continue ! Tu es meilleur que {{percentile}}% !"
+      "rank1": "Tu es #1 ! Le champion absolu !",
+      "rank2": "Incroyable ! Tu es sur le podium !",
+      "rank3": "Impressionnant ! Médaille de bronze !",
+      "top5": "Élite ! Tu fais partie du Top {{topPercent}}% !",
+      "top10": "Impressionnant ! Tu fais partie du Top {{topPercent}}% !",
+      "top25": "Excellent ! Tu fais partie du Top {{topPercent}}% !",
+      "top50": "Bien joué ! Tu fais partie du Top {{topPercent}}% !",
+      "other": "Continue ! Tu fais partie du Top {{topPercent}}% !"
     },
 
     "loading": "Chargement du classement...",

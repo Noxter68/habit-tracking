@@ -33,6 +33,7 @@ const LeaderboardScreen = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [userStats, setUserStats] = useState<UserRankStats | null>(null);
+  const [weeklyTotalUsers, setWeeklyTotalUsers] = useState(0);
 
   // Animation pour le toggle
   const togglePosition = useSharedValue(mode === 'weekly' ? 0 : mode === 'global' ? 1 : 2);
@@ -61,9 +62,10 @@ const LeaderboardScreen = () => {
         setLeaderboard(data);
         setCurrentUserRank(rank);
       } else if (mode === 'weekly') {
-        const { leaderboard: data, currentUserRank: rank } = await LeaderboardService.getWeeklyLeaderboard(user.id, 20);
+        const { leaderboard: data, currentUserRank: rank, totalActiveUsers } = await LeaderboardService.getWeeklyLeaderboard(user.id, 20);
         setLeaderboard(data);
         setCurrentUserRank(rank);
+        setWeeklyTotalUsers(totalActiveUsers);
       } else if (mode === 'local') {
         const { leaderboard: data, currentUserRank: rank } = await LeaderboardService.getLocalLeaderboard(user.id, 20);
         setLeaderboard(data);
@@ -340,13 +342,25 @@ const LeaderboardScreen = () => {
                       {mode === 'local' ? t('leaderboard.rankTypes.local') : mode === 'weekly' ? t('leaderboard.rankTypes.weekly') : t('leaderboard.rankTypes.global')}
                     </Text>
                     <Text style={tw`text-white text-sm font-bold leading-5`}>
-                      {userStats.percentile >= 90
-                        ? t('leaderboard.encouragement.top10', { percentile: userStats.percentile })
-                        : userStats.percentile >= 75
-                        ? t('leaderboard.encouragement.top25', { percentile: userStats.percentile })
-                        : userStats.percentile >= 50
-                        ? t('leaderboard.encouragement.top50', { topPercent: 100 - userStats.percentile })
-                        : t('leaderboard.encouragement.other', { percentile: userStats.percentile })}
+                      {(() => {
+                        // Déterminer le rang et le total selon le mode
+                        const rank = mode === 'global' ? userStats.globalRank : mode === 'local' ? userStats.localRank : currentUserRank;
+                        const total = mode === 'global' ? userStats.globalTotal : mode === 'local' ? userStats.localTotal : weeklyTotalUsers;
+
+                        // Messages spéciaux pour le podium (rang absolu)
+                        if (rank === 1) return t('leaderboard.encouragement.rank1');
+                        if (rank === 2) return t('leaderboard.encouragement.rank2');
+                        if (rank === 3) return t('leaderboard.encouragement.rank3');
+
+                        // Calculer le percentile pour les autres
+                        const percentile = total > 0 ? Math.max(Math.round((rank / total) * 100), 1) : 100;
+
+                        if (percentile <= 5) return t('leaderboard.encouragement.top5', { topPercent: percentile });
+                        if (percentile <= 10) return t('leaderboard.encouragement.top10', { topPercent: percentile });
+                        if (percentile <= 25) return t('leaderboard.encouragement.top25', { topPercent: percentile });
+                        if (percentile <= 50) return t('leaderboard.encouragement.top50', { topPercent: percentile });
+                        return t('leaderboard.encouragement.other', { topPercent: percentile });
+                      })()}
                     </Text>
                   </View>
                 </View>
@@ -466,28 +480,51 @@ const LeaderboardScreen = () => {
           {/* Your Position (if outside top 20) */}
           {currentUser && currentUser.rank > 20 && (
             <Animated.View entering={FadeInUp.delay(700)} style={tw`px-6 mt-6`}>
-              <View style={tw`mb-2`}>
-                <Text style={tw`text-xs font-bold text-white/50 text-center tracking-wider`}>{t('leaderboard.sections.yourRank')}</Text>
+              <View style={tw`mb-4 flex-row items-center`}>
+                <View style={tw`flex-1 h-px bg-white/20`} />
+                <Text style={tw`text-xs font-bold text-white/50 mx-3 tracking-wider`}>{t('leaderboard.sections.yourRank')}</Text>
+                <View style={tw`flex-1 h-px bg-white/20`} />
               </View>
 
-              <View style={tw`bg-slate-600/40 border-2 border-slate-500/50 rounded-2xl p-5 flex-row items-center justify-between`}>
-                <View>
-                  <Text style={tw`text-xs font-bold text-white/80 mb-1 tracking-wide`}>{t('leaderboard.sections.yourPosition')}</Text>
-                  <Text style={tw`text-white font-black text-lg mb-1`}>{currentUser.username}</Text>
-                  <Text style={tw`text-white/70 text-xs font-semibold`}>
-                    {mode === 'weekly'
-                      ? t('leaderboard.stats.weeklyXp', {
-                          xp: (currentUser.weeklyXP || 0).toLocaleString(),
-                        })
-                      : t('leaderboard.stats.levelWithXp', {
-                          xp: currentUser.total_xp.toLocaleString(),
-                          level: currentUser.current_level,
-                        })}
+              <View
+                style={[
+                  tw`flex-row items-center p-4 rounded-xl border-2`,
+                  {
+                    backgroundColor: 'rgba(139, 92, 246, 0.25)',
+                    borderColor: '#8b5cf6',
+                  },
+                ]}
+              >
+                <View style={tw`mr-4`}>
+                  <View
+                    style={[
+                      tw`w-12 h-12 rounded-xl items-center justify-center`,
+                      { backgroundColor: '#7c3aed' },
+                    ]}
+                  >
+                    <Text style={tw`text-white font-black text-base`}>#{currentUserRank}</Text>
+                  </View>
+                </View>
+
+                <View style={tw`flex-1`}>
+                  <View style={tw`flex-row items-center gap-2 mb-0.5`}>
+                    <Text style={tw`text-white font-bold text-sm flex-shrink`} numberOfLines={1}>
+                      {currentUser.username}
+                    </Text>
+                    <View style={tw`bg-violet-600/50 px-2 py-0.5 rounded`}>
+                      <Text style={tw`text-violet-200 text-xs font-black`}>{t('leaderboard.labels.you')}</Text>
+                    </View>
+                  </View>
+                  <Text style={tw`text-white/60 text-xs font-semibold`}>
+                    {t('leaderboard.labels.level')} {currentUser.current_level}
                   </Text>
                 </View>
 
-                <View style={tw`bg-white/15 rounded-2xl px-5 py-3`}>
-                  <Text style={tw`text-white font-black text-2xl`}>{currentUserRank}</Text>
+                <View style={tw`items-end`}>
+                  <Text style={tw`text-white font-bold text-sm`}>
+                    {mode === 'weekly' ? (currentUser.weeklyXP || 0).toLocaleString() : currentUser.total_xp.toLocaleString()}
+                  </Text>
+                  <Text style={tw`text-white/50 text-xs font-semibold`}>{t('leaderboard.labels.xp')}</Text>
                 </View>
               </View>
             </Animated.View>
