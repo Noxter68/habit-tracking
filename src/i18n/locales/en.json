@@ -265,7 +265,7 @@
 
   "paywall": {
     "title": "Upgrade to Premium",
-    "subtitle": "Unlock unlimited potential",
+    "subtitle": "Unlock unlimited potential and\nachieve more every day",
     "features": {
       "unlimitedHabits": {
         "title": "Unlimited Habits",
@@ -287,14 +287,34 @@
     "plans": {
       "monthly": "Monthly",
       "yearly": "Yearly",
+      "month": "month",
+      "year": "year",
       "mostPopular": "Most Popular",
-      "savePercent": "Save {{percent}}%"
+      "savePercent": "Save {{percent}}%",
+      "perMonth": "${{price}} per month",
+      "includesBonus": "Includes 50 Streak Savers bonus"
     },
+    "includedIn": "INCLUDED IN {{plan}}",
+    "loadingPlans": "Loading plans...",
     "cta": "Start Premium",
     "restore": "Restore Purchases",
     "terms": "Cancel anytime • Secure payment",
     "loading": "Loading...",
-    "error": "Failed to load subscription options"
+    "error": "Failed to load subscription options",
+    "alerts": {
+      "noPlans": "No subscription plans available. Please try again later.",
+      "selectPlan": "Please select a subscription plan",
+      "welcomeTitle": "Welcome to Premium",
+      "welcomeMessage": "You now have unlimited access to all features.",
+      "getStarted": "Get Started",
+      "purchaseFailedTitle": "Purchase Failed",
+      "purchaseFailedMessage": "Unable to complete purchase. Please try again.",
+      "genericError": "Something went wrong. Please try again.",
+      "restoreSuccess": "Your purchases have been restored.",
+      "noPurchasesTitle": "No Purchases Found",
+      "noPurchasesMessage": "We couldn't find any previous purchases to restore.",
+      "restoreError": "Failed to restore purchases. Please try again."
+    }
   },
   "diagnostic": {
     "title": "System Diagnostics",

@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { X, Crown, Infinity, Shield, Sparkles, Check } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import tw from '../lib/tailwind';
 import { RootStackParamList } from '../../App';
 import { useSubscription } from '@/context/SubscriptionContext';
@@ -31,6 +32,7 @@ interface PaywallScreenProps {
 const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
   const navigation = useNavigation<NavigationProp>();
   const { refreshSubscription } = useSubscription();
+  const { t } = useTranslation();
 
   const [loading, setLoading] = useState(false);
   const [loadingOfferings, setLoadingOfferings] = useState(true);
@@ -41,26 +43,26 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
   const sharedFeatures: Feature[] = [
     {
       icon: Infinity,
-      title: 'Unlimited Habits',
-      description: 'Track as many habits as you need',
+      title: t('paywall.features.unlimitedHabits.title'),
+      description: t('paywall.features.unlimitedHabits.description'),
     },
     {
       icon: Shield,
-      title: 'Unlimited Holiday Mode',
-      description: 'Pause habits without losing progress',
+      title: t('paywall.features.unlimitedHoliday.title'),
+      description: t('paywall.features.unlimitedHoliday.description'),
     },
   ];
 
   const monthlyExtraFeature: Feature = {
     icon: Sparkles,
-    title: '3 Streak Savers/Month',
-    description: 'Restore missed days automatically',
+    title: t('paywall.features.monthlyStreakSavers.title'),
+    description: t('paywall.features.monthlyStreakSavers.description'),
   };
 
   const yearlyExtraFeature: Feature = {
     icon: Crown,
-    title: '50 Streak Savers',
-    description: 'Added to your inventory instantly',
+    title: t('paywall.features.yearlyStreakSavers.title'),
+    description: t('paywall.features.yearlyStreakSavers.description'),
   };
 
   // Load offerings
@@ -74,7 +76,7 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
       const { subscriptions } = await RevenueCatService.getAllOfferings();
 
       if (!subscriptions || subscriptions.length === 0) {
-        Alert.alert('Error', 'No subscription plans available. Please try again later.');
+        Alert.alert(t('common.error'), t('paywall.alerts.noPlans'));
         return;
       }
 
@@ -83,7 +85,7 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
       setSelectedPackage(yearlyPlan || subscriptions[0]);
     } catch (error) {
       Logger.error('❌ [Paywall] Failed to load offerings');
-      Alert.alert('Error', 'Failed to load subscription options. Please try again.');
+      Alert.alert(t('common.error'), t('paywall.error'));
     } finally {
       setLoadingOfferings(false);
     }
@@ -91,7 +93,7 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
 
   const handleSubscribe = async () => {
     if (!selectedPackage) {
-      Alert.alert('Error', 'Please select a subscription plan');
+      Alert.alert(t('common.error'), t('paywall.alerts.selectPlan'));
       return;
     }
 
@@ -102,18 +104,18 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
 
       if (result.success) {
         await refreshSubscription();
-        Alert.alert('Welcome to Premium', 'You now have unlimited access to all features.', [
+        Alert.alert(t('paywall.alerts.welcomeTitle'), t('paywall.alerts.welcomeMessage'), [
           {
-            text: 'Get Started',
+            text: t('paywall.alerts.getStarted'),
             onPress: () => navigation.goBack(),
           },
         ]);
       } else if (result.error !== 'cancelled') {
-        Alert.alert('Purchase Failed', result.error || 'Unable to complete purchase. Please try again.');
+        Alert.alert(t('paywall.alerts.purchaseFailedTitle'), result.error || t('paywall.alerts.purchaseFailedMessage'));
       }
     } catch (error) {
       Logger.error('❌ [Paywall] Purchase error');
-      Alert.alert('Error', 'Something went wrong. Please try again.');
+      Alert.alert(t('common.error'), t('paywall.alerts.genericError'));
     } finally {
       setLoading(false);
     }
@@ -125,9 +127,9 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
       const result = await RevenueCatService.restorePurchases();
 
       if (result.success) {
-        Alert.alert('Success', 'Your purchases have been restored.', [
+        Alert.alert(t('common.success'), t('paywall.alerts.restoreSuccess'), [
           {
-            text: 'Continue',
+            text: t('common.continue'),
             onPress: async () => {
               await refreshSubscription();
               navigation.goBack();
@@ -135,11 +137,11 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
           },
         ]);
       } else {
-        Alert.alert('No Purchases Found', "We couldn't find any previous purchases to restore.");
+        Alert.alert(t('paywall.alerts.noPurchasesTitle'), t('paywall.alerts.noPurchasesMessage'));
       }
     } catch (error) {
       Logger.error('❌ [Paywall] Restore error');
-      Alert.alert('Error', 'Failed to restore purchases. Please try again.');
+      Alert.alert(t('common.error'), t('paywall.alerts.restoreError'));
     } finally {
       setLoading(false);
     }
@@ -152,7 +154,7 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
         <View style={[StyleSheet.absoluteFill, tw`bg-black/40`]} />
         <View style={tw`flex-1 items-center justify-center`}>
           <ActivityIndicator size="large" color="#ffffff" />
-          <Text style={tw`mt-4 text-white font-medium`}>Loading plans...</Text>
+          <Text style={tw`mt-4 text-white font-medium`}>{t('paywall.loadingPlans')}</Text>
         </View>
       </ImageBackground>
     );
@@ -184,8 +186,8 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
               <Crown size={40} color="#fbbf24" strokeWidth={1.5} />
             </View>
 
-            <Text style={tw`text-4xl font-bold text-white text-center mb-3`}>Upgrade to Premium</Text>
-            <Text style={tw`text-base text-white/80 text-center leading-6 px-2`}>Unlock unlimited potential and{'\n'}achieve more every day</Text>
+            <Text style={tw`text-4xl font-bold text-white text-center mb-3`}>{t('paywall.title')}</Text>
+            <Text style={tw`text-base text-white/80 text-center leading-6 px-2`}>{t('paywall.subtitle')}</Text>
           </Animated.View>
 
           {/* Plan Selection */}
@@ -208,10 +210,10 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
                     >
                       <View style={tw`flex-row items-center justify-between mb-3`}>
                         <View style={tw`flex-row items-center flex-1`}>
-                          <Text style={tw`text-lg font-bold text-white`}>{isYearly ? 'Yearly' : 'Monthly'}</Text>
+                          <Text style={tw`text-lg font-bold text-white`}>{isYearly ? t('paywall.plans.yearly') : t('paywall.plans.monthly')}</Text>
                           {isYearly && savingsPercentage > 0 && (
                             <View style={tw`ml-3 px-2.5 py-1 rounded-full bg-emerald-500/30`}>
-                              <Text style={tw`text-xs font-bold text-emerald-300`}>Save {savingsPercentage}%</Text>
+                              <Text style={tw`text-xs font-bold text-emerald-300`}>{t('paywall.plans.savePercent', { percent: savingsPercentage })}</Text>
                             </View>
                           )}
                         </View>
@@ -223,16 +225,16 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
 
                       <View style={tw`flex-row items-baseline mb-1`}>
                         <Text style={tw`text-3xl font-bold text-white`}>{pkg.product.priceString}</Text>
-                        <Text style={tw`text-sm text-white/70 ml-2`}>/ {isYearly ? 'year' : 'month'}</Text>
+                        <Text style={tw`text-sm text-white/70 ml-2`}>/ {isYearly ? t('paywall.plans.year') : t('paywall.plans.month')}</Text>
                       </View>
 
-                      {isYearly && <Text style={tw`text-sm text-white/60`}>${monthlyPrice.toFixed(2)} per month</Text>}
+                      {isYearly && <Text style={tw`text-sm text-white/60`}>{t('paywall.plans.perMonth', { price: monthlyPrice.toFixed(2) })}</Text>}
 
                       {isYearly && (
                         <View style={tw`mt-3 pt-3 border-t border-white/20`}>
                           <View style={tw`flex-row items-center`}>
                             <Crown size={14} color="#fbbf24" strokeWidth={2} style={tw`mr-2`} />
-                            <Text style={tw`text-xs font-medium text-white/90`}>Includes 50 Streak Savers bonus</Text>
+                            <Text style={tw`text-xs font-medium text-white/90`}>{t('paywall.plans.includesBonus')}</Text>
                           </View>
                         </View>
                       )}
@@ -245,7 +247,7 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
 
           {/* Features List */}
           <Animated.View entering={FadeInDown.delay(300)} style={tw`mb-8`}>
-            <Text style={tw`text-sm font-bold text-white/90 mb-4 tracking-wide`}>INCLUDED IN {isYearlySelected ? 'YEARLY' : 'MONTHLY'}</Text>
+            <Text style={tw`text-sm font-bold text-white/90 mb-4 tracking-wide`}>{t('paywall.includedIn', { plan: isYearlySelected ? t('paywall.plans.yearly').toUpperCase() : t('paywall.plans.monthly').toUpperCase() })}</Text>
 
             <View style={tw`gap-3`}>
               {displayFeatures.map((feature, index) => {
@@ -275,19 +277,19 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
               disabled={loading || !selectedPackage}
               style={({ pressed }) => [tw`rounded-2xl py-5 items-center justify-center mb-4 ${loading || !selectedPackage ? 'bg-white/20' : 'bg-white'}`, pressed && tw`opacity-80`]}
             >
-              {loading ? <ActivityIndicator color="#7c3aed" /> : <Text style={tw`text-purple-600 text-lg font-bold`}>Start Premium</Text>}
+              {loading ? <ActivityIndicator color="#7c3aed" /> : <Text style={tw`text-purple-600 text-lg font-bold`}>{t('paywall.cta')}</Text>}
             </Pressable>
           </Animated.View>
 
           {/* Trust Indicators */}
           <Animated.View entering={FadeInUp.delay(500)} style={tw`items-center mb-4`}>
-            <Text style={tw`text-xs text-white/50 text-center leading-5`}>Cancel anytime • Secure payment</Text>
+            <Text style={tw`text-xs text-white/50 text-center leading-5`}>{t('paywall.terms')}</Text>
           </Animated.View>
 
           {/* Restore Link */}
           <Animated.View entering={FadeInUp.delay(600)} style={tw`items-center mb-4`}>
             <Pressable onPress={handleRestore} disabled={loading}>
-              <Text style={tw`text-sm text-white/80 font-medium underline`}>Restore Purchases</Text>
+              <Text style={tw`text-sm text-white/80 font-medium underline`}>{t('paywall.restore')}</Text>
             </Pressable>
           </Animated.View>
         </ScrollView>

@@ -334,7 +334,7 @@
 
   "paywall": {
     "title": "Passer à Premium",
-    "subtitle": "Débloquez votre plein potentiel",
+    "subtitle": "Débloquez votre plein potentiel et\naccomplissez plus chaque jour",
     "features": {
       "unlimitedHabits": {
         "title": "Habitudes illimitées",
@@ -356,14 +356,34 @@
     "plans": {
       "monthly": "Mensuel",
       "yearly": "Annuel",
+      "month": "mois",
+      "year": "an",
       "mostPopular": "Le plus populaire",
-      "savePercent": "Économisez {{percent}}%"
+      "savePercent": "Économisez {{percent}}%",
+      "perMonth": "{{price}}€ par mois",
+      "includesBonus": "Inclut 50 Sauvegardes de série bonus"
     },
+    "includedIn": "INCLUS DANS {{plan}}",
+    "loadingPlans": "Chargement des offres...",
     "cta": "Commencer Premium",
     "restore": "Restaurer les achats",
     "terms": "Annulez à tout moment • Paiement sécurisé",
     "loading": "Chargement...",
-    "error": "Échec du chargement des options d'abonnement"
+    "error": "Échec du chargement des options d'abonnement",
+    "alerts": {
+      "noPlans": "Aucun abonnement disponible. Veuillez réessayer plus tard.",
+      "selectPlan": "Veuillez sélectionner un abonnement",
+      "welcomeTitle": "Bienvenue dans Premium",
+      "welcomeMessage": "Vous avez maintenant un accès illimité à toutes les fonctionnalités.",
+      "getStarted": "Commencer",
+      "purchaseFailedTitle": "Achat échoué",
+      "purchaseFailedMessage": "Impossible de finaliser l'achat. Veuillez réessayer.",
+      "genericError": "Une erreur s'est produite. Veuillez réessayer.",
+      "restoreSuccess": "Vos achats ont été restaurés.",
+      "noPurchasesTitle": "Aucun achat trouvé",
+      "noPurchasesMessage": "Nous n'avons trouvé aucun achat précédent à restaurer.",
+      "restoreError": "Échec de la restauration des achats. Veuillez réessayer."
+    }
   },
 
   "holidayMode": {
