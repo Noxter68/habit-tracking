@@ -1,11 +1,10 @@
 // screens/GroupDashboardScreen.tsx
 // Dashboard avec i18n
 
-import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, ImageBackground, Animated, Image } from 'react-native';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, ImageBackground, Animated, Image, StatusBar } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { StatusBar } from 'expo-status-bar';
-import { useNavigation, useRoute, RouteProp as RNRouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp as RNRouteProp, useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ArrowLeft, Plus, Settings, UserRoundPlus, Flame, Trophy, Star } from 'lucide-react-native';
@@ -231,6 +230,12 @@ export default function GroupDashboardScreen() {
     loadGroupData();
   }, [groupId, user?.id]);
 
+  useFocusEffect(
+    useCallback(() => {
+      StatusBar.setBarStyle('light-content');
+    }, [])
+  );
+
   const onRefresh = () => {
     setRefreshing(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -342,7 +347,7 @@ export default function GroupDashboardScreen() {
 
   return (
     <View style={tw`flex-1 bg-[#FAFAFA] mb-10`}>
-      <StatusBar style="light" />
+      <StatusBar barStyle="light-content" />
       <LinearGradient
         colors={headerGradient}
         start={{ x: 0, y: 0 }}

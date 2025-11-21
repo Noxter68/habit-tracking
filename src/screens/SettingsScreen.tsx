@@ -17,21 +17,7 @@
  */
 
 import React, { JSX, useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Switch,
-  SafeAreaView,
-  StatusBar,
-  ActivityIndicator,
-  Linking,
-  Alert,
-  Pressable,
-  Image,
-  ImageBackground
-} from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Switch, SafeAreaView, StatusBar, ActivityIndicator, Linking, Alert, Pressable, Image, ImageBackground } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import * as Notifications from 'expo-notifications';
@@ -243,11 +229,7 @@ const ProfileHeader: React.FC = () => {
     if (!user?.id) return;
 
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('id', user.id)
-        .single();
+      const { data, error } = await supabase.from('profiles').select('username').eq('id', user.id).single();
 
       if (!error && data) {
         setCurrentUsername(data.username || getDisplayName());
@@ -336,13 +318,7 @@ const ProfileHeader: React.FC = () => {
       </Animated.View>
 
       {/* Modal d'édition du nom */}
-      <EditUsernameModal
-        visible={showEditModal}
-        currentUsername={currentUsername}
-        userId={user?.id || ''}
-        onClose={() => setShowEditModal(false)}
-        onSuccess={handleUsernameUpdate}
-      />
+      <EditUsernameModal visible={showEditModal} currentUsername={currentUsername} userId={user?.id || ''} onClose={() => setShowEditModal(false)} onSuccess={handleUsernameUpdate} />
     </>
   );
 };
@@ -385,14 +361,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({ title, children, dela
 /**
  * Élément individuel dans une section de paramètres
  */
-const SettingsItem: React.FC<SettingsItemProps> = ({
-  icon,
-  title,
-  subtitle,
-  trailing,
-  onPress,
-  isLast = false
-}) => {
+const SettingsItem: React.FC<SettingsItemProps> = ({ icon, title, subtitle, trailing, onPress, isLast = false }) => {
   const content = (
     <View style={[tw`flex-row items-center py-4 px-4`, !isLast && tw`border-b border-zinc-100`]}>
       {/* Icône */}
@@ -454,10 +423,7 @@ const SettingsScreen: React.FC = () => {
     if (!user) return;
 
     try {
-      const [holiday, stats] = await Promise.all([
-        HolidayModeService.getActiveHoliday(user.id),
-        HolidayModeService.getHolidayStats(user.id)
-      ]);
+      const [holiday, stats] = await Promise.all([HolidayModeService.getActiveHoliday(user.id), HolidayModeService.getHolidayStats(user.id)]);
       setActiveHoliday(holiday);
       setHolidayStats(stats);
     } catch (error) {
@@ -475,6 +441,7 @@ const SettingsScreen: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
+      StatusBar.setBarStyle('dark-content');
       loadHolidayStatus();
     }, [loadHolidayStatus])
   );
@@ -642,7 +609,7 @@ const SettingsScreen: React.FC = () => {
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`pb-24`}>
           {/* En-tête avec icône de l'app */}
-          <Animated.View entering={FadeInDown.duration(600).springify()} style={tw`px-6 pt-15 pb-8`}>
+          <Animated.View entering={FadeInDown.duration(600).springify()} style={tw`px-6 pt-8 pb-8`}>
             <View style={tw`items-center`}>
               <View style={tw`mb-4`}>
                 <Image source={APP_ICON} style={{ width: 120, height: 120, borderRadius: 20 }} resizeMode="contain" />
@@ -779,39 +746,21 @@ const SettingsScreen: React.FC = () => {
             {/* Section Debug Tools (tests) */}
             {Config.debug.showDebugScreen && (
               <SettingsSection title="Debug Tools" delay={500}>
-                <SettingsItem
-                  icon="bug"
-                  title="Test Level Up"
-                  subtitle="Celebration simple (5s)"
-                  onPress={() => triggerLevelUp(30, 14)}
-                />
-                <SettingsItem
-                  icon="sparkles"
-                  title="Test Tier Up"
-                  subtitle="Celebration epique (8s)"
-                  onPress={() => triggerTierUp(50, 9)}
-                  isLast
-                />
+                <SettingsItem icon="bug" title="Test Level Up" subtitle="Celebration simple (5s)" onPress={() => triggerLevelUp(30, 14)} />
+                <SettingsItem icon="sparkles" title="Test Tier Up" subtitle="Celebration epique (8s)" onPress={() => triggerTierUp(50, 9)} isLast />
               </SettingsSection>
             )}
 
             {/* Section Support */}
             <SettingsSection title={t('settings.support')} delay={400}>
-              <SettingsItem
-                icon="information-circle-outline"
-                title={t('settings.version')}
-                subtitle={Constants.expoConfig?.version || '1.0.0'}
-              />
+              <SettingsItem icon="information-circle-outline" title={t('settings.version')} subtitle={Constants.expoConfig?.version || '1.0.0'} />
             </SettingsSection>
 
             {/* Bouton Revoir le tutoriel */}
             <View style={tw`mt-6`}>
               <Text style={tw`text-sm font-bold text-zinc-500 uppercase tracking-wider mb-3 px-1`}>{t('settings.help')}</Text>
 
-              <Pressable
-                onPress={handleReviewOnboarding}
-                style={tw`bg-white/90 rounded-2xl px-4 py-4 flex-row items-center justify-between shadow-md`}
-              >
+              <Pressable onPress={handleReviewOnboarding} style={tw`bg-white/90 rounded-2xl px-4 py-4 flex-row items-center justify-between shadow-md`}>
                 <View style={tw`flex-row items-center gap-3`}>
                   <View style={tw`w-10 h-10 rounded-xl bg-zinc-100 items-center justify-center`}>
                     <GraduationCap size={20} color="#52525B" strokeWidth={2.5} />
@@ -829,12 +778,7 @@ const SettingsScreen: React.FC = () => {
             {/* Bouton de déconnexion */}
             <Animated.View entering={FadeInDown.delay(500).duration(600).springify()} style={tw`mt-8 mb-6`}>
               <TouchableOpacity activeOpacity={0.8} disabled={signingOut} onPress={handleSignOut}>
-                <LinearGradient
-                  colors={['#DC2626', '#B91C1C']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={[tw`rounded-2xl p-4.5 shadow-lg`, { opacity: signingOut ? 0.6 : 1 }]}
-                >
+                <LinearGradient colors={['#DC2626', '#B91C1C']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[tw`rounded-2xl p-4.5 shadow-lg`, { opacity: signingOut ? 0.6 : 1 }]}>
                   <View style={tw`flex-row items-center justify-center`}>
                     {signingOut ? (
                       <ActivityIndicator color="#FFFFFF" size="small" />

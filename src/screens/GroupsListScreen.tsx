@@ -35,6 +35,7 @@ const GroupCard = ({ group, onPress, t }: { group: GroupWithMembers; onPress: ()
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.96}>
+      <StatusBar barStyle="light-content" />
       <LinearGradient
         colors={tierTheme.gradient}
         start={{ x: 0, y: 0 }}
@@ -267,6 +268,7 @@ export default function GroupsListScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      StatusBar.setBarStyle('light-content');
       loadGroups(true);
     }, [user?.id])
   );

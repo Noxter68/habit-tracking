@@ -194,6 +194,7 @@ const CalendarScreen: React.FC = () => {
   // Rafraîchit les vacances et scroll en haut quand l'écran reprend le focus
   useFocusEffect(
     useCallback(() => {
+      StatusBar.setBarStyle('dark-content');
       Logger.debug('Screen focused - reloading holidays and scrolling to top');
       loadHoliday();
       // Force scroll to top on focus

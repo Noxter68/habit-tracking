@@ -379,6 +379,7 @@ const Dashboard: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
+      StatusBar.setBarStyle('dark-content');
       let isMounted = true;
 
       const loadData = async () => {
