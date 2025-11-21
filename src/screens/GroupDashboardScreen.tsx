@@ -1,14 +1,14 @@
 // screens/GroupDashboardScreen.tsx
 // Dashboard avec i18n
 
-import React, { useCallback, useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, ImageBackground, Animated, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation, useRoute, RouteProp as RNRouteProp } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ArrowLeft, Plus, Settings, UserRoundPlus, Flame, Trophy } from 'lucide-react-native';
+import { ArrowLeft, Plus, Settings, UserRoundPlus, Flame, Trophy, Star } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { groupService } from '@/services/groupTypeService';
@@ -45,8 +45,13 @@ export default function GroupDashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showStreakSaverShop, setShowStreakSaverShop] = useState(false);
+  const [weeklyBonusStatus, setWeeklyBonusStatus] = useState<{ bonusOnTrack: boolean; weekComplete: boolean }>({
+    bonusOnTrack: false,
+    weekComplete: false,
+  });
 
   const xpProgress = useRef(new Animated.Value(0)).current;
+  const bonusPulseAnim = useRef(new Animated.Value(1)).current;
   const isInitialLoad = useRef(true);
   const currentLevelRef = useRef<number | null>(null);
 
@@ -68,6 +73,28 @@ export default function GroupDashboardScreen() {
       currentLevelRef.current = group.level;
     }
   }, [group]);
+
+  // Animation de respiration pour le badge bonus
+  useEffect(() => {
+    if (weeklyBonusStatus.bonusOnTrack) {
+      const pulse = Animated.loop(
+        Animated.sequence([
+          Animated.timing(bonusPulseAnim, {
+            toValue: 1.05,
+            duration: 1500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(bonusPulseAnim, {
+            toValue: 1,
+            duration: 1500,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      pulse.start();
+      return () => pulse.stop();
+    }
+  }, [weeklyBonusStatus.bonusOnTrack]);
 
   const loadGroupData = async (silent = false) => {
     if (!user?.id) return;
@@ -114,6 +141,10 @@ export default function GroupDashboardScreen() {
 
       const habitsData = await groupService.getGroupHabits(groupId);
       setHabits(habitsData);
+
+      // Charger le statut du bonus hebdomadaire
+      const bonusStatus = await groupService.getGroupWeeklyBonusStatus(groupId);
+      setWeeklyBonusStatus(bonusStatus);
     } catch (error) {
       Logger.error('[GroupDashboard] Error loading group:', error);
       if (!silent) {
@@ -500,6 +531,38 @@ export default function GroupDashboardScreen() {
                       {formatStreak(group.current_streak)}
                     </Text>
                   </View>
+
+                  {/* Badge bonus +200 XP si tous les jours passés sont complétés */}
+                  {weeklyBonusStatus.bonusOnTrack && (
+                    <Animated.View
+                      style={[
+                        tw`px-2.5 py-1 rounded-full flex-row items-center gap-1`,
+                        {
+                          backgroundColor: weeklyBonusStatus.weekComplete ? '#fbbf24' : '#fef3c7',
+                          borderWidth: 1.5,
+                          borderColor: weeklyBonusStatus.weekComplete ? '#f59e0b' : '#fcd34d',
+                          transform: [{ scale: bonusPulseAnim }],
+                          shadowColor: '#fbbf24',
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.3,
+                          shadowRadius: 4,
+                          elevation: 4,
+                        },
+                      ]}
+                    >
+                      <Star size={12} color={weeklyBonusStatus.weekComplete ? '#FFFFFF' : '#f59e0b'} fill={weeklyBonusStatus.weekComplete ? '#FFFFFF' : '#f59e0b'} />
+                      <Text
+                        style={[
+                          tw`text-xs font-bold`,
+                          {
+                            color: weeklyBonusStatus.weekComplete ? '#FFFFFF' : '#b45309',
+                          },
+                        ]}
+                      >
+                        +200 XP
+                      </Text>
+                    </Animated.View>
+                  )}
                 </View>
               </View>
             </View>

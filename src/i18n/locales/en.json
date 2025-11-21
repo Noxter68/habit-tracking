@@ -2186,7 +2186,15 @@
       },
       "weekly": {
         "title": "Weekly Bonus",
-        "description": "Achieve 100% completion every day for a full week, and earn a massive +200 XP bonus on Saturday midnight. Perfect teamwork deserves perfect rewards!"
+        "description": "Achieve 100% completion every day for a full week (Monday to Sunday), and earn a massive +200 XP bonus on Sunday midnight. Perfect teamwork deserves perfect rewards!"
+      },
+      "invite": {
+        "title": "Invite Members",
+        "description": "Share your group's invitation code to invite new members. Tap the code to automatically copy it to your clipboard, then send it to your friends!"
+      },
+      "limits": {
+        "title": "Group Limits",
+        "description": "With the free version, you can join up to 2 groups. Upgrade to Premium to join up to 5 groups and unlock exclusive features!"
       },
       "tip": "Remember: consistency and teamwork are key. Even on tough days, your group is there to keep you motivated!",
       "close": "Got it!"

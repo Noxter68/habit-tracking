@@ -694,7 +694,16 @@ class GroupService {
     monday.setUTCDate(today.getUTCDate() - daysFromMonday);
     monday.setUTCHours(0, 0, 0, 0);
 
-    const completions = await this.getHabitCompletions(habitId, 7);
+    // Récupérer 14 jours pour inclure le dimanche précédent (bonus week: Dim précédent -> Sam)
+    const completions = await this.getHabitCompletions(habitId, 14);
+
+    // Récupérer la fréquence de l'habitude
+    const { data: habitData } = await supabase
+      .from('group_habits')
+      .select('frequency')
+      .eq('id', habitId)
+      .single();
+    const habitFrequency = habitData?.frequency || 'daily';
 
     const { data: members } = await supabase.rpc('get_group_members', {
       group_uuid: groupId,
@@ -702,14 +711,97 @@ class GroupService {
 
     const groupMembers = members || [];
     const timeline: TimelineDay[] = [];
+    // Affichage classique: Lu, Ma, Me, Je, Ve, Sa, Di
     const dayNames = ['Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di'];
     const todayStr = today.toISOString().split('T')[0];
 
+    // Les dates de la semaine (Lun à Dim)
+    const weekDates: string[] = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setUTCDate(monday.getUTCDate() + i);
+      weekDates.push(d.toISOString().split('T')[0]);
+    }
+
+    // Vérifier si tous les jours PASSÉS (jusqu'à aujourd'hui) sont complétés par tous les membres
+    // Le badge s'affiche pour motiver à continuer tant que la série est intacte
+    const checkAllPastDaysComplete = (): boolean => {
+      if (groupMembers.length === 0) return false;
+
+      // Pour les habitudes WEEKLY: chaque membre doit avoir complété au moins une fois cette semaine
+      if (habitFrequency === 'weekly') {
+        for (const member of groupMembers) {
+          const hasCompletedThisWeek = completions.some(
+            (c) => c.user_id === member.user_id && weekDates.includes(c.date)
+          );
+          if (!hasCompletedThisWeek) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      // Pour les habitudes DAILY: chaque membre doit avoir complété chaque jour passé
+      const pastDates = weekDates.filter(dateStr => dateStr <= todayStr);
+
+      // Si aucun jour passé (on est avant lundi), pas de badge
+      if (pastDates.length === 0) return false;
+
+      // Vérifier que chaque membre a complété chaque jour passé
+      for (const member of groupMembers) {
+        for (const dateStr of pastDates) {
+          const hasCompleted = completions.some(
+            (c) => c.user_id === member.user_id && c.date === dateStr
+          );
+          if (!hasCompleted) {
+            return false;
+          }
+        }
+      }
+      return true;
+    };
+
+    // Vérifier si la semaine COMPLÈTE est terminée (pour le bonus final de 200 XP)
+    const checkFullWeekComplete = (): boolean => {
+      if (groupMembers.length === 0) return false;
+
+      // Pour les habitudes WEEKLY: chaque membre doit avoir complété au moins une fois cette semaine
+      if (habitFrequency === 'weekly') {
+        for (const member of groupMembers) {
+          const hasCompletedThisWeek = completions.some(
+            (c) => c.user_id === member.user_id && weekDates.includes(c.date)
+          );
+          if (!hasCompletedThisWeek) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      // Pour les habitudes DAILY: chaque membre doit avoir complété chaque jour de la semaine
+      for (const member of groupMembers) {
+        for (const dateStr of weekDates) {
+          const hasCompleted = completions.some(
+            (c) => c.user_id === member.user_id && c.date === dateStr
+          );
+          if (!hasCompleted) {
+            return false;
+          }
+        }
+      }
+      return true;
+    };
+
+    const allPastDaysComplete = checkAllPastDaysComplete();
+    const isFullWeekComplete = checkFullWeekComplete();
+
+    // Timeline de 7 jours: Lun, Mar, Mer, Jeu, Ven, Sam, Dim (affichage classique)
     for (let i = 0; i < 7; i++) {
       const date = new Date(monday);
       date.setUTCDate(monday.getUTCDate() + i);
       const dateStr = date.toISOString().split('T')[0];
       const dayName = dayNames[i];
+      const isSunday = i === 6; // Dimanche est à l'index 6
 
       const dayCompletions = completions.filter((c) => c.date === dateStr);
 
@@ -729,8 +821,13 @@ class GroupService {
         date: dateStr,
         day_name: dayName,
         completions: timelineCompletions,
-        all_completed: timelineCompletions.every((c) => c.completed),
+        all_completed: timelineCompletions.every((c: { completed: boolean }) => c.completed),
         is_today: dateStr === todayStr,
+        // Marquer le dimanche avec les infos de bonus
+        ...(isSunday && {
+          week_completed: isFullWeekComplete,  // Semaine 100% complète (bonus final)
+          bonus_on_track: allPastDaysComplete, // Tous les jours passés OK (motivation)
+        }),
       });
     }
 
@@ -787,6 +884,51 @@ class GroupService {
 
     if (error) throw error;
     return data as CanAddHabitResponse;
+  }
+
+  /**
+   * Vérifier si le bonus hebdomadaire du groupe est en bonne voie
+   * Le bonus est attribué si TOUTES les habitudes du groupe ont tous les jours passés complétés
+   *
+   * @param groupId - L'identifiant du groupe
+   * @returns { bonusOnTrack, weekComplete } - État du bonus hebdomadaire
+   */
+  async getGroupWeeklyBonusStatus(groupId: string): Promise<{
+    bonusOnTrack: boolean;
+    weekComplete: boolean;
+  }> {
+    // Récupérer toutes les habitudes du groupe
+    const habits = await this.getGroupHabits(groupId);
+
+    if (habits.length === 0) {
+      return { bonusOnTrack: false, weekComplete: false };
+    }
+
+    // Pour chaque habitude, récupérer sa timeline et vérifier le statut du bonus
+    let allBonusOnTrack = true;
+    let allWeekComplete = true;
+
+    for (const habit of habits) {
+      const timeline = await this.getHabitTimeline(habit.id, groupId, 7);
+      const sundayData = timeline.find((day) => new Date(day.date).getUTCDay() === 0);
+
+      if (!sundayData?.bonus_on_track) {
+        allBonusOnTrack = false;
+      }
+      if (!sundayData?.week_completed) {
+        allWeekComplete = false;
+      }
+
+      // Si déjà faux pour les deux, pas besoin de continuer
+      if (!allBonusOnTrack && !allWeekComplete) {
+        break;
+      }
+    }
+
+    return {
+      bonusOnTrack: allBonusOnTrack,
+      weekComplete: allWeekComplete,
+    };
   }
 }
 

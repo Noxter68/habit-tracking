@@ -291,7 +291,8 @@ export interface TimelineDay {
   completions: TimelineCompletion[];
   all_completed: boolean;
   is_today: boolean;
-  week_completed?: boolean; // Pour les habitudes weekly
+  week_completed?: boolean; // Semaine 100% complète (bonus final de 200 XP)
+  bonus_on_track?: boolean; // Tous les jours passés sont OK (pour motiver)
 }
 
 export interface TimelineCompletion {

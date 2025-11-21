@@ -99,31 +99,31 @@ export function GroupHabitTimeline({ timeline, accentColor = '#10b981', frequenc
   const renderCircle = (day: TimelineDay) => {
     const status = getCompletionStatus(day);
     const isToday = day.is_today;
-    const isSaturday = new Date(day.date).getUTCDay() === 6;
+    const isSunday = new Date(day.date).getUTCDay() === 0;
 
-    // CAS SPÉCIAL SAMEDI : TOUJOURS étoile Topaz
-    if (isSaturday) {
+    // CAS SPÉCIAL DIMANCHE : TOUJOURS étoile dorée vibrante (jour du bonus hebdo)
+    if (isSunday) {
       // Si complété à 100%
       if (status === 'all') {
         return (
           <LinearGradient
-            colors={['#f59e0b', '#d97706']}
+            colors={['#fbbf24', '#f59e0b']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[
               tw`w-8 h-8 rounded-full items-center justify-center`,
               {
-                shadowColor: '#f59e0b',
+                shadowColor: '#fbbf24',
                 shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.5,
-                shadowRadius: 8,
-                elevation: 6,
+                shadowOpacity: 0.6,
+                shadowRadius: 10,
+                elevation: 8,
               },
             ]}
           >
             <Check size={16} color="#FFFFFF" strokeWidth={3} />
             <View style={tw`absolute items-center justify-center`}>
-              <Star size={16} color="#facc15" fill="#facc15" strokeWidth={0} />
+              <Star size={16} color="#fef08a" fill="#fef08a" strokeWidth={0} />
             </View>
           </LinearGradient>
         );
@@ -133,55 +133,55 @@ export function GroupHabitTimeline({ timeline, accentColor = '#10b981', frequenc
       if (status === 'partial') {
         return (
           <LinearGradient
-            colors={['#f59e0b', '#d97706']}
+            colors={['#fbbf24', '#f59e0b']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[
               tw`w-8 h-8 rounded-full items-center justify-center`,
               {
-                shadowColor: '#f59e0b',
+                shadowColor: '#fbbf24',
                 shadowOffset: { width: 0, height: 3 },
-                shadowOpacity: 0.3,
-                shadowRadius: 6,
-                elevation: 4,
+                shadowOpacity: 0.4,
+                shadowRadius: 8,
+                elevation: 6,
               },
             ]}
           >
-            <Star size={18} color="#facc15" fill="#facc15" strokeWidth={0} />
+            <Star size={18} color="#fef08a" fill="#fef08a" strokeWidth={0} />
           </LinearGradient>
         );
       }
 
-      // Si user_done (weekly complété) ou none - étoile normale
+      // Si user_done (weekly complété) ou none - étoile dorée vibrante
       return (
         <LinearGradient
-          colors={['#f59e0b', '#d97706']}
+          colors={['#fcd34d', '#fbbf24']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[
             tw`w-8 h-8 rounded-full items-center justify-center`,
             {
-              shadowColor: '#f59e0b',
+              shadowColor: '#fbbf24',
               shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.3,
-              shadowRadius: 4,
-              elevation: 3,
+              shadowOpacity: 0.4,
+              shadowRadius: 6,
+              elevation: 4,
             },
             isToday && {
-              shadowColor: '#f59e0b',
-              shadowOffset: { width: 0, height: 3 },
-              shadowOpacity: 0.5,
-              shadowRadius: 6,
-              elevation: 5,
+              shadowColor: '#fbbf24',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.6,
+              shadowRadius: 10,
+              elevation: 8,
             },
           ]}
         >
-          <Star size={18} color="#fde047" fill="#fde047" strokeWidth={0} />
+          <Star size={18} color="#fefce8" fill="#fefce8" strokeWidth={0} />
         </LinearGradient>
       );
     }
 
-    // Pouce blanc sur fond bleu pour weekly quand l'utilisateur a déjà complété (sauf samedi)
+    // Pouce blanc sur fond bleu pour weekly quand l'utilisateur a déjà complété (sauf dimanche)
     if (status === 'user_done') {
       return (
         <View
@@ -305,6 +305,7 @@ export function GroupHabitTimeline({ timeline, accentColor = '#10b981', frequenc
 
   return (
     <View style={tw`bg-stone-50/60 rounded-2xl p-3 mt-2`}>
+
       {todayData && (
         <View style={tw`flex-row items-center justify-center gap-1.5 mb-2.5`}>
           <View style={[tw`rounded-full px-2 py-0.5`, { backgroundColor: accentColor + '15' }]}>

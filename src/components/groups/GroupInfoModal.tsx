@@ -1,7 +1,7 @@
 // components/groups/GroupInfoModal.tsx
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, ScrollView } from 'react-native';
-import { X, Users, Zap, Calendar, Shield, Trophy } from 'lucide-react-native';
+import { X, Users, Zap, Calendar, Shield, Trophy, Share2, Crown } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import tw from '@/lib/tailwind';
 
@@ -47,6 +47,18 @@ export default function GroupInfoModal({ visible, onClose, t }: GroupInfoModalPr
       color: '#EF4444',
       title: t('groups.info.weekly.title'),
       description: t('groups.info.weekly.description'),
+    },
+    {
+      icon: Share2,
+      color: '#06B6D4',
+      title: t('groups.info.invite.title'),
+      description: t('groups.info.invite.description'),
+    },
+    {
+      icon: Crown,
+      color: '#EC4899',
+      title: t('groups.info.limits.title'),
+      description: t('groups.info.limits.description'),
     },
   ];
 

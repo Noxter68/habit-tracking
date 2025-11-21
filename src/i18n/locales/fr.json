@@ -2157,7 +2157,15 @@
       },
       "weekly": {
         "title": "Bonus Hebdomadaire",
-        "description": "Atteignez 100% de complétion chaque jour pendant une semaine complète, et gagnez un énorme bonus de +200 XP le samedi à minuit. Un travail d'équipe parfait mérite des récompenses parfaites !"
+        "description": "Atteignez 100% de complétion chaque jour pendant une semaine complète (lundi à dimanche), et gagnez un énorme bonus de +200 XP le dimanche à minuit. Un travail d'équipe parfait mérite des récompenses parfaites !"
+      },
+      "invite": {
+        "title": "Inviter des Membres",
+        "description": "Partagez le code d'invitation de votre groupe pour inviter de nouveaux membres. Appuyez sur le code pour le copier automatiquement dans votre presse-papiers, puis envoyez-le à vos amis !"
+      },
+      "limits": {
+        "title": "Limites de Groupes",
+        "description": "En version gratuite, vous pouvez rejoindre jusqu'à 2 groupes. Passez à Premium pour rejoindre jusqu'à 5 groupes et débloquer des fonctionnalités exclusives !"
       },
       "tip": "Rappel : la constance et le travail d'équipe sont essentiels. Même lors des jours difficiles, votre groupe est là pour vous motiver !",
       "close": "Compris !"
