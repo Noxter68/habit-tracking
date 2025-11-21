@@ -1544,6 +1544,11 @@
       "partial": "Partial",
       "missed": "Missed",
       "holiday": "Holiday"
+    },
+    "frequency": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "custom": "Custom"
     }
   },
   "leaderboard": {

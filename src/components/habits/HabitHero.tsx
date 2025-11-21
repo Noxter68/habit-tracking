@@ -64,7 +64,7 @@ export const HabitHero: React.FC<HabitHeroProps> = ({ habitName, habitType, cate
             </View>
 
             <View style={tw`bg-white/25 rounded-xl px-2.5 py-1`}>
-              <Text style={tw`text-white text-xs font-bold`}>{category}</Text>
+              <Text style={tw`text-white text-xs font-bold`}>{category.charAt(0).toUpperCase() + category.slice(1)}</Text>
             </View>
 
             {tierMultiplier > 1 && (

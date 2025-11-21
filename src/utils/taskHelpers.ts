@@ -111,10 +111,12 @@ export const normalizeTasks = (
 };
 
 /**
- * Récupère les détails complets des tâches à partir de leurs IDs.
- * Utilisé quand les habitudes stockent des IDs et qu'on a besoin des détails complets.
+ * Récupère les détails complets des tâches à partir de leurs IDs ou objets.
+ * Gère les deux formats:
+ * - Ancien format: tableau de strings ["gym-workout", "push-ups"]
+ * - Nouveau format: tableau d'objets [{ id: "...", name: "..." }]
  *
- * @param taskIds - Tableau d'identifiants de tâches
+ * @param tasks - Tableau d'identifiants de tâches ou d'objets tâches
  * @param category - Catégorie de l'habitude
  * @param habitType - Type d'habitude ('good' ou 'bad')
  * @returns Tableau d'objets Task avec tous les détails
@@ -124,13 +126,49 @@ export const normalizeTasks = (
  * // Retourne les tâches avec noms, descriptions et durées
  */
 export const getTaskDetails = (
-  taskIds: string[],
+  tasks: (string | Task)[],
   category: string,
   habitType: 'good' | 'bad'
 ): Task[] => {
+  if (!tasks || !Array.isArray(tasks)) return [];
+
   const availableTasks = getTasksForCategory(category, habitType);
 
-  return taskIds.map((taskId) => {
+  return tasks.map((task, index) => {
+    // Si c'est déjà un objet Task valide, le retourner
+    if (typeof task === 'object' && task !== null) {
+      // Si l'objet a déjà id et name, c'est bon
+      if (task.id && task.name) {
+        return task as Task;
+      }
+      // Si l'objet a un id mais pas de name, chercher dans les tâches prédéfinies
+      if (task.id) {
+        const taskDetail = availableTasks.find((t) => t.id === task.id);
+        if (taskDetail) {
+          return { ...taskDetail, ...task };
+        }
+        // Fallback: générer un nom à partir de l'id
+        return {
+          id: task.id,
+          name: String(task.id)
+            .replace(/-/g, ' ')
+            .replace(/_/g, ' ')
+            .replace(/\b\w/g, (l) => l.toUpperCase()),
+          description: task.description,
+          duration: task.duration,
+        };
+      }
+      // Objet sans id valide
+      return {
+        id: `unknown-task-${index}`,
+        name: (task as any).name || (task as any).text || `Task ${index + 1}`,
+        description: (task as any).description,
+        duration: (task as any).duration,
+      };
+    }
+
+    // C'est une string (ancien format)
+    const taskId = String(task);
     const taskDetail = availableTasks.find((t) => t.id === taskId);
 
     if (taskDetail) {
@@ -141,6 +179,7 @@ export const getTaskDetails = (
     return {
       id: taskId,
       name: taskId
+        .replace(/-/g, ' ')
         .replace(/_/g, ' ')
         .replace(/\b\w/g, (l) => l.toUpperCase()),
       duration: undefined,

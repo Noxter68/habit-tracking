@@ -142,6 +142,7 @@ export const isPastDate = (date: Date): boolean => {
 /**
  * Retourne tous les jours d'un mois avec des emplacements vides pour la grille du calendrier.
  * Les emplacements vides représentent les jours avant le premier jour du mois.
+ * Les semaines commencent par lundi (0=Lundi, 6=Dimanche).
  *
  * @param date - Une date dans le mois souhaité
  * @returns Un tableau de dates (ou null pour les emplacements vides)
@@ -154,12 +155,23 @@ export const getDaysInMonth = (date: Date): (Date | null)[] => {
   const year = date.getFullYear();
   const month = date.getMonth();
 
+  const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
   const daysInMonth = lastDay.getDate();
 
   const days: (Date | null)[] = [];
 
-  // Ajouter tous les jours du mois d'abord
+  // Calculer le jour de la semaine du premier jour (0=Dimanche, 1=Lundi, etc.)
+  // On veut que Lundi soit 0, donc on décale: (day + 6) % 7
+  const firstDayOfWeek = firstDay.getDay();
+  const mondayBasedFirstDay = (firstDayOfWeek + 6) % 7; // Lundi=0, Mardi=1, ..., Dimanche=6
+
+  // Ajouter des emplacements vides au début pour aligner sur lundi
+  for (let i = 0; i < mondayBasedFirstDay; i++) {
+    days.push(null);
+  }
+
+  // Ajouter tous les jours du mois
   for (let i = 1; i <= daysInMonth; i++) {
     days.push(new Date(year, month, i));
   }

@@ -237,6 +237,17 @@ export class HabitService {
       if (fetchError) throw fetchError;
       if (!habit) throw new Error('Habit not found');
 
+      // Parse tasks if stored as JSON string
+      let existingTasks = habit.tasks || [];
+      if (typeof existingTasks === 'string') {
+        try {
+          existingTasks = JSON.parse(existingTasks);
+        } catch (e) {
+          Logger.error('Failed to parse existing tasks:', e);
+          existingTasks = [];
+        }
+      }
+
       const newTask = {
         id: task.id,
         name: task.name,
@@ -245,7 +256,7 @@ export class HabitService {
         category: task.category || habit.category || 'custom',
       };
 
-      const updatedTasks = [...(habit.tasks || []), newTask];
+      const updatedTasks = [...(Array.isArray(existingTasks) ? existingTasks : []), newTask];
 
       const { error: updateError } = await supabase
         .from('habits')

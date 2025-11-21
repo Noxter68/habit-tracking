@@ -27,15 +27,15 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ habit, currentMonth, select
   const theme = tierThemes[tier.name];
   const days = getDaysInMonth(currentMonth);
 
-  // Week days avec traduction
+  // Week days avec traduction - commence par lundi
   const weekDays = [
-    t('calendar.weekDays.short.sunday'),
     t('calendar.weekDays.short.monday'),
     t('calendar.weekDays.short.tuesday'),
     t('calendar.weekDays.short.wednesday'),
     t('calendar.weekDays.short.thursday'),
     t('calendar.weekDays.short.friday'),
     t('calendar.weekDays.short.saturday'),
+    t('calendar.weekDays.short.sunday'),
   ];
 
   return (
@@ -83,22 +83,32 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ habit, currentMonth, select
           let isStreakStart = false;
           let isStreakEnd = false;
 
+          const isWeeklyHabitForStreak = habit.frequency === 'weekly';
+
           if (date) {
             const dateString = getLocalDateString(date);
-            const isCompleted = habit.dailyTasks[dateString]?.allCompleted || false;
+            const dailyCompleted = habit.dailyTasks[dateString]?.allCompleted || false;
+
+            // For weekly habits, check if the week is completed
+            const isWeekCompletedForStreak = isWeeklyHabitForStreak ? isWeeklyHabitCompletedForWeek(date, habit) : false;
+            const isCompleted = isWeeklyHabitForStreak ? isWeekCompletedForStreak : dailyCompleted;
 
             if (isCompleted) {
               // Check previous day
               const prevDate = new Date(date);
               prevDate.setDate(prevDate.getDate() - 1);
               const prevDateString = getLocalDateString(prevDate);
-              const prevCompleted = habit.dailyTasks[prevDateString]?.allCompleted || false;
+              const prevDailyCompleted = habit.dailyTasks[prevDateString]?.allCompleted || false;
+              const prevWeekCompleted = isWeeklyHabitForStreak ? isWeeklyHabitCompletedForWeek(prevDate, habit) : false;
+              const prevCompleted = isWeeklyHabitForStreak ? prevWeekCompleted : prevDailyCompleted;
 
               // Check next day
               const nextDate = new Date(date);
               nextDate.setDate(nextDate.getDate() + 1);
               const nextDateString = getLocalDateString(nextDate);
-              const nextCompleted = habit.dailyTasks[nextDateString]?.allCompleted || false;
+              const nextDailyCompleted = habit.dailyTasks[nextDateString]?.allCompleted || false;
+              const nextWeekCompleted = isWeeklyHabitForStreak ? isWeeklyHabitCompletedForWeek(nextDate, habit) : false;
+              const nextCompleted = isWeeklyHabitForStreak ? nextWeekCompleted : nextDailyCompleted;
 
               // Determine streak position
               if (prevCompleted || nextCompleted) {
@@ -119,12 +129,18 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ habit, currentMonth, select
           let isHolidayStreakStart = false;
           let isHolidayStreakEnd = false;
 
+          const isWeeklyHabit = habit.frequency === 'weekly';
+
           if (date) {
             const dateString = getLocalDateString(date);
             const dayTasks = habit.dailyTasks[dateString];
             const completedTasks = dayTasks?.completedTasks?.length || 0;
-            const isCompleted = dayTasks?.allCompleted || false;
-            const isPartial = completedTasks > 0 && !isCompleted;
+            const dailyCompleted = dayTasks?.allCompleted || false;
+
+            // For weekly habits, check if the week is completed
+            const isWeekCompleted = isWeeklyHabit ? isWeeklyHabitCompletedForWeek(date, habit) : false;
+            const isCompleted = isWeeklyHabit ? isWeekCompleted : dailyCompleted;
+            const isPartial = !isWeeklyHabit && completedTasks > 0 && !isCompleted;
 
             const checkDate = new Date(date);
             checkDate.setHours(0, 0, 0, 0);
@@ -139,7 +155,19 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ habit, currentMonth, select
 
             const taskIds = habit.tasks.map((t: any) => t.id);
             const isHoliday = HolidayModeService.isDateInAnyHoliday(date, allHolidays, habit.id, taskIds);
-            const isMissed = isPast && !isCompleted && !isPartial && !beforeCreation && !isHoliday;
+
+            // For weekly habits, only mark missed if entire week is past
+            let isMissed = false;
+            if (isWeeklyHabit) {
+              const weekStart = getWeekStart(date);
+              const weekEnd = new Date(weekStart);
+              weekEnd.setDate(weekStart.getDate() + 6);
+              weekEnd.setHours(23, 59, 59, 999);
+              const isWeekPast = weekEnd < new Date();
+              isMissed = isWeekPast && !isWeekCompleted && !beforeCreation && !isHoliday;
+            } else {
+              isMissed = isPast && !isCompleted && !isPartial && !beforeCreation && !isHoliday;
+            }
 
             // Check missed streak
             if (isMissed) {
@@ -228,6 +256,38 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ habit, currentMonth, select
   );
 };
 
+/**
+ * Helper to get the start of a week (Monday) for a given date
+ */
+const getWeekStart = (date: Date): Date => {
+  const d = new Date(date);
+  const day = d.getDay();
+  // Convertir dimanche (0) en 7 pour le calcul basé sur lundi
+  const dayFromMonday = day === 0 ? 7 : day;
+  d.setDate(d.getDate() - (dayFromMonday - 1));
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+/**
+ * Check if a weekly habit was completed during the week containing the given date
+ */
+const isWeeklyHabitCompletedForWeek = (date: Date, habit: Habit): boolean => {
+  const weekStart = getWeekStart(date);
+
+  // Check each day of the week
+  for (let i = 0; i < 7; i++) {
+    const checkDate = new Date(weekStart);
+    checkDate.setDate(weekStart.getDate() + i);
+    const dateString = getLocalDateString(checkDate);
+
+    if (habit.dailyTasks[dateString]?.allCompleted) {
+      return true;
+    }
+  }
+  return false;
+};
+
 const CalendarDay: React.FC<{
   date: Date | null;
   habit: Habit;
@@ -261,13 +321,16 @@ const CalendarDay: React.FC<{
     return <View style={tw`w-1/7 h-11 mb-1`} />;
   }
 
+  const isWeeklyHabit = habit.frequency === 'weekly';
   const dateString = getLocalDateString(date);
   const dayTasks = habit.dailyTasks[dateString];
-  const totalTasks = habit.tasks?.length || 0;
   const completedTasks = dayTasks?.completedTasks?.length || 0;
 
-  const isCompleted = dayTasks?.allCompleted || false;
-  const isPartial = completedTasks > 0 && !isCompleted;
+  // For weekly habits, check if the week is completed
+  const isWeekCompleted = isWeeklyHabit ? isWeeklyHabitCompletedForWeek(date, habit) : false;
+
+  const isCompleted = isWeeklyHabit ? isWeekCompleted : (dayTasks?.allCompleted || false);
+  const isPartial = !isWeeklyHabit && completedTasks > 0 && !isCompleted;
   const isSelected = isSameDay(date, selectedDate);
   const isCurrentDay = isToday(date);
 
@@ -280,7 +343,25 @@ const CalendarDay: React.FC<{
 
   const beforeCreation = checkDate.getTime() < creationDate.getTime();
   const isPast = date < new Date() && !isCurrentDay;
-  const isMissed = isPast && !isCompleted && !isPartial && !beforeCreation;
+
+  // For weekly habits, don't show individual days as missed
+  // Only show missed if the entire week is past and not completed
+  let isMissed = false;
+  if (isWeeklyHabit) {
+    // Check if the entire week has passed
+    const weekStart = getWeekStart(date);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    weekEnd.setHours(23, 59, 59, 999);
+
+    const now = new Date();
+    const isWeekPast = weekEnd < now;
+
+    // Only mark as missed if the week is past and not completed
+    isMissed = isWeekPast && !isWeekCompleted && !beforeCreation;
+  } else {
+    isMissed = isPast && !isCompleted && !isPartial && !beforeCreation;
+  }
 
   // Check if this date is in a holiday period
   const taskIds = habit.tasks.map((t) => t.id);

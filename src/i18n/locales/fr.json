@@ -1590,6 +1590,11 @@
       "partial": "Partiel",
       "missed": "Manqué",
       "holiday": "Vacances"
+    },
+    "frequency": {
+      "daily": "Quotidien",
+      "weekly": "Hebdo",
+      "custom": "Personnalisé"
     }
   },
 

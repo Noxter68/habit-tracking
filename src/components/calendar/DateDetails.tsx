@@ -2,7 +2,7 @@
 import React from 'react';
 import { View, Text, ImageBackground } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Sun, CheckCircle2, Flame, Calendar } from 'lucide-react-native';
+import { Sun, CheckCircle2, Flame, Calendar, Repeat, CalendarDays } from 'lucide-react-native';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import tw from '@/lib/tailwind';
@@ -180,29 +180,33 @@ const DateDetails: React.FC<DateDetailsProps> = ({ habit, selectedDate, activeHo
           end={{ x: 1, y: 1 }}
           style={tw`p-3`}
         >
-          {/* Habit Name */}
-          <Text style={tw`text-white font-bold text-base mb-2`} numberOfLines={1}>
-            {habit.name}
-          </Text>
+          {/* Habit Name + Percentage - Top Row */}
+          <View style={tw`flex-row items-center justify-between mb-1`}>
+            <Text style={tw`text-white font-black text-lg flex-1 mr-2`} numberOfLines={1}>
+              {habit.name}
+            </Text>
+            <View style={tw`bg-white/20 rounded-full px-3 py-1.5`}>
+              <Text style={tw`text-white text-base font-black`}>{percentage}%</Text>
+            </View>
+          </View>
 
-          {/* Date Header - Duolingo Style - Compact */}
-          <View style={tw`flex-row items-center justify-between mb-3`}>
-            <View style={tw`flex-row items-center`}>
-              <Text style={tw`text-white text-3xl font-black`}>
-                {selectedDate.toLocaleDateString(i18n.language, { day: 'numeric' })}
+          {/* Frequency Badge + Today Badge - Second Row */}
+          <View style={tw`flex-row items-center mb-3`}>
+            <View style={tw`flex-row items-center bg-white/20 border border-white/30 rounded-full px-2 py-0.5`}>
+              {habit.frequency === 'weekly' ? (
+                <CalendarDays size={10} color="#fff" strokeWidth={2.5} />
+              ) : (
+                <Repeat size={10} color="#fff" strokeWidth={2.5} />
+              )}
+              <Text style={tw`text-white text-[9px] font-bold ml-1 uppercase`}>
+                {habit.frequency === 'weekly' ? t('calendar.frequency.weekly') : t('calendar.frequency.daily')}
               </Text>
-              <View style={tw`ml-2`}>
-                <Text style={tw`text-white/90 text-sm font-bold uppercase`}>
-                  {selectedDate.toLocaleDateString(i18n.language, { month: 'short' })}
-                </Text>
-                {isToday && (
-                  <Text style={tw`text-white/70 text-xs font-bold uppercase`}>{t('calendar.today')}</Text>
-                )}
+            </View>
+            {isToday && (
+              <View style={tw`ml-1.5 bg-white/20 rounded-full px-1.5 py-0.5`}>
+                <Text style={tw`text-white text-[9px] font-bold uppercase`}>{t('calendar.today')}</Text>
               </View>
-            </View>
-            <View style={tw`bg-white/20 rounded-full px-4 py-2`}>
-              <Text style={tw`text-white text-xl font-black`}>{percentage}%</Text>
-            </View>
+            )}
           </View>
 
           {/* Stats Row - Duolingo Style with Icons Above */}
