@@ -142,6 +142,27 @@ const isWeekCompleted = (habit: Habit): boolean => {
   return false;
 };
 
+/**
+ * Retourne le nom traduit de l'habitude
+ * Si le nom correspond à un habitName prédéfini, utilise la traduction
+ * Sinon retourne le nom tel quel (custom)
+ * @param habit - Habitude
+ * @param t - Fonction de traduction
+ * @returns Nom traduit ou original
+ */
+const getTranslatedHabitName = (habit: Habit, t: (key: string) => string): string => {
+  // Essayer de récupérer le nom traduit depuis les catégories
+  const translatedName = t(`habitHelpers.categories.${habit.type}.${habit.category}.habitName`);
+
+  // Si la traduction existe et n'est pas la clé elle-même, l'utiliser
+  if (translatedName && !translatedName.includes('habitHelpers.categories')) {
+    return translatedName;
+  }
+
+  // Sinon retourner le nom stocké (custom ou fallback)
+  return habit.name;
+};
+
 // =============================================================================
 // COMPOSANT PRINCIPAL
 // =============================================================================
@@ -297,7 +318,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
             {/* En-tete */}
             <View style={tw`mb-3 pr-14`}>
               <Text numberOfLines={1} style={tw`text-xl font-bold text-white mb-0.5`}>
-                {habit.name}
+                {getTranslatedHabitName(habit, t)}
               </Text>
               <View style={tw`flex-row items-center gap-2`}>
                 <Text style={tw`text-xs text-white/70 font-medium capitalize`}>

@@ -210,6 +210,9 @@ const taskIcons: Record<string, Record<string, Record<string, any>>> = {
       'daily-review': BarChart3,
       'priority-tasks': Star,
       'inbox-zero': Mail,
+      'plan-day': CalendarCheck,
+      'weekly-review': Calendar,
+      'track-goals': Target,
     },
     bad: {
       'no-social-media': PhoneOff,

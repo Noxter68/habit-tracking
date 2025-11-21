@@ -905,6 +905,21 @@
             "name": "Inbox Zéro",
             "description": "Vider tous les emails",
             "duration": "20 min"
+          },
+          "plan-day": {
+            "name": "Planifier sa Journée",
+            "description": "Définir les objectifs du jour",
+            "duration": "10 min"
+          },
+          "weekly-review": {
+            "name": "Revue Hebdomadaire",
+            "description": "Réviser les progrès de la semaine",
+            "duration": "30 min"
+          },
+          "track-goals": {
+            "name": "Suivre ses Objectifs",
+            "description": "Surveiller la progression",
+            "duration": "15 min"
           }
         },
         "bad": {

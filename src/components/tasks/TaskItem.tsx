@@ -16,9 +16,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Trash2 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import tw from '@/lib/tailwind';
-import { Task } from '@/types';
+import { Task, HabitType } from '@/types';
 import { HabitService } from '@/services/habitService';
 import { useAuth } from '@/context/AuthContext';
+import { getTasksForCategory } from '@/utils/habitHelpers';
 
 // ============================================================================
 // TYPES
@@ -27,6 +28,8 @@ import { useAuth } from '@/context/AuthContext';
 interface TaskItemProps {
   task: Task;
   habitId: string;
+  habitCategory: string;
+  habitType: HabitType;
   onTaskDeleted: () => void;
   tierColor: string;
 }
@@ -42,11 +45,36 @@ const SWIPE_THRESHOLD = -SCREEN_WIDTH * 0.25;
 // COMPONENT
 // ============================================================================
 
-const TaskItem: React.FC<TaskItemProps> = ({ task, habitId, onTaskDeleted, tierColor }) => {
+const TaskItem: React.FC<TaskItemProps> = ({ task, habitId, habitCategory, habitType, onTaskDeleted, tierColor }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const translateX = useRef(new RNAnimated.Value(0)).current;
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Récupérer les données traduites si c'est une tâche prédéfinie
+  const getEnrichedTask = () => {
+    // Si c'est une tâche custom, retourner telle quelle
+    if (task.id.startsWith('custom-task-') || task.id.startsWith('custom_')) {
+      return task;
+    }
+
+    // Chercher dans les tâches prédéfinies traduites
+    const predefinedTasks = getTasksForCategory(habitCategory, habitType);
+    const translatedTask = predefinedTasks.find((t) => t.id === task.id);
+
+    if (translatedTask) {
+      return {
+        ...task,
+        name: translatedTask.name || task.name,
+        description: translatedTask.description || task.description,
+        duration: translatedTask.duration || task.duration,
+      };
+    }
+
+    return task;
+  };
+
+  const enrichedTask = getEnrichedTask();
 
   // ============================================================================
   // GESTURE HANDLERS
@@ -84,7 +112,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, habitId, onTaskDeleted, tierC
     }
 
     // Show confirmation alert with i18n
-    Alert.alert(t('taskManager.deleteTask'), t('taskManager.deleteTaskConfirm', { taskName: task.name }), [
+    Alert.alert(t('taskManager.deleteTask'), t('taskManager.deleteTaskConfirm', { taskName: enrichedTask.name }), [
       {
         text: t('common.cancel'),
         style: 'cancel',
@@ -150,19 +178,21 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, habitId, onTaskDeleted, tierC
                 /* Task Content */
                 <View style={tw`flex-row items-center justify-between`}>
                   <View style={tw`flex-1 pr-4`}>
-                    <Text style={tw`text-stone-900 font-bold text-base mb-1.5`}>{task.name}</Text>
+                    <Text style={tw`text-stone-900 font-bold text-base mb-1.5`}>{enrichedTask.name}</Text>
 
-                    {task.description && (
+                    {enrichedTask.description && (
                       <Text style={tw`text-stone-600 text-sm mb-2 leading-5`} numberOfLines={2}>
-                        {task.description}
+                        {enrichedTask.description}
                       </Text>
                     )}
 
-                    <View style={tw`flex-row items-center gap-2`}>
-                      <View style={[tw`px-3 py-1.5 rounded-full`, { backgroundColor: `${tierColor}10` }]}>
-                        <Text style={[tw`text-xs font-semibold`, { color: tierColor }]}>{task.category || task.duration}</Text>
+                    {(enrichedTask.category || enrichedTask.duration) && (
+                      <View style={tw`flex-row items-center gap-2`}>
+                        <View style={[tw`px-3 py-1.5 rounded-full`, { backgroundColor: `${tierColor}10` }]}>
+                          <Text style={[tw`text-xs font-semibold`, { color: tierColor }]}>{enrichedTask.category || enrichedTask.duration}</Text>
+                        </View>
                       </View>
-                    </View>
+                    )}
                   </View>
 
                   {/* Swipe Indicator */}

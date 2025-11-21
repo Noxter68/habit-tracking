@@ -26,6 +26,18 @@ interface HabitHeroProps {
 export const HabitHero: React.FC<HabitHeroProps> = ({ habitName, habitType, category, currentStreak, bestStreak, tierInfo, nextTier, tierProgress, tierMultiplier, totalXPEarned, completionRate }) => {
   const { t } = useTranslation();
 
+  /**
+   * Retourne le nom traduit de la catégorie
+   */
+  const getTranslatedCategory = (): string => {
+    const translatedLabel = t(`habitHelpers.categories.${habitType}.${category}.label`);
+    if (translatedLabel && !translatedLabel.includes('habitHelpers.categories')) {
+      return translatedLabel;
+    }
+    // Fallback: capitaliser le nom de la catégorie
+    return category.charAt(0).toUpperCase() + category.slice(1);
+  };
+
   const getGemIcon = () => {
     switch (tierInfo.name) {
       case 'Ruby':
@@ -64,7 +76,7 @@ export const HabitHero: React.FC<HabitHeroProps> = ({ habitName, habitType, cate
             </View>
 
             <View style={tw`bg-white/25 rounded-xl px-2.5 py-1`}>
-              <Text style={tw`text-white text-xs font-bold`}>{category.charAt(0).toUpperCase() + category.slice(1)}</Text>
+              <Text style={tw`text-white text-xs font-bold`}>{getTranslatedCategory()}</Text>
             </View>
 
             {tierMultiplier > 1 && (

@@ -56,6 +56,21 @@ interface SwipeableHabitCardProps {
 }
 
 // =============================================================================
+// FONCTIONS UTILITAIRES
+// =============================================================================
+
+/**
+ * Retourne le nom traduit de l'habitude
+ */
+const getTranslatedHabitName = (habit: Habit, t: (key: string) => string): string => {
+  const translatedName = t(`habitHelpers.categories.${habit.type}.${habit.category}.habitName`);
+  if (translatedName && !translatedName.includes('habitHelpers.categories')) {
+    return translatedName;
+  }
+  return habit.name;
+};
+
+// =============================================================================
 // COMPOSANT PRINCIPAL
 // =============================================================================
 
@@ -115,7 +130,7 @@ const SwipeableHabitCard: React.FC<SwipeableHabitCardProps> = ({
         Alert.alert(
           t('dashboard.removeHabit'),
           t('dashboard.removeHabitConfirm', {
-            name: habit.name,
+            name: getTranslatedHabitName(habit, t),
             streak: habit.currentStreak,
           }),
           [

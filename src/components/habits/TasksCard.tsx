@@ -10,6 +10,8 @@ import tw from '@/lib/tailwind';
 import { tierThemes } from '@/utils/tierTheme';
 import { HabitTier } from '@/services/habitProgressionService';
 import { t } from 'i18next';
+import { HabitType } from '@/types';
+import { getTasksForCategory } from '@/utils/habitHelpers';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -24,6 +26,8 @@ interface TasksCardProps {
   tasks: Task[];
   todayTasks: { completedTasks: string[]; allCompleted: boolean };
   habitId: string;
+  habitCategory: string;
+  habitType: HabitType;
   today: string;
   onToggleTask: (taskId: string) => Promise<void>;
   tier: HabitTier;
@@ -177,6 +181,8 @@ export const TasksCard: React.FC<TasksCardProps> = ({
   tasks,
   todayTasks,
   habitId,
+  habitCategory,
+  habitType,
   today,
   onToggleTask,
   tier,
@@ -190,6 +196,34 @@ export const TasksCard: React.FC<TasksCardProps> = ({
   const completedTasksToday = todayTasks.completedTasks?.length || 0;
   const totalTasks = tasks?.length || 0;
   const taskProgress = totalTasks > 0 ? (completedTasksToday / totalTasks) * 100 : 0;
+
+  // Récupérer les tâches prédéfinies traduites pour enrichir les données
+  const predefinedTasks = React.useMemo(
+    () => getTasksForCategory(habitCategory, habitType),
+    [habitCategory, habitType]
+  );
+
+  // Enrichir une tâche avec les traductions si c'est une tâche prédéfinie
+  const getEnrichedTask = (task: Task): Task => {
+    // Si c'est une tâche custom, retourner telle quelle
+    if (task.id.startsWith('custom-task-') || task.id.startsWith('custom_')) {
+      return task;
+    }
+
+    // Chercher dans les tâches prédéfinies traduites
+    const translatedTask = predefinedTasks.find((t) => t.id === task.id);
+
+    if (translatedTask) {
+      return {
+        ...task,
+        name: translatedTask.name || task.name,
+        description: translatedTask.description || task.description,
+        duration: translatedTask.duration || task.duration,
+      };
+    }
+
+    return task;
+  };
 
   const progressWidth = useSharedValue(0);
   const prevProgress = React.useRef(0);
@@ -263,9 +297,9 @@ export const TasksCard: React.FC<TasksCardProps> = ({
       {/* Task List */}
       {tasks.map((task, idx) => {
         const taskId = typeof task === 'string' ? task : task?.id || `task-${idx}`;
-        const taskName = typeof task === 'string' ? task : task?.name || task;
+        const taskName = typeof task === 'string' ? task : task?.name || taskId;
 
-        const taskObject =
+        const taskObject: Task =
           typeof task === 'object' && task.name
             ? task
             : {
@@ -274,6 +308,9 @@ export const TasksCard: React.FC<TasksCardProps> = ({
                 description: typeof task === 'object' ? task.description : undefined,
                 duration: typeof task === 'object' ? task.duration : undefined,
               };
+
+        // Enrichir la tâche avec les traductions si c'est une tâche prédéfinie
+        const enrichedTask = getEnrichedTask(taskObject);
 
         const isCompleted = todayTasks.completedTasks.includes(taskId);
         const isPaused = !!pausedTasks[taskId];
@@ -284,7 +321,7 @@ export const TasksCard: React.FC<TasksCardProps> = ({
         return (
           <TaskItem
             key={`task-${taskId}-${idx}`}
-            task={taskObject}
+            task={enrichedTask}
             isCompleted={isCompleted}
             theme={theme}
             onPress={() => onToggleTask(taskId)}

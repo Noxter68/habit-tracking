@@ -204,7 +204,7 @@ const TaskManager: React.FC<TaskManagerProps> = ({ habitId, habitCategory, habit
                       ],
                     }}
                   >
-                    <TaskItem task={item} habitId={habitId} onTaskDeleted={handleTaskDeleted} tierColor={tierColor} />
+                    <TaskItem task={item} habitId={habitId} habitCategory={habitCategory} habitType={habitType} onTaskDeleted={handleTaskDeleted} tierColor={tierColor} />
                   </Animated.View>
                 )}
                 ItemSeparatorComponent={() => <View style={tw`h-3`} />}

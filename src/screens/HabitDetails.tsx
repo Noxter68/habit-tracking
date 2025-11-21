@@ -25,6 +25,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, FadeInUp, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { ArrowLeft, Zap } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 
 import { HabitHero } from '@/components/habits/HabitHero';
 import { TabSelector } from '@/components/habits/TabSelector';
@@ -67,10 +68,28 @@ type TabType = 'overview' | 'tiers';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ============================================================================
+// FONCTIONS UTILITAIRES
+// ============================================================================
+
+/**
+ * Retourne le nom traduit de l'habitude
+ * Si le nom correspond à un habitName prédéfini, utilise la traduction
+ * Sinon retourne le nom tel quel (custom)
+ */
+const getTranslatedHabitName = (habit: Habit, t: (key: string) => string): string => {
+  const translatedName = t(`habitHelpers.categories.${habit.type}.${habit.category}.habitName`);
+  if (translatedName && !translatedName.includes('habitHelpers.categories')) {
+    return translatedName;
+  }
+  return habit.name;
+};
+
+// ============================================================================
 // COMPOSANT PRINCIPAL
 // ============================================================================
 
 const HabitDetails: React.FC = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
   const { user } = useAuth();
@@ -379,7 +398,7 @@ const HabitDetails: React.FC = () => {
                   <ArrowLeft size={22} color="#fff" strokeWidth={2.5} />
                 </Pressable>
 
-                <Text style={tw`text-lg font-black text-white`}>Habit Journey</Text>
+                <Text style={tw`text-lg font-black text-white`}>{t('habitDetails.title')}</Text>
 
                 <View style={tw`w-11`}>
                   <DebugButton
@@ -431,7 +450,7 @@ const HabitDetails: React.FC = () => {
                   ]}
                 >
                   <HabitHero
-                    habitName={habit.name}
+                    habitName={getTranslatedHabitName(habit, t)}
                     habitType={habit.type}
                     category={habit.category}
                     currentStreak={performanceMetrics?.currentStreak ?? habit.currentStreak}
@@ -448,7 +467,7 @@ const HabitDetails: React.FC = () => {
                 {/* Modal Streak Saver réel */}
                 <StreakSaverModal
                   visible={streakSaver.showModal}
-                  habitName={streakSaver.eligibility.habitName || habit?.name || 'Habit'}
+                  habitName={habit ? getTranslatedHabitName(habit, t) : 'Habit'}
                   previousStreak={streakSaver.eligibility.previousStreak || 0}
                   availableSavers={streakSaver.inventory.available}
                   loading={streakSaver.using}
@@ -463,7 +482,7 @@ const HabitDetails: React.FC = () => {
                 {Config.debug.enabled && (
                   <StreakSaverModal
                     visible={showTestModal}
-                    habitName={habit?.name || 'Morning Workout'}
+                    habitName={habit ? getTranslatedHabitName(habit, t) : 'Morning Workout'}
                     previousStreak={15}
                     availableSavers={3}
                     loading={testModalLoading}
@@ -513,6 +532,8 @@ const HabitDetails: React.FC = () => {
                     tasks={habit.tasks || []}
                     todayTasks={todayTasks}
                     habitId={habit.id}
+                    habitCategory={habit.category}
+                    habitType={habit.type}
                     today={today}
                     onToggleTask={handleToggleTask}
                     tier={currentTierData.tier.name}

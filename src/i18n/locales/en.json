@@ -790,6 +790,21 @@
             "name": "Inbox Zero",
             "description": "Clear all emails",
             "duration": "20 min"
+          },
+          "plan-day": {
+            "name": "Plan Your Day",
+            "description": "Set daily goals",
+            "duration": "10 min"
+          },
+          "weekly-review": {
+            "name": "Weekly Review",
+            "description": "Review weekly progress",
+            "duration": "30 min"
+          },
+          "track-goals": {
+            "name": "Track Goals",
+            "description": "Monitor goal progress",
+            "duration": "15 min"
           }
         },
         "bad": {
