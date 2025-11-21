@@ -21,8 +21,9 @@ import { DebugButton } from '@/components/debug/DebugButton';
 import { StreakSaverBadge } from '@/components/streakSaver/StreakSaverBadge';
 import { StreakSaverShopModal } from '@/components/streakSaver/StreakSaverShopModal';
 import TaskBadge from '@/components/TasksBadge';
-import AddHabitButton from '@/components/dashboard/AddHabitButton';
 import { UpdateModal } from '@/components/updateModal';
+import { HabitsSectionHeader } from '@/components/dashboard/HabitsSectionHeader';
+import { HabitCategoryBadge } from '@/components/dashboard/HabitCategoryBadge';
 
 // Contexts
 import { useAuth } from '../context/AuthContext';
@@ -217,6 +218,13 @@ const Dashboard: React.FC = () => {
   const showFullHolidayMode = activeHabits.length === 0 && habits.length > 0;
   const showPartialPauseMode = hasPartialPause && !showFullHolidayMode;
   const isHabitLimitReached = !isPremium && habitCount >= maxHabits;
+
+  // Separate habits by frequency (daily vs weekly)
+  const { dailyHabits, weeklyHabits } = useMemo(() => {
+    const daily = activeHabits.filter((habit) => habit.frequency !== 'weekly');
+    const weekly = activeHabits.filter((habit) => habit.frequency === 'weekly');
+    return { dailyHabits: daily, weeklyHabits: weekly };
+  }, [activeHabits]);
 
   // ============================================================================
   // Event Handlers
@@ -516,7 +524,7 @@ const Dashboard: React.FC = () => {
           )}
 
           {/* Habits Section */}
-          <Animated.View entering={FadeInUp.delay(200)} style={tw`mt-2`}>
+          <Animated.View entering={FadeInUp.delay(200)}>
             {/* Free user habit limit indicator */}
             {!isPremium && habitCount > 0 && (
               <View
@@ -543,7 +551,7 @@ const Dashboard: React.FC = () => {
             {!showFullHolidayMode && activeHabits.length > 0 ? (
               <View style={tw`mt-4`}>
                 <TaskBadge completed={realTimeTasksStats.completed} total={realTimeTasksStats.total} onAddPress={handleCreateHabit} showAddButton={habits.length > 0} />
-                <AddHabitButton onPress={handleCreateHabit} />
+                <HabitsSectionHeader onAddPress={handleCreateHabit} habitCount={activeHabits.length} />
               </View>
             ) : showFullHolidayMode ? (
               <View style={tw`flex-row items-center justify-between mb-4`}>
@@ -578,19 +586,47 @@ const Dashboard: React.FC = () => {
                 </View>
               )
             ) : activeHabits.length > 0 ? (
-              /* Active Habits List */
-              <View style={tw`gap-3 mt-4`}>
-                {activeHabits.map((habit, index) => (
-                  <SwipeableHabitCard
-                    key={habit.id}
-                    habit={habit}
-                    onToggleDay={handleDayToggle}
-                    onToggleTask={handleTaskToggle}
-                    onDelete={handleDeleteHabit}
-                    onPress={() => handleHabitPress(habit.id)}
-                    index={index}
-                  />
-                ))}
+              /* Active Habits List - Separated by Daily/Weekly */
+              <View style={tw`mt-2`}>
+                {/* Daily Habits Section */}
+                {dailyHabits.length > 0 && (
+                  <>
+                    <HabitCategoryBadge type="daily" count={dailyHabits.length} />
+                    <View style={tw`gap-3`}>
+                      {dailyHabits.map((habit, index) => (
+                        <SwipeableHabitCard
+                          key={habit.id}
+                          habit={habit}
+                          onToggleDay={handleDayToggle}
+                          onToggleTask={handleTaskToggle}
+                          onDelete={handleDeleteHabit}
+                          onPress={() => handleHabitPress(habit.id)}
+                          index={index}
+                        />
+                      ))}
+                    </View>
+                  </>
+                )}
+
+                {/* Weekly Habits Section */}
+                {weeklyHabits.length > 0 && (
+                  <>
+                    <HabitCategoryBadge type="weekly" count={weeklyHabits.length} />
+                    <View style={tw`gap-3`}>
+                      {weeklyHabits.map((habit, index) => (
+                        <SwipeableHabitCard
+                          key={habit.id}
+                          habit={habit}
+                          onToggleDay={handleDayToggle}
+                          onToggleTask={handleTaskToggle}
+                          onDelete={handleDeleteHabit}
+                          onPress={() => handleHabitPress(habit.id)}
+                          index={dailyHabits.length + index}
+                        />
+                      ))}
+                    </View>
+                  </>
+                )}
               </View>
             ) : (
               /* Empty State - Create First Habit */

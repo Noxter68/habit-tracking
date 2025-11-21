@@ -89,11 +89,17 @@ const SwipeableHabitCard: React.FC<SwipeableHabitCardProps> = ({
 
   /**
    * Gère l'événement de geste pan
+   * Limite le swipe uniquement vers la gauche (valeurs négatives)
    */
-  const handleGestureEvent = RNAnimated.event(
-    [{ nativeEvent: { translationX: translateX } }],
-    { useNativeDriver: true }
-  );
+  const handleGestureEvent = (event: any) => {
+    const { translationX: translation } = event.nativeEvent;
+    // Only allow left swipe (negative values), block right swipe
+    if (translation <= 0) {
+      translateX.setValue(translation);
+    } else {
+      translateX.setValue(0);
+    }
+  };
 
   /**
    * Gère le changement d'état du geste
@@ -203,7 +209,7 @@ const SwipeableHabitCard: React.FC<SwipeableHabitCardProps> = ({
       <PanGestureHandler
         onGestureEvent={handleGestureEvent}
         onHandlerStateChange={handleStateChange}
-        activeOffsetX={[-10, 10]}
+        activeOffsetX={[-10, 1000]}
         failOffsetY={[-5, 5]}
       >
         <RNAnimated.View

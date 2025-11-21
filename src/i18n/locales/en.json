@@ -61,6 +61,12 @@
     "startJourney": "Begin your journey to building better habits and earning achievements!",
     "tapToBegin": "Tap to begin →",
     "createNewHabit": "Create new habit",
+    "habitsSection": {
+      "title": "My Habits",
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "addHabit": "Add"
+    },
     "greeting": {
       "morning": "Good morning",
       "afternoon": "Good afternoon",

@@ -127,9 +127,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
    * Détermine la clé du tier actuel en fonction du niveau utilisateur
    */
   const currentTierKey = useMemo((): TierKey => {
-    const title = achievementTitles.find(
-      (t) => userLevel >= t.level && userLevel < (achievementTitles.find((next) => next.level > t.level)?.level || Infinity)
-    );
+    const title = achievementTitles.find((t) => userLevel >= t.level && userLevel < (achievementTitles.find((next) => next.level > t.level)?.level || Infinity));
     return (title?.tierKey as TierKey) || 'novice';
   }, [userLevel]);
 
@@ -163,10 +161,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     };
   }, [tierTheme.gemName]);
 
-  const nextTitle = useMemo(
-    () => achievementTitles.find((title) => title.level > userLevel),
-    [userLevel]
-  );
+  const nextTitle = useMemo(() => achievementTitles.find((title) => title.level > userLevel), [userLevel]);
 
   /**
    * Calcule l'XP et la progression à afficher

@@ -62,6 +62,12 @@
     "startJourney": "Commencez votre parcours pour développer de meilleures habitudes et gagner des succès !",
     "tapToBegin": "Appuyez pour commencer →",
     "createNewHabit": "Créer une nouvelle habitude",
+    "habitsSection": {
+      "title": "Mes Habitudes",
+      "daily": "Quotidien",
+      "weekly": "Hebdo",
+      "addHabit": "Ajouter"
+    },
     "greeting": {
       "morning": "Bonjour",
       "afternoon": "Bon après-midi",
