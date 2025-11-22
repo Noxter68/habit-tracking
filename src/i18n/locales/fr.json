@@ -79,6 +79,8 @@
       "streakSubtitle": "jours",
       "active": "Actives",
       "activeSubtitle": "Habitudes",
+      "streakSavers": "Savers",
+      "streakSaversSubtitle": "dispo",
       "xpTotal": "XP"
     },
     "levelProgress": {
@@ -305,7 +307,7 @@
     "holidayMode": "Mode Vacances",
     "breakMode": "Mode Pause",
     "holidayUnlimited": "Périodes de vacances illimitées disponibles",
-    "holidayLimited": "Max 14 jours par période • {{periods}} période restante | Max 14 jours par période • {{periods}} périodes restantes",
+    "holidayLimited": "Max 14 jours par période • {{periods}} période restante",
     "holidayDaysRemaining": "Se termine le {{date}} • {{count}} jours restants",
     "active": "Actif",
     "streakSavers": "Sauvegardes de série",

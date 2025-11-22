@@ -475,29 +475,19 @@ const Dashboard: React.FC = () => {
             </>
           )}
 
-          {/* Streak Saver Badge */}
+          {/* Streak Saver Shop Modal */}
           {!showPartialPauseMode && !hasTasksPaused && !showFullHolidayMode && (
-            <>
-              <StreakSaverBadge
-                onPress={handleStreakSaverPress}
-                onShopPress={() => {
-                  HapticFeedback.light();
-                  setShowShop(true);
-                }}
-                refreshTrigger={streakSaverRefreshTrigger}
-              />
-              <StreakSaverShopModal
-                visible={showShop}
-                onClose={() => {
-                  HapticFeedback.light();
-                  setShowShop(false);
-                }}
-                onPurchaseSuccess={() => {
-                  setShowShop(false);
-                  setStreakSaverRefreshTrigger((prev) => prev + 1);
-                }}
-              />
-            </>
+            <StreakSaverShopModal
+              visible={showShop}
+              onClose={() => {
+                HapticFeedback.light();
+                setShowShop(false);
+              }}
+              onPurchaseSuccess={() => {
+                setShowShop(false);
+                setStreakSaverRefreshTrigger((prev) => prev + 1);
+              }}
+            />
           )}
 
           {/* Partial Holiday Mode Banner */}
@@ -526,32 +516,48 @@ const Dashboard: React.FC = () => {
 
           {/* Habits Section */}
           <Animated.View entering={FadeInUp.delay(200)}>
-            {/* Free user habit limit indicator */}
-            {!isPremium && habitCount > 0 && (
-              <View
-                style={[
-                  tw`mx-1 mb-3 px-4 py-3 rounded-2xl flex-row items-center justify-center`,
-                  {
-                    backgroundColor: isHabitLimitReached ? 'rgba(251, 146, 60, 0.08)' : 'rgba(59, 130, 246, 0.08)',
-                    borderWidth: 1,
-                    borderColor: isHabitLimitReached ? 'rgba(251, 146, 60, 0.2)' : 'rgba(59, 130, 246, 0.2)',
-                  },
-                ]}
-              >
-                {isHabitLimitReached ? (
-                  <>
-                    <Lock size={14} color="#EA580C" strokeWidth={2.5} style={tw`mr-2`} />
-                    <Text style={tw`text-xs font-bold text-orange-700 tracking-wide flex-shrink`}>{t('dashboard.habitLimitReached')}</Text>
-                  </>
-                ) : (
-                  <Text style={tw`text-xs font-bold text-blue-700 tracking-wide`}>{t('dashboard.habitCount', { count: habitCount, max: maxHabits })}</Text>
-                )}
-              </View>
-            )}
             {/* Section Header */}
             {!showFullHolidayMode && activeHabits.length > 0 ? (
               <View style={tw`mt-4`}>
                 <TaskBadge completed={realTimeTasksStats.completed} total={realTimeTasksStats.total} onAddPress={handleCreateHabit} showAddButton={habits.length > 0} />
+
+                {/* Free user habit limit indicator - below TaskBadge */}
+                {!isPremium && habitCount > 0 && (
+                  <View
+                    style={[
+                      tw`mx-1 mt-3 px-4 py-3 rounded-2xl flex-row items-center justify-center`,
+                      {
+                        backgroundColor: isHabitLimitReached ? 'rgba(251, 146, 60, 0.08)' : 'rgba(59, 130, 246, 0.08)',
+                        borderWidth: 1,
+                        borderColor: isHabitLimitReached ? 'rgba(251, 146, 60, 0.2)' : 'rgba(59, 130, 246, 0.2)',
+                      },
+                    ]}
+                  >
+                    {isHabitLimitReached ? (
+                      <>
+                        <Lock size={14} color="#EA580C" strokeWidth={2.5} style={tw`mr-2`} />
+                        <Text style={tw`text-xs font-bold text-orange-700 tracking-wide flex-shrink`}>{t('dashboard.habitLimitReached')}</Text>
+                      </>
+                    ) : (
+                      <Text style={tw`text-xs font-bold text-blue-700 tracking-wide`}>{t('dashboard.habitCount', { count: habitCount, max: maxHabits })}</Text>
+                    )}
+                  </View>
+                )}
+
+                {/* Streak Saver Badge - below habit limit indicator */}
+                {!showPartialPauseMode && !hasTasksPaused && (
+                  <View style={tw`mt-3`}>
+                    <StreakSaverBadge
+                      onPress={handleStreakSaverPress}
+                      onShopPress={() => {
+                        HapticFeedback.light();
+                        setShowShop(true);
+                      }}
+                      refreshTrigger={streakSaverRefreshTrigger}
+                    />
+                  </View>
+                )}
+
                 <HabitsSectionHeader onAddPress={handleCreateHabit} habitCount={activeHabits.length} />
               </View>
             ) : showFullHolidayMode ? (

@@ -78,6 +78,8 @@
       "streakSubtitle": "days",
       "active": "Active",
       "activeSubtitle": "Habits",
+      "streakSavers": "Savers",
+      "streakSaversSubtitle": "available",
       "xpTotal": "XP"
     },
     "levelProgress": {
@@ -236,7 +238,7 @@
     "holidayMode": "Holiday Mode",
     "breakMode": "Break Mode",
     "holidayUnlimited": "Unlimited holiday periods available",
-    "holidayLimited": "Max 14 days per period • {{periods}} period left | Max 14 days per period • {{periods}} periods left",
+    "holidayLimited": "Max 14 days per period • {{periods}} period left",
     "holidayDaysRemaining": "Ends on {{date}} • {{count}} days remaining",
     "active": "Active",
     "streakSavers": "Streak Savers",

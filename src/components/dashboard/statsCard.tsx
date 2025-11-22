@@ -144,6 +144,29 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
       );
     }
 
+    // For streak saver cards
+    if ('image' in props && props.image === 'streak-saver') {
+      return (
+        <View
+          style={{
+            width: 40,
+            height: 40,
+            backgroundColor: getIconBg(),
+            borderRadius: 12,
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 6,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.08,
+            shadowRadius: 4,
+          }}
+        >
+          <Image source={require('../../../assets/interface/streak-saver.png')} style={{ width: 35, height: 35 }} resizeMode="contain" />
+        </View>
+      );
+    }
+
     // Check if we have an icon prop
     if ('icon' in props && props.icon) {
       const Icon = props.icon;

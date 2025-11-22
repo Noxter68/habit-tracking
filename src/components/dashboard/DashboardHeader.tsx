@@ -30,6 +30,7 @@ import StatsCard from './statsCard';
 // Contextes et Hooks
 import { useAuth } from '../../context/AuthContext';
 import { useStats } from '@/context/StatsContext';
+import { useSubscription } from '@/context/SubscriptionContext';
 
 // Utilitaires
 import { getGreeting } from '../../utils/progressStatus';
@@ -98,6 +99,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const navigation = useNavigation();
   const { user, username } = useAuth();
   const { refreshStats } = useStats();
+  const { streakSavers } = useSubscription();
   const { t, i18n } = useTranslation();
 
   // ---------------------------------------------------------------------------
@@ -501,10 +503,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               textColor={textColors.secondary}
             />
             <StatsCard
-              label={t('dashboard.header.active')}
-              value={activeHabits}
-              image="active"
-              subtitle={t('dashboard.header.activeSubtitle')}
+              label={t('dashboard.header.streakSavers')}
+              value={streakSavers}
+              image="streak-saver"
+              subtitle={t('dashboard.header.streakSaversSubtitle')}
               tierTheme={tierTheme}
               textColor={textColors.secondary}
             />
