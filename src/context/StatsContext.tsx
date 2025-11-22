@@ -164,11 +164,12 @@ export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         Logger.debug('StatsContext: Fetching fresh data from backend...');
 
         // Fetch tout en parallele
-        const [xpStats, habitStats, activeHabitsCount, todayStats] = await Promise.all([
+        const [xpStats, habitStats, activeHabitsCount, todayStats, globalStreak] = await Promise.all([
           XPService.getUserXPStats(user.id),
           HabitService.getAggregatedStats(user.id),
           HabitService.getActiveHabitsCount(user.id),
           HabitService.getTodayStats(user.id),
+          HabitService.getGlobalStreak(user.id),
         ]);
 
         Logger.debug('StatsContext: Raw XP data from backend:', {
@@ -204,7 +205,7 @@ export const StatsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           currentLevelXP: adjustedCurrentXP,
           xpForNextLevel: nextLevelXP,
           levelProgress: progress,
-          totalStreak: habitStats?.totalDaysTracked || 0,
+          totalStreak: globalStreak || 0,
           activeHabits: activeHabitsCount || 0,
           completedTasksToday: todayStats?.completed || todayStats?.completedTasks || 0,
           totalTasksToday: todayStats?.total || todayStats?.totalTasks || 0,

@@ -1285,6 +1285,58 @@ export class HabitService {
   }
 
   /**
+   * Récupérer le streak global de l'utilisateur
+   * Le streak global compte les jours consécutifs où TOUTES les habitudes sont complétées
+   *
+   * @param userId - L'identifiant de l'utilisateur
+   * @returns Le streak global actuel
+   */
+  static async getGlobalStreak(userId: string): Promise<number> {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('current_global_streak')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        Logger.error('Error fetching global streak:', error);
+        return 0;
+      }
+
+      return data?.current_global_streak || 0;
+    } catch (error) {
+      Logger.error('Error in getGlobalStreak:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Forcer le recalcul du streak global
+   * Utile après une modification manuelle ou pour debug
+   *
+   * @param userId - L'identifiant de l'utilisateur
+   * @returns Le nouveau streak calculé
+   */
+  static async recalculateGlobalStreak(userId: string): Promise<number> {
+    try {
+      const { data, error } = await supabase.rpc('update_user_global_streak', {
+        p_user_id: userId,
+      });
+
+      if (error) {
+        Logger.error('Error recalculating global streak:', error);
+        return 0;
+      }
+
+      return data || 0;
+    } catch (error) {
+      Logger.error('Error in recalculateGlobalStreak:', error);
+      return 0;
+    }
+  }
+
+  /**
    * Vérifier si l'utilisateur a des habitudes
    *
    * @param userId - L'identifiant de l'utilisateur
