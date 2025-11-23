@@ -200,6 +200,8 @@
     "resetsIn": "Réinit. dans {{count}}{{unit}}",
     "daysLeft_one": "{{count}} jour restant",
     "daysLeft_other": "{{count}} jours restants",
+    "hoursLeft_one": "{{count}}h restante",
+    "hoursLeft_other": "{{count}}h restantes",
     "unitDay": "j",
     "unitHour": "h",
     "weeklyTasks": "Tâches Hebdomadaires",

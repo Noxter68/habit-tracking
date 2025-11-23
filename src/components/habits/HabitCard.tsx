@@ -92,48 +92,66 @@ const getLastCompletionDate = (habit: Habit): Date | null => {
 };
 
 /**
+ * Retourne le lundi de la semaine contenant la date donnée
+ * @param date - Date de référence
+ * @returns Date du lundi à 00:00:00
+ */
+const getWeekStart = (date: Date): Date => {
+  const d = new Date(date);
+  const day = d.getDay();
+  // Convertit dimanche (0) en 7 pour un calcul basé sur lundi
+  const dayFromMonday = day === 0 ? 7 : day;
+  d.setDate(d.getDate() - (dayFromMonday - 1));
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+/**
  * Calcule la prochaine reinitialisation hebdomadaire
- * Basee sur la derniere completion, pas la date de creation
- * @param habit - Habitude
- * @returns Date de prochaine reinitialisation
+ * Basée sur les semaines calendaires (lundi à dimanche)
+ * Reset = prochain lundi à 00:01
+ * @param habit - Habitude (non utilisé mais gardé pour la signature)
+ * @returns Date de prochaine reinitialisation (prochain lundi)
  */
 const getNextWeeklyReset = (habit: Habit): Date => {
-  const lastCompletion = getLastCompletionDate(habit);
-  const baseDate = lastCompletion || new Date(habit.createdAt);
-
   const today = new Date();
-  const daysSinceBase = Math.floor(
-    (today.getTime() - baseDate.getTime()) / (1000 * 60 * 60 * 24)
-  );
-  const weeksSinceBase = Math.floor(daysSinceBase / 7);
+  const currentWeekStart = getWeekStart(today);
 
-  const nextReset = new Date(baseDate);
-  nextReset.setDate(baseDate.getDate() + (weeksSinceBase + 1) * 7);
+  // Prochain lundi = lundi actuel + 7 jours
+  const nextMonday = new Date(currentWeekStart);
+  nextMonday.setDate(currentWeekStart.getDate() + 7);
+  nextMonday.setHours(0, 1, 0, 0); // 00:01 du lundi
 
-  return nextReset;
+  return nextMonday;
 };
 
 /**
  * Verifie si toutes les taches sont completees cette semaine pour une habitude hebdomadaire
+ * Utilise les semaines calendaires (lundi à dimanche)
  * @param habit - Habitude
  * @returns True si la semaine est completee
  */
 const isWeekCompleted = (habit: Habit): boolean => {
   if (habit.frequency !== 'weekly') return false;
 
-  const created = new Date(habit.createdAt);
   const today = new Date();
-  const daysSinceCreation = Math.floor(
-    (today.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)
-  );
-  const currentWeekStart = Math.floor(daysSinceCreation / 7) * 7;
+  const weekStart = getWeekStart(today);
+  const createdAt = new Date(habit.createdAt);
+  createdAt.setHours(0, 0, 0, 0);
 
+  // Vérifie chaque jour de la semaine calendaire (lundi à dimanche)
   for (let i = 0; i < 7; i++) {
-    const checkDate = new Date(created);
-    checkDate.setDate(created.getDate() + currentWeekStart + i);
-    const dateStr = getLocalDateString(checkDate);
+    const checkDate = new Date(weekStart);
+    checkDate.setDate(weekStart.getDate() + i);
 
+    // Ignore les jours avant la création de l'habitude
+    if (checkDate.getTime() < createdAt.getTime()) {
+      continue;
+    }
+
+    const dateStr = getLocalDateString(checkDate);
     const dayData = habit.dailyTasks?.[dateStr];
+
     if (dayData?.allCompleted) {
       return true;
     }
@@ -195,24 +213,29 @@ export const HabitCard: React.FC<HabitCardProps> = ({
   const todayTasks = habit.dailyTasks?.[today];
   const isWeekly = habit.frequency === 'weekly';
 
-  // Pour les habitudes hebdomadaires, compte TOUTES les taches completees CETTE SEMAINE
+  // Pour les habitudes hebdomadaires, compte TOUTES les taches completees CETTE SEMAINE calendaire
   const completedTasks = useMemo(() => {
     if (!isWeekly) {
       return todayTasks?.completedTasks?.length || 0;
     }
 
-    const created = new Date(habit.createdAt);
     const now = new Date();
-    const daysSince = Math.floor(
-      (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)
-    );
-    const weekStart = Math.floor(daysSince / 7) * 7;
+    const weekStart = getWeekStart(now);
+    const createdAt = new Date(habit.createdAt);
+    createdAt.setHours(0, 0, 0, 0);
 
     const weekTasksCompleted = new Set<string>();
 
+    // Parcourt la semaine calendaire (lundi à dimanche)
     for (let i = 0; i < 7; i++) {
-      const checkDate = new Date(created);
-      checkDate.setDate(created.getDate() + weekStart + i);
+      const checkDate = new Date(weekStart);
+      checkDate.setDate(weekStart.getDate() + i);
+
+      // Ignore les jours avant la création de l'habitude
+      if (checkDate.getTime() < createdAt.getTime()) {
+        continue;
+      }
+
       const dateStr = getLocalDateString(checkDate);
       const dayData = habit.dailyTasks?.[dateStr];
 
@@ -228,9 +251,14 @@ export const HabitCard: React.FC<HabitCardProps> = ({
 
   const weekCompleted = isWeekly ? isWeekCompleted(habit) : false;
   const nextReset = isWeekly ? getNextWeeklyReset(habit) : null;
-  const daysUntilReset = nextReset
-    ? Math.ceil((nextReset.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
-    : 0;
+
+  // Calcul du temps jusqu'au reset pour les weekly
+  const msUntilReset = nextReset ? nextReset.getTime() - new Date().getTime() : 0;
+  const hoursUntilWeeklyReset = Math.ceil(msUntilReset / (1000 * 60 * 60));
+  const daysUntilReset = Math.ceil(msUntilReset / (1000 * 60 * 60 * 24));
+  // Affiche en heures si moins de 24h
+  const showHoursForWeekly = hoursUntilWeeklyReset <= 24 && hoursUntilWeeklyReset > 0;
+
   const hoursUntilReset = !isWeekly ? getHoursUntilMidnight() : 0;
 
   // Compte des taches en pause
@@ -330,10 +358,12 @@ export const HabitCard: React.FC<HabitCardProps> = ({
                     <Text style={tw`text-xs text-white/70 font-medium`}>
                       {weekCompleted
                         ? t('habits.resetsIn', {
-                            count: daysUntilReset,
-                            unit: t('habits.unitDay'),
+                            count: showHoursForWeekly ? hoursUntilWeeklyReset : daysUntilReset,
+                            unit: showHoursForWeekly ? t('habits.unitHour') : t('habits.unitDay'),
                           })
-                        : t('habits.daysLeft', { count: daysUntilReset })}
+                        : showHoursForWeekly
+                          ? t('habits.hoursLeft', { count: hoursUntilWeeklyReset })
+                          : t('habits.daysLeft', { count: daysUntilReset })}
                     </Text>
                   </>
                 )}
