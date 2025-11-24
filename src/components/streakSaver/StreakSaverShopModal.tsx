@@ -74,7 +74,7 @@ export const StreakSaverShopModal: React.FC<StreakSaverShopModalProps> = ({ visi
   const handlePurchase = async (pkg: SubscriptionPackage) => {
     try {
       setPurchasing(pkg.identifier);
-      const result = await RevenueCatService.purchasePackage(pkg);
+      const result = await RevenueCatService.purchasePackage(pkg, user.id);
 
       if (result.success) {
         const quantity = getStreakSaverQuantity(pkg.product.identifier);

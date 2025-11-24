@@ -236,10 +236,16 @@ export class RevenueCatService {
    * Acheter un package d'abonnement
    *
    * @param pkg - Le package a acheter
+   * @param userId - L'ID utilisateur pour s'assurer qu'il est bien connecte
    * @returns Resultat de l'operation avec le statut et les infos client
    */
-  static async purchasePackage(pkg: SubscriptionPackage): Promise<PurchaseResult> {
+  static async purchasePackage(pkg: SubscriptionPackage, userId?: string): Promise<PurchaseResult> {
     try {
+      // S'assurer que l'utilisateur est bien connecte avant l'achat
+      if (userId) {
+        await this.ensureUserConnected(userId);
+      }
+
       const { customerInfo } = await Purchases.purchasePackage(pkg.rcPackage);
 
       const hasPremium = !!customerInfo.entitlements.active['premium'];
@@ -372,6 +378,24 @@ export class RevenueCatService {
       Logger.debug('[RevenueCat] User logged out');
     } catch (error) {
       Logger.error('[RevenueCat] Error logging out');
+    }
+  }
+
+  /**
+   * S'assurer que l'utilisateur est bien connecte avant un achat
+   * Re-authentifie si necessaire
+   *
+   * @param userId - L'identifiant unique de l'utilisateur
+   */
+  static async ensureUserConnected(userId: string): Promise<void> {
+    try {
+      const customerInfo = await Purchases.getCustomerInfo();
+      if (customerInfo.originalAppUserId !== userId) {
+        Logger.debug('[RevenueCat] Re-authenticating user');
+        await Purchases.logIn(userId);
+      }
+    } catch {
+      await Purchases.logIn(userId);
     }
   }
 }

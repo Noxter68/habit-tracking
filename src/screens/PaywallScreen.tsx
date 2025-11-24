@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import tw from '../lib/tailwind';
 import { RootStackParamList } from '../../App';
 import { useSubscription } from '@/context/SubscriptionContext';
+import { useAuth } from '@/context/AuthContext';
 import { RevenueCatService, SubscriptionPackage } from '@/services/RevenueCatService';
 import Logger from '@/utils/logger';
 
@@ -32,6 +33,7 @@ interface PaywallScreenProps {
 const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
   const navigation = useNavigation<NavigationProp>();
   const { refreshSubscription } = useSubscription();
+  const { user } = useAuth();
   const { t } = useTranslation();
 
   const [loading, setLoading] = useState(false);
@@ -100,7 +102,7 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
     setLoading(true);
 
     try {
-      const result = await RevenueCatService.purchasePackage(selectedPackage);
+      const result = await RevenueCatService.purchasePackage(selectedPackage, user?.id);
 
       if (result.success) {
         await refreshSubscription();

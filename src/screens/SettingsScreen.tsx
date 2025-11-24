@@ -33,6 +33,7 @@ import tw from 'twrnc';
 import EditUsernameModal from '@/components/settings/EditUserModal';
 import { GroupTierUpModal } from '@/components/groups/GroupTierUpModal';
 import { GroupLevelUpModal } from '@/components/groups/GroupLevelUpModal';
+import { StreakSaverShopModal } from '@/components/streakSaver/StreakSaverShopModal';
 
 import { useAuth } from '@/context/AuthContext';
 import { useSubscription } from '@/context/SubscriptionContext';
@@ -411,6 +412,7 @@ const SettingsScreen: React.FC = () => {
   const [activeHoliday, setActiveHoliday] = useState<HolidayPeriod | null>(null);
   const [holidayStats, setHolidayStats] = useState<any>(null);
   const [signingOut, setSigningOut] = useState(false);
+  const [showStreakSaverShop, setShowStreakSaverShop] = useState(false);
 
   // ============================================================================
   // HOOKS - useCallback
@@ -747,7 +749,17 @@ const SettingsScreen: React.FC = () => {
             {Config.debug.showDebugScreen && (
               <SettingsSection title="Debug Tools" delay={500}>
                 <SettingsItem icon="bug" title="Test Level Up" subtitle="Celebration simple (5s)" onPress={() => triggerLevelUp(30, 14)} />
-                <SettingsItem icon="sparkles" title="Test Tier Up" subtitle="Celebration epique (8s)" onPress={() => triggerTierUp(50, 9)} isLast />
+                <SettingsItem icon="sparkles" title="Test Tier Up" subtitle="Celebration epique (8s)" onPress={() => triggerTierUp(50, 9)} />
+                <SettingsItem
+                  icon="sparkles"
+                  title="Test Streak Saver Shop"
+                  subtitle="Ouvrir la modal d'achat"
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setShowStreakSaverShop(true);
+                  }}
+                  isLast
+                />
               </SettingsSection>
             )}
 
@@ -774,6 +786,9 @@ const SettingsScreen: React.FC = () => {
             {/* Modals de célébration de groupe */}
             <GroupTierUpModal />
             <GroupLevelUpModal />
+
+            {/* Modal Streak Saver Shop (debug) */}
+            <StreakSaverShopModal visible={showStreakSaverShop} onClose={() => setShowStreakSaverShop(false)} />
 
             {/* Bouton de déconnexion */}
             <Animated.View entering={FadeInDown.delay(500).duration(600).springify()} style={tw`mt-8 mb-6`}>
