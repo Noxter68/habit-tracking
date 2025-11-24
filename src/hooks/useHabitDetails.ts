@@ -80,10 +80,7 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
     if (!habitId || !userId) return;
 
     try {
-      // Don't show loading on subsequent fetches (prevents flash)
-      if (!performanceMetrics) {
-        setLoading(true);
-      }
+      setLoading(true);
 
       // Fetch async data in parallel
       const [progression, metrics] = await Promise.all([HabitProgressionService.getOrCreateProgression(habitId, userId), HabitProgressionService.getPerformanceMetrics(habitId, userId)]);
@@ -122,7 +119,7 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
     } finally {
       setLoading(false);
     }
-  }, [habitId, userId, currentStreak, performanceMetrics, createdAt]);
+  }, [habitId, userId, currentStreak, currentTierLevel, createdAt]);
 
   // ============================================================================
   // FETCH ON MOUNT AND WHEN DEPENDENCIES CHANGE
