@@ -212,3 +212,143 @@ export const getHoursUntilMidnight = (): number => {
 
   return diffHours;
 };
+
+// =============================================================================
+// FONCTIONS POUR LES HABITUDES HEBDOMADAIRES
+// =============================================================================
+
+/**
+ * Retourne le lundi de la semaine contenant la date donnée.
+ * Utilise les semaines calendaires standard (lundi à dimanche).
+ *
+ * @param date - Date de référence
+ * @returns Date du lundi à 00:00:00
+ *
+ * @example
+ * const monday = getWeekStartMonday(new Date('2024-01-17')); // mercredi
+ * // Retourne: Date du lundi 15 janvier 2024 à 00:00:00
+ */
+export const getWeekStartMonday = (date: Date): Date => {
+  const d = new Date(date);
+  const day = d.getDay();
+  // Convertit dimanche (0) en 7 pour un calcul basé sur lundi
+  const dayFromMonday = day === 0 ? 7 : day;
+  d.setDate(d.getDate() - (dayFromMonday - 1));
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+/**
+ * Calcule la date du prochain lundi à 00:01.
+ * Utilisé pour le reset des habitudes hebdomadaires.
+ *
+ * @returns Date du prochain lundi à 00:01
+ *
+ * @example
+ * const nextMonday = getNextMondayReset();
+ */
+export const getNextMondayReset = (): Date => {
+  const today = new Date();
+  const currentWeekStart = getWeekStartMonday(today);
+
+  // Prochain lundi = lundi actuel + 7 jours
+  const nextMonday = new Date(currentWeekStart);
+  nextMonday.setDate(currentWeekStart.getDate() + 7);
+  nextMonday.setHours(0, 1, 0, 0); // 00:01 du lundi
+
+  return nextMonday;
+};
+
+/**
+ * Vérifie si une habitude hebdomadaire est complétée pour la semaine calendaire actuelle.
+ * Une semaine est considérée complète si au moins un jour a toutes les tâches complétées.
+ *
+ * @param dailyTasks - Les données de tâches quotidiennes de l'habitude
+ * @param createdAt - Date de création de l'habitude
+ * @returns true si la semaine est complétée, false sinon
+ *
+ * @example
+ * const isComplete = isWeeklyHabitCompletedThisWeek(habit.dailyTasks, habit.createdAt);
+ */
+export const isWeeklyHabitCompletedThisWeek = (
+  dailyTasks: Record<string, { completedTasks?: string[]; allCompleted?: boolean }> | undefined,
+  createdAt: Date
+): boolean => {
+  const today = new Date();
+  const weekStart = getWeekStartMonday(today);
+  const created = new Date(createdAt);
+  created.setHours(0, 0, 0, 0);
+
+  // Vérifie chaque jour de la semaine calendaire (lundi à dimanche)
+  for (let i = 0; i < 7; i++) {
+    const checkDate = new Date(weekStart);
+    checkDate.setDate(weekStart.getDate() + i);
+
+    // Ignore les jours avant la création de l'habitude
+    if (checkDate.getTime() < created.getTime()) {
+      continue;
+    }
+
+    // Ignore les jours futurs
+    if (checkDate.getTime() > today.getTime()) {
+      continue;
+    }
+
+    const dateStr = getLocalDateString(checkDate);
+    const dayData = dailyTasks?.[dateStr];
+
+    if (dayData?.allCompleted) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+/**
+ * Compte les tâches complétées cette semaine calendaire pour une habitude hebdomadaire.
+ * Agrège toutes les tâches uniques complétées du lundi au dimanche.
+ *
+ * @param dailyTasks - Les données de tâches quotidiennes de l'habitude
+ * @param createdAt - Date de création de l'habitude
+ * @returns Le nombre de tâches uniques complétées cette semaine
+ *
+ * @example
+ * const count = getWeeklyCompletedTasksCount(habit.dailyTasks, habit.createdAt);
+ */
+export const getWeeklyCompletedTasksCount = (
+  dailyTasks: Record<string, { completedTasks?: string[]; allCompleted?: boolean }> | undefined,
+  createdAt: Date
+): number => {
+  const today = new Date();
+  const weekStart = getWeekStartMonday(today);
+  const created = new Date(createdAt);
+  created.setHours(0, 0, 0, 0);
+
+  const weekTasksCompleted = new Set<string>();
+
+  // Parcourt la semaine calendaire (lundi à dimanche)
+  for (let i = 0; i < 7; i++) {
+    const checkDate = new Date(weekStart);
+    checkDate.setDate(weekStart.getDate() + i);
+
+    // Ignore les jours avant la création de l'habitude
+    if (checkDate.getTime() < created.getTime()) {
+      continue;
+    }
+
+    // Ignore les jours futurs
+    if (checkDate.getTime() > today.getTime()) {
+      continue;
+    }
+
+    const dateStr = getLocalDateString(checkDate);
+    const dayData = dailyTasks?.[dateStr];
+
+    if (dayData?.completedTasks) {
+      dayData.completedTasks.forEach((taskId: string) => weekTasksCompleted.add(taskId));
+    }
+  }
+
+  return weekTasksCompleted.size;
+};

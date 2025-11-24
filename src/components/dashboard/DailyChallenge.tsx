@@ -7,7 +7,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, wit
 import { useTranslation } from 'react-i18next';
 import { XPService } from '../../services/xpService';
 import { supabase } from '../../lib/supabase';
-import { getTodayString } from '@/utils/dateHelpers';
+import { getTodayString, isWeeklyHabitCompletedThisWeek } from '@/utils/dateHelpers';
 import Logger from '@/utils/logger';
 import { Config } from '@/config';
 import { Habit } from '@/types';
@@ -54,29 +54,8 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
       } else if (habit.frequency === 'weekly') {
         weeklyTasksTotal += taskCount;
 
-        // Vérifier si l'habitude weekly est déjà complétée cette semaine
-        const created = new Date(habit.createdAt);
-        const now = new Date();
-        const daysSince = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
-        const weekStart = Math.floor(daysSince / 7) * 7;
-
-        let weekCompleted = false;
-        for (let i = 0; i < 7; i++) {
-          const checkDate = new Date(created);
-          checkDate.setDate(created.getDate() + weekStart + i);
-          const year = checkDate.getFullYear();
-          const month = String(checkDate.getMonth() + 1).padStart(2, '0');
-          const day = String(checkDate.getDate()).padStart(2, '0');
-          const dateStr = `${year}-${month}-${day}`;
-          const dayData = habit.dailyTasks?.[dateStr];
-
-          if (dayData?.allCompleted) {
-            weekCompleted = true;
-            break;
-          }
-        }
-
-        if (weekCompleted) {
+        // Utilise la fonction centralisée qui utilise les semaines calendaires (lundi-dimanche)
+        if (isWeeklyHabitCompletedThisWeek(habit.dailyTasks, habit.createdAt)) {
           weeklyTasksCompletedThisWeek += taskCount;
         }
       }

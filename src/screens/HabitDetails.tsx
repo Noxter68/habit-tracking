@@ -17,7 +17,7 @@
  */
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, Dimensions, StatusBar } from 'react-native';
+import { View, Text, ScrollView, Pressable, Dimensions, StatusBar, ActivityIndicator, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
@@ -34,7 +34,6 @@ import MilestonesCard from '@/components/habits/MilestoneCard';
 import { TierCelebration } from '@/components/habits/TierCelebration';
 import { StreakSaverModal } from '@/components/streakSaver/StreakSaverModal';
 import { DebugButton } from '@/components/debug/DebugButton';
-import TaskManager from '@/components/tasks/TaskManager';
 
 import { useHabits } from '@/context/HabitContext';
 import { useAuth } from '@/context/AuthContext';
@@ -156,19 +155,40 @@ const HabitDetails: React.FC = () => {
   };
 
   /**
+   * Retourne le lundi de la semaine contenant la date donnée
+   */
+  const getWeekStart = (date: Date): Date => {
+    const d = new Date(date);
+    const day = d.getDay();
+    // Convertit dimanche (0) en 7 pour un calcul basé sur lundi
+    const dayFromMonday = day === 0 ? 7 : day;
+    d.setDate(d.getDate() - (dayFromMonday - 1));
+    d.setHours(0, 0, 0, 0);
+    return d;
+  };
+
+  /**
    * Vérifie si la semaine est complétée pour les habitudes hebdomadaires
+   * Utilise les semaines calendaires (lundi à dimanche)
    */
   const isWeekCompleted = useMemo(() => {
     if (habit?.frequency !== 'weekly') return false;
 
-    const created = new Date(habit.createdAt);
-    const now = new Date();
-    const daysSince = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
-    const weekStart = Math.floor(daysSince / 7) * 7;
+    const today = new Date();
+    const weekStart = getWeekStart(today);
+    const createdAt = new Date(habit.createdAt);
+    createdAt.setHours(0, 0, 0, 0);
 
+    // Vérifie chaque jour de la semaine calendaire (lundi à dimanche)
     for (let i = 0; i < 7; i++) {
-      const checkDate = new Date(created);
-      checkDate.setDate(created.getDate() + weekStart + i);
+      const checkDate = new Date(weekStart);
+      checkDate.setDate(weekStart.getDate() + i);
+
+      // Ignore les jours avant la création de l'habitude
+      if (checkDate.getTime() < createdAt.getTime()) {
+        continue;
+      }
+
       const dateStr = getLocalDateString(checkDate);
       const dayData = habit.dailyTasks?.[dateStr];
 
@@ -187,19 +207,7 @@ const HabitDetails: React.FC = () => {
   // HOOKS - Données de progression
   // ============================================================================
 
-  const {
-    tierInfo,
-    nextTier,
-    milestoneStatus,
-    performanceMetrics,
-    refreshProgression,
-    loading
-  } = useHabitDetails(
-    habit?.id || '',
-    user?.id || '',
-    habit?.currentStreak || 0,
-    completedTasksToday
-  );
+  const { tierInfo, nextTier, milestoneStatus, performanceMetrics, refreshProgression, loading } = useHabitDetails(habit?.id || '', user?.id || '', habit?.currentStreak || 0, completedTasksToday, habit?.currentTierLevel, habit?.createdAt);
 
   // ============================================================================
   // VARIABLES DERIVEES - Métriques
@@ -368,33 +376,40 @@ const HabitDetails: React.FC = () => {
     );
   }
 
+  // Affiche un loader tant que les milestones ne sont pas chargés
+  if (loading) {
+    return (
+      <View style={tw`flex-1 bg-stone-50`}>
+        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+        <LinearGradient colors={tierThemes[currentTierData.tier.name].gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`flex-1 items-center justify-center`}>
+          <ActivityIndicator size="large" color="#ffffff" />
+        </LinearGradient>
+      </View>
+    );
+  }
+
   // ============================================================================
   // RENDU PRINCIPAL
   // ============================================================================
 
   return (
-    <View style={tw`flex-1 bg-stone-50`}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+    <ImageBackground
+      source={require('../../assets/interface/textures/texture-white.png')}
+      style={tw`flex-1`}
+      imageStyle={{ opacity: 0.6 }}
+      resizeMode="cover"
+    >
+      <View style={tw`flex-1 bg-stone-50/80`}>
+        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-      <ScrollView contentContainerStyle={tw`pb-8`} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={tw`pb-8`} showsVerticalScrollIndicator={false}>
         {/* En-tête avec dégradé du tier */}
         <Animated.View style={animatedGradientStyle}>
-          <LinearGradient
-            colors={tierThemes[currentTierData.tier.name].gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={tw`pb-10`}
-          >
+          <LinearGradient colors={tierThemes[currentTierData.tier.name].gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`pb-10`}>
             <SafeAreaView edges={['top']}>
               {/* Barre de navigation */}
-              <View style={tw`px-8 py-5 flex-row items-center justify-between`}>
-                <Pressable
-                  onPress={handleGoBack}
-                  style={({ pressed }) => [
-                    tw`w-11 h-11 rounded-2xl items-center justify-center bg-sand/20`,
-                    pressed && tw`scale-95`
-                  ]}
-                >
+              <View style={tw`px-8 pt-5 pb-4 flex-row items-center justify-between`}>
+                <Pressable onPress={handleGoBack} style={({ pressed }) => [tw`w-11 h-11 rounded-2xl items-center justify-center bg-sand/20`, pressed && tw`scale-95`]}>
                   <ArrowLeft size={22} color="#fff" strokeWidth={2.5} />
                 </Pressable>
 
@@ -413,13 +428,7 @@ const HabitDetails: React.FC = () => {
               {/* Bouton de test en mode développeur */}
               {Config.debug.enabled && (
                 <View style={tw`px-8 mb-4`}>
-                  <Pressable
-                    onPress={() => setShowTestModal(true)}
-                    style={({ pressed }) => [
-                      tw`bg-purple-500 rounded-2xl py-3 px-4 flex-row items-center justify-center`,
-                      pressed && tw`opacity-80`
-                    ]}
-                  >
+                  <Pressable onPress={() => setShowTestModal(true)} style={({ pressed }) => [tw`bg-purple-500 rounded-2xl py-3 px-4 flex-row items-center justify-center`, pressed && tw`opacity-80`]}>
                     <Zap size={18} color="white" fill="white" style={tw`mr-2`} />
                     <Text style={tw`text-white font-black text-sm`}>Test Streak Saver Modal</Text>
                   </Pressable>
@@ -430,7 +439,7 @@ const HabitDetails: React.FC = () => {
               <Animated.View
                 entering={FadeInDown.delay(100).springify()}
                 style={[
-                  tw`px-8 mt-6`,
+                  tw`px-8 mt-2`,
                   {
                     shadowColor: '#000',
                     shadowOffset: { width: 0, height: 4 },
@@ -461,6 +470,7 @@ const HabitDetails: React.FC = () => {
                     tierMultiplier={tierMultiplier}
                     totalXPEarned={totalXPEarned}
                     completionRate={completionRate}
+                    unlockedMilestonesCount={milestoneStatus?.unlocked?.length || 0}
                   />
                 </View>
 
@@ -498,78 +508,51 @@ const HabitDetails: React.FC = () => {
         </Animated.View>
 
         {/* Contenu des onglets */}
-        <ScrollView
-          contentContainerStyle={[tw`pb-8 pt-5`]}
-          showsVerticalScrollIndicator={false}
-        >
+        <ScrollView contentContainerStyle={[tw`pb-8 pt-5`]} showsVerticalScrollIndicator={false}>
           {/* Sélecteur d'onglets */}
           <Animated.View entering={FadeInUp.delay(200).springify()} style={tw`px-5 mb-5 mt-2`}>
-            <TabSelector
-              tier={currentTierData.tier.name}
-              selected={selectedTab}
-              onChange={handleTabChange}
-            />
+            <TabSelector tier={currentTierData.tier.name} selected={selectedTab} onChange={handleTabChange} />
           </Animated.View>
 
           <View style={tw`px-5`}>
             {/* Onglet Vue d'ensemble */}
             {selectedTab === 'overview' && (
               <Animated.View entering={FadeInDown.duration(300)}>
-                {/* Gestionnaire de tâches */}
-                <TaskManager
+                {/* Carte des tâches avec gestion intégrée */}
+                <TasksCard
+                  tasks={habit.tasks || []}
+                  todayTasks={todayTasks}
                   habitId={habit.id}
                   habitCategory={habit.category}
                   habitType={habit.type}
-                  currentTier={currentTierData.tier.name}
-                  tasks={habit.tasks || []}
+                  today={today}
+                  onToggleTask={handleToggleTask}
+                  tier={currentTierData.tier.name}
+                  pausedTasks={pausedTasks}
+                  isLoading={isTogglingTask}
+                  loadingTaskId={loadingTaskId}
+                  frequency={habit.frequency}
+                  isWeekCompleted={isWeekCompleted}
                   onTasksUpdated={handleTasksUpdated}
                   tierColor={tierColor}
                 />
-
-                {/* Carte des tâches */}
-                {totalTasks > 0 && (
-                  <TasksCard
-                    tasks={habit.tasks || []}
-                    todayTasks={todayTasks}
-                    habitId={habit.id}
-                    habitCategory={habit.category}
-                    habitType={habit.type}
-                    today={today}
-                    onToggleTask={handleToggleTask}
-                    tier={currentTierData.tier.name}
-                    pausedTasks={pausedTasks}
-                    isLoading={isTogglingTask}
-                    loadingTaskId={loadingTaskId}
-                    frequency={habit.frequency}
-                    isWeekCompleted={isWeekCompleted}
-                  />
-                )}
               </Animated.View>
             )}
 
             {/* Onglet Tiers */}
             {selectedTab === 'tiers' && (
               <Animated.View entering={FadeInDown.duration(300)}>
-                <MilestonesCard
-                  milestones={milestoneStatus?.all || []}
-                  currentStreak={debugStreak !== null ? debugStreak : habit.currentStreak}
-                  unlockedMilestones={milestoneStatus?.unlocked || []}
-                />
+                <MilestonesCard milestones={milestoneStatus?.all || []} habitAge={Math.floor((new Date().getTime() - new Date(habit.createdAt).getTime()) / (1000 * 60 * 60 * 24)) + 1} unlockedMilestones={milestoneStatus?.unlocked || []} />
               </Animated.View>
             )}
           </View>
         </ScrollView>
       </ScrollView>
 
-      {/* Animation de célébration de tier */}
-      {celebrationTier && (
-        <TierCelebration
-          visible={showCelebration}
-          newTier={celebrationTier}
-          onClose={handleCelebrationClose}
-        />
-      )}
-    </View>
+        {/* Animation de célébration de tier */}
+        {celebrationTier && <TierCelebration visible={showCelebration} newTier={celebrationTier} onClose={handleCelebrationClose} />}
+      </View>
+    </ImageBackground>
   );
 };
 

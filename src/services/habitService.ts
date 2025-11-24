@@ -16,7 +16,7 @@ import { supabase } from '../lib/supabase';
 // =============================================================================
 // IMPORTS - Utilitaires internes
 // =============================================================================
-import { getLocalDateString, getTodayString } from '@/utils/dateHelpers';
+import { getLocalDateString, getTodayString, getWeekStartMonday } from '@/utils/dateHelpers';
 import { getTasksForCategory } from '@/utils/habitHelpers';
 import Logger from '@/utils/logger';
 
@@ -566,6 +566,7 @@ export class HabitService {
           currentStreak: habit.current_streak || 0,
           bestStreak: habit.best_streak || 0,
           createdAt: new Date(habit.created_at),
+          currentTierLevel: habit.current_tier_level ?? 0,
         };
       });
     } catch (error) {
@@ -794,6 +795,7 @@ export class HabitService {
 
   /**
    * Calculer les streaks pour les habitudes hebdomadaires
+   * Utilise les semaines calendaires (lundi-dimanche) pour cohérence avec le reset hebdomadaire
    *
    * @param completions - Les données de complétion
    * @param createdAt - La date de création de l'habitude
@@ -809,25 +811,32 @@ export class HabitService {
     const created = new Date(createdAt);
     created.setHours(0, 0, 0, 0);
 
-    const daysSinceCreation = Math.floor(
-      (today.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)
-    );
-    const currentWeekIndex = Math.floor(daysSinceCreation / 7);
+    // Utilise les semaines calendaires (lundi-dimanche)
+    const currentWeekStart = getWeekStartMonday(today);
+    const createdWeekStart = getWeekStartMonday(created);
 
+    // Calcul de l'index de la semaine courante par rapport à la semaine de création
+    const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+    const currentWeekIndex = Math.floor(
+      (currentWeekStart.getTime() - createdWeekStart.getTime()) / msPerWeek
+    );
+
+    // Map des semaines complétées (index basé sur semaines calendaires depuis création)
     const weekCompletions = new Map<number, boolean>();
 
     completions.forEach((completion) => {
       const completionDate = new Date(completion.date);
-      const daysSince = Math.floor(
-        (completionDate.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)
+      const completionWeekStart = getWeekStartMonday(completionDate);
+      const weekIndex = Math.floor(
+        (completionWeekStart.getTime() - createdWeekStart.getTime()) / msPerWeek
       );
-      const weekIndex = Math.floor(daysSince / 7);
 
-      if (completion.all_completed) {
+      if (completion.all_completed && weekIndex >= 0) {
         weekCompletions.set(weekIndex, true);
       }
     });
 
+    // Calcul du streak actuel (en partant de la semaine courante vers le passé)
     let currentStreak = 0;
     for (let week = currentWeekIndex; week >= 0; week--) {
       if (weekCompletions.get(week)) {
@@ -837,16 +846,20 @@ export class HabitService {
       }
     }
 
+    // Calcul du meilleur streak
     let bestStreak = 0;
     let tempStreak = 0;
 
-    const maxWeek = Math.max(...Array.from(weekCompletions.keys()));
-    for (let week = 0; week <= maxWeek; week++) {
-      if (weekCompletions.get(week)) {
-        tempStreak++;
-        bestStreak = Math.max(bestStreak, tempStreak);
-      } else {
-        tempStreak = 0;
+    const weekKeys = Array.from(weekCompletions.keys());
+    if (weekKeys.length > 0) {
+      const maxWeek = Math.max(...weekKeys);
+      for (let week = 0; week <= maxWeek; week++) {
+        if (weekCompletions.get(week)) {
+          tempStreak++;
+          bestStreak = Math.max(bestStreak, tempStreak);
+        } else {
+          tempStreak = 0;
+        }
       }
     }
 

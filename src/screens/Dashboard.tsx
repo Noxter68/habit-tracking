@@ -40,7 +40,7 @@ import { StreakSaverService } from '@/services/StreakSaverService';
 import { getAchievementByLevel, getAchievementTitle } from '@/utils/achievements';
 import { HapticFeedback } from '@/utils/haptics';
 import Logger from '@/utils/logger';
-import { getTodayString, getLocalDateString } from '@/utils/dateHelpers';
+import { getTodayString, isWeeklyHabitCompletedThisWeek, getWeeklyCompletedTasksCount } from '@/utils/dateHelpers';
 import { versionManager } from '@/utils/versionManager';
 import { getModalTexts, getUpdatesForVersion } from '@/utils/updateContent';
 
@@ -48,6 +48,7 @@ import { getModalTexts, getUpdatesForVersion } from '@/utils/updateContent';
 import { HolidayPeriod } from '@/types/holiday.types';
 import { Config } from '@/config';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
+import { useMultipleHabitMilestonesCount } from '@/hooks/useHabitMilestones';
 
 // ============================================================================
 // Main Component
@@ -226,6 +227,10 @@ const Dashboard: React.FC = () => {
     return { dailyHabits: daily, weeklyHabits: weekly };
   }, [activeHabits]);
 
+  // Load milestones counts for all habits
+  const habitIds = useMemo(() => habits.map((h) => h.id), [habits]);
+  const milestoneCounts = useMultipleHabitMilestonesCount(habitIds);
+
   // ============================================================================
   // Event Handlers
   // ============================================================================
@@ -294,38 +299,18 @@ const Dashboard: React.FC = () => {
       const taskCount = habit.tasks?.length || 0;
       const isWeekly = habit.frequency === 'weekly';
 
-      // Pour les habitudes weekly, vérifier si elles sont déjà complétées cette semaine
+      // Pour les habitudes weekly, vérifier si elles sont déjà complétées cette semaine calendaire (lundi-dimanche)
       if (isWeekly) {
-        const created = new Date(habit.createdAt);
-        const now = new Date();
-        const daysSince = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
-        const weekStart = Math.floor(daysSince / 7) * 7;
+        const weekCompleted = isWeeklyHabitCompletedThisWeek(habit.dailyTasks, habit.createdAt);
 
-        // Vérifier si l'habitude a été complétée cette semaine
-        let weekCompleted = false;
-        for (let i = 0; i < 7; i++) {
-          const checkDate = new Date(created);
-          checkDate.setDate(created.getDate() + weekStart + i);
-          const dateStr = getLocalDateString(checkDate);
-          const dayData = habit.dailyTasks?.[dateStr];
-
-          if (dayData?.allCompleted) {
-            weekCompleted = true;
-            break;
-          }
-        }
-
-        // Si l'habitude weekly est déjà complétée cette semaine, on la compte comme "completed" mais pas dans le total du jour
+        // Si l'habitude weekly est déjà complétée cette semaine, on la compte comme "completed"
         if (weekCompleted) {
           completed += taskCount;
           total += taskCount;
         } else {
-          // Si pas encore complétée, on compte normalement
+          // Si pas encore complétée, on compte les tâches complétées cette semaine
           total += taskCount;
-          const todayData = habit.dailyTasks?.[today];
-          if (todayData?.completedTasks) {
-            completed += todayData.completedTasks.length;
-          }
+          completed += getWeeklyCompletedTasksCount(habit.dailyTasks, habit.createdAt);
         }
       } else {
         // Pour les habitudes daily, logique normale
@@ -609,6 +594,7 @@ const Dashboard: React.FC = () => {
                           onDelete={handleDeleteHabit}
                           onPress={() => handleHabitPress(habit.id)}
                           index={index}
+                          unlockedMilestonesCount={milestoneCounts[habit.id] || 0}
                         />
                       ))}
                     </View>
@@ -629,6 +615,7 @@ const Dashboard: React.FC = () => {
                           onDelete={handleDeleteHabit}
                           onPress={() => handleHabitPress(habit.id)}
                           index={dailyHabits.length + index}
+                          unlockedMilestonesCount={milestoneCounts[habit.id] || 0}
                         />
                       ))}
                     </View>
