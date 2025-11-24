@@ -395,7 +395,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           });
 
           if (milestoneRes.unlocked) {
-            Alert.alert('Milestone Reached!', `You've unlocked: ${milestoneRes.unlocked.title}`);
+            // La modal EpicModal gère maintenant l'affichage des milestones
           }
         }
 
