@@ -27,7 +27,7 @@ interface UseHabitDetailsResult {
   loading: boolean;
 }
 
-export function useHabitDetails(habitId: string, userId: string, currentStreak: number, completedTasksToday?: number): UseHabitDetailsResult {
+export function useHabitDetails(habitId: string, userId: string, currentStreak: number, completedTasksToday?: number, currentTierLevel?: number, createdAt?: Date): UseHabitDetailsResult {
   const [tierInfo, setTierInfo] = useState<TierInfo | null>(null);
   const [tierProgress, setTierProgress] = useState(0);
   const [nextTier, setNextTier] = useState<TierInfo | null>(null);
@@ -88,9 +88,23 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
       // Fetch async data in parallel
       const [progression, metrics] = await Promise.all([HabitProgressionService.getOrCreateProgression(habitId, userId), HabitProgressionService.getPerformanceMetrics(habitId, userId)]);
 
-      // Update milestones
+      // Update milestones - basé sur l'ancienneté de l'habitude (jours depuis création)
       if (progression) {
-        const status = await HabitProgressionService.getMilestoneStatus(currentStreak, progression.milestones_unlocked || []);
+        const unlockedData = currentTierLevel !== undefined && currentTierLevel > 0
+          ? currentTierLevel
+          : progression.milestones_unlocked || [];
+
+        // Calculer l'ancienneté de l'habitude
+        let habitAge = 1; // Par défaut, 1 jour
+        if (createdAt) {
+          const created = new Date(createdAt);
+          const today = new Date();
+          created.setHours(0, 0, 0, 0);
+          today.setHours(0, 0, 0, 0);
+          habitAge = Math.floor((today.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        }
+
+        const status = await HabitProgressionService.getMilestoneStatus(habitAge, unlockedData);
         setMilestoneStatus(status);
       }
 
@@ -108,7 +122,7 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
     } finally {
       setLoading(false);
     }
-  }, [habitId, userId, currentStreak, performanceMetrics]);
+  }, [habitId, userId, currentStreak, performanceMetrics, createdAt]);
 
   // ============================================================================
   // FETCH ON MOUNT AND WHEN DEPENDENCIES CHANGE
@@ -116,7 +130,7 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
 
   useEffect(() => {
     fetchData();
-  }, [habitId, userId, currentStreak, completedTasksToday]);
+  }, [habitId, userId, currentStreak, completedTasksToday, currentTierLevel]);
 
   return {
     tierInfo,

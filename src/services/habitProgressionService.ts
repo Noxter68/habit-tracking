@@ -209,20 +209,40 @@ export class HabitProgressionService {
   }
 
   /**
-   * Obtenir le statut des jalons pour un streak donne
+   * Obtenir le statut des jalons basé sur l'ancienneté de l'habitude (jours depuis création)
+   * Les milestones sont débloqués en fonction du temps passé depuis la création,
+   * pas du streak - car on construit une habitude même si on rate quelques jours.
    *
-   * @param currentStreak - Le streak actuel
-   * @param unlockedMilestones - Liste des jalons deja debloques
+   * @param habitAge - Nombre de jours depuis la création de l'habitude
+   * @param unlockedMilestones - Liste des jalons deja debloques (titres) OU nombre de milestones debloques
    * @returns Les jalons debloques, a venir et le prochain
    */
-  static async getMilestoneStatus(currentStreak: number, unlockedMilestones: string[]) {
+  static async getMilestoneStatus(habitAge: number, unlockedMilestones: string[] | number) {
     const milestones = await this.getMilestones();
 
+    // Si c'est un nombre (current_tier_level), on prend les N premiers milestones comme débloqués
+    const unlockedCount = typeof unlockedMilestones === 'number'
+      ? unlockedMilestones
+      : unlockedMilestones.length;
+
     const unlocked = milestones.filter(
-      (m) => unlockedMilestones.includes(m.title) || m.days <= currentStreak
+      (m, index) => {
+        // Débloqué si: index < nombre de milestones débloqués OU ancienneté >= jours requis
+        if (typeof unlockedMilestones === 'number') {
+          return index < unlockedMilestones || m.days <= habitAge;
+        }
+        // Fallback: comparaison par titre (legacy)
+        return unlockedMilestones.includes(m.title) || m.days <= habitAge;
+      }
     );
+
     const upcoming = milestones.filter(
-      (m) => m.days > currentStreak && !unlockedMilestones.includes(m.title)
+      (m, index) => {
+        if (typeof unlockedMilestones === 'number') {
+          return index >= unlockedMilestones && m.days > habitAge;
+        }
+        return m.days > habitAge && !unlockedMilestones.includes(m.title);
+      }
     );
     const next = upcoming[0] ?? null;
 
@@ -230,17 +250,19 @@ export class HabitProgressionService {
   }
 
   /**
-   * Verifier et debloquer un jalon
+   * Verifier et debloquer un jalon basé sur l'ancienneté de l'habitude
+   * Les milestones sont débloqués quand l'habitude atteint un certain âge (jours depuis création),
+   * indépendamment du streak.
    *
    * @param habitId - L'identifiant de l'habitude
    * @param userId - L'identifiant de l'utilisateur
-   * @param options - Options avec streak optionnel
+   * @param options - Options avec ancienneté optionnelle (overrideAge)
    * @returns Le jalon debloque et les XP accordes
    */
   static async checkMilestoneUnlock(
     habitId: string,
     userId: string,
-    options?: { overrideStreak?: number }
+    options?: { overrideAge?: number }
   ): Promise<{ unlocked: HabitMilestone | null; xpAwarded: number }> {
     try {
       const progression = await this.getOrCreateProgression(habitId, userId);
@@ -249,17 +271,25 @@ export class HabitProgressionService {
         return { unlocked: null, xpAwarded: 0 };
       }
 
-      let streak = options?.overrideStreak ?? 0;
-      if (!streak) {
+      // Calculer l'ancienneté de l'habitude (jours depuis création)
+      let habitAge = options?.overrideAge ?? 0;
+      if (!habitAge) {
         const { data } = await supabase
           .from('habits')
-          .select('current_streak')
+          .select('created_at')
           .eq('id', habitId)
           .single();
-        streak = data?.current_streak ?? 0;
+
+        if (data?.created_at) {
+          const createdAt = new Date(data.created_at);
+          const today = new Date();
+          createdAt.setHours(0, 0, 0, 0);
+          today.setHours(0, 0, 0, 0);
+          habitAge = Math.floor((today.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)) + 1; // +1 car le jour de création compte
+        }
       }
 
-      Logger.debug('Checking milestones for streak:', streak);
+      Logger.debug('Checking milestones for habit age:', habitAge);
 
       const { data: milestones, error } = await supabase
         .from('habit_milestones')
@@ -274,15 +304,16 @@ export class HabitProgressionService {
       const unlockedList = progression.milestones_unlocked ?? [];
       Logger.debug('Already unlocked (from DB):', unlockedList);
 
+      // Trouver le milestone correspondant à l'ancienneté exacte de l'habitude
       const milestoneData = milestones?.find(
         (m: any) =>
-          m.days === streak &&
+          m.days === habitAge &&
           !unlockedList.includes(m.id) &&
           !unlockedList.includes(m.title)
       );
 
       if (!milestoneData) {
-        Logger.debug('No new milestone for streak', streak);
+        Logger.debug('No new milestone for habit age', habitAge);
         return { unlocked: null, xpAwarded: 0 };
       }
 
@@ -325,10 +356,12 @@ export class HabitProgressionService {
         return { unlocked: null, xpAwarded: 0 };
       }
 
+      const newUnlockedList = [...unlockedList, milestone.title];
+
       const { error: updateError } = await supabase
         .from('habit_progression')
         .update({
-          milestones_unlocked: [...unlockedList, milestone.title],
+          milestones_unlocked: newUnlockedList,
           last_milestone_date: new Date().toISOString(),
         })
         .eq('id', progression.id);
@@ -338,7 +371,19 @@ export class HabitProgressionService {
         throw updateError;
       }
 
-      Logger.debug('Milestone unlocked successfully!');
+      // Mettre à jour current_tier_level dans habits (0-14 basé sur le nombre de milestones)
+      const newTierLevel = newUnlockedList.length;
+      const { error: habitUpdateError } = await supabase
+        .from('habits')
+        .update({ current_tier_level: newTierLevel })
+        .eq('id', habitId);
+
+      if (habitUpdateError) {
+        Logger.error('Error updating habit tier level:', habitUpdateError);
+        // Ne pas throw, le milestone est déjà débloqué
+      }
+
+      Logger.debug('Milestone unlocked successfully! Tier level:', newTierLevel);
       return { unlocked: milestone, xpAwarded: milestone.xpReward };
     } catch (err) {
       Logger.error('checkMilestoneUnlock error:', err);

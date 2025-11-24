@@ -61,6 +61,8 @@ export interface Habit {
   bestStreak: number;
   completedDays: string[]; // Days where ALL tasks were completed
   createdAt: Date;
+  /** Niveau de palier actuel (0-14), mis à jour lors du déblocage d'un milestone */
+  currentTierLevel?: number;
 }
 
 // ===== NEW TYPES FOR HABIT PROGRESSION =====

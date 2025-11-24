@@ -28,7 +28,8 @@ import * as Haptics from 'expo-haptics';
 import tw from '@/lib/tailwind';
 import { tierThemes } from '@/utils/tierTheme';
 import { HabitProgressionService } from '@/services/habitProgressionService';
-import { getTodayString, getLocalDateString, getHoursUntilMidnight } from '@/utils/dateHelpers';
+import { getTodayString, getHoursUntilMidnight, getNextMondayReset, isWeeklyHabitCompletedThisWeek, getWeeklyCompletedTasksCount } from '@/utils/dateHelpers';
+import { getTierIcon } from '@/utils/tierIcons';
 
 // Types
 import { Habit } from '@/types';
@@ -46,6 +47,8 @@ interface HabitCardProps {
   onPress?: () => void;
   index: number;
   pausedTasks?: Record<string, { pausedUntil: string; reason?: string }>;
+  /** Nombre de milestones debloques pour afficher l'icone du palier */
+  unlockedMilestonesCount?: number;
 }
 
 // =============================================================================
@@ -92,75 +95,6 @@ const getLastCompletionDate = (habit: Habit): Date | null => {
 };
 
 /**
- * Retourne le lundi de la semaine contenant la date donnée
- * @param date - Date de référence
- * @returns Date du lundi à 00:00:00
- */
-const getWeekStart = (date: Date): Date => {
-  const d = new Date(date);
-  const day = d.getDay();
-  // Convertit dimanche (0) en 7 pour un calcul basé sur lundi
-  const dayFromMonday = day === 0 ? 7 : day;
-  d.setDate(d.getDate() - (dayFromMonday - 1));
-  d.setHours(0, 0, 0, 0);
-  return d;
-};
-
-/**
- * Calcule la prochaine reinitialisation hebdomadaire
- * Basée sur les semaines calendaires (lundi à dimanche)
- * Reset = prochain lundi à 00:01
- * @param habit - Habitude (non utilisé mais gardé pour la signature)
- * @returns Date de prochaine reinitialisation (prochain lundi)
- */
-const getNextWeeklyReset = (habit: Habit): Date => {
-  const today = new Date();
-  const currentWeekStart = getWeekStart(today);
-
-  // Prochain lundi = lundi actuel + 7 jours
-  const nextMonday = new Date(currentWeekStart);
-  nextMonday.setDate(currentWeekStart.getDate() + 7);
-  nextMonday.setHours(0, 1, 0, 0); // 00:01 du lundi
-
-  return nextMonday;
-};
-
-/**
- * Verifie si toutes les taches sont completees cette semaine pour une habitude hebdomadaire
- * Utilise les semaines calendaires (lundi à dimanche)
- * @param habit - Habitude
- * @returns True si la semaine est completee
- */
-const isWeekCompleted = (habit: Habit): boolean => {
-  if (habit.frequency !== 'weekly') return false;
-
-  const today = new Date();
-  const weekStart = getWeekStart(today);
-  const createdAt = new Date(habit.createdAt);
-  createdAt.setHours(0, 0, 0, 0);
-
-  // Vérifie chaque jour de la semaine calendaire (lundi à dimanche)
-  for (let i = 0; i < 7; i++) {
-    const checkDate = new Date(weekStart);
-    checkDate.setDate(weekStart.getDate() + i);
-
-    // Ignore les jours avant la création de l'habitude
-    if (checkDate.getTime() < createdAt.getTime()) {
-      continue;
-    }
-
-    const dateStr = getLocalDateString(checkDate);
-    const dayData = habit.dailyTasks?.[dateStr];
-
-    if (dayData?.allCompleted) {
-      return true;
-    }
-  }
-
-  return false;
-};
-
-/**
  * Retourne le nom traduit de l'habitude
  * Si le nom correspond à un habitName prédéfini, utilise la traduction
  * Sinon retourne le nom tel quel (custom)
@@ -185,13 +119,7 @@ const getTranslatedHabitName = (habit: Habit, t: (key: string) => string): strin
 // COMPOSANT PRINCIPAL
 // =============================================================================
 
-export const HabitCard: React.FC<HabitCardProps> = ({
-  habit,
-  completedToday,
-  onPress,
-  index,
-  pausedTasks = {},
-}) => {
+export const HabitCard: React.FC<HabitCardProps> = ({ habit, completedToday, onPress, index, pausedTasks = {}, unlockedMilestonesCount = 0 }) => {
   // ---------------------------------------------------------------------------
   // Hooks
   // ---------------------------------------------------------------------------
@@ -219,38 +147,13 @@ export const HabitCard: React.FC<HabitCardProps> = ({
       return todayTasks?.completedTasks?.length || 0;
     }
 
-    const now = new Date();
-    const weekStart = getWeekStart(now);
-    const createdAt = new Date(habit.createdAt);
-    createdAt.setHours(0, 0, 0, 0);
-
-    const weekTasksCompleted = new Set<string>();
-
-    // Parcourt la semaine calendaire (lundi à dimanche)
-    for (let i = 0; i < 7; i++) {
-      const checkDate = new Date(weekStart);
-      checkDate.setDate(weekStart.getDate() + i);
-
-      // Ignore les jours avant la création de l'habitude
-      if (checkDate.getTime() < createdAt.getTime()) {
-        continue;
-      }
-
-      const dateStr = getLocalDateString(checkDate);
-      const dayData = habit.dailyTasks?.[dateStr];
-
-      if (dayData?.completedTasks) {
-        dayData.completedTasks.forEach((taskId: string) =>
-          weekTasksCompleted.add(taskId)
-        );
-      }
-    }
-
-    return weekTasksCompleted.size;
+    // Utilise la fonction centralisée pour compter les tâches complétées cette semaine calendaire
+    return getWeeklyCompletedTasksCount(habit.dailyTasks, habit.createdAt);
   }, [habit, isWeekly, todayTasks]);
 
-  const weekCompleted = isWeekly ? isWeekCompleted(habit) : false;
-  const nextReset = isWeekly ? getNextWeeklyReset(habit) : null;
+  // Utilise les fonctions centralisées pour les semaines calendaires (lundi-dimanche)
+  const weekCompleted = isWeekly ? isWeeklyHabitCompletedThisWeek(habit.dailyTasks, habit.createdAt) : false;
+  const nextReset = isWeekly ? getNextMondayReset() : null;
 
   // Calcul du temps jusqu'au reset pour les weekly
   const msUntilReset = nextReset ? nextReset.getTime() - new Date().getTime() : 0;
@@ -262,9 +165,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
   const hoursUntilReset = !isWeekly ? getHoursUntilMidnight() : 0;
 
   // Compte des taches en pause
-  const pausedTaskCount = Object.keys(pausedTasks).filter((taskId) =>
-    habit.tasks.some((t) => (typeof t === 'string' ? t : t.id) === taskId)
-  ).length;
+  const pausedTaskCount = Object.keys(pausedTasks).filter((taskId) => habit.tasks.some((t) => (typeof t === 'string' ? t : t.id) === taskId)).length;
 
   const activeTasks = totalTasks - pausedTaskCount;
   const taskProgress = activeTasks > 0 ? Math.round((completedTasks / activeTasks) * 100) : 0;
@@ -318,143 +219,201 @@ export const HabitCard: React.FC<HabitCardProps> = ({
   return (
     <Animated.View entering={FadeIn.delay(index * 50)}>
       <Pressable onPress={handlePress}>
-        <ImageBackground
-          source={theme.texture}
-          style={tw`rounded-2xl overflow-hidden`}
-          imageStyle={tw`rounded-2xl opacity-70`}
-          resizeMode="cover"
+        {/* Outer container with shadow and border effect */}
+        <View
+          style={[
+            tw`rounded-2xl overflow-hidden`,
+            {
+              shadowColor: isCompleted ? theme.gradient[1] : '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: isCompleted ? 0.4 : 0.15,
+              shadowRadius: isCompleted ? 12 : 8,
+              elevation: isCompleted ? 8 : 4,
+            },
+          ]}
         >
-          <LinearGradient
-            colors={[
-              theme.gradient[0] + 'e6',
-              theme.gradient[1] + 'dd',
-              theme.gradient[2] + 'cc',
-            ]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={tw`p-4`}
-          >
-            {/* Icone de gemme */}
-            <View style={tw`absolute top-3 right-3 z-10`}>
-              <Image
-                source={getGemIcon(tier.name)}
-                style={tw`w-12 h-12`}
-                resizeMode="contain"
-              />
-            </View>
+          <ImageBackground source={theme.texture} style={tw`rounded-2xl overflow-hidden`} imageStyle={tw`rounded-2xl opacity-80`} resizeMode="cover">
+            <LinearGradient colors={[theme.gradient[0] + 'e8', theme.gradient[1] + 'e0', theme.gradient[2] + 'd8']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`p-5`}>
+              {/* Decorative gradient overlay */}
+              <View style={tw`absolute inset-0 opacity-15`}>
+                <LinearGradient colors={['transparent', 'rgba(255,255,255,0.3)', 'transparent']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`w-full h-full`} />
+              </View>
 
-            {/* En-tete */}
-            <View style={tw`mb-3 pr-14`}>
-              <Text numberOfLines={1} style={tw`text-xl font-bold text-white mb-0.5`}>
-                {getTranslatedHabitName(habit, t)}
-              </Text>
-              <View style={tw`flex-row items-center gap-2`}>
-                <Text style={tw`text-xs text-white/70 font-medium capitalize`}>
-                  {habit.type === 'good' ? t('habits.building') : t('habits.quitting')}
+              {/* Completed badge glow effect */}
+              {isCompleted && (
+                <View
+                  style={[
+                    tw`absolute top-0 right-0 w-24 h-24`,
+                    {
+                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                      borderBottomLeftRadius: 100,
+                    },
+                  ]}
+                />
+              )}
+
+              {/* Tier icon / Gem with glow */}
+              <View style={tw`absolute top-4 right-4 z-10`}>
+                {unlockedMilestonesCount > 0 ? (
+                  <View style={tw`items-center justify-center`}>
+                    {/* Glow behind icon */}
+                    <View
+                      style={[
+                        tw`absolute w-12 h-12 rounded-full`,
+                        {
+                          backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                          shadowColor: '#ffffff',
+                          shadowOffset: { width: 0, height: 0 },
+                          shadowOpacity: 0.5,
+                          shadowRadius: 8,
+                        },
+                      ]}
+                    />
+                    <Image source={getTierIcon(unlockedMilestonesCount)} style={tw`w-10 h-10`} resizeMode="contain" />
+                  </View>
+                ) : (
+                  <Image source={getGemIcon(tier.name)} style={tw`w-12 h-12`} resizeMode="contain" />
+                )}
+              </View>
+
+              {/* Header */}
+              <View style={tw`mb-4 pr-16`}>
+                <Text numberOfLines={1} style={tw`text-xl font-black text-white mb-1`}>
+                  {getTranslatedHabitName(habit, t)}
                 </Text>
-                {isWeekly && (
-                  <>
-                    <View style={tw`w-1 h-1 rounded-full bg-white/50`} />
-                    <Text style={tw`text-xs text-white/70 font-medium`}>
+                <View style={tw`flex-row items-center gap-2`}>
+                  <View style={tw`bg-white/20 rounded-lg px-2 py-0.5`}>
+                    <Text style={tw`text-[10px] text-white font-bold uppercase`}>{habit.type === 'good' ? t('habits.building') : t('habits.quitting')}</Text>
+                  </View>
+                  {isWeekly && (
+                    <Text style={tw`text-[10px] text-white/70 font-medium`}>
                       {weekCompleted
                         ? t('habits.resetsIn', {
                             count: showHoursForWeekly ? hoursUntilWeeklyReset : daysUntilReset,
                             unit: showHoursForWeekly ? t('habits.unitHour') : t('habits.unitDay'),
                           })
                         : showHoursForWeekly
-                          ? t('habits.hoursLeft', { count: hoursUntilWeeklyReset })
-                          : t('habits.daysLeft', { count: daysUntilReset })}
+                        ? t('habits.hoursLeft', { count: hoursUntilWeeklyReset })
+                        : t('habits.daysLeft', { count: daysUntilReset })}
                     </Text>
-                  </>
-                )}
-                {!isWeekly && !completedToday && hoursUntilReset > 0 && (
-                  <>
-                    <View style={tw`w-1 h-1 rounded-full bg-white/50`} />
-                    <Text style={tw`text-xs text-white/70 font-medium`}>
+                  )}
+                  {!isWeekly && !completedToday && hoursUntilReset > 0 && (
+                    <Text style={tw`text-[10px] text-white/70 font-medium`}>
                       {t('habits.resetsIn', {
                         count: hoursUntilReset,
                         unit: t('habits.unitHour'),
                       })}
                     </Text>
-                  </>
-                )}
-              </View>
-            </View>
-
-            {/* Section progression */}
-            <View style={tw`mb-3`}>
-              <View style={tw`h-2.5 bg-white/20 rounded-full overflow-hidden mb-2`}>
-                <View
-                  style={[tw`h-full bg-white rounded-full`, { width: `${taskProgress}%` }]}
-                />
-              </View>
-
-              <View style={tw`flex-row items-center justify-between`}>
-                <View style={tw`flex-row items-center gap-1.5`}>
-                  {isCompleted ? (
-                    <CheckCircle2
-                      size={14}
-                      color="#fff"
-                      strokeWidth={2.5}
-                      fill="rgba(255,255,255,0.3)"
-                    />
-                  ) : (
-                    <Circle size={14} color="#fff" strokeWidth={2} />
                   )}
-                  <Text style={tw`text-xs font-semibold text-white/90`}>
-                    {isWeekly ? t('habits.weeklyTasks') : t('habits.todaysTasks')}
-                  </Text>
                 </View>
-                <Text style={tw`text-xs font-bold text-white`}>
-                  {completedTasks}/{activeTasks}
-                </Text>
               </View>
-            </View>
 
-            {/* Footer statistiques */}
-            <View style={tw`flex-row items-center justify-between pt-3 border-t border-white/20`}>
-              <View>
-                <Text style={tw`text-xs text-white/70 font-medium mb-1`}>
-                  {t('habits.streak')}
-                </Text>
-                <View style={tw`flex-row items-center gap-1.5`}>
-                  <Flame
-                    size={22}
-                    color="#FFFFFF"
-                    strokeWidth={2}
-                    fill="rgba(255, 255, 255, 0.2)"
+              {/* Progress section with enhanced bar */}
+              <View style={tw`mb-4`}>
+                <View
+                  style={[
+                    tw`h-3 rounded-full overflow-hidden`,
+                    {
+                      backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                      borderWidth: 1,
+                      borderColor: 'rgba(255, 255, 255, 0.1)',
+                    },
+                  ]}
+                >
+                  <View
+                    style={[
+                      tw`h-full rounded-full`,
+                      {
+                        width: `${taskProgress}%`,
+                        backgroundColor: isCompleted ? '#ffffff' : 'rgba(255, 255, 255, 0.9)',
+                        shadowColor: '#fff',
+                        shadowOffset: { width: 0, height: 0 },
+                        shadowOpacity: isCompleted ? 0.8 : 0.3,
+                        shadowRadius: 4,
+                      },
+                    ]}
                   />
-                  <View style={tw`flex-row items-baseline gap-1`}>
-                    <Text style={tw`text-2xl font-black text-white`}>
-                      {streakData.count}
-                    </Text>
-                    <Text style={tw`text-sm font-semibold text-white/80`}>
-                      {streakData.unit}
+                </View>
+
+                <View style={tw`flex-row items-center justify-between mt-2`}>
+                  <View style={tw`flex-row items-center gap-1.5`}>
+                    {isCompleted ? (
+                      <View style={tw`bg-white rounded-full p-0.5`}>
+                        <CheckCircle2 size={12} color={theme.gradient[1]} strokeWidth={3} />
+                      </View>
+                    ) : (
+                      <Circle size={14} color="rgba(255,255,255,0.7)" strokeWidth={2} />
+                    )}
+                    <Text style={tw`text-xs font-semibold text-white/90`}>{isWeekly ? t('habits.weeklyTasks') : t('habits.todaysTasks')}</Text>
+                  </View>
+                  <View style={tw`bg-white/20 rounded-lg px-2 py-0.5`}>
+                    <Text style={tw`text-xs font-black text-white`}>
+                      {completedTasks}/{activeTasks}
                     </Text>
                   </View>
                 </View>
               </View>
 
+              {/* Footer stats with enhanced streak display */}
               <View
                 style={[
-                  tw`px-3 py-1.5 rounded-xl border border-white/30`,
-                  { backgroundColor: 'rgba(255, 255, 255, 0.15)' },
+                  tw`flex-row items-center justify-between pt-4`,
+                  {
+                    borderTopWidth: 1,
+                    borderTopColor: 'rgba(255, 255, 255, 0.2)',
+                  },
                 ]}
               >
-                <Text style={tw`text-xs font-black text-white`}>{tier.name}</Text>
-              </View>
-            </View>
+                <View style={tw`flex-row items-center gap-3`}>
+                  {/* Streak fire badge */}
+                  <View
+                    style={[
+                      tw`w-12 h-12 rounded-2xl items-center justify-center`,
+                      {
+                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                        borderWidth: 1.5,
+                        borderColor: 'rgba(255, 255, 255, 0.25)',
+                      },
+                    ]}
+                  >
+                    <Flame size={24} color="#FFFFFF" strokeWidth={2} fill="rgba(255, 255, 255, 0.3)" />
+                  </View>
+                  <View>
+                    <Text style={tw`text-[10px] text-white/70 font-bold uppercase tracking-wide`}>{t('habits.streak')}</Text>
+                    <View style={tw`flex-row items-baseline gap-1`}>
+                      <Text style={tw`text-2xl font-black text-white`}>{streakData.count}</Text>
+                      <Text style={tw`text-xs font-semibold text-white/80`}>{streakData.unit}</Text>
+                    </View>
+                  </View>
+                </View>
 
-            {/* Notification taches en pause */}
-            {pausedTaskCount > 0 && (
-              <View style={tw`mt-3 pt-3 border-t border-white/20`}>
-                <Text style={tw`text-xs text-white/70`}>
-                  {t('habits.tasksPaused', { count: pausedTaskCount })}
-                </Text>
+                {/* Tier badge when no milestone icon */}
+                {unlockedMilestonesCount === 0 && (
+                  <View
+                    style={[
+                      tw`px-3 py-2 rounded-xl`,
+                      {
+                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                        borderWidth: 1.5,
+                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                      },
+                    ]}
+                  >
+                    <Text style={tw`text-xs font-black text-white`}>{tier.name}</Text>
+                  </View>
+                )}
               </View>
-            )}
-          </LinearGradient>
-        </ImageBackground>
+
+              {/* Paused tasks notification */}
+              {pausedTaskCount > 0 && (
+                <View style={[tw`mt-3 pt-3 flex-row items-center gap-2`, { borderTopWidth: 1, borderTopColor: 'rgba(255, 255, 255, 0.15)' }]}>
+                  <View style={tw`w-2 h-2 rounded-full bg-amber-400`} />
+                  <Text style={tw`text-xs text-white/70 font-medium`}>{t('habits.tasksPaused', { count: pausedTaskCount })}</Text>
+                </View>
+              )}
+            </LinearGradient>
+          </ImageBackground>
+        </View>
       </Pressable>
     </Animated.View>
   );

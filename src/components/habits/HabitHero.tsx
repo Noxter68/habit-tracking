@@ -8,6 +8,7 @@ import ProgressBar from '@/components/ui/ProgressBar';
 import { TierInfo } from '@/services/habitProgressionService';
 import { HabitHeroBackground } from '@/components/habits/HabitHeroBackground';
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber';
+import { getTierIcon } from '@/utils/tierIcons';
 
 interface HabitHeroProps {
   habitName: string;
@@ -21,9 +22,24 @@ interface HabitHeroProps {
   tierMultiplier: number;
   totalXPEarned: number;
   completionRate: number;
+  /** Nombre de milestones debloques pour afficher l'icone du palier */
+  unlockedMilestonesCount?: number;
 }
 
-export const HabitHero: React.FC<HabitHeroProps> = ({ habitName, habitType, category, currentStreak, bestStreak, tierInfo, nextTier, tierProgress, tierMultiplier, totalXPEarned, completionRate }) => {
+export const HabitHero: React.FC<HabitHeroProps> = ({
+  habitName,
+  habitType,
+  category,
+  currentStreak,
+  bestStreak,
+  tierInfo,
+  nextTier,
+  tierProgress,
+  tierMultiplier,
+  totalXPEarned,
+  completionRate,
+  unlockedMilestonesCount = 0,
+}) => {
   const { t } = useTranslation();
 
   /**
@@ -58,8 +74,29 @@ export const HabitHero: React.FC<HabitHeroProps> = ({ habitName, habitType, cate
         <LinearGradient colors={['transparent', 'rgba(255,255,255,0.2)', 'transparent']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`w-full h-full`} />
       </View>
 
-      <View style={tw`absolute top-2 right-3 z-10`}>
-        <Image source={getGemIcon()} style={tw`w-20 h-20`} contentFit="contain" />
+      <View style={tw`absolute top-3 right-2 z-10`}>
+        {unlockedMilestonesCount > 0 ? (
+          <View style={tw`items-center justify-center w-18 h-18`}>
+            {/* Glow effect statique - cercle derriere l'icone */}
+            <View
+              style={[
+                tw`absolute w-14 h-14 rounded-full`,
+                {
+                  backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                  shadowColor: '#ffffff',
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowOpacity: 0.6,
+                  shadowRadius: 16,
+                  elevation: 8,
+                },
+              ]}
+            />
+            {/* Icone du palier au-dessus du glow */}
+            <Image source={getTierIcon(unlockedMilestonesCount)} style={tw`w-12 h-12`} contentFit="contain" />
+          </View>
+        ) : (
+          <Image source={getGemIcon()} style={tw`w-16 h-16`} contentFit="contain" />
+        )}
       </View>
 
       <View style={tw`flex-row items-center justify-between`}>
@@ -70,18 +107,18 @@ export const HabitHero: React.FC<HabitHeroProps> = ({ habitName, habitType, cate
             {habitName}
           </Text>
 
-          <View style={tw`flex-row items-center gap-2 mt-2.5`}>
-            <View style={tw`bg-white/25 rounded-xl px-2.5 py-1`}>
-              <Text style={tw`text-white text-xs font-bold`}>{tierInfo.name}</Text>
+          <View style={tw`flex-row items-center gap-1.5 mt-2`}>
+            <View style={tw`bg-white/25 rounded-lg px-2 py-0.5`}>
+              <Text style={tw`text-white text-[10px] font-bold`}>{tierInfo.name}</Text>
             </View>
 
-            <View style={tw`bg-white/25 rounded-xl px-2.5 py-1`}>
-              <Text style={tw`text-white text-xs font-bold`}>{getTranslatedCategory()}</Text>
+            <View style={tw`bg-white/25 rounded-lg px-2 py-0.5`}>
+              <Text style={tw`text-white text-[10px] font-bold`}>{getTranslatedCategory()}</Text>
             </View>
 
             {tierMultiplier > 1 && (
-              <View style={tw`bg-sand/25 rounded-xl px-2.5 py-1`}>
-                <Text style={tw`text-white text-xs font-bold`}>×{tierMultiplier.toFixed(1)} XP</Text>
+              <View style={tw`bg-sand/25 rounded-lg px-2 py-0.5`}>
+                <Text style={tw`text-white text-[10px] font-bold`}>×{tierMultiplier.toFixed(1)} XP</Text>
               </View>
             )}
           </View>

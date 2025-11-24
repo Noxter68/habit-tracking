@@ -29,30 +29,31 @@ const tierIcons = {
 };
 
 const iconSizes = {
-  0: { width: 80, height: 80 },
-  1: { width: 80, height: 80 },
-  2: { width: 80, height: 80 },
-  3: { width: 80, height: 80 },
-  4: { width: 80, height: 80 },
-  5: { width: 80, height: 80 },
-  6: { width: 80, height: 80 },
-  7: { width: 80, height: 80 },
-  8: { width: 80, height: 80 },
-  9: { width: 80, height: 80 },
-  10: { width: 50, height: 50 },
-  11: { width: 50, height: 50 },
-  12: { width: 50, height: 50 },
-  13: { width: 50, height: 50 },
-  14: { width: 50, height: 50 },
+  0: { width: 50, height: 50 },
+  1: { width: 50, height: 50 },
+  2: { width: 50, height: 50 },
+  3: { width: 50, height: 50 },
+  4: { width: 50, height: 50 },
+  5: { width: 50, height: 50 },
+  6: { width: 50, height: 50 },
+  7: { width: 50, height: 50 },
+  8: { width: 50, height: 50 },
+  9: { width: 50, height: 50 },
+  10: { width: 40, height: 40 },
+  11: { width: 40, height: 40 },
+  12: { width: 40, height: 40 },
+  13: { width: 40, height: 40 },
+  14: { width: 40, height: 40 },
 };
 
 interface MilestonesCardProps {
   milestones: HabitMilestone[];
-  currentStreak: number;
+  /** Nombre de jours depuis la création de l'habitude */
+  habitAge: number;
   unlockedMilestones: HabitMilestone[];
 }
 
-const MilestonesCard: React.FC<MilestonesCardProps> = ({ milestones, currentStreak, unlockedMilestones }) => {
+const MilestonesCard: React.FC<MilestonesCardProps> = ({ milestones, habitAge, unlockedMilestones }) => {
   const { t, i18n } = useTranslation();
   const [selectedMilestone, setSelectedMilestone] = useState<{
     milestone: HabitMilestone;
@@ -81,7 +82,7 @@ const MilestonesCard: React.FC<MilestonesCardProps> = ({ milestones, currentStre
               : getTranslatedMilestone(milestones[0]?.title || 'Getting Started', i18n.language as 'en' | 'fr').title}
           </Text>
           {unlockedMilestones.length === 0 && milestones[0] && (
-            <Text style={tw`text-xs text-stone-400 mt-1`}>{t('habitDetails.milestones.daysAway', { count: milestones[0].days - currentStreak })}</Text>
+            <Text style={tw`text-xs text-stone-400 mt-1`}>{t('habitDetails.milestones.daysAway', { count: milestones[0].days - habitAge })}</Text>
           )}
         </View>
       </View>
@@ -99,14 +100,14 @@ const MilestonesCard: React.FC<MilestonesCardProps> = ({ milestones, currentStre
         <View style={tw`gap-3`}>
           {milestones.map((milestone, idx) => {
             const isUnlocked = unlockedMilestones.some((m) => m.title === milestone.title);
-            const isAchieved = currentStreak >= milestone.days || isUnlocked;
+            const isAchieved = habitAge >= milestone.days || isUnlocked;
             const iconSize = iconSizes[idx as keyof typeof iconSizes] || { width: 20, height: 20 };
 
             // ✅ Get translated milestone
             const translatedMilestone = getTranslatedMilestone(milestone.title, i18n.language as 'en' | 'fr');
 
             // Calculate days away
-            const daysAway = milestone.days - currentStreak;
+            const daysAway = milestone.days - habitAge;
 
             return (
               <Animated.View key={milestone.days} entering={FadeInDown.delay(idx * 50).springify()}>
@@ -152,7 +153,7 @@ const MilestonesCard: React.FC<MilestonesCardProps> = ({ milestones, currentStre
                             <CheckCircle2 size={14} color="#FFFFFF" strokeWidth={2.5} />
                             <Text style={tw`text-white text-xs font-bold`}>{t('habitDetails.milestones.achieved', { xp: milestone.xpReward })}</Text>
                           </View>
-                        ) : currentStreak > milestone.days ? (
+                        ) : habitAge > milestone.days ? (
                           <View style={tw`bg-stone-300 px-3 py-1 rounded-lg`}>
                             <Text style={tw`text-stone-600 text-xs font-bold`}>{t('habitDetails.milestones.missed')}</Text>
                           </View>

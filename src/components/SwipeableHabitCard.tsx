@@ -53,6 +53,8 @@ interface SwipeableHabitCardProps {
   onPress?: () => void;
   index?: number;
   pausedTasks?: Record<string, { pausedUntil: string; reason?: string }>;
+  /** Nombre de milestones debloques pour afficher l'icone du palier */
+  unlockedMilestonesCount?: number;
 }
 
 // =============================================================================
@@ -80,6 +82,7 @@ const SwipeableHabitCard: React.FC<SwipeableHabitCardProps> = ({
   onPress,
   index = 0,
   pausedTasks = {},
+  unlockedMilestonesCount = 0,
 }) => {
   // ---------------------------------------------------------------------------
   // Hooks
@@ -239,6 +242,7 @@ const SwipeableHabitCard: React.FC<SwipeableHabitCardProps> = ({
             onPress={handlePress}
             index={index}
             pausedTasks={pausedTasks}
+            unlockedMilestonesCount={unlockedMilestonesCount}
           />
         </RNAnimated.View>
       </PanGestureHandler>
