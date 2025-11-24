@@ -24,7 +24,8 @@ import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, FadeInUp, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { ArrowLeft, Zap } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ArrowLeft, Zap, Trophy } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
 import { HabitHero } from '@/components/habits/HabitHero';
@@ -33,6 +34,8 @@ import { TasksCard } from '@/components/habits/TasksCard';
 import MilestonesCard from '@/components/habits/MilestoneCard';
 import { TierCelebration } from '@/components/habits/TierCelebration';
 import { StreakSaverModal } from '@/components/streakSaver/StreakSaverModal';
+import { EpicMilestoneUnlockModal } from '@/components/habits/EpicMilestoneUnlockModal';
+import { MilestoneRecapModal, MilestoneWithIndex } from '@/components/habits/MilestoneRecapModal';
 import { DebugButton } from '@/components/debug/DebugButton';
 
 import { useHabits } from '@/context/HabitContext';
@@ -41,7 +44,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useHabitDetails } from '@/hooks/useHabitDetails';
 import { useStreakSaver } from '@/hooks/useStreakSaver';
 
-import { HabitProgressionService } from '@/services/habitProgressionService';
+import { HabitProgressionService, HabitMilestone } from '@/services/habitProgressionService';
 
 import tw from '@/lib/tailwind';
 import { getTodayString, getLocalDateString } from '@/utils/dateHelpers';
@@ -111,6 +114,19 @@ const HabitDetails: React.FC = () => {
   const [testModalLoading, setTestModalLoading] = useState(false);
   const [testModalSuccess, setTestModalSuccess] = useState(false);
   const [testNewStreak, setTestNewStreak] = useState(0);
+
+  // État pour le modal de célébration de milestone (1 seul nouveau)
+  const [showMilestoneModal, setShowMilestoneModal] = useState(false);
+  const [celebrationMilestone, setCelebrationMilestone] = useState<HabitMilestone | null>(null);
+  const [celebrationMilestoneIndex, setCelebrationMilestoneIndex] = useState(0);
+
+  // État pour le modal récap de milestones (plusieurs à rattraper)
+  const [showMilestoneRecapModal, setShowMilestoneRecapModal] = useState(false);
+  const [recapMilestones, setRecapMilestones] = useState<MilestoneWithIndex[]>([]);
+
+  // État pour les modals de test milestone en mode développeur
+  const [showTestMilestoneModal, setShowTestMilestoneModal] = useState(false);
+  const [showTestMilestoneRecapModal, setShowTestMilestoneRecapModal] = useState(false);
 
   // ============================================================================
   // HOOKS - Refs & Shared Values
@@ -337,9 +353,123 @@ const HabitDetails: React.FC = () => {
     setTestNewStreak(0);
   };
 
+  /**
+   * Ferme le modal de célébration de milestone (1 seul nouveau)
+   */
+  const handleMilestoneModalClose = useCallback(() => {
+    setShowMilestoneModal(false);
+    // Sauvegarder que ce milestone a été vu
+    if (celebrationMilestone && habit) {
+      const key = `seen_milestones_${habit.id}`;
+      AsyncStorage.getItem(key).then((data) => {
+        const seenMilestones: string[] = data ? JSON.parse(data) : [];
+        if (!seenMilestones.includes(celebrationMilestone.title)) {
+          seenMilestones.push(celebrationMilestone.title);
+          AsyncStorage.setItem(key, JSON.stringify(seenMilestones));
+        }
+      });
+    }
+  }, [celebrationMilestone, habit]);
+
+  /**
+   * Ferme le modal récap de milestones (plusieurs à rattraper)
+   */
+  const handleMilestoneRecapModalClose = useCallback(() => {
+    setShowMilestoneRecapModal(false);
+    // Sauvegarder tous les milestones du récap comme vus
+    if (recapMilestones.length > 0 && habit) {
+      const key = `seen_milestones_${habit.id}`;
+      AsyncStorage.getItem(key).then((data) => {
+        const seenMilestones: string[] = data ? JSON.parse(data) : [];
+        recapMilestones.forEach(({ milestone }) => {
+          if (!seenMilestones.includes(milestone.title)) {
+            seenMilestones.push(milestone.title);
+          }
+        });
+        AsyncStorage.setItem(key, JSON.stringify(seenMilestones));
+      });
+    }
+  }, [recapMilestones, habit]);
+
+  /**
+   * Affiche le modal de test milestone (single)
+   */
+  const handleTestMilestoneModal = useCallback(() => {
+    setShowTestMilestoneModal(true);
+  }, []);
+
+  /**
+   * Ferme le modal de test milestone (single)
+   */
+  const handleTestMilestoneModalClose = useCallback(() => {
+    setShowTestMilestoneModal(false);
+  }, []);
+
+  /**
+   * Affiche le modal de test milestone récap (multiple)
+   */
+  const handleTestMilestoneRecapModal = useCallback(() => {
+    setShowTestMilestoneRecapModal(true);
+  }, []);
+
+  /**
+   * Ferme le modal de test milestone récap (multiple)
+   */
+  const handleTestMilestoneRecapModalClose = useCallback(() => {
+    setShowTestMilestoneRecapModal(false);
+  }, []);
+
   // ============================================================================
   // HOOKS - useEffect
   // ============================================================================
+
+  // Détecte et affiche les milestones non vus à l'ouverture de l'écran
+  useEffect(() => {
+    const checkUnseenMilestones = async () => {
+      if (!habit || !milestoneStatus?.unlocked || milestoneStatus.unlocked.length === 0) {
+        return;
+      }
+
+      const key = `seen_milestones_${habit.id}`;
+      const data = await AsyncStorage.getItem(key);
+      const seenMilestones: string[] = data ? JSON.parse(data) : [];
+
+      // Trouve tous les milestones débloqués qui n'ont pas été vus
+      const unlockedMilestones = milestoneStatus.unlocked;
+      const allMilestones = milestoneStatus.all;
+
+      const unseenMilestones: MilestoneWithIndex[] = [];
+
+      for (const milestone of unlockedMilestones) {
+        if (!seenMilestones.includes(milestone.title)) {
+          const index = allMilestones.findIndex((m) => m.title === milestone.title);
+          unseenMilestones.push({ milestone, index: index >= 0 ? index : 0 });
+        }
+      }
+
+      Logger.debug('Found unseen milestones:', unseenMilestones.length);
+
+      if (unseenMilestones.length === 0) {
+        // Aucun milestone à afficher
+        return;
+      } else if (unseenMilestones.length === 1) {
+        // Un seul milestone non vu → modal épique
+        const { milestone, index } = unseenMilestones[0];
+        setCelebrationMilestone(milestone);
+        setCelebrationMilestoneIndex(index);
+        setShowMilestoneModal(true);
+      } else {
+        // Plusieurs milestones non vus → modal récap
+        setRecapMilestones(unseenMilestones);
+        setShowMilestoneRecapModal(true);
+      }
+    };
+
+    // Attendre que le loading soit terminé avant de vérifier
+    if (!loading) {
+      checkUnseenMilestones();
+    }
+  }, [habit?.id, milestoneStatus?.unlocked, loading]);
 
   // Détecte et célèbre les montées de tier
   useEffect(() => {
@@ -425,12 +555,20 @@ const HabitDetails: React.FC = () => {
                 </View>
               </View>
 
-              {/* Bouton de test en mode développeur */}
+              {/* Boutons de test en mode développeur */}
               {Config.debug.enabled && (
-                <View style={tw`px-8 mb-4`}>
+                <View style={tw`px-8 mb-4 gap-2`}>
                   <Pressable onPress={() => setShowTestModal(true)} style={({ pressed }) => [tw`bg-purple-500 rounded-2xl py-3 px-4 flex-row items-center justify-center`, pressed && tw`opacity-80`]}>
                     <Zap size={18} color="white" fill="white" style={tw`mr-2`} />
                     <Text style={tw`text-white font-black text-sm`}>Test Streak Saver Modal</Text>
+                  </Pressable>
+                  <Pressable onPress={handleTestMilestoneModal} style={({ pressed }) => [tw`bg-amber-500 rounded-2xl py-3 px-4 flex-row items-center justify-center`, pressed && tw`opacity-80`]}>
+                    <Trophy size={18} color="white" fill="white" style={tw`mr-2`} />
+                    <Text style={tw`text-white font-black text-sm`}>Test Milestone Modal (Single)</Text>
+                  </Pressable>
+                  <Pressable onPress={handleTestMilestoneRecapModal} style={({ pressed }) => [tw`bg-amber-600 rounded-2xl py-3 px-4 flex-row items-center justify-center`, pressed && tw`opacity-80`]}>
+                    <Trophy size={18} color="white" fill="white" style={tw`mr-2`} />
+                    <Text style={tw`text-white font-black text-sm`}>Test Milestone Recap (Multiple)</Text>
                   </Pressable>
                 </View>
               )}
@@ -551,6 +689,49 @@ const HabitDetails: React.FC = () => {
 
         {/* Animation de célébration de tier */}
         {celebrationTier && <TierCelebration visible={showCelebration} newTier={celebrationTier} onClose={handleCelebrationClose} />}
+
+        {/* Modal de célébration de milestone */}
+        <EpicMilestoneUnlockModal
+          visible={showMilestoneModal}
+          milestone={celebrationMilestone}
+          milestoneIndex={celebrationMilestoneIndex}
+          onClose={handleMilestoneModalClose}
+        />
+
+        {/* Modal récap de milestones (plusieurs à rattraper) */}
+        <MilestoneRecapModal
+          visible={showMilestoneRecapModal}
+          milestones={recapMilestones}
+          onClose={handleMilestoneRecapModalClose}
+        />
+
+        {/* Modals de test milestone en mode développeur */}
+        {Config.debug.enabled && (
+          <>
+            <EpicMilestoneUnlockModal
+              visible={showTestMilestoneModal}
+              milestone={{
+                id: 'test-milestone',
+                days: 21,
+                title: 'Habit Former',
+                description: '21 days to form a habit',
+                xpReward: 150,
+                badge: '🏆',
+              }}
+              milestoneIndex={3}
+              onClose={handleTestMilestoneModalClose}
+            />
+            <MilestoneRecapModal
+              visible={showTestMilestoneRecapModal}
+              milestones={[
+                { milestone: { id: 'm1', days: 3, title: 'First Steps', description: '', xpReward: 50, badge: '🌱' }, index: 0 },
+                { milestone: { id: 'm2', days: 7, title: 'Week Warrior', description: '', xpReward: 75, badge: '⚔️' }, index: 1 },
+                { milestone: { id: 'm3', days: 14, title: 'Fortnight Fighter', description: '', xpReward: 100, badge: '🛡️' }, index: 2 },
+              ]}
+              onClose={handleTestMilestoneRecapModalClose}
+            />
+          </>
+        )}
       </View>
     </ImageBackground>
   );

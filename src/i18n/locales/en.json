@@ -1940,6 +1940,28 @@
       "levelMax": "MYTHIC STATUS ACHIEVED!"
     }
   },
+  "milestoneUnlock": {
+    "title": "MILESTONE UNLOCKED!",
+    "daysLabel": "DAYS",
+    "tapToContinue": "Tap to continue",
+    "closingIn": "Closing in {{seconds}}s...",
+    "motivational": {
+      "week": "Great start! You're building momentum!",
+      "threeWeeks": "Three weeks strong! The habit is forming!",
+      "month": "One month! You're unstoppable!",
+      "twoMonths": "Two months of dedication! Incredible!",
+      "hundred": "100 days! You're a true champion!",
+      "legendary": "Legendary commitment! You inspire others!"
+    }
+  },
+  "milestoneRecap": {
+    "title": "Your Progress So Far",
+    "subtitle": "You've already unlocked {{count}} milestones!",
+    "day": "Day {{count}}",
+    "totalXp": "XP earned",
+    "tapToContinue": "Tap to continue",
+    "closingIn": "Closing in {{seconds}}s..."
+  },
   "onboarding": {
     "skip": "Skip",
     "continue": "Continue",

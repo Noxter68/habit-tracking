@@ -1910,6 +1910,28 @@
       "levelMax": "STATUT MYTHIQUE ATTEINT !"
     }
   },
+  "milestoneUnlock": {
+    "title": "JALON DÉBLOQUÉ !",
+    "daysLabel": "JOURS",
+    "tapToContinue": "Appuyez pour continuer",
+    "closingIn": "Fermeture dans {{seconds}}s...",
+    "motivational": {
+      "week": "Super début ! Vous gagnez en élan !",
+      "threeWeeks": "Trois semaines solides ! L'habitude se forme !",
+      "month": "Un mois ! Vous êtes inarrêtable !",
+      "twoMonths": "Deux mois de dévouement ! Incroyable !",
+      "hundred": "100 jours ! Vous êtes un vrai champion !",
+      "legendary": "Engagement légendaire ! Vous inspirez les autres !"
+    }
+  },
+  "milestoneRecap": {
+    "title": "Vos Paliers Atteints",
+    "subtitle": "Vous avez déjà débloqué {{count}} paliers !",
+    "day": "Jour {{count}}",
+    "totalXp": "XP gagnés",
+    "tapToContinue": "Appuyez pour continuer",
+    "closingIn": "Fermeture dans {{seconds}}s..."
+  },
   "onboarding": {
     "skip": "Passer",
     "continue": "Continuer",
