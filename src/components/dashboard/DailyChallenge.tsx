@@ -72,7 +72,14 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
     };
   }, [habits]);
 
-  const canClaimChallenge = stats.dailyTasksCompleted >= stats.dailyTasksTotal && stats.dailyTasksTotal > 0;
+  // Pour réclamer le défi :
+  // - Toutes les tâches daily doivent être complétées aujourd'hui
+  // - Toutes les tâches weekly doivent être complétées cette semaine
+  // - Il faut avoir au moins une tâche (daily ou weekly)
+  const dailyComplete = stats.dailyTasksCompleted >= stats.dailyTasksTotal;
+  const weeklyComplete = stats.weeklyTasksCompletedThisWeek >= stats.weeklyTasksTotal;
+  const hasAnyTasks = stats.dailyTasksTotal > 0 || stats.weeklyTasksTotal > 0;
+  const canClaimChallenge = dailyComplete && weeklyComplete && hasAnyTasks;
 
   // Calcul du total de tâches pour aujourd'hui : daily + weekly (toutes)
   const totalTasksToday = stats.dailyTasksTotal + stats.weeklyTasksTotal;
@@ -234,7 +241,10 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
     if (isCollected) return t('dashboard.dailyChallenge.collected');
     if (canClaimChallenge) return t('dashboard.dailyChallenge.readyToClaim');
 
-    const remaining = stats.dailyTasksTotal - stats.dailyTasksCompleted;
+    // Calcul des tâches restantes (daily non complétées + weekly non complétées)
+    const dailyRemaining = stats.dailyTasksTotal - stats.dailyTasksCompleted;
+    const weeklyRemaining = stats.weeklyTasksTotal - stats.weeklyTasksCompletedThisWeek;
+    const remaining = dailyRemaining + weeklyRemaining;
     return t('dashboard.dailyChallenge.tasksRemaining', { count: remaining });
   };
 
