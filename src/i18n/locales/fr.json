@@ -403,6 +403,8 @@
     "viewDetails": "Voir les détails",
     "endEarly": "Terminer plus tôt",
     "enjoyBreak": "Profitez de votre pause bien méritée",
+    "daysLeft": "{{count}}j restant",
+    "loadingDates": "Chargement des dates...",
     "create": {
       "title": "Créer une période de vacances",
       "selectDates": "Sélectionner les dates",
@@ -432,7 +434,80 @@
       "daysRemaining": "Jours restants",
       "upgradeTitle": "Besoin de plus de jours ?",
       "upgradeMessage": "Gratuit : {{free}} jours/an\nPremium : Illimité",
-      "upgrade": "Passer à Premium"
+      "upgrade": "Passer à Premium",
+      "daysPerPeriod": "Jours par période",
+      "yourAllowance": "Votre quota",
+      "freePlan": "PLAN GRATUIT",
+      "periodLeft": "Période restante",
+      "daysMax": "Jours max"
+    },
+
+    "form": {
+      "scheduleBreak": "Planifier une pause",
+      "totalDuration": "Durée totale",
+      "day": "jour",
+      "days": "jours",
+      "startDate": "Date de début",
+      "endDate": "Date de fin",
+      "freezeScope": "Portée du gel",
+      "all": "Tout",
+      "habits": "Habitudes",
+      "tasks": "Tâches",
+      "activate": "Activer le mode vacances"
+    },
+
+    "scope": {
+      "infoAll": "Toutes les habitudes en pause. Séries préservées.",
+      "infoHabits": "Habitudes sélectionnées en pause. Les autres continuent normalement.",
+      "infoTasks": "Tâches sélectionnées en pause. Les autres continuent normalement."
+    },
+
+    "datePicker": {
+      "cancel": "Annuler",
+      "done": "Terminé"
+    },
+
+    "alerts": {
+      "selectionRequired": "Sélection requise",
+      "selectHabit": "Veuillez sélectionner au moins une habitude à geler",
+      "selectTask": "Veuillez sélectionner au moins une tâche à geler",
+      "invalidDates": "Dates invalides",
+      "premiumRequired": "Premium requis",
+      "premiumMessage": "Cette fonctionnalité nécessite un abonnement Premium.",
+      "cannotCreate": "Impossible de créer",
+      "unableToCreate": "Impossible de créer la période de vacances.",
+      "error": "Erreur",
+      "validationFailed": "Échec de la validation de la période de vacances. Veuillez réessayer.",
+      "activateTitle": "Activer le mode vacances ?",
+      "activateMessage": "Tous {{scope}} seront en pause du {{startDate}} au {{endDate}} ({{duration}} jours).",
+      "activateMessageAll": "les habitudes",
+      "activateMessageSelected": "les éléments sélectionnés",
+      "freezingHabits": "Gel de {{count}} habitude",
+      "freezingHabitsPlural": "Gel de {{count}} habitudes",
+      "freezingTasks": "Gel de {{count}} tâche de {{habitCount}} habitude",
+      "freezingTasksPlural": "Gel de {{count}} tâches de {{habitCount}} habitudes",
+      "cancel": "Annuler",
+      "activate": "Activer",
+      "premiumFeature": "Fonctionnalité Premium",
+      "featureRequiresPremium": "Cette fonctionnalité nécessite Premium.",
+      "upgrade": "Passer à Premium",
+      "createFailed": "Échec de la création",
+      "endEarlyTitle": "Terminer les vacances ?",
+      "endEarlyMessage": "Vos habitudes reprendront le suivi immédiatement.",
+      "endHoliday": "Terminer les vacances",
+      "cancelFailed": "Échec de l'annulation"
+    },
+
+    "premium": {
+      "goPremium": "Passer à Premium",
+      "benefits": "Vacances illimitées • Aucune limite de durée • Contrôles avancés"
+    },
+
+    "habitSelection": {
+      "freezingHabits": "Gel de {{count}} habitude | Gel de {{count}} habitudes",
+      "customSelection": "sélection personnalisée",
+      "frozenHabits": "{{count}} habitudes",
+      "frozenTasks": "{{count}} tâches"
     }
   },
   "diagnostic": {
