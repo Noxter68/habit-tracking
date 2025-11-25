@@ -42,7 +42,7 @@ const HolidayModeScreen: React.FC = () => {
   const [selectedHabits, setSelectedHabits] = useState<Set<string>>(new Set());
   const [selectedTasks, setSelectedTasks] = useState<Map<string, Set<string>>>(new Map());
 
-  const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  const duration = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
   const loadData = useCallback(async () => {
     if (!user) return;
