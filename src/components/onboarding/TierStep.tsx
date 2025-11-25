@@ -3,7 +3,7 @@ import { View, Text } from 'react-native';
 import { Check } from 'lucide-react-native';
 import { Image } from 'expo-image';
 import tw from '../../lib/tailwind';
-import i18n from '../../i18n';
+import { useTranslation } from 'react-i18next';
 
 interface TierCardProps {
   gemSource: any;
@@ -65,30 +65,31 @@ interface TierStepProps {
 }
 
 const TierStep: React.FC<TierStepProps> = ({ gradient }) => {
+  const { t } = useTranslation();
   return (
     <View style={tw`items-center gap-6`}>
       <View style={tw`items-center gap-2.5`}>
-        <Text style={tw`text-4xl font-black text-white text-center`}>{i18n.t('onboarding.tiers.title')}</Text>
-        <Text style={tw`text-base text-white/80 text-center leading-6 max-w-[300px]`}>{i18n.t('onboarding.tiers.subtitle')}</Text>
+        <Text style={tw`text-4xl font-black text-white text-center`}>{t('onboarding.tiers.title')}</Text>
+        <Text style={tw`text-base text-white/80 text-center leading-6 max-w-[300px]`}>{t('onboarding.tiers.subtitle')}</Text>
       </View>
 
       <View style={tw`w-full gap-2.5`}>
         <TierCard
           gemSource={require('../../../assets/interface/gems/crystal-gem.png')}
-          name={i18n.t('onboarding.tiers.crystal')}
-          streak={i18n.t('onboarding.tiers.daysRange', { min: 0, max: 19 })}
+          name={t('onboarding.tiers.crystal')}
+          streak={t('onboarding.tiers.daysRange', { min: 0, max: 19 })}
           color="#60a5fa"
         />
         <TierCard
           gemSource={require('../../../assets/interface/gems/ruby-gem.png')}
-          name={i18n.t('onboarding.tiers.ruby')}
-          streak={i18n.t('onboarding.tiers.daysRange', { min: 20, max: 59 })}
+          name={t('onboarding.tiers.ruby')}
+          streak={t('onboarding.tiers.daysRange', { min: 20, max: 59 })}
           color="#ef4444"
         />
         <TierCard
           gemSource={require('../../../assets/interface/gems/amethyst-gem.png')}
-          name={i18n.t('onboarding.tiers.amethyst')}
-          streak={i18n.t('onboarding.tiers.daysPlus', { count: 60 })}
+          name={t('onboarding.tiers.amethyst')}
+          streak={t('onboarding.tiers.daysPlus', { count: 60 })}
           color="#8b5cf6"
           special
         />

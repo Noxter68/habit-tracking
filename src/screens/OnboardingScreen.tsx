@@ -6,10 +6,10 @@ import { useNavigation } from '@react-navigation/native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
 import { ChevronRight, ChevronLeft } from 'lucide-react-native';
 import { Image } from 'expo-image';
+import { useTranslation } from 'react-i18next';
 import tw from '../lib/tailwind';
 import { RootStackParamList } from '../../App';
 import * as Haptics from 'expo-haptics';
-import i18n from '../i18n';
 import { useAuth } from '@/context/AuthContext';
 
 import WelcomeStep from '../components/onboarding/WelcomeStep';
@@ -69,6 +69,7 @@ const STEPS: StepConfig[] = [
 const OnboardingScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { completeOnboarding } = useAuth();
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(0);
 
   const opacity = useSharedValue(0);
@@ -156,7 +157,7 @@ const OnboardingScreen: React.FC = () => {
                 },
               ]}
             >
-              <Text style={tw`text-sm font-semibold text-white/90`}>{i18n.t('onboarding.skip')}</Text>
+              <Text style={tw`text-sm font-semibold text-white/90`}>{t('onboarding.skip')}</Text>
             </Pressable>
           </View>
         </View>
@@ -203,7 +204,7 @@ const OnboardingScreen: React.FC = () => {
                 },
               ]}
             >
-              <Text style={tw`text-base font-bold text-purple-900`}>{i18n.t('onboarding.continue')}</Text>
+              <Text style={tw`text-base font-bold text-purple-900`}>{t('onboarding.continue')}</Text>
               <ChevronRight size={20} color="#581c87" strokeWidth={2.5} />
             </Pressable>
           ) : (
@@ -241,7 +242,7 @@ const OnboardingScreen: React.FC = () => {
                   },
                 ]}
               >
-                <Text style={tw`text-base font-bold text-purple-900`}>{currentStep === STEPS.length - 1 ? i18n.t('onboarding.letsStart') : i18n.t('onboarding.continue')}</Text>
+                <Text style={tw`text-base font-bold text-purple-900`}>{currentStep === STEPS.length - 1 ? t('onboarding.letsStart') : t('onboarding.continue')}</Text>
                 <ChevronRight size={20} color="#581c87" strokeWidth={2.5} />
               </Pressable>
             </View>
