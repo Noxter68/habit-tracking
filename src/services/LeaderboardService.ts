@@ -96,6 +96,7 @@ export class LeaderboardService {
       const { data: topUsers, error: topError } = await supabase
         .from('profiles')
         .select('id, username, email, total_xp, current_level, timezone_offset')
+        .neq('username', 'testuser')
         .order('total_xp', { ascending: false })
         .limit(limit);
 
@@ -257,6 +258,15 @@ export class LeaderboardService {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
 
+      // Get testuser ID to exclude
+      const { data: testUserData } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', 'testuser')
+        .maybeSingle();
+
+      const testUserId = testUserData?.id;
+
       const { data: weeklyXP, error } = await supabase
         .from('xp_transactions')
         .select('user_id, amount')
@@ -270,6 +280,9 @@ export class LeaderboardService {
 
       const xpByUser = new Map<string, number>();
       weeklyXP.forEach((xp) => {
+        // Skip testuser
+        if (testUserId && xp.user_id === testUserId) return;
+
         const current = xpByUser.get(xp.user_id) || 0;
         xpByUser.set(xp.user_id, current + xp.amount);
       });
@@ -289,7 +302,8 @@ export class LeaderboardService {
       const { data: users, error: profilesError } = await supabase
         .from('profiles')
         .select('id, username, email, total_xp, current_level, timezone_offset')
-        .in('id', topUserIds);
+        .in('id', topUserIds)
+        .neq('username', 'testuser');
 
       if (profilesError) throw profilesError;
       if (!users) {
@@ -376,7 +390,8 @@ export class LeaderboardService {
       // 3. Compter le nombre total d'utilisateurs
       const { count: globalTotal, error: countError } = await supabase
         .from('profiles')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true })
+        .neq('username', 'testuser');
 
       if (countError) {
         Logger.error('Error counting users:', countError);
@@ -390,6 +405,7 @@ export class LeaderboardService {
       const { data: localUsers, error: localError } = await supabase
         .from('profiles')
         .select('id, total_xp, timezone_offset')
+        .neq('username', 'testuser')
         .order('total_xp', { ascending: false });
 
       if (localError || !localUsers) {
@@ -471,6 +487,7 @@ export class LeaderboardService {
       const { data: allUsers, error: usersError } = await supabase
         .from('profiles')
         .select('id, username, email, total_xp, current_level, timezone_offset')
+        .neq('username', 'testuser')
         .order('total_xp', { ascending: false });
 
       if (usersError || !allUsers) {
