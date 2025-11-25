@@ -1,5 +1,5 @@
 // src/hooks/useHabitDetails.ts
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { HabitProgressionService, TierInfo, HabitMilestone } from '@/services/habitProgressionService';
 import Logger from '@/utils/logger';
 
@@ -27,7 +27,7 @@ interface UseHabitDetailsResult {
   loading: boolean;
 }
 
-export function useHabitDetails(habitId: string, userId: string, currentStreak: number, completedTasksToday?: number, currentTierLevel?: number, createdAt?: Date): UseHabitDetailsResult {
+export function useHabitDetails(habitId: string, userId: string, currentStreak: number, currentTierLevel?: number, createdAt?: Date): UseHabitDetailsResult {
   const [tierInfo, setTierInfo] = useState<TierInfo | null>(null);
   const [tierProgress, setTierProgress] = useState(0);
   const [nextTier, setNextTier] = useState<TierInfo | null>(null);
@@ -39,6 +39,13 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
   }>({ unlocked: [], next: null, upcoming: [], all: [] });
   const [performanceMetrics, setPerformanceMetrics] = useState<UseHabitDetailsResult['performanceMetrics']>(null);
   const [loading, setLoading] = useState(true);
+
+  // Use ref to avoid fetchData recreating when currentStreak changes
+  const currentStreakRef = useRef(currentStreak);
+
+  useEffect(() => {
+    currentStreakRef.current = currentStreak;
+  }, [currentStreak]);
 
   // ============================================================================
   // CALCULATE TIER IMMEDIATELY (SYNCHRONOUS)
@@ -59,28 +66,30 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
     setTierProgress(immediateTierInfo.progress);
     setNextTier(HabitProgressionService.getNextTier(immediateTierInfo.tier));
 
-    // Set initial performance metrics with streak data
-    setPerformanceMetrics({
-      avgTasksPerDay: 0,
-      perfectDayRate: 0,
+    // Update only tier-related data and streak, keep existing metrics
+    setPerformanceMetrics((prev) => ({
+      avgTasksPerDay: prev?.avgTasksPerDay ?? 0,
+      perfectDayRate: prev?.perfectDayRate ?? 0,
       currentTier: immediateTierInfo.tier,
       tierProgress: immediateTierInfo.progress,
-      consistency: 0,
-      totalXPEarned: 0,
+      consistency: prev?.consistency ?? 0,
+      totalXPEarned: prev?.totalXPEarned ?? 0,
       currentStreak: currentStreak,
-      bestStreak: currentStreak,
-    });
+      bestStreak: Math.max(prev?.bestStreak ?? 0, currentStreak),
+    }));
   }, [currentStreak, immediateTierInfo]);
 
   // ============================================================================
   // FETCH DETAILED DATA FROM BACKEND
   // ============================================================================
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (silent: boolean = false) => {
     if (!habitId || !userId) return;
 
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      }
 
       // Fetch async data in parallel
       const [progression, metrics] = await Promise.all([HabitProgressionService.getOrCreateProgression(habitId, userId), HabitProgressionService.getPerformanceMetrics(habitId, userId)]);
@@ -107,19 +116,25 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
 
       // Update performance metrics with real data from backend
       if (metrics) {
-        setPerformanceMetrics({
+        const currentStreakValue = currentStreakRef.current;
+        setPerformanceMetrics((prev) => ({
           ...metrics,
-          currentStreak: currentStreak, // Always use real-time value
-          bestStreak: Math.max(metrics.bestStreak || 0, currentStreak),
-        });
+          currentStreak: currentStreakValue, // Always use real-time value from ref
+          bestStreak: Math.max(metrics.bestStreak || 0, currentStreakValue),
+          // Preserve existing values if new ones are 0 or null (optimistic update)
+          totalXPEarned: metrics.totalXPEarned || prev?.totalXPEarned || 0,
+          consistency: metrics.consistency !== undefined ? metrics.consistency : (prev?.consistency || 0),
+        }));
       }
     } catch (err) {
       Logger.error('useHabitDetails error', err);
       // Keep the initial values set in useEffect above
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
-  }, [habitId, userId, currentStreak, currentTierLevel, createdAt]);
+  }, [habitId, userId, currentTierLevel, createdAt]);
 
   // ============================================================================
   // FETCH ON MOUNT AND WHEN DEPENDENCIES CHANGE
@@ -127,7 +142,7 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
 
   useEffect(() => {
     fetchData();
-  }, [habitId, userId, currentStreak, completedTasksToday, currentTierLevel]);
+  }, [habitId, userId, currentTierLevel]);
 
   return {
     tierInfo,
@@ -135,7 +150,7 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
     nextTier,
     milestoneStatus,
     performanceMetrics,
-    refreshProgression: fetchData,
+    refreshProgression: () => fetchData(true), // Silent refresh
     loading,
   };
 }
