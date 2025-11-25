@@ -223,7 +223,7 @@ const HabitDetails: React.FC = () => {
   // HOOKS - Données de progression
   // ============================================================================
 
-  const { tierInfo, nextTier, milestoneStatus, performanceMetrics, refreshProgression, loading } = useHabitDetails(habit?.id || '', user?.id || '', habit?.currentStreak || 0, completedTasksToday, habit?.currentTierLevel, habit?.createdAt);
+  const { tierInfo, nextTier, milestoneStatus, performanceMetrics, refreshProgression, loading } = useHabitDetails(habit?.id || '', user?.id || '', habit?.currentStreak || 0, habit?.currentTierLevel, habit?.createdAt);
 
   // ============================================================================
   // VARIABLES DERIVEES - Métriques
@@ -270,6 +270,8 @@ const HabitDetails: React.FC = () => {
       try {
         await toggleTask(habit.id, today, taskId);
         await new Promise((resolve) => setTimeout(resolve, 150));
+        // Refresh progression metrics silently in background
+        refreshProgression();
       } catch (error) {
         Logger.error('Task toggle failed:', error);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -278,21 +280,9 @@ const HabitDetails: React.FC = () => {
         setLoadingTaskId(null);
       }
     },
-    [habit, today, toggleTask, isTogglingTask]
+    [habit, today, toggleTask, isTogglingTask, refreshProgression]
   );
 
-  /**
-   * Rafraîchit les habitudes après mise à jour des tâches
-   */
-  const handleTasksUpdated = useCallback(async () => {
-    try {
-      await refreshHabits();
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Logger.debug('Tasks updated, habits refreshed');
-    } catch (error) {
-      Logger.error('Failed to refresh habits after task update:', error);
-    }
-  }, [refreshHabits]);
 
   /**
    * Retourne à l'écran précédent
@@ -671,7 +661,6 @@ const HabitDetails: React.FC = () => {
                   loadingTaskId={loadingTaskId}
                   frequency={habit.frequency}
                   isWeekCompleted={isWeekCompleted}
-                  onTasksUpdated={handleTasksUpdated}
                   tierColor={tierColor}
                 />
               </Animated.View>

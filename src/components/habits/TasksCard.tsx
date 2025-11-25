@@ -255,15 +255,11 @@ export const TasksCard: React.FC<TasksCardProps> = ({
   const handleTasksUpdatedInternal = () => {
     setShowCategoryPicker(false);
     setShowManageModal(false);
-    if (onTasksUpdated) {
-      onTasksUpdated();
-    }
+    // Note: No need to refresh habits here - the context already handles updates
   };
 
   const handleTaskDeleted = () => {
-    if (onTasksUpdated) {
-      onTasksUpdated();
-    }
+    // Note: No need to refresh habits here - the context already handles updates
   };
   const completedTasksToday = todayTasks.completedTasks?.length || 0;
   const totalTasks = tasks?.length || 0;
