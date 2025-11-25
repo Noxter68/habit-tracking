@@ -176,11 +176,13 @@ export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({
   }) as string[];
   const randomMessage = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
 
+  if (!visible) return null;
+
   return (
     <Modal visible={visible} transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
       <BlurView intensity={30} style={tw`flex-1`}>
         <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)} style={tw`flex-1 bg-black/50 items-center justify-center px-5`}>
-          <Pressable style={tw`absolute inset-0`} onPress={onClose} disabled={loading || success} />
+          <Pressable style={tw`absolute inset-0`} onPress={!loading && !success ? onClose : undefined} />
 
           <Animated.View entering={FadeInDown.duration(400).springify()} style={tw`bg-white rounded-3xl overflow-hidden w-full max-w-md shadow-2xl`}>
             {success ? (

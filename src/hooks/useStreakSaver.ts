@@ -397,6 +397,7 @@ export const useStreakSaver = (props: UseStreakSaverProps) => {
   const closeModal = useCallback(() => {
     Logger.debug(`👋 [${type.toUpperCase()}] Closing streak saver modal`);
     setShowModal(false);
+    setUsing(false);
     setSuccess(false);
     setError(null);
     setNewStreak(0);

@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { Shield, Zap, Gift } from 'lucide-react-native';
 import tw from '../../lib/tailwind';
-import i18n from '../../i18n';
+import { useTranslation } from 'react-i18next';
 
 interface FeatureItemProps {
   icon: React.ReactNode;
@@ -25,11 +25,12 @@ interface SaverStepProps {
 }
 
 const SaverStep: React.FC<SaverStepProps> = ({ gradient }) => {
+  const { t } = useTranslation();
   return (
     <View style={tw`items-center gap-6`}>
       <View style={tw`items-center gap-2.5`}>
-        <Text style={tw`text-4xl font-black text-white text-center`}>{i18n.t('onboarding.savers.title')}</Text>
-        <Text style={tw`text-base text-white/80 text-center leading-6 max-w-[300px]`}>{i18n.t('onboarding.savers.subtitle')}</Text>
+        <Text style={tw`text-4xl font-black text-white text-center`}>{t('onboarding.savers.title')}</Text>
+        <Text style={tw`text-base text-white/80 text-center leading-6 max-w-[300px]`}>{t('onboarding.savers.subtitle')}</Text>
       </View>
 
       <View
@@ -45,9 +46,9 @@ const SaverStep: React.FC<SaverStepProps> = ({ gradient }) => {
           },
         ]}
       >
-        <FeatureItem icon={<Shield size={20} color="white" strokeWidth={2} />} title={i18n.t('onboarding.savers.protectStreak')} desc={i18n.t('onboarding.savers.protectDesc')} />
-        <FeatureItem icon={<Zap size={20} color="white" strokeWidth={2} />} title={i18n.t('onboarding.savers.instantRestore')} desc={i18n.t('onboarding.savers.instantDesc')} />
-        <FeatureItem icon={<Gift size={20} color="white" strokeWidth={2} />} title={i18n.t('onboarding.savers.welcomeGift')} desc={i18n.t('onboarding.savers.welcomeGiftDesc')} />
+        <FeatureItem icon={<Shield size={20} color="white" strokeWidth={2} />} title={t('onboarding.savers.protectStreak')} desc={t('onboarding.savers.protectDesc')} />
+        <FeatureItem icon={<Zap size={20} color="white" strokeWidth={2} />} title={t('onboarding.savers.instantRestore')} desc={t('onboarding.savers.instantDesc')} />
+        <FeatureItem icon={<Gift size={20} color="white" strokeWidth={2} />} title={t('onboarding.savers.welcomeGift')} desc={t('onboarding.savers.welcomeGiftDesc')} />
       </View>
     </View>
   );
