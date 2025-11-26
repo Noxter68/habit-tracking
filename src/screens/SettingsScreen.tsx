@@ -758,6 +758,15 @@ const SettingsScreen: React.FC = () => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     setShowStreakSaverShop(true);
                   }}
+                />
+                <SettingsItem
+                  icon="crown"
+                  title="Test Paywall Screen"
+                  subtitle="Voir l'écran d'abonnement"
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    navigation.navigate('Paywall', { source: 'settings' });
+                  }}
                   isLast
                 />
               </SettingsSection>
