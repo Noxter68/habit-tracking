@@ -353,7 +353,7 @@ const UsernameStep: React.FC<UsernameStepProps> = ({
       </Animated.View>
 
           {/* Liste des règles de validation avec indicateurs visuels */}
-          <View style={tw`gap-3 mt-2`}>
+          <View style={tw`gap-3 mt-2 w-full max-w-[340px]`}>
             <ValidationRule
               isValid={validatedLength === true}
               text={t('onboarding.username.rules.length')}
