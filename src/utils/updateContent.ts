@@ -63,52 +63,51 @@ const updates_1_0_12_fr: UpdateItem[] = [
   },
 ];
 
-// Version 1.1.0 - English
-const updates_1_1_0_en: UpdateItem[] = [
+// Version 1.1.1- English
+const updates_1_1_1_en: UpdateItem[] = [
   {
-    title: 'Group Habits',
-    description: 'Team up with friends! Create shared habits, track collective streaks, and earn XP together. This is version 1.0 of Group Habits and may have some bugs - your feedback is welcome!',
+    title: 'Username Creation',
+    description: 'You can now create your username right after onboarding, making it easier to join groups and connect with friends from the start.',
   },
   {
-    title: 'Edit Habit Tasks',
-    description: 'You can now add or remove tasks from your existing habits. Adjust your habits as your routine evolves.',
+    title: 'Milestone Fixes',
+    description: 'Fixed period calculation for milestone unlocks - your achievements will now unlock at the right time.',
   },
   {
-    title: 'Multilingual Support',
-    description: 'Nuvoria now speaks your language! Available in English and French, automatically matching your device settings.',
+    title: 'Streak Saver Improvements',
+    description: 'Streak Savers now work perfectly! They properly maintain both habit and global streaks when saving your progress.',
   },
   {
-    title: 'Settings Redesign',
-    description: 'The Settings screen got a fresh, cleaner look that matches the zen aesthetic of the app.',
+    title: 'Smart Notifications',
+    description: "Notifications are now smarter - you won't receive reminders for tasks you've already completed.",
   },
   {
-    title: 'Bug Fixes & Improvements',
-    description: 'Streak Savers are now working properly, along with various other fixes to make your experience smoother and more reliable.',
+    title: 'Weekly Bonus System',
+    description: 'Improved timezone handling for weekly resets and bonuses - everyone gets their rewards at the right time, no matter where they are.',
   },
 ];
 
-// Version 1.1.0 - French
-const updates_1_1_0_fr: UpdateItem[] = [
+// Version 1.1.1 - French
+const updates_1_1_1_fr: UpdateItem[] = [
   {
-    title: 'Habitudes de groupe',
-    description:
-      "Formez une équipe avec vos amis ! Créez des habitudes partagées, suivez vos streaks collectifs et gagnez de l'XP ensemble. C'est la version 1.0 des Habitudes de groupe, quelques bugs peuvent survenir - vos retours sont les bienvenus !",
+    title: 'Création de pseudo',
+    description: "Vous pouvez maintenant créer votre pseudo juste après l'onboarding, facilitant la création et l'adhésion à des groupes dès le début.",
   },
   {
-    title: 'Modification des tâches',
-    description: 'Vous pouvez maintenant ajouter ou supprimer des tâches dans vos habitudes existantes. Adaptez vos habitudes au fil de votre routine.',
+    title: 'Corrections des jalons',
+    description: 'Correction du calcul de période pour le déblocage des jalons - vos accomplissements se débloquent maintenant au bon moment.',
   },
   {
-    title: 'Support multilingue',
-    description: "Nuvoria parle maintenant votre langue ! Disponible en anglais et français, l'app s'adapte automatiquement à votre appareil.",
+    title: 'Améliorations Sauvegarde de Série',
+    description: 'Les Sauvegardes de Série fonctionnent parfaitement ! Elles maintiennent correctement vos séries individuelles et globales.',
   },
   {
-    title: 'Réglages repensés',
-    description: "La page Réglages a un nouveau look plus épuré et cohérent avec l'esthétique zen de l'app.",
+    title: 'Notifications intelligentes',
+    description: 'Les notifications sont plus intelligentes - vous ne recevrez plus de rappels pour les tâches déjà complétées.',
   },
   {
-    title: 'Corrections et améliorations',
-    description: 'Les Streak Savers fonctionnent maintenant correctement, ainsi que diverses autres corrections pour une expérience plus fluide et fiable.',
+    title: 'Système de bonus hebdomadaire',
+    description: 'Gestion améliorée des fuseaux horaires pour les réinitialisations et bonus hebdomadaires - tout le monde reçoit ses récompenses au bon moment.',
   },
 ];
 
@@ -128,8 +127,8 @@ export const getUpdatesForVersion = (version: string, locale: string = 'en'): Up
   const updatesMap: Record<string, UpdateItem[]> = {
     updates_1_0_12_en: updates_1_0_12_en,
     updates_1_0_12_fr: updates_1_0_12_fr,
-    updates_1_1_0_en: updates_1_1_0_en,
-    updates_1_1_0_fr: updates_1_1_0_fr,
+    updates_1_1_0_en: updates_1_1_1_en,
+    updates_1_1_0_fr: updates_1_1_1_fr,
   };
 
   return updatesMap[key] || updatesMap[`updates_${version.replace(/\./g, '_')}_en`] || [];
