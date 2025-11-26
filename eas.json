@@ -9,7 +9,8 @@
       "distribution": "internal",
       "channel": "development",
       "env": {
-        "DEBUG_MODE": "true"
+        "DEBUG_MODE": "true",
+        "ENVIRONMENT": "development"
       }
     },
     "preview": {
@@ -20,7 +21,8 @@
       "autoIncrement": true,
       "channel": "production",
       "env": {
-        "DEBUG_MODE": "false"
+        "DEBUG_MODE": "false",
+        "ENVIRONMENT": "production"
       }
     }
   },
