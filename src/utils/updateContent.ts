@@ -127,8 +127,8 @@ export const getUpdatesForVersion = (version: string, locale: string = 'en'): Up
   const updatesMap: Record<string, UpdateItem[]> = {
     updates_1_0_12_en: updates_1_0_12_en,
     updates_1_0_12_fr: updates_1_0_12_fr,
-    updates_1_1_0_en: updates_1_1_1_en,
-    updates_1_1_0_fr: updates_1_1_1_fr,
+    updates_1_1_1_en: updates_1_1_1_en,
+    updates_1_1_1_fr: updates_1_1_1_fr,
   };
 
   return updatesMap[key] || updatesMap[`updates_${version.replace(/\./g, '_')}_en`] || [];
