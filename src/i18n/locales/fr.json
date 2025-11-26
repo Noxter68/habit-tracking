@@ -2062,6 +2062,24 @@
       "holidayMode": "Mode vacances",
       "ready": "Vous êtes prêt !",
       "readyDesc": "Créons votre première habitude et commençons votre voyage vers l'excellence"
+    },
+
+    "username": {
+      "title": "Créez votre pseudo",
+      "subtitle": "Choisissez un nom unique qui vous représente dans la communauté Nuvoria",
+      "placeholder": "Votre pseudo",
+      "characterCount": "{{count}} / {{max}} caractères",
+      "errors": {
+        "tooShort": "Le pseudo doit contenir au moins 3 caractères",
+        "tooLong": "Le pseudo ne peut pas dépasser 20 caractères",
+        "invalidChars": "Seules les lettres sont autorisées (pas de chiffres, points, tirets ou underscores)",
+        "taken": "Ce pseudo est déjà pris, essayez-en un autre"
+      },
+      "rules": {
+        "length": "Entre 3 et 20 caractères",
+        "lettersOnly": "Lettres uniquement (accents autorisés)",
+        "available": "Pseudo disponible"
+      }
     }
   },
   "loader": {

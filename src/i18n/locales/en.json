@@ -2017,6 +2017,24 @@
       "holidayMode": "Holiday Mode",
       "ready": "You're Ready!",
       "readyDesc": "Let's create your first habit and start your journey to excellence"
+    },
+
+    "username": {
+      "title": "Create Your Username",
+      "subtitle": "Choose a unique name that represents you in the Nuvoria community",
+      "placeholder": "Your username",
+      "characterCount": "{{count}} / {{max}} characters",
+      "errors": {
+        "tooShort": "Username must be at least 3 characters long",
+        "tooLong": "Username cannot exceed 20 characters",
+        "invalidChars": "Only letters are allowed (no numbers, dots, dashes or underscores)",
+        "taken": "This username is already taken, try another one"
+      },
+      "rules": {
+        "length": "Between 3 and 20 characters",
+        "lettersOnly": "Letters only (accents allowed)",
+        "available": "Username available"
+      }
     }
   },
   "loader": {

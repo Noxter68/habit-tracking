@@ -6,6 +6,7 @@ import tw from 'twrnc';
 import { supabase } from '@/lib/supabase';
 import Logger from '@/utils/logger';
 import { useTranslation } from 'react-i18next';
+import { OnboardingService } from '@/services/onboardingService';
 
 interface EditUsernameModalProps {
   visible: boolean;
@@ -20,47 +21,31 @@ const EditUsernameModal: React.FC<EditUsernameModalProps> = ({ visible, currentU
   const [username, setUsername] = useState(currentUsername);
   const [loading, setLoading] = useState(false);
 
+  /**
+   * Vérifier si le username est disponible dans la base de données
+   * en excluant l'utilisateur actuel
+   */
   const checkUsernameAvailability = async (newUsername: string): Promise<boolean> => {
-    try {
-      // Vérifier si le username existe déjà (en excluant l'utilisateur actuel)
-      const { data, error } = await supabase.from('profiles').select('id').eq('username', newUsername).neq('id', userId).maybeSingle();
-
-      if (error) {
-        Logger.error('Error checking username:', error);
-        return false;
-      }
-
-      // Si data existe, c'est que le username est déjà pris
-      return data === null;
-    } catch (error) {
-      Logger.error('Exception checking username:', error);
-      return false;
-    }
+    return await OnboardingService.isUsernameAvailable(newUsername, userId);
   };
 
   const handleSave = async () => {
-    // Validation de base
     const trimmedUsername = username.trim();
 
-    if (!trimmedUsername) {
-      Alert.alert(t('editUsername.errors.emptyTitle'), t('editUsername.errors.emptyMessage'));
-      return;
-    }
+    // Validation du format via le service centralisé
+    const validation = OnboardingService.validateUsernameFormat(trimmedUsername);
 
-    if (trimmedUsername.length < 3) {
-      Alert.alert(t('editUsername.errors.tooShortTitle'), t('editUsername.errors.tooShortMessage'));
-      return;
-    }
-
-    if (trimmedUsername.length > 20) {
-      Alert.alert(t('editUsername.errors.tooLongTitle'), t('editUsername.errors.tooLongMessage'));
-      return;
-    }
-
-    // Validation des caractères (alphanumérique + underscore uniquement)
-    const usernameRegex = /^[a-zA-Z0-9_]+$/;
-    if (!usernameRegex.test(trimmedUsername)) {
-      Alert.alert(t('editUsername.errors.invalidCharsTitle'), t('editUsername.errors.invalidCharsMessage'));
+    if (!validation.isValid) {
+      // Afficher l'erreur appropriée selon le type de validation échouée
+      if (!trimmedUsername) {
+        Alert.alert(t('editUsername.errors.emptyTitle'), t('editUsername.errors.emptyMessage'));
+      } else if (trimmedUsername.length < 3) {
+        Alert.alert(t('editUsername.errors.tooShortTitle'), t('editUsername.errors.tooShortMessage'));
+      } else if (trimmedUsername.length > 20) {
+        Alert.alert(t('editUsername.errors.tooLongTitle'), t('editUsername.errors.tooLongMessage'));
+      } else {
+        Alert.alert(t('editUsername.errors.invalidCharsTitle'), t('editUsername.errors.invalidCharsMessage'));
+      }
       return;
     }
 

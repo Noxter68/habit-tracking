@@ -11,18 +11,25 @@ import tw from '../lib/tailwind';
 import { RootStackParamList } from '../../App';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
+import Logger from '@/utils/logger';
 
 import WelcomeStep from '../components/onboarding/WelcomeStep';
 import XPStep from '../components/onboarding/XPStep';
 import TierStep from '../components/onboarding/TierStep';
 import SaverStep from '../components/onboarding/SaverStep';
 import FeaturesStep from '../components/onboarding/FeaturesStep';
+import UsernameStep from '../components/onboarding/UsernameStep';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Onboarding'>;
 
 interface StepConfig {
   id: string;
-  component: React.ComponentType<{ gradient: string[] }>;
+  component: React.ComponentType<{
+    gradient: string[];
+    onUsernameChange?: (username: string, isValid: boolean) => void;
+    onKeyboardVisibilityChange?: (isVisible: boolean) => void;
+  }>;
   gradient: string[];
   gemColor: string;
   gemSource: any;
@@ -64,15 +71,27 @@ const STEPS: StepConfig[] = [
     gemColor: '#f59e0b',
     gemSource: require('../../assets/interface/gems/topaz-gem.png'),
   },
+  {
+    id: 'username',
+    component: UsernameStep,
+    gradient: ['#ec4899', '#db2777', '#be185d'],
+    gemColor: '#ec4899',
+    gemSource: require('../../assets/interface/gems/ruby-gem.png'),
+  },
 ];
 
 const OnboardingScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const { completeOnboarding } = useAuth();
+  const { completeOnboarding, user } = useAuth();
   const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(0);
+  const [username, setUsername] = useState('');
+  const [isUsernameValid, setIsUsernameValid] = useState(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
   const opacity = useSharedValue(0);
+  const gemOpacity = useSharedValue(1);
+  const gemScale = useSharedValue(1);
 
   useEffect(() => {
     opacity.value = withDelay(200, withTiming(1, { duration: 600 }));
@@ -81,7 +100,24 @@ const OnboardingScreen: React.FC = () => {
   useEffect(() => {
     opacity.value = 0;
     opacity.value = withTiming(1, { duration: 400 });
+    // Réinitialiser l'état du clavier quand on change de step
+    gemOpacity.value = withTiming(1, { duration: 300 });
+    gemScale.value = withTiming(1, { duration: 300 });
   }, [currentStep]);
+
+  // Callback pour gérer la visibilité du clavier depuis UsernameStep
+  const handleKeyboardVisibilityChange = (visible: boolean) => {
+    setIsKeyboardVisible(visible);
+    if (visible) {
+      // Masquer la gemme quand le clavier apparaît
+      gemOpacity.value = withTiming(0, { duration: 300 });
+      gemScale.value = withTiming(0.8, { duration: 300 });
+    } else {
+      // Réafficher la gemme quand le clavier disparaît
+      gemOpacity.value = withTiming(1, { duration: 300 });
+      gemScale.value = withTiming(1, { duration: 300 });
+    }
+  };
 
   const handleNext = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -101,6 +137,27 @@ const OnboardingScreen: React.FC = () => {
 
   const handleComplete = async () => {
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+    // Si on est sur le dernier step (username) et que le pseudo est valide, le sauvegarder en base de données
+    if (currentStep === STEPS.length - 1 && isUsernameValid && username.trim()) {
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            username: username.trim(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', user?.id);
+
+        if (error) {
+          Logger.error('Error saving username:', error);
+          // Continuer quand même vers le HabitWizard, l'utilisateur pourra mettre à jour son pseudo plus tard
+        }
+      } catch (error) {
+        Logger.error('Exception saving username:', error);
+      }
+    }
+
     await completeOnboarding();
     navigation.replace('HabitWizard');
   };
@@ -113,6 +170,11 @@ const OnboardingScreen: React.FC = () => {
 
   const animatedContentStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
+  }));
+
+  const animatedGemStyle = useAnimatedStyle(() => ({
+    opacity: gemOpacity.value,
+    transform: [{ scale: gemScale.value }],
   }));
 
   const step = STEPS[currentStep];
@@ -162,8 +224,14 @@ const OnboardingScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Gem */}
-        <Animated.View key={`gem-${currentStep}`} style={tw`items-center mt-4 mb-3`}>
+        {/* Gem - disparaît quand le clavier apparaît sur le step username */}
+        <Animated.View
+          key={`gem-${currentStep}`}
+          style={[
+            tw`items-center mt-4 mb-3`,
+            currentStep === STEPS.length - 1 ? animatedGemStyle : {}
+          ]}
+        >
           <View
             style={[
               tw`w-36 h-36 rounded-full items-center justify-center`,
@@ -181,14 +249,22 @@ const OnboardingScreen: React.FC = () => {
           </View>
         </Animated.View>
 
-        {/* Main Content */}
+        {/* Contenu principal : affiche le composant de l'étape actuelle */}
         <Animated.View style={[animatedContentStyle, tw`flex-1 justify-center px-8`]}>
-          <StepComponent gradient={step.gradient} />
+          <StepComponent
+            gradient={step.gradient}
+            onUsernameChange={(newUsername: string, isValid: boolean) => {
+              setUsername(newUsername);
+              setIsUsernameValid(isValid);
+            }}
+            onKeyboardVisibilityChange={currentStep === STEPS.length - 1 ? handleKeyboardVisibilityChange : undefined}
+          />
         </Animated.View>
 
-        {/* Bottom Navigation */}
+        {/* Navigation du bas : boutons pour naviguer entre les étapes */}
         <View style={tw`px-8 pb-8 pt-8`}>
           {currentStep === 0 ? (
+            // Premier step : bouton pleine largeur sans retour arrière
             <Pressable
               onPress={handleNext}
               style={({ pressed }) => [
@@ -208,6 +284,8 @@ const OnboardingScreen: React.FC = () => {
               <ChevronRight size={20} color="#581c87" strokeWidth={2.5} />
             </Pressable>
           ) : (
+            // Steps suivants : bouton retour + bouton continuer
+
             <View style={tw`flex-row justify-between items-center gap-4`}>
               <Pressable
                 onPress={handleBack}
@@ -229,10 +307,15 @@ const OnboardingScreen: React.FC = () => {
 
               <Pressable
                 onPress={handleNext}
+                // Désactiver le bouton sur le dernier step si le pseudo n'est pas valide
+                disabled={currentStep === STEPS.length - 1 && !isUsernameValid}
                 style={({ pressed }) => [
                   tw`flex-1 h-14 rounded-full flex-row items-center justify-center gap-2`,
                   {
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    // Opacité réduite si le bouton est désactivé
+                    backgroundColor: currentStep === STEPS.length - 1 && !isUsernameValid
+                      ? 'rgba(255, 255, 255, 0.3)'
+                      : 'rgba(255, 255, 255, 0.95)',
                     opacity: pressed ? 0.9 : 1,
                     shadowColor: '#000',
                     shadowOffset: { width: 0, height: 4 },
@@ -242,8 +325,22 @@ const OnboardingScreen: React.FC = () => {
                   },
                 ]}
               >
-                <Text style={tw`text-base font-bold text-purple-900`}>{currentStep === STEPS.length - 1 ? t('onboarding.letsStart') : t('onboarding.continue')}</Text>
-                <ChevronRight size={20} color="#581c87" strokeWidth={2.5} />
+                <Text style={[
+                  tw`text-base font-bold`,
+                  {
+                    // Couleur atténuée si le bouton est désactivé
+                    color: currentStep === STEPS.length - 1 && !isUsernameValid
+                      ? 'rgba(88, 28, 135, 0.4)'
+                      : '#581c87'
+                  }
+                ]}>
+                  {currentStep === STEPS.length - 1 ? t('onboarding.letsStart') : t('onboarding.continue')}
+                </Text>
+                <ChevronRight
+                  size={20}
+                  color={currentStep === STEPS.length - 1 && !isUsernameValid ? 'rgba(88, 28, 135, 0.4)' : '#581c87'}
+                  strokeWidth={2.5}
+                />
               </Pressable>
             </View>
           )}
