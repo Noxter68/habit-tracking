@@ -227,9 +227,11 @@ export class HabitProgressionService {
 
     const unlocked = milestones.filter(
       (m, index) => {
-        // Débloqué si: index < nombre de milestones débloqués OU ancienneté >= jours requis
+        // Débloqué UNIQUEMENT si l'ancienneté est suffisante (on vérifie toujours l'âge)
+        // Le nombre de milestones débloqués (current_tier_level) est juste une indication,
+        // mais la vraie condition est: habitAge >= jours requis
         if (typeof unlockedMilestones === 'number') {
-          return index < unlockedMilestones || m.days <= habitAge;
+          return m.days <= habitAge;
         }
         // Fallback: comparaison par titre (legacy)
         return unlockedMilestones.includes(m.title) || m.days <= habitAge;
