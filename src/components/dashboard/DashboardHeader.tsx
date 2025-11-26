@@ -516,17 +516,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           {user?.id && (
             <View style={{ marginBottom: 12 }}>
               <DailyChallenge
-                completedToday={completedTasksToday}
-                totalTasksToday={totalTasksToday}
+                habits={habits}
                 onCollect={handleXPCollect}
                 userId={user.id}
                 currentLevelXP={optimisticXP}
                 xpForNextLevel={xpForNextLevel}
                 onLevelUp={handleLevelUp}
-                debugMode={__DEV__}
                 tierTheme={tierTheme}
-                textColor={textColors.secondary}
-                habits={habits}
               />
             </View>
           )}

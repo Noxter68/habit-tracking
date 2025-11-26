@@ -7,7 +7,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, wit
 import { useTranslation } from 'react-i18next';
 import { XPService } from '../../services/xpService';
 import { supabase } from '../../lib/supabase';
-import { getTodayString, isWeeklyHabitCompletedThisWeek } from '@/utils/dateHelpers';
+import { getTodayString, isWeeklyHabitCompletedThisWeek, getWeeklyCompletedTasksCount } from '@/utils/dateHelpers';
 import Logger from '@/utils/logger';
 import { Config } from '@/config';
 import { Habit } from '@/types';
@@ -17,6 +17,7 @@ interface TierTheme {
   gradient: string[];
   accent: string;
   gemName: string;
+  texture?: any;
 }
 
 interface DailyChallengeProps {
@@ -56,7 +57,11 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
 
         // Utilise la fonction centralisée qui utilise les semaines calendaires (lundi-dimanche)
         if (isWeeklyHabitCompletedThisWeek(habit.dailyTasks, habit.createdAt)) {
+          // Weekly complétée cette semaine → compte toutes les tâches
           weeklyTasksCompletedThisWeek += taskCount;
+        } else {
+          // Weekly en cours → compte les tâches uniques complétées cette semaine
+          weeklyTasksCompletedThisWeek += getWeeklyCompletedTasksCount(habit.dailyTasks, habit.createdAt);
         }
       }
     });
@@ -74,20 +79,14 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
 
   // Pour réclamer le défi :
   // - Toutes les tâches daily doivent être complétées aujourd'hui
-  // - Toutes les tâches weekly doivent être complétées cette semaine
-  // - Il faut avoir au moins une tâche (daily ou weekly)
-  const dailyComplete = stats.dailyTasksCompleted >= stats.dailyTasksTotal;
-  const weeklyComplete = stats.weeklyTasksCompletedThisWeek >= stats.weeklyTasksTotal;
-  const hasAnyTasks = stats.dailyTasksTotal > 0 || stats.weeklyTasksTotal > 0;
-  const canClaimChallenge = dailyComplete && weeklyComplete && hasAnyTasks;
+  // - Les weekly ne bloquent PAS le claim (elles sont optionnelles)
+  // - Il faut avoir au moins une tâche daily
+  const canClaimChallenge = stats.dailyTasksCompleted >= stats.dailyTasksTotal && stats.dailyTasksTotal > 0;
 
-  // Calcul du total de tâches pour aujourd'hui : daily + weekly (toutes)
-  const totalTasksToday = stats.dailyTasksTotal + stats.weeklyTasksTotal;
-
-  // Calcul du nombre de tâches complétées : daily complétées aujourd'hui + weekly complétées cette semaine
-  const totalCompleted = stats.dailyTasksCompleted + stats.weeklyTasksCompletedThisWeek;
-
-  const completionPercentage = totalTasksToday > 0 ? Math.min(100, Math.round((totalCompleted / totalTasksToday) * 100)) : 0;
+  // ProgressBar basée UNIQUEMENT sur les daily (ignore les weekly)
+  const completionPercentage = stats.dailyTasksTotal > 0
+    ? Math.min(100, Math.round((stats.dailyTasksCompleted / stats.dailyTasksTotal) * 100))
+    : 0;
 
   const scale = useSharedValue(1);
   const cardTranslateY = useSharedValue(0);
