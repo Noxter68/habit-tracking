@@ -18,7 +18,7 @@
         "backgroundColor": "#ffffff",
         "resizeMode": "contain"
       },
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.davidplanchon.nuvoria",
       "usesAppleSignIn": true,
       "buildNumber": "14",
