@@ -23,46 +23,6 @@ const modalTexts_fr: UpdateModalTexts = {
   getStarted: 'Commencer',
 };
 
-// Version 1.0.12 - English
-const updates_1_0_12_en: UpdateItem[] = [
-  {
-    title: 'Performance Improvements',
-    description: 'The app is now 30% faster with better memory management.',
-  },
-  {
-    title: 'New Notification System',
-    description: 'Receive personalized reminders for your important habits.',
-  },
-  {
-    title: 'Redesigned Interface',
-    description: 'Cleaner and more intuitive design for optimal user experience.',
-  },
-  {
-    title: 'Bug Fixes',
-    description: 'Resolution of several issues reported by the community.',
-  },
-];
-
-// Version 1.0.12 - French
-const updates_1_0_12_fr: UpdateItem[] = [
-  {
-    title: 'Amélioration des performances',
-    description: "L'application est maintenant 30% plus rapide avec une meilleure gestion de la mémoire.",
-  },
-  {
-    title: 'Nouveau système de notifications',
-    description: 'Recevez des rappels personnalisés pour vos habitudes importantes.',
-  },
-  {
-    title: 'Interface repensée',
-    description: 'Design plus épuré et intuitif pour une expérience utilisateur optimale.',
-  },
-  {
-    title: 'Corrections de bugs',
-    description: 'Résolution de plusieurs problèmes signalés par la communauté.',
-  },
-];
-
 // Version 1.1.1- English
 const updates_1_1_1_en: UpdateItem[] = [
   {
@@ -125,8 +85,6 @@ export const getUpdatesForVersion = (version: string, locale: string = 'en'): Up
 
   // Map des versions disponibles
   const updatesMap: Record<string, UpdateItem[]> = {
-    updates_1_0_12_en: updates_1_0_12_en,
-    updates_1_0_12_fr: updates_1_0_12_fr,
     updates_1_1_1_en: updates_1_1_1_en,
     updates_1_1_1_fr: updates_1_1_1_fr,
   };
