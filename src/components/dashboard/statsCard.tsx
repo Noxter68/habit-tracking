@@ -102,10 +102,10 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
         <Animated.View style={isOnFire ? fireAnimatedStyle : undefined}>
           <View
             style={{
-              width: 40,
-              height: 40,
+              width: 48,
+              height: 48,
               backgroundColor: getIconBg(),
-              borderRadius: 12,
+              borderRadius: 14,
               alignItems: 'center',
               justifyContent: 'center',
               padding: 6,
@@ -115,7 +115,7 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
               shadowRadius: 4,
             }}
           >
-            <Image source={theme.streakImage} style={{ width: 35, height: 35 }} resizeMode="contain" />
+            <Image source={theme.streakImage} style={{ width: 42, height: 42 }} resizeMode="contain" />
           </View>
         </Animated.View>
       );
@@ -126,10 +126,10 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
       return (
         <View
           style={{
-            width: 40,
-            height: 40,
+            width: 48,
+            height: 48,
             backgroundColor: getIconBg(),
-            borderRadius: 12,
+            borderRadius: 14,
             alignItems: 'center',
             justifyContent: 'center',
             padding: 6,
@@ -139,7 +139,7 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
             shadowRadius: 4,
           }}
         >
-          <Image source={theme.questImage} style={{ width: 35, height: 35 }} resizeMode="contain" />
+          <Image source={theme.questImage} style={{ width: 42, height: 42 }} resizeMode="contain" />
         </View>
       );
     }
@@ -149,10 +149,10 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
       return (
         <View
           style={{
-            width: 40,
-            height: 40,
+            width: 48,
+            height: 48,
             backgroundColor: getIconBg(),
-            borderRadius: 12,
+            borderRadius: 14,
             alignItems: 'center',
             justifyContent: 'center',
             padding: 6,
@@ -162,7 +162,7 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
             shadowRadius: 4,
           }}
         >
-          <Image source={require('../../../assets/interface/streak-saver.png')} style={{ width: 35, height: 35 }} resizeMode="contain" />
+          <Image source={require('../../../assets/interface/streak-saver.png')} style={{ width: 42, height: 42 }} resizeMode="contain" />
         </View>
       );
     }
@@ -174,10 +174,10 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
         <Animated.View style={isOnFire ? fireAnimatedStyle : undefined}>
           <View
             style={{
-              width: 40,
-              height: 40,
+              width: 48,
+              height: 48,
               backgroundColor: getIconBg(),
-              borderRadius: 12,
+              borderRadius: 14,
               alignItems: 'center',
               justifyContent: 'center',
               shadowColor: '#000',
@@ -186,7 +186,7 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
               shadowRadius: 4,
             }}
           >
-            <Icon size={22} color={getIconColor()} />
+            <Icon size={28} color={getIconColor()} />
           </View>
         </Animated.View>
       );
@@ -202,10 +202,10 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
           <Animated.View style={isOnFire ? fireAnimatedStyle : undefined}>
             <View
               style={{
-                width: 40,
-                height: 40,
+                width: 48,
+                height: 48,
                 backgroundColor: getIconBg(),
-                borderRadius: 12,
+                borderRadius: 14,
                 alignItems: 'center',
                 justifyContent: 'center',
                 shadowColor: '#000',
@@ -214,7 +214,7 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
                 shadowRadius: 4,
               }}
             >
-              <HomeIcon size={22} color={getIconColor()} />
+              <HomeIcon size={28} color={getIconColor()} />
             </View>
           </Animated.View>
         );
@@ -224,10 +224,10 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
         <Animated.View style={isOnFire ? fireAnimatedStyle : undefined}>
           <View
             style={{
-              width: 40,
-              height: 40,
+              width: 48,
+              height: 48,
               backgroundColor: getIconBg(),
-              borderRadius: 12,
+              borderRadius: 14,
               alignItems: 'center',
               justifyContent: 'center',
               padding: 6,
@@ -237,7 +237,7 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
               shadowRadius: 4,
             }}
           >
-            <Image source={imageSource} style={{ width: 35, height: 35 }} resizeMode="contain" />
+            <Image source={imageSource} style={{ width: 42, height: 42 }} resizeMode="contain" />
           </View>
         </Animated.View>
       );
@@ -247,10 +247,10 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
     return (
       <View
         style={{
-          width: 40,
-          height: 40,
+          width: 48,
+          height: 48,
           backgroundColor: getIconBg(),
-          borderRadius: 12,
+          borderRadius: 14,
           alignItems: 'center',
           justifyContent: 'center',
           shadowColor: '#000',
@@ -259,7 +259,7 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
           shadowRadius: 4,
         }}
       >
-        <HomeIcon size={22} color={getIconColor()} />
+        <HomeIcon size={28} color={getIconColor()} />
       </View>
     );
   };
@@ -272,7 +272,7 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
       style={{
         flex: 1,
         borderRadius: 16,
-        padding: 16,
+        padding: 12,
         borderWidth: 1.5,
         borderColor: getBorderColor(),
         shadowColor: getShadowColor(),
@@ -285,11 +285,11 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
         style={{
           flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'space-between',
+          gap: 12,
         }}
       >
         {renderVisual()}
-        <View style={{ flex: 1, marginLeft: 12 }}>
+        <View style={{ flex: 1, alignItems: 'center' }}>
           <Text
             style={{
               fontSize: 11,
@@ -297,24 +297,12 @@ const StatsCard: React.FC<StatsCardProps> = (props) => {
               fontWeight: '600',
               textTransform: 'uppercase',
               letterSpacing: 1,
+              marginBottom: 4,
             }}
           >
             {label}
           </Text>
-          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
-            <Text style={{ fontSize: 26, fontWeight: '900', color: getTextColors() }}>{value}</Text>
-            {subtitle && (
-              <Text
-                style={{
-                  fontSize: 12,
-                  color: getSubtextColors(),
-                  fontWeight: '600',
-                }}
-              >
-                {subtitle}
-              </Text>
-            )}
-          </View>
+          <Text style={{ fontSize: 26, fontWeight: '900', color: getTextColors() }}>{value}</Text>
         </View>
       </View>
     </LinearGradient>

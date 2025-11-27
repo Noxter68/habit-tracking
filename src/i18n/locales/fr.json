@@ -76,10 +76,12 @@
     "header": {
       "level": "Niveau",
       "streak": "Série",
-      "streakSubtitle": "jours",
+      "streakSubtitle": "jour",
+      "streakSubtitle_plural": "jours",
       "active": "Actives",
       "activeSubtitle": "Habitudes",
-      "streakSavers": "Savers",
+      "streakSavers": "Sauveur",
+      "streakSavers_plural": "Sauveurs",
       "streakSaversSubtitle": "dispo",
       "xpTotal": "XP"
     },

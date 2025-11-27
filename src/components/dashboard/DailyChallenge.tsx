@@ -36,6 +36,27 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
   const [showXPBadge, setShowXPBadge] = useState(false);
   const { t } = useTranslation();
 
+  // Get tier-based challenge image
+  const getChallengeImage = () => {
+    const gemName = tierTheme?.gemName || 'Amethyst';
+    switch (gemName.toLowerCase()) {
+      case 'crystal':
+        return require('../../../assets/interface/challenge/crystal-challenge.png');
+      case 'ruby':
+        return require('../../../assets/interface/challenge/ruby-challenge.png');
+      case 'amethyst':
+        return require('../../../assets/interface/challenge/amethyst-challenge.png');
+      case 'jade':
+        return require('../../../assets/interface/challenge/jade-challenge.png');
+      case 'topaz':
+        return require('../../../assets/interface/challenge/topaz-challenge.png');
+      case 'obsidian':
+        return require('../../../assets/interface/challenge/obsidien-challenge.png');
+      default:
+        return require('../../../assets/interface/challenge/amethyst-challenge.png');
+    }
+  };
+
   const stats = useMemo(() => {
     const today = getTodayString();
 
@@ -388,11 +409,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
                             borderColor: `${accentColor}40`,
                           }}
                         >
-                          {canClaimChallenge ? (
-                            <Image source={require('../../../assets/interface/consumable-xp.png')} style={{ width: 60, height: 60 }} resizeMode="contain" />
-                          ) : (
-                            <Image source={require('../../../assets/interface/challenge.png')} style={{ width: 60, height: 60 }} resizeMode="contain" />
-                          )}
+                          <Image source={getChallengeImage()} style={{ width: 45, height: 45 }} resizeMode="contain" />
                         </View>
                       )}
                     </View>

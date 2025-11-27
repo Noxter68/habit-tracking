@@ -75,10 +75,12 @@
     "header": {
       "level": "Level",
       "streak": "Streak",
-      "streakSubtitle": "days",
+      "streakSubtitle": "day",
+      "streakSubtitle_plural": "days",
       "active": "Active",
       "activeSubtitle": "Habits",
-      "streakSavers": "Savers",
+      "streakSavers": "Saver",
+      "streakSavers_plural": "Savers",
       "streakSaversSubtitle": "available",
       "xpTotal": "XP"
     },

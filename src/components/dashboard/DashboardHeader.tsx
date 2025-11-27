@@ -478,7 +478,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
           {/* Barre de progression niveau */}
           {userLevel < 30 && (
-            <View style={{ marginBottom: 16 }}>
+            <View style={{ marginBottom: 8 }}>
               <LevelProgress
                 currentLevel={userLevel}
                 currentLevelXP={displayXP}
@@ -491,7 +491,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           )}
 
           {/* Cartes statistiques */}
-          <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
+          <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
             <StatsCard
               label={t('dashboard.header.streak')}
               value={totalStreak}
@@ -503,7 +503,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               textColor={textColors.secondary}
             />
             <StatsCard
-              label={t('dashboard.header.streakSavers')}
+              label={streakSavers === 1 ? t('dashboard.header.streakSavers') : t('dashboard.header.streakSavers_plural')}
               value={streakSavers}
               image="streak-saver"
               subtitle={t('dashboard.header.streakSaversSubtitle')}
