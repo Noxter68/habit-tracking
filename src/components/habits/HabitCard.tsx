@@ -365,7 +365,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit, completedToday, onP
                   {unlockedMilestonesCount === 0 ? (
                     <View
                       style={[
-                        tw`w-12 h-12 rounded-2xl items-center justify-center`,
+                        tw`px-3 py-1.5 rounded-xl items-center justify-center`,
                         {
                           backgroundColor: 'rgba(255, 255, 255, 0.2)',
                           borderWidth: 1.5,
@@ -373,7 +373,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit, completedToday, onP
                         },
                       ]}
                     >
-                      <Image source={getGemIcon(tier.name)} style={tw`w-8 h-8`} resizeMode="contain" />
+                      <Text style={tw`text-xs font-black text-white uppercase`}>Crystal</Text>
                     </View>
                   ) : (
                     <View
