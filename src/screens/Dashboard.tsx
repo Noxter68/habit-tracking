@@ -220,10 +220,39 @@ const Dashboard: React.FC = () => {
   const showPartialPauseMode = hasPartialPause && !showFullHolidayMode;
   const isHabitLimitReached = !isPremium && habitCount >= maxHabits;
 
-  // Separate habits by frequency (daily vs weekly)
+  // Separate habits by frequency (daily vs weekly) and sort by completion status
   const { dailyHabits, weeklyHabits } = useMemo(() => {
-    const daily = activeHabits.filter((habit) => habit.frequency !== 'weekly');
-    const weekly = activeHabits.filter((habit) => habit.frequency === 'weekly');
+    const today = getTodayString();
+
+    // Helper function to check if a habit is completed
+    const isHabitCompleted = (habit: any) => {
+      if (habit.frequency === 'weekly') {
+        return isWeeklyHabitCompletedThisWeek(habit.dailyTasks, habit.createdAt);
+      } else {
+        const todayData = habit.dailyTasks?.[today];
+        return todayData?.allCompleted || false;
+      }
+    };
+
+    // Separate and sort: incomplete habits first, then completed ones
+    const daily = activeHabits
+      .filter((habit) => habit.frequency !== 'weekly')
+      .sort((a, b) => {
+        const aCompleted = isHabitCompleted(a);
+        const bCompleted = isHabitCompleted(b);
+        if (aCompleted === bCompleted) return 0;
+        return aCompleted ? 1 : -1; // incomplete first
+      });
+
+    const weekly = activeHabits
+      .filter((habit) => habit.frequency === 'weekly')
+      .sort((a, b) => {
+        const aCompleted = isHabitCompleted(a);
+        const bCompleted = isHabitCompleted(b);
+        if (aCompleted === bCompleted) return 0;
+        return aCompleted ? 1 : -1; // incomplete first
+      });
+
     return { dailyHabits: daily, weeklyHabits: weekly };
   }, [activeHabits]);
 
@@ -584,7 +613,7 @@ const Dashboard: React.FC = () => {
                 {dailyHabits.length > 0 && (
                   <>
                     <HabitCategoryBadge type="daily" count={dailyHabits.length} />
-                    <View style={tw`gap-3`}>
+                    <View style={tw`gap-4`}>
                       {dailyHabits.map((habit, index) => (
                         <SwipeableHabitCard
                           key={habit.id}
@@ -605,7 +634,7 @@ const Dashboard: React.FC = () => {
                 {weeklyHabits.length > 0 && (
                   <>
                     <HabitCategoryBadge type="weekly" count={weeklyHabits.length} />
-                    <View style={tw`gap-3`}>
+                    <View style={tw`gap-4`}>
                       {weeklyHabits.map((habit, index) => (
                         <SwipeableHabitCard
                           key={habit.id}

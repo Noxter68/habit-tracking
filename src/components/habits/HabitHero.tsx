@@ -76,26 +76,39 @@ export const HabitHero: React.FC<HabitHeroProps> = ({
 
       <View style={tw`absolute top-3 right-2 z-10`}>
         {unlockedMilestonesCount > 0 ? (
-          <View style={tw`items-center justify-center w-18 h-18`}>
-            {/* Glow effect statique - cercle derriere l'icone */}
-            <View
-              style={[
-                tw`absolute w-14 h-14 rounded-full`,
-                {
-                  backgroundColor: 'rgba(255, 255, 255, 0.5)',
-                  shadowColor: '#ffffff',
-                  shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: 0.6,
-                  shadowRadius: 16,
-                  elevation: 8,
-                },
-              ]}
-            />
-            {/* Icone du palier au-dessus du glow */}
-            <Image source={getTierIcon(unlockedMilestonesCount)} style={tw`w-12 h-12`} contentFit="contain" />
+          <View
+            style={[
+              tw`items-center justify-center`,
+              {
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                borderRadius: 20,
+                borderWidth: 1,
+                right: 10,
+                top: 5,
+                borderColor: 'rgba(255, 255, 255, 0.3)',
+                width: 64,
+                height: 64,
+              },
+            ]}
+          >
+            <Image source={getTierIcon(unlockedMilestonesCount)} style={tw`w-14 h-14`} contentFit="contain" />
           </View>
         ) : (
-          <Image source={getGemIcon()} style={tw`w-16 h-16`} contentFit="contain" />
+          <View
+            style={[
+              tw`items-center justify-center`,
+              {
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: 'rgba(255, 255, 255, 0.3)',
+                width: 64,
+                height: 64,
+              },
+            ]}
+          >
+            <Image source={getGemIcon()} style={tw`w-14 h-14`} contentFit="contain" />
+          </View>
         )}
       </View>
 

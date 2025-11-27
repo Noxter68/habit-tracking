@@ -28,7 +28,7 @@ import * as Haptics from 'expo-haptics';
 import tw from '@/lib/tailwind';
 import { tierThemes } from '@/utils/tierTheme';
 import { HabitProgressionService } from '@/services/habitProgressionService';
-import { getTodayString, getHoursUntilMidnight, getNextMondayReset, isWeeklyHabitCompletedThisWeek, getWeeklyCompletedTasksCount } from '@/utils/dateHelpers';
+import { getTodayString, getHoursUntilMidnight, getNextMondayReset, isWeeklyHabitCompletedThisWeek, getWeeklyCompletedTasksCount, formatDateByLocale } from '@/utils/dateHelpers';
 import { getTierIcon } from '@/utils/tierIcons';
 
 // Types
@@ -123,7 +123,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit, completedToday, onP
   // ---------------------------------------------------------------------------
   // Hooks
   // ---------------------------------------------------------------------------
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigation = useNavigation<NavigationProp>();
 
   // ---------------------------------------------------------------------------
@@ -190,6 +190,17 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit, completedToday, onP
     }
   };
 
+  /**
+   * Formate la date de création de l'habitude selon la langue
+   * FR: DD/MM/YYYY, EN: MM/DD/YYYY
+   * @returns Date formatée
+   */
+  const getCreatedDate = (): string => {
+    if (!habit.createdAt) return '';
+    const date = new Date(habit.createdAt);
+    return formatDateByLocale(date, i18n.language);
+  };
+
   // ---------------------------------------------------------------------------
   // Handlers
   // ---------------------------------------------------------------------------
@@ -222,197 +233,214 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit, completedToday, onP
         {/* Outer container with shadow and border effect */}
         <View
           style={[
-            tw`rounded-2xl overflow-hidden`,
+            tw`rounded-2xl`,
             {
               shadowColor: isCompleted ? theme.gradient[1] : '#000',
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: isCompleted ? 0.4 : 0.15,
               shadowRadius: isCompleted ? 12 : 8,
               elevation: isCompleted ? 8 : 4,
+              overflow: 'visible',
             },
           ]}
         >
-          <ImageBackground source={theme.texture} style={tw`rounded-2xl overflow-hidden`} imageStyle={tw`rounded-2xl opacity-80`} resizeMode="cover">
-            <LinearGradient colors={[theme.gradient[0] + 'e8', theme.gradient[1] + 'e0', theme.gradient[2] + 'd8']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`p-5`}>
-              {/* Decorative gradient overlay */}
-              <View style={tw`absolute inset-0 opacity-15`}>
-                <LinearGradient colors={['transparent', 'rgba(255,255,255,0.3)', 'transparent']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`w-full h-full`} />
-              </View>
-
-              {/* Completed badge glow effect */}
-              {isCompleted && (
-                <View
-                  style={[
-                    tw`absolute top-0 right-0 w-24 h-24`,
-                    {
-                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                      borderBottomLeftRadius: 100,
-                    },
-                  ]}
-                />
-              )}
-
-              {/* Tier icon / Gem with glow */}
-              <View style={tw`absolute top-4 right-4 z-10`}>
-                {unlockedMilestonesCount > 0 ? (
-                  <View style={tw`items-center justify-center`}>
-                    {/* Glow behind icon */}
-                    <View
-                      style={[
-                        tw`absolute w-12 h-12 rounded-full`,
-                        {
-                          backgroundColor: 'rgba(255, 255, 255, 0.25)',
-                          shadowColor: '#ffffff',
-                          shadowOffset: { width: 0, height: 0 },
-                          shadowOpacity: 0.5,
-                          shadowRadius: 8,
-                        },
-                      ]}
-                    />
-                    <Image source={getTierIcon(unlockedMilestonesCount)} style={tw`w-10 h-10`} resizeMode="contain" />
-                  </View>
-                ) : (
-                  <Image source={getGemIcon(tier.name)} style={tw`w-12 h-12`} resizeMode="contain" />
-                )}
-              </View>
-
-              {/* Header */}
-              <View style={tw`mb-4 pr-16`}>
-                <Text numberOfLines={1} style={tw`text-xl font-black text-white mb-1`}>
-                  {getTranslatedHabitName(habit, t)}
-                </Text>
-                <View style={tw`flex-row items-center gap-2`}>
-                  <View style={tw`bg-white/20 rounded-lg px-2 py-0.5`}>
-                    <Text style={tw`text-[10px] text-white font-bold uppercase`}>{habit.type === 'good' ? t('habits.building') : t('habits.quitting')}</Text>
-                  </View>
-                  {isWeekly && (
-                    <Text style={tw`text-[10px] text-white/70 font-medium`}>
-                      {weekCompleted
-                        ? t('habits.resetsIn', {
-                            count: showHoursForWeekly ? hoursUntilWeeklyReset : daysUntilReset,
-                            unit: showHoursForWeekly ? t('habits.unitHour') : t('habits.unitDay'),
-                          })
-                        : showHoursForWeekly
-                        ? t('habits.hoursLeft', { count: hoursUntilWeeklyReset })
-                        : t('habits.daysLeft', { count: daysUntilReset })}
-                    </Text>
-                  )}
-                  {!isWeekly && !completedToday && hoursUntilReset > 0 && (
-                    <Text style={tw`text-[10px] text-white/70 font-medium`}>
-                      {t('habits.resetsIn', {
-                        count: hoursUntilReset,
-                        unit: t('habits.unitHour'),
-                      })}
-                    </Text>
-                  )}
+          <View style={tw`rounded-2xl overflow-hidden`}>
+            <ImageBackground source={theme.texture} style={tw`rounded-2xl`} imageStyle={tw`rounded-2xl opacity-80`} resizeMode="cover">
+              <LinearGradient colors={[theme.gradient[0] + 'e8', theme.gradient[1] + 'e0', theme.gradient[2] + 'd8']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`p-5`}>
+                {/* Decorative gradient overlay */}
+                <View style={tw`absolute inset-0 opacity-15`}>
+                  <LinearGradient colors={['transparent', 'rgba(255,255,255,0.3)', 'transparent']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`w-full h-full`} />
                 </View>
-              </View>
 
-              {/* Progress section with enhanced bar */}
-              <View style={tw`mb-4`}>
-                <View
-                  style={[
-                    tw`h-3 rounded-full overflow-hidden`,
-                    {
-                      backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                      borderWidth: 1,
-                      borderColor: 'rgba(255, 255, 255, 0.1)',
-                    },
-                  ]}
-                >
+                {/* Completed badge glow effect */}
+                {isCompleted && (
                   <View
                     style={[
-                      tw`h-full rounded-full`,
+                      tw`absolute top-0 right-0 w-24 h-24`,
                       {
-                        width: `${taskProgress}%`,
-                        backgroundColor: isCompleted ? '#ffffff' : 'rgba(255, 255, 255, 0.9)',
-                        shadowColor: '#fff',
-                        shadowOffset: { width: 0, height: 0 },
-                        shadowOpacity: isCompleted ? 0.8 : 0.3,
-                        shadowRadius: 4,
+                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                        borderBottomLeftRadius: 100,
                       },
                     ]}
                   />
+                )}
+
+                {/* Tier gem icon - top right - always shows current tier gem */}
+                <View style={{ position: 'absolute', right: 16, top: 16, zIndex: 10 }}>
+                  <Image source={getGemIcon(tier.name)} style={tw`w-12 h-12`} resizeMode="contain" />
                 </View>
 
-                <View style={tw`flex-row items-center justify-between mt-2`}>
-                  <View style={tw`flex-row items-center gap-1.5`}>
-                    {isCompleted ? (
-                      <View style={tw`bg-white rounded-full p-0.5`}>
-                        <CheckCircle2 size={12} color={theme.gradient[1]} strokeWidth={3} />
+                {/* Header */}
+                <View style={tw`mb-4 pr-16`}>
+                  <Text numberOfLines={1} style={tw`text-xl font-black text-white mb-1`}>
+                    {getTranslatedHabitName(habit, t)}
+                  </Text>
+                  <View style={tw`flex-row items-center gap-2 flex-wrap`}>
+                    <View style={tw`bg-white/20 rounded-lg px-2 py-0.5`}>
+                      <Text style={tw`text-[10px] text-white font-bold uppercase`}>{habit.type === 'good' ? t('habits.building') : t('habits.quitting')}</Text>
+                    </View>
+                    {getCreatedDate() && (
+                      <View style={tw`bg-white/20 rounded-lg px-2 py-0.5`}>
+                        <Text style={tw`text-[10px] text-white font-bold uppercase`}>
+                          {t('habits.since')} {getCreatedDate()}
+                        </Text>
                       </View>
-                    ) : (
-                      <Circle size={14} color="rgba(255,255,255,0.7)" strokeWidth={2} />
                     )}
-                    <Text style={tw`text-xs font-semibold text-white/90`}>{isWeekly ? t('habits.weeklyTasks') : t('habits.todaysTasks')}</Text>
-                  </View>
-                  <View style={tw`bg-white/20 rounded-lg px-2 py-0.5`}>
-                    <Text style={tw`text-xs font-black text-white`}>
-                      {completedTasks}/{activeTasks}
-                    </Text>
                   </View>
                 </View>
-              </View>
 
-              {/* Footer stats with enhanced streak display */}
-              <View
-                style={[
-                  tw`flex-row items-center justify-between pt-4`,
-                  {
-                    borderTopWidth: 1,
-                    borderTopColor: 'rgba(255, 255, 255, 0.2)',
-                  },
-                ]}
-              >
-                <View style={tw`flex-row items-center gap-3`}>
-                  {/* Streak fire badge */}
+                {/* Progress section with enhanced bar */}
+                <View style={tw`mb-4`}>
                   <View
                     style={[
-                      tw`w-12 h-12 rounded-2xl items-center justify-center`,
+                      tw`h-3 rounded-full overflow-hidden`,
                       {
-                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                        borderWidth: 1.5,
-                        borderColor: 'rgba(255, 255, 255, 0.25)',
+                        backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                        borderWidth: 1,
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
                       },
                     ]}
                   >
-                    <Flame size={24} color="#FFFFFF" strokeWidth={2} fill="rgba(255, 255, 255, 0.3)" />
+                    <View
+                      style={[
+                        tw`h-full rounded-full`,
+                        {
+                          width: `${taskProgress}%`,
+                          backgroundColor: isCompleted ? '#ffffff' : 'rgba(255, 255, 255, 0.9)',
+                          shadowColor: '#fff',
+                          shadowOffset: { width: 0, height: 0 },
+                          shadowOpacity: isCompleted ? 0.8 : 0.3,
+                          shadowRadius: 4,
+                        },
+                      ]}
+                    />
                   </View>
-                  <View>
-                    <Text style={tw`text-[10px] text-white/70 font-bold uppercase tracking-wide`}>{t('habits.streak')}</Text>
-                    <View style={tw`flex-row items-baseline gap-1`}>
-                      <Text style={tw`text-2xl font-black text-white`}>{streakData.count}</Text>
-                      <Text style={tw`text-xs font-semibold text-white/80`}>{streakData.unit}</Text>
+
+                  <View style={tw`flex-row items-center justify-between mt-2`}>
+                    <View style={tw`flex-row items-center gap-1.5`}>
+                      {isCompleted ? (
+                        <View style={tw`bg-white rounded-full p-0.5`}>
+                          <CheckCircle2 size={12} color={theme.gradient[1]} strokeWidth={3} />
+                        </View>
+                      ) : (
+                        <Circle size={14} color="rgba(255,255,255,0.7)" strokeWidth={2} />
+                      )}
+                      <Text style={tw`text-xs font-semibold text-white/90`}>{isWeekly ? t('habits.weeklyTasks') : t('habits.todaysTasks')}</Text>
+                    </View>
+                    <View style={tw`bg-white/20 rounded-lg px-2 py-0.5`}>
+                      <Text style={tw`text-xs font-black text-white`}>
+                        {completedTasks}/{activeTasks}
+                      </Text>
                     </View>
                   </View>
                 </View>
 
-                {/* Tier badge when no milestone icon */}
-                {unlockedMilestonesCount === 0 && (
-                  <View
-                    style={[
-                      tw`px-3 py-2 rounded-xl`,
-                      {
-                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                        borderWidth: 1.5,
-                        borderColor: 'rgba(255, 255, 255, 0.3)',
-                      },
-                    ]}
-                  >
-                    <Text style={tw`text-xs font-black text-white`}>{tier.name}</Text>
+                {/* Footer stats with enhanced streak display */}
+                <View style={[tw`flex-row items-center justify-between pt-2`]}>
+                  {/* Left: Streak info */}
+                  <View style={tw`flex-row items-center gap-3`}>
+                    {/* Streak fire badge */}
+                    <View
+                      style={[
+                        tw`w-12 h-12 rounded-2xl items-center justify-center`,
+                        {
+                          backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                          borderWidth: 1.5,
+                          borderColor: 'rgba(255, 255, 255, 0.25)',
+                        },
+                      ]}
+                    >
+                      <Flame size={24} color="#FFFFFF" strokeWidth={2} fill="rgba(255, 255, 255, 0.3)" />
+                    </View>
+                    <View>
+                      <Text style={tw`text-[10px] text-white/70 font-bold uppercase tracking-wide`}>{t('habits.streak')}</Text>
+                      <View style={tw`flex-row items-baseline gap-1`}>
+                        <Text style={tw`text-2xl font-black text-white`}>{streakData.count}</Text>
+                        <Text style={tw`text-xs font-semibold text-white/80`}>{streakData.unit}</Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* Right: Tier badge or milestone icon */}
+                  {unlockedMilestonesCount === 0 ? (
+                    <View
+                      style={[
+                        tw`w-12 h-12 rounded-2xl items-center justify-center`,
+                        {
+                          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                          borderWidth: 1.5,
+                          borderColor: 'rgba(255, 255, 255, 0.3)',
+                        },
+                      ]}
+                    >
+                      <Image source={getGemIcon(tier.name)} style={tw`w-8 h-8`} resizeMode="contain" />
+                    </View>
+                  ) : (
+                    <View
+                      style={[
+                        tw`w-12 h-12 rounded-2xl items-center justify-center`,
+                        {
+                          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                          borderWidth: 1.5,
+                          borderColor: 'rgba(255, 255, 255, 0.3)',
+                        },
+                      ]}
+                    >
+                      <Image source={getTierIcon(unlockedMilestonesCount)} style={tw`w-9 h-9`} resizeMode="contain" />
+                    </View>
+                  )}
+                </View>
+
+                {/* Paused tasks notification */}
+                {pausedTaskCount > 0 && (
+                  <View style={[tw`mt-3 pt-3 flex-row items-center gap-2`, { borderTopWidth: 1, borderTopColor: 'rgba(255, 255, 255, 0.15)' }]}>
+                    <View style={tw`w-2 h-2 rounded-full bg-amber-400`} />
+                    <Text style={tw`text-xs text-white/70 font-medium`}>{t('habits.tasksPaused', { count: pausedTaskCount })}</Text>
                   </View>
                 )}
-              </View>
+              </LinearGradient>
+            </ImageBackground>
+          </View>
 
-              {/* Paused tasks notification */}
-              {pausedTaskCount > 0 && (
-                <View style={[tw`mt-3 pt-3 flex-row items-center gap-2`, { borderTopWidth: 1, borderTopColor: 'rgba(255, 255, 255, 0.15)' }]}>
-                  <View style={tw`w-2 h-2 rounded-full bg-amber-400`} />
-                  <Text style={tw`text-xs text-white/70 font-medium`}>{t('habits.tasksPaused', { count: pausedTaskCount })}</Text>
-                </View>
-              )}
-            </LinearGradient>
-          </ImageBackground>
+          {/* Reset time badge - absolute centered at bottom border */}
+          {((isWeekly && (weekCompleted || hoursUntilWeeklyReset > 0)) || (!isWeekly && !completedToday && hoursUntilReset > 0)) && (
+            <View
+              style={{
+                position: 'absolute',
+                bottom: -10,
+                left: '50%',
+                transform: [{ translateX: -50 }],
+                zIndex: 50,
+              }}
+            >
+              <View
+                style={[
+                  tw`px-3 py-1 rounded-full`,
+                  {
+                    backgroundColor: '#FFFFFF',
+                    borderWidth: 2,
+                    borderColor: tier.color,
+                  },
+                ]}
+              >
+                <Text style={[tw`text-[9px] font-bold`, { color: tier.color }]}>
+                  {isWeekly
+                    ? weekCompleted
+                      ? t('habits.resetsIn', {
+                          count: showHoursForWeekly ? hoursUntilWeeklyReset : daysUntilReset,
+                          unit: showHoursForWeekly ? t('habits.unitHour') : t('habits.unitDay'),
+                        })
+                      : showHoursForWeekly
+                      ? t('habits.hoursLeft', { count: hoursUntilWeeklyReset })
+                      : t('habits.daysLeft', { count: daysUntilReset })
+                    : t('habits.resetsIn', {
+                        count: hoursUntilReset,
+                        unit: t('habits.unitHour'),
+                      })}
+                </Text>
+              </View>
+            </View>
+          )}
         </View>
       </Pressable>
     </Animated.View>

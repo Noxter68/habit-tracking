@@ -463,15 +463,29 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                   zIndex: 20,
                 }}
               >
-                <AchievementBadge
-                  achievement={currentAchievement}
-                  onPress={() => {
-                    HapticFeedback.light();
-                    handleAchievementPress();
+                <View
+                  style={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    borderRadius: 14,
+                    padding: 0,
+                    borderWidth: 1,
+                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.15,
+                    shadowRadius: 8,
                   }}
-                  tierTheme={tierTheme}
-                  size={70}
-                />
+                >
+                  <AchievementBadge
+                    achievement={currentAchievement}
+                    onPress={() => {
+                      HapticFeedback.light();
+                      handleAchievementPress();
+                    }}
+                    tierTheme={tierTheme}
+                    size={65}
+                  />
+                </View>
               </View>
             </View>
           </View>

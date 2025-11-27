@@ -352,3 +352,31 @@ export const getWeeklyCompletedTasksCount = (
 
   return weekTasksCompleted.size;
 };
+
+/**
+ * Formate une date selon la locale (langue) actuelle.
+ * FR: DD/MM/YYYY, EN: MM/DD/YYYY
+ *
+ * @param date - La date à formater
+ * @param locale - La locale ('fr' ou 'en')
+ * @returns La date formatée selon la locale
+ *
+ * @example
+ * const formatted = formatDateByLocale(new Date('2024-01-15'), 'en');
+ * // Retourne: "01/15/2024"
+ *
+ * const formattedFr = formatDateByLocale(new Date('2024-01-15'), 'fr');
+ * // Retourne: "15/01/2024"
+ */
+export const formatDateByLocale = (date: Date, locale: string): string => {
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+
+  if (locale === 'fr') {
+    return `${day}/${month}/${year}`;
+  }
+
+  // Default to English format (MM/DD/YYYY)
+  return `${month}/${day}/${year}`;
+};
