@@ -79,12 +79,7 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
    * @returns Couleurs primaire et secondaire
    */
   const getTextColors = (gemName: string) => {
-    if (['Crystal', 'Topaz'].includes(gemName)) {
-      return {
-        primary: '#292524',
-        secondary: '#57534e',
-      };
-    }
+    // Tous les tiers utilisent du texte blanc pour une meilleure lisibilité
     return {
       primary: '#ffffff',
       secondary: 'rgba(255, 255, 255, 0.9)',

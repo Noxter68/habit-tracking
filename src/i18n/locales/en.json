@@ -1880,11 +1880,11 @@
     },
 
     "milestoneZoomModal": {
-      "achieved": "✓ Débloqué",
-      "locked": "Verrouillé · Nécessite {{days}} jours consécutifs",
-      "day": "Jour {{count}}",
+      "achieved": "✓ Unlocked",
+      "locked": "Locked · Requires {{days}} consecutive days",
+      "day": "Day {{count}}",
       "xpReward": "+{{xp}} XP",
-      "tapToClose": "Appuyez n'importe où pour fermer"
+      "tapToClose": "Tap anywhere to close"
     },
 
     "tierCelebration": {
