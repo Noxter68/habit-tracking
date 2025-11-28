@@ -233,6 +233,45 @@ const HabitDetails: React.FC = () => {
   const totalXPEarned = performanceMetrics?.totalXPEarned || 0;
   const completionRate = performanceMetrics?.consistency || 0;
 
+  /**
+   * Memoize HabitHero props to prevent re-renders during animations
+   * This ensures AnimatedNumber and ProgressBar animations complete smoothly
+   */
+  const habitHeroProps = useMemo(() => {
+    if (!habit) return null;
+
+    return {
+      habitName: getTranslatedHabitName(habit, t),
+      habitType: habit.type,
+      category: habit.category,
+      currentStreak: performanceMetrics?.currentStreak ?? habit.currentStreak,
+      bestStreak: performanceMetrics?.bestStreak ?? habit.bestStreak,
+      tierInfo: currentTierData.tier,
+      nextTier: nextTier,
+      tierProgress: currentTierData.progress,
+      tierMultiplier: tierMultiplier,
+      totalXPEarned: totalXPEarned,
+      completionRate: completionRate,
+      unlockedMilestonesCount: milestoneStatus?.unlocked?.length || 0,
+    };
+  }, [
+    habit?.name,
+    habit?.type,
+    habit?.category,
+    habit?.currentStreak,
+    habit?.bestStreak,
+    performanceMetrics?.currentStreak,
+    performanceMetrics?.bestStreak,
+    currentTierData.tier.name,
+    currentTierData.progress,
+    nextTier?.name,
+    tierMultiplier,
+    totalXPEarned,
+    completionRate,
+    milestoneStatus?.unlocked?.length,
+    t,
+  ]);
+
   // ============================================================================
   // HOOKS - Streak Saver
   // ============================================================================
@@ -269,9 +308,12 @@ const HabitDetails: React.FC = () => {
 
       try {
         await toggleTask(habit.id, today, taskId);
-        await new Promise((resolve) => setTimeout(resolve, 150));
-        // Refresh progression metrics silently in background
-        refreshProgression();
+
+        // Fire-and-forget: refresh progression after animations complete (700ms)
+        // This prevents interrupting AnimatedNumber (600ms) and ProgressBar (600ms) animations
+        setTimeout(() => {
+          refreshProgression();
+        }, 700);
       } catch (error) {
         Logger.error('Task toggle failed:', error);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -586,20 +628,7 @@ const HabitDetails: React.FC = () => {
                     },
                   ]}
                 >
-                  <HabitHero
-                    habitName={getTranslatedHabitName(habit, t)}
-                    habitType={habit.type}
-                    category={habit.category}
-                    currentStreak={performanceMetrics?.currentStreak ?? habit.currentStreak}
-                    bestStreak={performanceMetrics?.bestStreak ?? habit.bestStreak}
-                    tierInfo={currentTierData.tier}
-                    nextTier={nextTier}
-                    tierProgress={currentTierData.progress}
-                    tierMultiplier={tierMultiplier}
-                    totalXPEarned={totalXPEarned}
-                    completionRate={completionRate}
-                    unlockedMilestonesCount={milestoneStatus?.unlocked?.length || 0}
-                  />
+                  {habitHeroProps && <HabitHero {...habitHeroProps} />}
                 </View>
 
                 {/* Modal Streak Saver réel */}

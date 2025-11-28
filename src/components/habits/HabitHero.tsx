@@ -142,7 +142,9 @@ export const HabitHero: React.FC<HabitHeroProps> = ({
         <View style={tw`mt-4`}>
           <View style={tw`flex-row justify-between mb-1.5`}>
             <Text style={tw`text-white/80 text-xs font-semibold`}>{t('habitDetails.hero.progressTo', { tier: nextTier.name })}</Text>
-            <Text style={tw`text-white font-bold text-xs`}>{Math.round(tierProgress)}%</Text>
+            <View>
+              <AnimatedNumber value={Math.round(tierProgress)} style={tw`text-white font-bold text-xs`} suffix="%" duration={600} />
+            </View>
           </View>
           <ProgressBar progress={tierProgress} height={20} width={200} tier={tierInfo.name.toLowerCase() as 'crystal' | 'ruby' | 'amethyst'} />
         </View>

@@ -1,7 +1,8 @@
 // src/components/ui/ProgressBar.tsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Svg, Defs, Rect, ClipPath, G, Image as SvgImage, LinearGradient, Stop } from 'react-native-svg';
 import { Image as RNImage } from 'react-native';
+import Animated, { useSharedValue, useAnimatedProps, withTiming, Easing } from 'react-native-reanimated';
 
 type TierTheme = 'crystal' | 'ruby' | 'amethyst';
 
@@ -11,6 +12,9 @@ interface ProgressBarProps {
   height?: number;
   tier: TierTheme;
 }
+
+// Create animated version of Rect for smooth progress animation
+const AnimatedRect = Animated.createAnimatedComponent(Rect);
 
 const ProgressBar: React.FC<ProgressBarProps> = ({ progress, width = 300, height = 24, tier }) => {
   const radius = height / 2;
@@ -26,7 +30,19 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ progress, width = 300, height
   }
 
   // clamp between 0 and 100 for rendering bar fill
-  const normalized = Math.max(0, Math.min(1, numericProgress / 100));
+  const targetNormalized = Math.max(0, Math.min(1, numericProgress / 100));
+
+  // Animated value for smooth transitions - initialize with current value to avoid jump on mount
+  const animatedProgress = useSharedValue(targetNormalized);
+
+  useEffect(() => {
+    // Animate to new value with smooth cubic easing
+    // No need to check if value changed - withTiming handles that internally
+    animatedProgress.value = withTiming(targetNormalized, {
+      duration: 600,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [targetNormalized, animatedProgress]);
 
   // textures
   const crystalUri = RNImage.resolveAssetSource(require('../../../assets/interface/progressBar/crystal-texture.png')).uri;
@@ -44,6 +60,13 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ progress, width = 300, height
 
   const borderColor = tierColors[tier];
 
+  // Animated props for the clip path
+  const animatedClipProps = useAnimatedProps(() => {
+    return {
+      width: Math.max(0, (width - 4) * animatedProgress.value),
+    };
+  });
+
   return (
     <Svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
       <Defs>
@@ -53,9 +76,16 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ progress, width = 300, height
           <Stop offset="100%" stopColor="#e2e8f0" />
         </LinearGradient>
 
-        {/* Clip for progress fill */}
+        {/* Clip for progress fill - animated */}
         <ClipPath id="progressClip">
-          <Rect x={2} y={2} width={Math.max(0, (width - 4) * normalized)} height={height - 4} rx={radius - 2} ry={radius - 2} />
+          <AnimatedRect
+            x={2}
+            y={2}
+            animatedProps={animatedClipProps}
+            height={height - 4}
+            rx={radius - 2}
+            ry={radius - 2}
+          />
         </ClipPath>
       </Defs>
 
@@ -63,11 +93,9 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ progress, width = 300, height
       <Rect x={0} y={0} width={width} height={height} rx={radius} ry={radius} fill="url(#bgGradient)" stroke={borderColor} strokeWidth={1} opacity={0.3} />
 
       {/* Progress fill with texture */}
-      {normalized > 0 && (
-        <G clipPath="url(#progressClip)">
-          <SvgImage href={themeTexture} x={2} y={2} width={width - 4} height={height - 4} preserveAspectRatio="xMidYMid slice" />
-        </G>
-      )}
+      <G clipPath="url(#progressClip)">
+        <SvgImage href={themeTexture} x={2} y={2} width={width - 4} height={height - 4} preserveAspectRatio="xMidYMid slice" />
+      </G>
 
       {/* Simple border */}
       <Rect x={0} y={0} width={width} height={height} rx={radius} ry={radius} fill="none" stroke={borderColor} strokeWidth={1.5} opacity={0.5} />

@@ -36,17 +36,19 @@ export const AnimatedNumber: React.FC<AnimatedNumberProps> = ({ value, style, pr
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / animDuration, 1);
 
+        // If animation complete, set exact value FIRST then return
+        if (progress >= 1) {
+          setDisplayValue(endValue);
+          return;
+        }
+
         // Ease out quad for smooth deceleration
         const easedProgress = 1 - Math.pow(1 - progress, 2);
 
         const currentValue = startValue + (endValue - startValue) * easedProgress;
         setDisplayValue(currentValue);
 
-        if (progress < 1) {
-          requestAnimationFrame(animateNumber);
-        } else {
-          setDisplayValue(endValue);
-        }
+        requestAnimationFrame(animateNumber);
       };
 
       // Quick flash on increase
