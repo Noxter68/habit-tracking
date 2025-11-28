@@ -3,11 +3,11 @@
 // Updated: Integrated task management icon
 // Enhanced: Gamified styling with texture and gradient
 
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Pressable, ImageBackground, Modal, FlatList, Animated as RNAnimated, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Pressable, ImageBackground, Modal, FlatList, Animated as RNAnimated, Easing as RNEasing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeIn, useAnimatedStyle, withSpring, useSharedValue, withRepeat, withTiming, Easing, withDelay } from 'react-native-reanimated';
-import { Circle, CheckCircle2, Clock, Loader2, PauseCircle, Settings2, Plus, X, Trash2, Sparkles } from 'lucide-react-native';
+import Animated, { useAnimatedStyle, withSpring, useSharedValue, withRepeat, withTiming, Easing } from 'react-native-reanimated';
+import { Circle, CheckCircle2, Loader2, PauseCircle, Settings2, Plus, X, Trash2 } from 'lucide-react-native';
 import tw from '@/lib/tailwind';
 import { tierThemes } from '@/utils/tierTheme';
 import { HabitTier } from '@/services/habitProgressionService';
@@ -229,27 +229,52 @@ export const TasksCard: React.FC<TasksCardProps> = ({
   // Task management state
   const [showManageModal, setShowManageModal] = useState(false);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
-  const [showTutorial, setShowTutorial] = useState(false);
-  const swipeAnim = useRef(new RNAnimated.Value(0)).current;
 
-  // Swipe tutorial animation
+  // Animation states
+  const backgroundOpacity = React.useRef(new RNAnimated.Value(0)).current;
+  const slideAnim = React.useRef(new RNAnimated.Value(1000)).current;
+
   useEffect(() => {
-    if (showManageModal && tasks.length > 0 && !showTutorial) {
-      setShowTutorial(true);
-      const swipeSequence = RNAnimated.sequence([
-        RNAnimated.timing(swipeAnim, { toValue: -80, duration: 500, useNativeDriver: true }),
-        RNAnimated.timing(swipeAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
-        RNAnimated.delay(200),
-        RNAnimated.timing(swipeAnim, { toValue: -80, duration: 500, useNativeDriver: true }),
-        RNAnimated.timing(swipeAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
-      ]);
-      swipeSequence.start();
+    if (showManageModal) {
+      slideAnim.setValue(1000);
+      RNAnimated.parallel([
+        RNAnimated.timing(backgroundOpacity, {
+          toValue: 0.5,
+          duration: 250,
+          useNativeDriver: true,
+          easing: RNEasing.out(RNEasing.ease),
+        }),
+        RNAnimated.spring(slideAnim, {
+          toValue: 0,
+          useNativeDriver: true,
+          tension: 50,
+          friction: 9,
+        }),
+      ]).start();
     }
-  }, [showManageModal, tasks.length, showTutorial, swipeAnim]);
+  }, [showManageModal, backgroundOpacity, slideAnim]);
+
+  const handleCloseModal = () => {
+    RNAnimated.parallel([
+      RNAnimated.timing(backgroundOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      RNAnimated.timing(slideAnim, {
+        toValue: 1000,
+        duration: 200,
+        useNativeDriver: true,
+        easing: RNEasing.in(RNEasing.ease),
+      }),
+    ]).start(() => {
+      setShowManageModal(false);
+    });
+  };
 
   const handleAddTaskPress = () => {
-    setShowManageModal(false);
-    setTimeout(() => setShowCategoryPicker(true), 300);
+    handleCloseModal();
+    setTimeout(() => setShowCategoryPicker(true), 400);
   };
 
   const handleTasksUpdatedInternal = () => {
@@ -498,58 +523,60 @@ export const TasksCard: React.FC<TasksCardProps> = ({
     {/* Task Management Modal */}
     {onTasksUpdated && (
       <>
-        <Modal visible={showManageModal} animationType="slide" transparent onRequestClose={() => setShowManageModal(false)}>
-          <View style={tw`flex-1 bg-black/50`}>
-            <ImageBackground
-              source={require('../../../assets/interface/textures/texture-white.png')}
-              style={{
-                flex: 1,
-                marginTop: 80,
-                borderTopLeftRadius: 24,
-                borderTopRightRadius: 24,
-                overflow: 'hidden',
-              }}
-              imageStyle={{
-                opacity: 0.6,
-                borderTopLeftRadius: 24,
-                borderTopRightRadius: 24,
-              }}
-              resizeMode="cover"
+        <Modal visible={showManageModal} animationType="none" transparent onRequestClose={handleCloseModal}>
+          <View style={tw`flex-1 justify-end`}>
+            <RNAnimated.View
+              style={[
+                tw`absolute inset-0 bg-black`,
+                { opacity: backgroundOpacity }
+              ]}
+            />
+            <RNAnimated.View
+              style={[
+                {
+                  transform: [{ translateY: slideAnim }],
+                  height: '60%',
+                  borderTopLeftRadius: 24,
+                  borderTopRightRadius: 24,
+                  overflow: 'hidden',
+                }
+              ]}
             >
-              <View style={tw`flex-1 bg-white/80`}>
-                {/* Header */}
-                <View style={tw`px-6 py-5 border-b border-stone-200`}>
-                  <View style={tw`flex-row items-center justify-between`}>
-                    <View style={tw`flex-1`}>
-                      <Text style={tw`text-stone-900 text-2xl font-bold`}>{t('taskManager.manageTitle')}</Text>
-                      <Text style={tw`text-stone-500 text-sm mt-1`}>{t('taskManager.maxTasks')}</Text>
-                    </View>
-                    <Pressable onPress={() => setShowManageModal(false)} style={tw`w-10 h-10 items-center justify-center rounded-xl bg-stone-100`}>
-                      <X size={20} color="#57534e" />
-                    </Pressable>
-                  </View>
-                </View>
-
-                {/* Task List */}
-                <FlatList
-                  data={tasks as TaskType[]}
-                  keyExtractor={(item) => item.id}
-                  contentContainerStyle={tw`p-5`}
-                  ListEmptyComponent={
-                    <View style={tw`items-center justify-center py-16`}>
-                      <View style={tw`w-20 h-20 rounded-full bg-stone-100 items-center justify-center mb-4`}>
-                        <Trash2 size={32} color="#a8a29e" />
+              <ImageBackground
+                source={require('../../../assets/interface/textures/texture-white.png')}
+                style={{ flex: 1 }}
+                imageStyle={{ opacity: 0.6 }}
+                resizeMode="cover"
+              >
+                <View style={tw`flex-1 bg-white/80`}>
+                  {/* Header */}
+                  <View style={tw`px-6 py-4 border-b border-stone-200`}>
+                    <View style={tw`flex-row items-center justify-between`}>
+                      <View style={tw`flex-1`}>
+                        <Text style={tw`text-stone-900 text-xl font-bold`}>{t('taskManager.manageTitle')}</Text>
+                        <Text style={tw`text-stone-500 text-xs mt-0.5`}>{t('taskManager.maxTasks')}</Text>
                       </View>
-                      <Text style={tw`text-stone-900 font-bold text-lg mb-2`}>{t('taskManager.noTasksTitle')}</Text>
-                      <Text style={tw`text-stone-500 text-center px-8`}>{t('taskManager.noTasks')}</Text>
+                      <Pressable onPress={handleCloseModal} style={tw`w-10 h-10 items-center justify-center rounded-xl bg-stone-100`}>
+                        <X size={20} color="#57534e" />
+                      </Pressable>
                     </View>
-                  }
-                  renderItem={({ item, index }) => (
-                    <RNAnimated.View
-                      style={{
-                        transform: [{ translateX: index === 0 && showTutorial ? swipeAnim : 0 }],
-                      }}
-                    >
+                  </View>
+
+                  {/* Task List */}
+                  <FlatList
+                    data={tasks as TaskType[]}
+                    keyExtractor={(item) => item.id}
+                    contentContainerStyle={tw`p-5 pb-0`}
+                    ListEmptyComponent={
+                      <View style={tw`items-center justify-center py-12`}>
+                        <View style={tw`w-16 h-16 rounded-full bg-stone-100 items-center justify-center mb-3`}>
+                          <Trash2 size={28} color="#a8a29e" />
+                        </View>
+                        <Text style={tw`text-stone-900 font-bold text-base mb-1`}>{t('taskManager.noTasksTitle')}</Text>
+                        <Text style={tw`text-stone-500 text-sm text-center px-8`}>{t('taskManager.noTasks')}</Text>
+                      </View>
+                    }
+                    renderItem={({ item, index }) => (
                       <TaskManagerItem
                         task={item}
                         habitId={habitId}
@@ -557,35 +584,36 @@ export const TasksCard: React.FC<TasksCardProps> = ({
                         habitType={habitType}
                         onTaskDeleted={handleTaskDeleted}
                         tierColor={effectiveTierColor}
+                        isFirst={index === 0}
                       />
-                    </RNAnimated.View>
-                  )}
-                  ItemSeparatorComponent={() => <View style={tw`h-3`} />}
-                />
+                    )}
+                    ItemSeparatorComponent={() => <View style={tw`h-2.5`} />}
+                  />
 
-                {/* Add Task Button */}
-                <View style={tw`p-6 border-t border-stone-200`}>
-                  <View
-                    style={{
-                      borderRadius: 16,
-                      overflow: 'hidden',
-                      shadowColor: effectiveTierColor,
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.2,
-                      shadowRadius: 8,
-                      elevation: 4,
-                    }}
-                  >
-                    <LinearGradient colors={theme.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                      <Pressable onPress={handleAddTaskPress} style={tw`flex-row items-center justify-center py-4`}>
-                        <Plus size={22} color="white" strokeWidth={2.5} />
-                        <Text style={tw`text-white font-bold text-base ml-2`}>{t('taskManager.addNewTask')}</Text>
-                      </Pressable>
-                    </LinearGradient>
+                  {/* Add Task Button */}
+                  <View style={tw`p-5 border-t border-stone-200 bg-white/80`}>
+                    <View
+                      style={{
+                        borderRadius: 16,
+                        overflow: 'hidden',
+                        shadowColor: effectiveTierColor,
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.2,
+                        shadowRadius: 8,
+                        elevation: 4,
+                      }}
+                    >
+                      <LinearGradient colors={[theme.gradient[0], theme.gradient[1], theme.gradient[2]]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                        <Pressable onPress={handleAddTaskPress} style={tw`flex-row items-center justify-center py-3.5`}>
+                          <Plus size={20} color="white" strokeWidth={2.5} />
+                          <Text style={tw`text-white font-bold text-sm ml-2`}>{t('taskManager.addNewTask')}</Text>
+                        </Pressable>
+                      </LinearGradient>
+                    </View>
                   </View>
                 </View>
-              </View>
-            </ImageBackground>
+              </ImageBackground>
+            </RNAnimated.View>
           </View>
         </Modal>
 

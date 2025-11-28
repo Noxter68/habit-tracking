@@ -662,6 +662,7 @@ const HabitDetails: React.FC = () => {
                   frequency={habit.frequency}
                   isWeekCompleted={isWeekCompleted}
                   tierColor={tierColor}
+                  onTasksUpdated={refreshHabits}
                 />
               </Animated.View>
             )}
