@@ -261,11 +261,9 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
     if (isCollected) return t('dashboard.dailyChallenge.collected');
     if (canClaimChallenge) return t('dashboard.dailyChallenge.readyToClaim');
 
-    // Calcul des tâches restantes (daily non complétées + weekly non complétées)
+    // Affiche uniquement les tâches daily restantes (les weekly ne bloquent pas le claim)
     const dailyRemaining = stats.dailyTasksTotal - stats.dailyTasksCompleted;
-    const weeklyRemaining = stats.weeklyTasksTotal - stats.weeklyTasksCompletedThisWeek;
-    const remaining = dailyRemaining + weeklyRemaining;
-    return t('dashboard.dailyChallenge.tasksRemaining', { count: remaining });
+    return t('dashboard.dailyChallenge.tasksRemaining', { count: dailyRemaining });
   };
 
   const renderTaskBadges = () => {
