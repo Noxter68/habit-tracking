@@ -31,6 +31,7 @@ import { ChevronRight, Pencil, GraduationCap } from 'lucide-react-native';
 import tw from 'twrnc';
 
 import EditUsernameModal from '@/components/settings/EditUserModal';
+import DeleteAccountModal from '@/components/settings/DeleteAccountModal';
 import { GroupTierUpModal } from '@/components/groups/GroupTierUpModal';
 import { GroupLevelUpModal } from '@/components/groups/GroupLevelUpModal';
 import { StreakSaverShopModal } from '@/components/streakSaver/StreakSaverShopModal';
@@ -42,6 +43,7 @@ import { useGroupCelebration } from '@/context/GroupCelebrationContext';
 import { HolidayModeService } from '@/services/holidayModeService';
 import { NotificationPreferencesService } from '@/services/notificationPreferenceService';
 import { OnboardingService } from '@/services/onboardingService';
+import { AccountDeletionService } from '@/services/accountDeletionService';
 
 import Logger from '@/utils/logger';
 import { supabase } from '@/lib/supabase';
@@ -413,6 +415,7 @@ const SettingsScreen: React.FC = () => {
   const [holidayStats, setHolidayStats] = useState<any>(null);
   const [signingOut, setSigningOut] = useState(false);
   const [showStreakSaverShop, setShowStreakSaverShop] = useState(false);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
 
   // ============================================================================
   // HOOKS - useCallback
@@ -600,6 +603,41 @@ const SettingsScreen: React.FC = () => {
     }
   };
 
+  /**
+   * Gère la suppression du compte utilisateur
+   */
+  const handleDeleteAccount = async () => {
+    if (!user?.id) return;
+
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+
+      // Supprimer le compte via le service
+      await AccountDeletionService.deleteAccount(user.id);
+
+      // Afficher un message de succès
+      Alert.alert(
+        t('common.success'),
+        t('settings.deleteAccountSuccess'),
+        [
+          {
+            text: t('common.confirm'),
+            onPress: async () => {
+              // Déconnecter l'utilisateur
+              await signOut();
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      Logger.error('Error deleting account:', error);
+      Alert.alert(
+        t('common.error'),
+        t('settings.deleteAccountError')
+      );
+    }
+  };
+
   // ============================================================================
   // RENDU PRINCIPAL
   // ============================================================================
@@ -777,6 +815,21 @@ const SettingsScreen: React.FC = () => {
               <SettingsItem icon="information-circle-outline" title={t('settings.version')} subtitle={Constants.expoConfig?.version || '1.0.0'} />
             </SettingsSection>
 
+            {/* Section Compte - Suppression */}
+            <SettingsSection title={t('settings.account')} delay={450}>
+              <SettingsItem
+                icon="log-out-outline"
+                title={t('settings.deleteAccount')}
+                subtitle={t('settings.deleteAccountSubtitle')}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  setShowDeleteAccountModal(true);
+                }}
+                trailing={<Icon name="chevron-forward" size={20} color="#DC2626" />}
+                isLast
+              />
+            </SettingsSection>
+
             {/* Bouton Revoir le tutoriel */}
             <View style={tw`mt-6`}>
               <Text style={tw`text-sm font-bold text-zinc-500 uppercase tracking-wider mb-3 px-1`}>{t('settings.help')}</Text>
@@ -798,6 +851,13 @@ const SettingsScreen: React.FC = () => {
 
             {/* Modal Streak Saver Shop (debug) */}
             <StreakSaverShopModal visible={showStreakSaverShop} onClose={() => setShowStreakSaverShop(false)} />
+
+            {/* Modal de suppression de compte */}
+            <DeleteAccountModal
+              visible={showDeleteAccountModal}
+              onClose={() => setShowDeleteAccountModal(false)}
+              onConfirm={handleDeleteAccount}
+            />
 
             {/* Bouton de déconnexion */}
             <Animated.View entering={FadeInDown.delay(500).duration(600).springify()} style={tw`mt-8 mb-6`}>
