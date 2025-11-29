@@ -63,6 +63,9 @@ const TaskCheckItem: React.FC<{
   // Shadow opacity reduces when pressed
   const shadowOpacity = useSharedValue(0.15);
 
+  // Scale effect for tap feedback
+  const scale = useSharedValue(1);
+
   // OPTIMISTIC UI: Checkmark animation scale (60fps native thread)
   const checkScale = useSharedValue(isCompleted ? 1 : 0);
 
@@ -100,13 +103,18 @@ const TaskCheckItem: React.FC<{
   const handlePressIn = () => {
     if (isPaused || isCompleted || disabled || isWeekLocked) return;
 
-    // Press down animation: move down 3px and reduce shadow
+    // Press down animation: move down 3px, reduce shadow, and scale down slightly
     pressY.value = withSpring(3, {
       damping: 20,
       stiffness: 600,
       mass: 0.3,
     });
     shadowOpacity.value = withTiming(0.05, { duration: 100 });
+    scale.value = withSpring(0.97, {
+      damping: 20,
+      stiffness: 600,
+      mass: 0.3,
+    });
   };
 
   const handlePressOut = () => {
@@ -119,12 +127,20 @@ const TaskCheckItem: React.FC<{
       mass: 0.5,
     });
     shadowOpacity.value = withTiming(0.15, { duration: 150 });
+    scale.value = withSpring(1, {
+      damping: 15,
+      stiffness: 400,
+      mass: 0.5,
+    });
   };
 
   // DUOLINGO-STYLE 3D ANIMATION
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
-    transform: [{ translateY: pressY.value }],
+    transform: [
+      { translateY: pressY.value },
+      { scale: scale.value },
+    ],
   }));
 
   // Checkmark scale animation (native 60fps)
@@ -193,11 +209,11 @@ const TaskCheckItem: React.FC<{
       ]}
     >
       {/* Checkbox - OPTIMISTIC UI with Lottie animation */}
-      <View style={tw`mr-3 items-center justify-center`}>
+      <View style={tw`mr-3 w-6 h-6 items-center justify-center`}>
         {showAsCompleted ? (
           <Animated.View
             style={[
-              tw`w-12 h-12 items-center justify-center`,
+              tw`items-center justify-center`,
               checkmarkStyle,
             ]}
           >
@@ -207,8 +223,19 @@ const TaskCheckItem: React.FC<{
               autoPlay={true}
               loop={false}
               speed={1.2}
-              style={{ width: 48, height: 48 }}
-              resizeMode="cover"
+              style={{ width: 44, height: 44 }}
+              resizeMode="contain"
+              colorFilters={[
+                {
+                  keypath: 'Shape Layer 1.Ellipse 1.Fill 1',
+                  color: theme.accent,
+                },
+                {
+                  keypath: 'trait.Shape Layer 1.Shape 1.Stroke 1',
+                  color: theme.accent,
+                },
+              ]}
+              hardwareAccelerationAndroid
             />
           </Animated.View>
         ) : isPaused ? (
@@ -278,6 +305,9 @@ export const TasksCard: React.FC<TasksCardProps> = ({
   const [showManageModal, setShowManageModal] = useState(false);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
 
+  // Optimistic progress tracking - ensures progress bar only moves forward
+  const [optimisticProgress, setOptimisticProgress] = useState<number | null>(null);
+
   // Animation states
   const backgroundOpacity = React.useRef(new RNAnimated.Value(0)).current;
   const slideAnim = React.useRef(new RNAnimated.Value(1000)).current;
@@ -334,9 +364,38 @@ export const TasksCard: React.FC<TasksCardProps> = ({
   const handleTaskDeleted = () => {
     // Note: No need to refresh habits here - the context already handles updates
   };
+
   const completedTasksToday = todayTasks.completedTasks?.length || 0;
   const totalTasks = tasks?.length || 0;
-  const taskProgress = totalTasks > 0 ? (completedTasksToday / totalTasks) * 100 : 0;
+
+  // Wrapper for onToggleTask that updates optimistic progress
+  const handleToggleTaskWithProgress = React.useCallback(async (taskId: string) => {
+    const currentCompleted = todayTasks.completedTasks || [];
+    const isCurrentlyCompleted = currentCompleted.includes(taskId);
+
+    // Only update optimistic progress when completing (not uncompleting)
+    if (!isCurrentlyCompleted) {
+      const newCompletedCount = currentCompleted.length + 1;
+      const newProgress = totalTasks > 0 ? (newCompletedCount / totalTasks) * 100 : 0;
+      setOptimisticProgress(newProgress);
+    }
+
+    // Call the original toggle function
+    await onToggleTask(taskId);
+  }, [todayTasks.completedTasks, totalTasks, onToggleTask]);
+  const serverProgress = totalTasks > 0 ? (completedTasksToday / totalTasks) * 100 : 0;
+
+  // OPTIMISTIC PROGRESS: Use optimistic value if available and greater than server value
+  const taskProgress = optimisticProgress !== null && optimisticProgress > serverProgress
+    ? optimisticProgress
+    : serverProgress;
+
+  // Clear optimistic progress when server catches up
+  React.useEffect(() => {
+    if (optimisticProgress !== null && serverProgress >= optimisticProgress) {
+      setOptimisticProgress(null);
+    }
+  }, [serverProgress, optimisticProgress]);
 
   // Récupérer les tâches prédéfinies traduites pour enrichir les données
   const predefinedTasks = React.useMemo(
@@ -550,7 +609,7 @@ export const TasksCard: React.FC<TasksCardProps> = ({
             task={enrichedTask}
             isCompleted={isCompleted}
             theme={theme}
-            onPress={() => onToggleTask(taskId)}
+            onPress={() => handleToggleTaskWithProgress(taskId)}
             index={idx}
             isPaused={isPaused}
             pausedUntil={pausedInfo?.pausedUntil}
