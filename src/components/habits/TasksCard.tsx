@@ -3,11 +3,12 @@
 // Updated: Integrated task management icon
 // Enhanced: Gamified styling with texture and gradient
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Pressable, ImageBackground, Modal, FlatList, Animated as RNAnimated, Easing as RNEasing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { useAnimatedStyle, withSpring, useSharedValue, withRepeat, withTiming, Easing } from 'react-native-reanimated';
-import { Circle, CheckCircle2, Loader2, PauseCircle, Settings2, Plus, X, Trash2 } from 'lucide-react-native';
+import Animated, { useAnimatedStyle, withSpring, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
+import LottieView from 'lottie-react-native';
+import { Circle, PauseCircle, Settings2, Plus, X, Trash2 } from 'lucide-react-native';
 import tw from '@/lib/tailwind';
 import { tierThemes } from '@/utils/tierTheme';
 import { HabitTier } from '@/services/habitProgressionService';
@@ -36,8 +37,6 @@ interface TasksCardProps {
   onToggleTask: (taskId: string) => Promise<void>;
   tier: HabitTier;
   pausedTasks?: Record<string, { pausedUntil: string; reason?: string }>;
-  isLoading?: boolean;
-  loadingTaskId?: string | null;
   frequency?: 'daily' | 'weekly' | 'monthly' | 'custom';
   isWeekCompleted?: boolean;
   // Task management props
@@ -54,45 +53,89 @@ const TaskCheckItem: React.FC<{
   isPaused?: boolean;
   pausedUntil?: string;
   disabled?: boolean;
-  isProcessing?: boolean;
   isWeekLocked?: boolean;
   totalTasks: number;
-}> = ({ task, isCompleted, theme, onPress, index, isPaused, pausedUntil, disabled, isProcessing, isWeekLocked, totalTasks }) => {
-  const scale = useSharedValue(1);
-  const spinnerRotation = useSharedValue(0);
+}> = ({ task, isCompleted, theme, onPress, index, isPaused, pausedUntil, disabled, isWeekLocked, totalTasks }) => {
+  // DUOLINGO-STYLE 3D PRESS ANIMATION
+  // Vertical translation for "press down" effect
+  const pressY = useSharedValue(0);
 
-  // Simple fade in
+  // Shadow opacity reduces when pressed
+  const shadowOpacity = useSharedValue(0.15);
+
+  // OPTIMISTIC UI: Checkmark animation scale (60fps native thread)
+  const checkScale = useSharedValue(isCompleted ? 1 : 0);
+
+  // Lottie animation ref for checkmark
+  const lottieRef = useRef<LottieView>(null);
+
+  // Simple fade in on mount
   const opacity = useSharedValue(0);
 
   React.useEffect(() => {
     opacity.value = withTiming(1, { duration: 300, easing: Easing.out(Easing.ease) });
   }, []);
 
+  // Track previous completed state to detect changes
+  const prevCompleted = React.useRef(isCompleted);
+
+  // INSTANT checkmark animation when completed changes
   React.useEffect(() => {
-    if (isProcessing) {
-      spinnerRotation.value = withRepeat(withTiming(360, { duration: 800, easing: Easing.linear }), -1, false);
-    } else {
-      spinnerRotation.value = 0;
+    checkScale.value = withSpring(isCompleted ? 1 : 0, {
+      damping: 15,
+      stiffness: 400,
+      mass: 0.5,
+    });
+
+    // Play Lottie animation when task becomes completed (not on mount)
+    if (isCompleted && !prevCompleted.current && lottieRef.current) {
+      // Reset and play from start
+      lottieRef.current.reset();
+      lottieRef.current.play();
     }
-  }, [isProcessing]);
+
+    prevCompleted.current = isCompleted;
+  }, [isCompleted]);
 
   const handlePressIn = () => {
     if (isPaused || isCompleted || disabled || isWeekLocked) return;
-    scale.value = withSpring(0.98, { damping: 15, stiffness: 400 });
+
+    // Press down animation: move down 3px and reduce shadow
+    pressY.value = withSpring(3, {
+      damping: 20,
+      stiffness: 600,
+      mass: 0.3,
+    });
+    shadowOpacity.value = withTiming(0.05, { duration: 100 });
   };
 
   const handlePressOut = () => {
     if (isPaused || isCompleted || disabled || isWeekLocked) return;
-    scale.value = withSpring(1, { damping: 15, stiffness: 400 });
+
+    // Release animation: spring back to original position
+    pressY.value = withSpring(0, {
+      damping: 15,
+      stiffness: 400,
+      mass: 0.5,
+    });
+    shadowOpacity.value = withTiming(0.15, { duration: 150 });
   };
 
+  // DUOLINGO-STYLE 3D ANIMATION
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
-    transform: [{ scale: scale.value }],
+    transform: [{ translateY: pressY.value }],
   }));
 
-  const spinnerStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${spinnerRotation.value}deg` }],
+  // Checkmark scale animation (native 60fps)
+  const checkmarkStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: checkScale.value }],
+    opacity: checkScale.value,
+  }));
+
+  // Shadow animation for 3D depth effect
+  const shadowStyle = useAnimatedStyle(() => ({
+    shadowOpacity: shadowOpacity.value,
   }));
 
   const formatPausedDate = (dateString: string): string => {
@@ -111,7 +154,6 @@ const TaskCheckItem: React.FC<{
   };
 
   const showAsCompleted = isCompleted || isWeekLocked;
-  const isLast = index === totalTasks - 1;
 
   return (
     <AnimatedPressable
@@ -122,45 +164,53 @@ const TaskCheckItem: React.FC<{
       style={[
         tw`flex-row items-center p-4 rounded-xl mb-2`,
         animatedStyle,
+        shadowStyle,
         {
           backgroundColor: showAsCompleted
             ? 'rgba(255, 255, 255, 0.95)'
             : isPaused
               ? 'rgba(255, 255, 255, 0.6)'
               : 'rgba(255, 255, 255, 0.85)',
-          borderWidth: 1.5,
-          borderColor: showAsCompleted
-            ? 'rgba(255, 255, 255, 0.9)'
-            : 'rgba(255, 255, 255, 0.4)',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.08,
-          shadowRadius: 4,
-          elevation: 2,
+          // DUOLINGO-STYLE: Border bottom for 3D depth
+          borderBottomWidth: showAsCompleted || isPaused ? 2 : 4,
+          borderBottomColor: showAsCompleted
+            ? 'rgba(200, 200, 200, 0.4)'
+            : isPaused
+              ? 'rgba(168, 162, 158, 0.3)'
+              : theme.accent + '40',
+          borderLeftWidth: 1.5,
+          borderRightWidth: 1.5,
+          borderTopWidth: 1.5,
+          borderLeftColor: 'rgba(255, 255, 255, 0.4)',
+          borderRightColor: 'rgba(255, 255, 255, 0.4)',
+          borderTopColor: 'rgba(255, 255, 255, 0.4)',
+          // Enhanced shadow for 3D effect
+          shadowColor: showAsCompleted || isPaused ? '#000' : theme.accent,
+          shadowOffset: { width: 0, height: 4 },
+          shadowRadius: 8,
+          elevation: showAsCompleted || isPaused ? 2 : 4,
         },
       ]}
     >
-      {/* Checkbox */}
-      <View style={tw`mr-3`}>
-        {isProcessing ? (
-          <Animated.View style={[tw`w-6 h-6 items-center justify-center`, spinnerStyle]}>
-            <Loader2 size={20} color={theme.accent} strokeWidth={2.5} />
-          </Animated.View>
-        ) : showAsCompleted ? (
-          <View
+      {/* Checkbox - OPTIMISTIC UI with Lottie animation */}
+      <View style={tw`mr-3 items-center justify-center`}>
+        {showAsCompleted ? (
+          <Animated.View
             style={[
-              tw`w-6 h-6 rounded-full items-center justify-center`,
-              {
-                backgroundColor: theme.accent,
-                shadowColor: theme.accent,
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.4,
-                shadowRadius: 4,
-              },
+              tw`w-12 h-12 items-center justify-center`,
+              checkmarkStyle,
             ]}
           >
-            <CheckCircle2 size={16} color="#fff" strokeWidth={3} fill="transparent" />
-          </View>
+            <LottieView
+              ref={lottieRef}
+              source={require('../../../assets/animations/blue-checkmark.json')}
+              autoPlay={true}
+              loop={false}
+              speed={1.2}
+              style={{ width: 48, height: 48 }}
+              resizeMode="cover"
+            />
+          </Animated.View>
         ) : isPaused ? (
           <PauseCircle size={24} color="#a8a29e" strokeWidth={2} />
         ) : (
@@ -216,8 +266,6 @@ export const TasksCard: React.FC<TasksCardProps> = ({
   onToggleTask,
   tier,
   pausedTasks = {},
-  isLoading = false,
-  loadingTaskId = null,
   frequency = 'daily',
   isWeekCompleted = false,
   onTasksUpdated,
@@ -494,7 +542,6 @@ export const TasksCard: React.FC<TasksCardProps> = ({
         const isCompleted = todayTasks.completedTasks.includes(taskId);
         const isPaused = !!pausedTasks[taskId];
         const pausedInfo = pausedTasks[taskId];
-        const isProcessing = isLoading && loadingTaskId === taskId;
         const isWeekLocked = frequency === 'weekly' && isWeekCompleted;
 
         return (
@@ -507,8 +554,7 @@ export const TasksCard: React.FC<TasksCardProps> = ({
             index={idx}
             isPaused={isPaused}
             pausedUntil={pausedInfo?.pausedUntil}
-            disabled={isLoading}
-            isProcessing={isProcessing}
+            disabled={false}
             isWeekLocked={isWeekLocked}
             totalTasks={totalTasks}
           />

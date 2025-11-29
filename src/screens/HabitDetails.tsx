@@ -106,8 +106,23 @@ const HabitDetails: React.FC = () => {
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationTier, setCelebrationTier] = useState<any>(null);
   const [debugStreak, setDebugStreak] = useState<number | null>(null);
-  const [isTogglingTask, setIsTogglingTask] = useState(false);
-  const [loadingTaskId, setLoadingTaskId] = useState<string | null>(null);
+
+  // ============================================================================
+  // OPTIMISTIC UI STATE - Instant feedback without network wait
+  // ============================================================================
+
+  /**
+   * Local optimistic state for completed tasks
+   * Updates IMMEDIATELY on tap (before server response)
+   * Provides Duolingo-like instant feedback
+   */
+  const [optimisticCompletedTasks, setOptimisticCompletedTasks] = useState<string[]>([]);
+
+  /**
+   * Tracks tasks pending server confirmation
+   * Used for rollback if server returns error (<1% cases)
+   */
+  const [pendingTasks, setPendingTasks] = useState<Set<string>>(new Set());
 
   // État pour le modal de test en mode développeur
   const [showTestModal, setShowTestModal] = useState(false);
@@ -165,10 +180,29 @@ const HabitDetails: React.FC = () => {
 
   const today = useMemo(() => getTodayString(), []);
 
-  const todayTasks: DailyTaskProgress = habit?.dailyTasks?.[today] || {
+  // Server data from habit context
+  const serverTodayTasks: DailyTaskProgress = habit?.dailyTasks?.[today] || {
     completedTasks: [],
     allCompleted: false,
   };
+
+  /**
+   * OPTIMISTIC MERGED STATE
+   * Combine server data with local optimistic updates
+   * This ensures instant UI updates while server is processing
+   */
+  const todayTasks: DailyTaskProgress = useMemo(() => {
+    // If we have optimistic state, use it
+    if (optimisticCompletedTasks.length > 0) {
+      const totalTasks = habit?.tasks?.length || 0;
+      return {
+        completedTasks: optimisticCompletedTasks,
+        allCompleted: optimisticCompletedTasks.length === totalTasks && totalTasks > 0,
+      };
+    }
+    // Otherwise use server data
+    return serverTodayTasks;
+  }, [optimisticCompletedTasks, serverTodayTasks, habit?.tasks?.length]);
 
   /**
    * Retourne le lundi de la semaine contenant la date donnée
@@ -296,33 +330,71 @@ const HabitDetails: React.FC = () => {
   // ============================================================================
 
   /**
-   * Gère le toggle d'une tâche avec retour haptique
+   * OPTIMISTIC UI - Toggle tâche avec mise à jour instantanée
+   *
+   * Pattern Duolingo:
+   * 1. Update UI IMMÉDIATEMENT (optimiste)
+   * 2. Animation native 60fps sur thread UI
+   * 3. API call en background (non-bloquant)
+   * 4. Rollback silencieux si erreur (<1% des cas)
    */
   const handleToggleTask = useCallback(
     async (taskId: string): Promise<void> => {
-      if (!habit || isTogglingTask) return;
+      if (!habit) return;
 
+      // Ignore si déjà en attente de confirmation
+      if (pendingTasks.has(taskId)) return;
+
+      // Haptic feedback instantané
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      setIsTogglingTask(true);
-      setLoadingTaskId(taskId);
 
+      // STEP 1: UPDATE OPTIMISTE IMMÉDIAT (0ms latence)
+      const currentCompleted = todayTasks.completedTasks || [];
+      const isCurrentlyCompleted = currentCompleted.includes(taskId);
+
+      const newOptimisticState = isCurrentlyCompleted
+        ? currentCompleted.filter(id => id !== taskId)
+        : [...currentCompleted, taskId];
+
+      setOptimisticCompletedTasks(newOptimisticState);
+      setPendingTasks(prev => new Set(prev).add(taskId));
+
+      // STEP 2: API CALL EN BACKGROUND (non-bloquant)
       try {
-        await toggleTask(habit.id, today, taskId);
+        const result = await toggleTask(habit.id, today, taskId);
 
-        // Fire-and-forget: refresh progression after animations complete (700ms)
-        // This prevents interrupting AnimatedNumber (600ms) and ProgressBar (600ms) animations
+        // Success: remove from pending
+        setPendingTasks(prev => {
+          const next = new Set(prev);
+          next.delete(taskId);
+          return next;
+        });
+
+        // Clear optimistic state after server confirms
+        setOptimisticCompletedTasks([]);
+
+        // Refresh progression after animations complete (700ms)
+        // This prevents interrupting AnimatedNumber and ProgressBar animations
         setTimeout(() => {
           refreshProgression();
         }, 700);
+
       } catch (error) {
         Logger.error('Task toggle failed:', error);
+
+        // STEP 3: ROLLBACK SILENCIEUX en cas d'erreur
+        setOptimisticCompletedTasks([]);
+        setPendingTasks(prev => {
+          const next = new Set(prev);
+          next.delete(taskId);
+          return next;
+        });
+
+        // User feedback pour erreur
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      } finally {
-        setIsTogglingTask(false);
-        setLoadingTaskId(null);
       }
     },
-    [habit, today, toggleTask, isTogglingTask, refreshProgression]
+    [habit, today, toggleTask, pendingTasks, todayTasks, refreshProgression]
   );
 
 
@@ -686,8 +758,6 @@ const HabitDetails: React.FC = () => {
                   onToggleTask={handleToggleTask}
                   tier={currentTierData.tier.name}
                   pausedTasks={pausedTasks}
-                  isLoading={isTogglingTask}
-                  loadingTaskId={loadingTaskId}
                   frequency={habit.frequency}
                   isWeekCompleted={isWeekCompleted}
                   tierColor={tierColor}
