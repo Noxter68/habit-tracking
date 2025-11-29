@@ -23,51 +23,43 @@ const modalTexts_fr: UpdateModalTexts = {
   getStarted: 'Commencer',
 };
 
-// Version 1.1.1- English
-const updates_1_1_1_en: UpdateItem[] = [
+// Version 1.1.2 - English
+const updates_1_1_2_en: UpdateItem[] = [
   {
-    title: 'Username Creation',
-    description: 'You can now create your username right after onboarding, making it easier to join groups and connect with friends from the start.',
+    title: 'Account Deletion',
+    description: 'You can now permanently delete your account and all associated data directly from the settings menu.',
   },
   {
-    title: 'Milestone Fixes',
-    description: 'Fixed period calculation for milestone unlocks - your achievements will now unlock at the right time.',
+    title: 'Improved Animations in Habit Details',
+    description: 'Task checking is now instant and satisfying! New optimistic UI with smooth 3D button effects and beautiful Lottie animations - zero waiting time.',
   },
   {
-    title: 'Streak Saver Improvements',
-    description: 'Streak Savers now work perfectly! They properly maintain both habit and global streaks when saving your progress.',
+    title: 'Enhanced User Interface',
+    description: 'Improved visual feedback with 3D depth effects on buttons, smoother transitions, and more polished animations throughout the app.',
   },
   {
-    title: 'Smart Notifications',
-    description: "Notifications are now smarter - you won't receive reminders for tasks you've already completed.",
-  },
-  {
-    title: 'Weekly Bonus System',
-    description: 'Improved timezone handling for weekly resets and bonuses - everyone gets their rewards at the right time, no matter where they are.',
+    title: 'Daily/Weekly Task Logic Fix',
+    description: 'Fixed logic issues between daily and weekly task completion tracking - your progress is now accurately recorded for both frequency types.',
   },
 ];
 
-// Version 1.1.1 - French
-const updates_1_1_1_fr: UpdateItem[] = [
+// Version 1.1.2 - French
+const updates_1_1_2_fr: UpdateItem[] = [
   {
-    title: 'Création de pseudo',
-    description: "Vous pouvez maintenant créer votre pseudo juste après l'onboarding, facilitant la création et l'adhésion à des groupes dès le début.",
+    title: 'Suppression de compte',
+    description: 'Vous pouvez maintenant supprimer définitivement votre compte et toutes les données associées directement depuis les paramètres.',
   },
   {
-    title: 'Corrections des jalons',
-    description: 'Correction du calcul de période pour le déblocage des jalons - vos accomplissements se débloquent maintenant au bon moment.',
+    title: 'Animations Améliorés dans vos habitudes',
+    description: 'Cocher une tâche est maintenant instantané et plus satisfaisant !',
   },
   {
-    title: 'Améliorations Sauvegarde de Série',
-    description: 'Les Sauvegardes de Série fonctionnent parfaitement ! Elles maintiennent correctement vos séries individuelles et globales.',
+    title: 'Interface utilisateur améliorée',
+    description: "Retour visuel amélioré avec effets de profondeur 3D sur les boutons, transitions plus fluides et animations plus soignées dans toute l'application.",
   },
   {
-    title: 'Notifications intelligentes',
-    description: 'Les notifications sont plus intelligentes - vous ne recevrez plus de rappels pour les tâches déjà complétées.',
-  },
-  {
-    title: 'Système de bonus hebdomadaire',
-    description: 'Gestion améliorée des fuseaux horaires pour les réinitialisations et bonus hebdomadaires - tout le monde reçoit ses récompenses au bon moment.',
+    title: 'Correction logique tâches quotidiennes/hebdomadaires',
+    description: 'Correction des problèmes de logique entre le suivi des tâches quotidiennes et hebdomadaires - votre progression est maintenant enregistrée avec précision pour les deux types.',
   },
 ];
 
@@ -85,8 +77,8 @@ export const getUpdatesForVersion = (version: string, locale: string = 'en'): Up
 
   // Map des versions disponibles
   const updatesMap: Record<string, UpdateItem[]> = {
-    updates_1_1_1_en: updates_1_1_1_en,
-    updates_1_1_1_fr: updates_1_1_1_fr,
+    updates_1_1_2_en: updates_1_1_2_en,
+    updates_1_1_2_fr: updates_1_1_2_fr,
   };
 
   return updatesMap[key] || updatesMap[`updates_${version.replace(/\./g, '_')}_en`] || [];
