@@ -16,11 +16,11 @@ export const milestonesTranslations: Record<string, Record<string, MilestoneTran
     // ========== BEGINNER TIER ==========
     'Getting Started': {
       title: 'Getting Started',
-      description: 'Complete 3 days',
+      description: '3 days of habit building',
     },
     'Week Warrior': {
       title: 'Week Warrior',
-      description: 'One week streak',
+      description: 'One week of habit building',
     },
 
     // ========== NOVICE TIER ==========
@@ -90,11 +90,11 @@ export const milestonesTranslations: Record<string, Record<string, MilestoneTran
     // ========== PALIER DÉBUTANT ==========
     'Getting Started': {
       title: 'Premiers Pas',
-      description: 'Complétez 3 jours',
+      description: "3 jours de création d'habitude",
     },
     'Week Warrior': {
       title: 'Guerrier de la Semaine',
-      description: 'Une semaine de série',
+      description: "Une semaine de création d'habitude",
     },
 
     // ========== PALIER NOVICE ==========
