@@ -10,7 +10,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
 import { diagnoseRevenueCatSetup } from './src/utils/RevenueCatDiagnostic';
-import { DEBUG_MODE } from '@env';
 import * as Linking from 'expo-linking';
 
 // Screens
@@ -96,26 +95,13 @@ export type TabParamList = {
 // Configuration
 // ============================================
 
-console.log('\n========= PRE-CONFIG DEBUG =========');
-console.log('1. Raw DEBUG_MODE from @env:', DEBUG_MODE);
-console.log('2. Config.debug.enabled BEFORE configure:', Config.debug.enabled);
-console.log('====================================\n');
-
 Logger.configure({ enabled: Config.debug.enabled });
-
-console.log('========= POST-CONFIG DEBUG =========');
-console.log('Logger configured with enabled:', Config.debug.enabled);
-console.log('Config.isDebug:', Config.isDebug);
-console.log('__DEV__:', __DEV__);
-console.log('====================================\n');
 
 if (Config.debug.enabled) {
   Logger.info('🚀 App Starting');
   Logger.debug('Environment:', Config.env.name);
   Logger.debug('Debug Mode:', Config.debug.enabled);
   Logger.debug('API URL:', Config.api.baseUrl);
-} else {
-  console.log('✅ Logger is DISABLED - No debug logs should appear below\n');
 }
 
 configureReanimatedLogger({
