@@ -63,30 +63,29 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({
 
   /**
    * Crée une version plus claire du gradient pour l'état déverrouillé
+   * Style similaire au DashboardHeader avec fond blanc opaque
    * @param tierGradient - Couleurs du gradient du tier
    * @returns Gradient avec opacité réduite
    */
   const getLightGradient = (tierGradient: string[]): string[] => {
     return [
-      tierGradient[0] + '15',
-      tierGradient[1] + '20',
-      tierGradient[2] + '15',
+      'rgba(255, 255, 255, 0.95)',
+      'rgba(255, 255, 255, 0.90)',
+      'rgba(255, 255, 255, 0.95)',
     ];
   };
 
   // Couleurs du gradient selon l'état
   const unlockedGradient = tierTheme
     ? getLightGradient(tierTheme.gradient)
-    : ['#F3F4F610', '#E5E7EB15', '#F9FAFB10'];
+    : ['rgba(255, 255, 255, 0.95)', 'rgba(255, 255, 255, 0.90)', 'rgba(255, 255, 255, 0.95)'];
 
-  const lockedGradient = ['#FAFAFA', '#F5F5F5', '#EEEEEE'];
+  const lockedGradient = ['rgba(250, 250, 250, 1)', 'rgba(245, 245, 245, 1)', 'rgba(238, 238, 238, 1)'];
 
-  // Couleurs de bordure et d'accent
+  // Couleurs de bordure et d'accent (style DashboardHeader avec bordure blanche)
   const borderColor = isUnlocked
-    ? tierTheme
-      ? tierTheme.gradient[1] + '40'
-      : '#E5E7EB'
-    : '#E0E0E0';
+    ? 'rgba(255, 255, 255, 0.9)' // Bordure blanche opaque pour les débloqués
+    : 'rgba(224, 224, 224, 1)'; // Bordure grise pour les verrouillés
 
   const accentColor = tierTheme ? tierTheme.gradient[1] : '#6B7280';
 

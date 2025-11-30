@@ -1463,7 +1463,8 @@
       "masteryAwakens": "Mastery Awakens",
       "legendaryAscent": "Legendary Ascent",
       "epicMastery": "Epic Mastery",
-      "mythicGlory": "Mythic Glory"
+      "mythicGlory": "Mythic Glory",
+      "celestialAscension": "Celestial Ascension"
     },
     "titles": {
       "level1": "The First Stepper",
@@ -1495,7 +1496,12 @@
       "level27": "Titan of Consistency",
       "level28": "The Invincible",
       "level29": "Legend of the Grind",
-      "level30": "Ascended One"
+      "level30": "Ascended One",
+      "level31": "Celestial Warden",
+      "level32": "Starborne Champion",
+      "level33": "Cosmic Sentinel",
+      "level34": "Ethereal Sovereign",
+      "level35": "Transcendent Master"
     }
   },
   "calendar": {

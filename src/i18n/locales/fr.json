@@ -254,7 +254,8 @@
       "masteryAwakens": "Éveil de la Maîtrise",
       "legendaryAscent": "Ascension Légendaire",
       "epicMastery": "Maîtrise Épique",
-      "mythicGlory": "Gloire Mythique"
+      "mythicGlory": "Gloire Mythique",
+      "celestialAscension": "Ascension Céleste"
     },
     "titles": {
       "level1": "Le Premier Pas",
@@ -286,7 +287,12 @@
       "level27": "Titan de la Constance",
       "level28": "L'Invincible",
       "level29": "Légende de l'Effort",
-      "level30": "L'Élevé"
+      "level30": "L'Élevé",
+      "level31": "Gardien Céleste",
+      "level32": "Champion Stellaire",
+      "level33": "Sentinelle Cosmique",
+      "level34": "Souverain Éthéré",
+      "level35": "Maître Transcendant"
     }
   },
   "settings": {

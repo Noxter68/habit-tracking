@@ -515,7 +515,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           </View>
 
           {/* Barre de progression niveau */}
-          {userLevel < 30 && (
+          {userLevel < 35 && (
             <View style={{ marginBottom: 8 }}>
               <LevelProgress
                 currentLevel={userLevel}

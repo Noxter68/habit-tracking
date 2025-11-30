@@ -1,7 +1,7 @@
 /**
  * @file achievements.ts
  * @description Gestion des achievements et niveaux de l'utilisateur.
- * Définit les 30 niveaux d'achievements répartis en 6 tiers de progression.
+ * Définit les 35 niveaux d'achievements répartis en 7 tiers de progression.
  */
 
 import { quartzGradients } from '@/lib/tailwind';
@@ -19,7 +19,7 @@ export type { Achievement } from '@/types/achievement.types';
  * Structure de base d'un achievement sans traductions.
  */
 interface BaseAchievementData {
-  /** Niveau de l'achievement (1-30) */
+  /** Niveau de l'achievement (1-35) */
   level: number;
   /** Clé du tier pour les traductions */
   tierKey: TierKey;
@@ -39,7 +39,7 @@ interface BaseAchievementData {
 export const LOCKED_BADGE_IMAGE = require('../../assets/achievements/locked.png');
 
 /**
- * Données de base des achievements (30 niveaux répartis en 6 tiers).
+ * Données de base des achievements (35 niveaux répartis en 7 tiers).
  * Les traductions sont appliquées dynamiquement via les getters.
  */
 const baseAchievementData: BaseAchievementData[] = [
@@ -84,6 +84,13 @@ const baseAchievementData: BaseAchievementData[] = [
   { level: 28, tierKey: 'mythicGlory', color: '#8b5cf6', image: require('../../assets/achievements/level-28.png') },
   { level: 29, tierKey: 'mythicGlory', color: '#8b5cf6', image: require('../../assets/achievements/level-29.png') },
   { level: 30, tierKey: 'mythicGlory', color: '#8b5cf6', image: require('../../assets/achievements/level-30.png') },
+
+  // Celestial Ascension (31-35)
+  { level: 31, tierKey: 'celestialAscension', color: '#3f7eea', image: require('../../assets/interface/gems/celeste-gem.png') },
+  // { level: 32, tierKey: 'celestialAscension', color: '#3f7eea', image: require('../../assets/interface/gems/celeste-gem.png') },
+  // { level: 33, tierKey: 'celestialAscension', color: '#3f7eea', image: require('../../assets/interface/gems/celeste-gem.png') },
+  // { level: 34, tierKey: 'celestialAscension', color: '#3f7eea', image: require('../../assets/interface/gems/celeste-gem.png') },
+  // { level: 35, tierKey: 'celestialAscension', color: '#3f7eea', image: require('../../assets/interface/gems/celeste-gem.png') },
 ];
 
 // =============================================================================

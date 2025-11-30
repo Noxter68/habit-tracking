@@ -29,8 +29,13 @@ export const getXPForNextLevel = (currentLevel: number): number => {
   }
 
   // Levels 26-30: Prestige levels (true mastery)
-  else {
+  else if (currentLevel <= 30) {
     return 2360 + (currentLevel - 25) * 300; // 2660, 2960, 3260, 3560, 3860
+  }
+
+  // Levels 31-35: Celestial Ascension (legendary achievement)
+  else {
+    return 3860 + (currentLevel - 30) * 400; // 4260, 4660, 5060, 5460, 5860
   }
 };
 

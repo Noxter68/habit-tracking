@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import tw from '../../lib/tailwind';
 import { Achievement } from '../../types/achievement.types';
 import { AchievementBadge } from '../shared/AchievementBadge';
-import { getAchievementTierTheme, AchievementTierName } from '../../utils/tierTheme';
+import { getAchievementTierTheme } from '../../utils/tierTheme';
 
 interface CurrentLevelHeroProps {
   currentLevel: number;
@@ -26,53 +26,124 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
   // Get the tier theme directly from utils using tierKey
   const tierTheme = getAchievementTierTheme(currentTitle?.tierKey || 'novice');
 
-  // Determine text colors based on gem type
-  const getTextColors = (gemName: string) => {
-    // Lighter gems need darker text for contrast
-    if (['Crystal', 'Topaz', 'Ruby', 'Amethyst', 'Jade', 'Obsidian'].includes(gemName)) {
-      return {
-        primary: 'text-white',
-        secondary: 'text-white/80',
-        badge: 'text-white',
-        badgeBg: 'bg-white/15',
-        statBg: 'bg-white/10',
-      };
-    }
+  // Special styling for Obsidian tier
+  const isObsidian = tierTheme.gemName === 'Obsidian';
 
-    // Darker gems need lighter text
-    return {
-      primary: 'text-stone-800',
-      secondary: 'text-stone-600',
-      badge: 'text-stone-800',
-      badgeBg: 'bg-white/50',
-      statBg: 'bg-white/30',
-    };
+  // Text colors for gradient background with texture (like DashboardHeader)
+  const textColors = {
+    primary: 'text-white',
+    secondary: 'text-white/80',
+    badge: 'text-white',
+    badgeBg: 'rgba(255, 255, 255, 0.3)',
+    badgeBorder: 'rgba(255, 255, 255, 0.4)',
+    separatorColor: 'rgba(255, 255, 255, 0.15)',
+    progressBg: 'rgba(255, 255, 255, 0.2)',
+    progressFill: '#FFFFFF',
   };
-
-  const textColors = getTextColors(tierTheme.gemName);
 
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [pressed && tw`opacity-95`]}>
-      <View style={tw`rounded-2xl overflow-hidden mb-4`}>
-        {/* Subtle gradient background */}
-        <LinearGradient colors={[tierTheme.gradient[0], tierTheme.gradient[1]]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-2xl`}>
-          {/* Texture overlay - more subtle */}
-          <ImageBackground source={tierTheme.texture} style={tw`rounded-2xl`} resizeMode="cover" imageStyle={{ opacity: 0.1 }}>
+      <View
+        style={[
+          tw`rounded-2xl overflow-hidden mb-4`,
+          {
+            borderWidth: isObsidian ? 2 : 1.5,
+            borderColor: isObsidian ? 'rgba(139, 92, 246, 0.4)' : 'rgba(255, 255, 255, 0.2)',
+            shadowColor: isObsidian ? '#8b5cf6' : '#000',
+            shadowOffset: { width: 0, height: isObsidian ? 12 : 8 },
+            shadowOpacity: isObsidian ? 0.6 : 0.3,
+            shadowRadius: isObsidian ? 24 : 20,
+          },
+        ]}
+      >
+        {/* Gradient background with tier colors */}
+        <LinearGradient colors={tierTheme.gradient as any} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-2xl`}>
+          {/* Texture overlay */}
+          <ImageBackground source={tierTheme.texture} resizeMode="cover" imageStyle={{ opacity: 0.2 }}>
+            {/* Obsidian glow overlay */}
+            {isObsidian && (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: 'rgba(139, 92, 246, 0.08)',
+                }}
+              />
+            )}
+            {/* Dark overlay for better text readability */}
+            <View
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: isObsidian ? 'rgba(0, 0, 0, 0.15)' : 'rgba(0, 0, 0, 0.05)',
+              }}
+            />
             <View style={tw`p-5`}>
               {/* Top Section: Title & Badge - Simplified */}
               <View style={tw`flex-row items-start justify-between mb-5`}>
                 <View style={tw`flex-1 pr-16`}>
-                  <Text style={[tw`text-xs font-semibold uppercase tracking-wide mb-1.5`, tw`${textColors.secondary}`]}>{t('achievements.currentAchievement')}</Text>
+                  <Text
+                    style={[
+                      tw`text-xs font-semibold uppercase tracking-wide mb-1.5`,
+                      tw`${textColors.secondary}`,
+                      {
+                        textShadowColor: isObsidian ? 'rgba(139, 92, 246, 0.8)' : 'rgba(0, 0, 0, 0.5)',
+                        textShadowOffset: { width: 0, height: 1 },
+                        textShadowRadius: isObsidian ? 8 : 4,
+                      },
+                    ]}
+                  >
+                    {t('achievements.currentAchievement')}
+                  </Text>
 
-                  <Text style={[tw`text-xl font-bold leading-tight mb-3`, tw`${textColors.primary}`]}>{currentTitle?.title || t('achievements.tiers.novice')}</Text>
+                  <Text
+                    style={[
+                      tw`text-xl font-bold leading-tight mb-3`,
+                      tw`${textColors.primary}`,
+                      {
+                        textShadowColor: isObsidian ? 'rgba(139, 92, 246, 0.9)' : 'rgba(0, 0, 0, 0.6)',
+                        textShadowOffset: { width: 0, height: 2 },
+                        textShadowRadius: isObsidian ? 12 : 8,
+                      },
+                    ]}
+                  >
+                    {currentTitle?.title || t('achievements.tiers.novice')}
+                  </Text>
 
                   {/* Level badge only - simplified */}
                   <View style={tw`flex-row items-center gap-2`}>
-                    <View style={[tw`rounded-lg px-3 py-1`, tw`${textColors.badgeBg}`]}>
-                      <Text style={[tw`text-xs font-semibold`, tw`${textColors.badge}`]}>{t('achievements.level', { level: currentLevel })}</Text>
+                    <View
+                      style={[
+                        tw`rounded-lg px-3 py-1`,
+                        {
+                          backgroundColor: textColors.badgeBg,
+                          borderWidth: 1,
+                          borderColor: textColors.badgeBorder,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          tw`text-xs font-semibold`,
+                          tw`${textColors.badge}`,
+                          {
+                            textShadowColor: 'rgba(0, 0, 0, 0.3)',
+                            textShadowOffset: { width: 0, height: 1 },
+                            textShadowRadius: 3,
+                          },
+                        ]}
+                      >
+                        {t('achievements.level', { level: currentLevel })}
+                      </Text>
                     </View>
 
-                    <View style={[tw`h-1 w-1 rounded-full`, { backgroundColor: 'rgba(255, 255, 255, 0.4)' }]} />
+                    <View style={[tw`h-1 w-1 rounded-full`, { backgroundColor: textColors.separatorColor }]} />
 
                     <Text style={[tw`text-xs font-medium`, tw`${textColors.secondary}`]}>{tierTheme.gemName}</Text>
                   </View>
@@ -93,8 +164,8 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
                   </View>
 
                   {/* Minimalist progress bar */}
-                  <View style={[tw`h-2 rounded-full overflow-hidden`, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}>
-                    {percent > 0 && <View style={[tw`h-full rounded-full bg-white`, { width: `${percent}%` }]} />}
+                  <View style={[tw`h-2 rounded-full overflow-hidden`, { backgroundColor: textColors.progressBg }]}>
+                    {percent > 0 && <View style={[tw`h-full rounded-full`, { width: `${percent}%`, backgroundColor: textColors.progressFill }]} />}
                   </View>
                 </View>
               )}
@@ -105,7 +176,7 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
                   tw`flex-row justify-between pt-4`,
                   {
                     borderTopWidth: 1,
-                    borderTopColor: 'rgba(255, 255, 255, 0.15)',
+                    borderTopColor: textColors.separatorColor,
                   },
                 ]}
               >
@@ -116,7 +187,7 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
                 </View>
 
                 {/* Vertical separator */}
-                <View style={[tw`w-px mx-2`, { backgroundColor: 'rgba(255, 255, 255, 0.15)' }]} />
+                <View style={[tw`w-px mx-2`, { backgroundColor: textColors.separatorColor }]} />
 
                 {/* Perfect Days */}
                 <View style={tw`items-center flex-1`}>
@@ -125,7 +196,7 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
                 </View>
 
                 {/* Vertical separator */}
-                <View style={[tw`w-px mx-2`, { backgroundColor: 'rgba(255, 255, 255, 0.15)' }]} />
+                <View style={[tw`w-px mx-2`, { backgroundColor: textColors.separatorColor }]} />
 
                 {/* Active Habits */}
                 <View style={tw`items-center flex-1`}>

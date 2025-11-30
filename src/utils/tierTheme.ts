@@ -138,6 +138,15 @@ export const achievementTierThemes: Record<TierKey, AchievementTierTheme> = {
     questImage: require('../../assets/interface/quest-obsidian.png'),
     backgroundGradient: ['#0f0a1a', '#1a1625', '#2d1b3d'],
   },
+  celestialAscension: {
+    gradient: ['#8ec5ff', '#3f7eea', '#122c88'],
+    accent: '#3f7eea',
+    gemName: 'Celeste',
+    texture: require('../../assets/interface/progressBar/celeste-texture.png'),
+    streakImage: require('../../assets/interface/gems/celeste-gem.png'),
+    questImage: require('../../assets/interface/gems/celeste-gem.png'),
+    backgroundGradient: ['#e0f2ff', '#bae6fd', '#7dd3fc'],
+  },
 };
 
 // =============================================================================
