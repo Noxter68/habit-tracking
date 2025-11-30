@@ -108,17 +108,28 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const [optimisticXP, setOptimisticXP] = React.useState(currentLevelXP);
   const [optimisticTotalXP, setOptimisticTotalXP] = React.useState(totalXP);
   const isOptimisticUpdate = React.useRef(false);
+  const prevLevelRef = React.useRef(userLevel);
 
   // ---------------------------------------------------------------------------
   // Effets
   // ---------------------------------------------------------------------------
   React.useEffect(() => {
-    if (isOptimisticUpdate.current) {
+    // Si le niveau a changé, c'est un level up confirmé par le backend
+    // On doit FORCER la mise à jour même si isOptimisticUpdate est true
+    const hasLeveledUp = userLevel !== prevLevelRef.current;
+
+    if (hasLeveledUp) {
+      // Reset le flag optimiste car le backend a confirmé le level up
+      isOptimisticUpdate.current = false;
+      prevLevelRef.current = userLevel;
+    }
+
+    if (isOptimisticUpdate.current && !hasLeveledUp) {
       return;
     }
     setOptimisticXP(currentLevelXP);
     setOptimisticTotalXP(totalXP);
-  }, [currentLevelXP, totalXP]);
+  }, [currentLevelXP, totalXP, userLevel]);
 
   // ---------------------------------------------------------------------------
   // Valeurs mémorisées
@@ -169,12 +180,25 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
    * Calcule l'XP et la progression à afficher
    */
   const { displayXP, displayProgress } = useMemo(() => {
-    const xpToShow = optimisticXP > xpForNextLevel ? optimisticXP % xpForNextLevel : optimisticXP;
+    // Normalise l'XP pour s'assurer qu'elle est dans les limites du niveau actuel
+    // Si optimisticXP > xpForNextLevel, c'est qu'on a level up mais le backend n'a pas encore confirmé
+    // Dans ce cas, on calcule l'overflow XP
+    let xpToShow = optimisticXP;
+
+    // Seulement appliquer le modulo si on est clairement au-dessus de la limite
+    // ET que ce n'est pas déjà géré par le backend (qui renvoie currentLevelXP déjà ajusté)
+    if (optimisticXP > xpForNextLevel && isOptimisticUpdate.current) {
+      xpToShow = optimisticXP % xpForNextLevel;
+    } else {
+      // Sinon, on fait confiance aux données du backend
+      xpToShow = Math.max(0, Math.min(optimisticXP, xpForNextLevel));
+    }
+
     const progressPercent = xpForNextLevel > 0 ? (xpToShow / xpForNextLevel) * 100 : 0;
 
     return {
-      displayXP: xpToShow,
-      displayProgress: progressPercent,
+      displayXP: Math.max(0, xpToShow),
+      displayProgress: Math.max(0, Math.min(progressPercent, 100)),
     };
   }, [optimisticXP, xpForNextLevel]);
 
