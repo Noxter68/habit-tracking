@@ -85,6 +85,8 @@ export const useDailyMotivation = () => {
       const timer = setTimeout(() => {
         setShowModal(true);
         setIsTestMode(false);
+        // Reset shouldShowToday to prevent showing again on re-navigation
+        setShouldShowToday(false);
       }, 2000); // 2 second delay to let other modals show first
 
       return () => clearTimeout(timer);
