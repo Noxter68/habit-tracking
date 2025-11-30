@@ -24,6 +24,7 @@ import TaskBadge from '@/components/TasksBadge';
 import { UpdateModal } from '@/components/updateModal';
 import { HabitsSectionHeader } from '@/components/dashboard/HabitsSectionHeader';
 import { HabitCategoryBadge } from '@/components/dashboard/HabitCategoryBadge';
+import { DailyMotivationModal } from '@/components/motivation/DailyMotivationModal';
 
 // Contexts
 import { useAuth } from '../context/AuthContext';
@@ -37,18 +38,20 @@ import { HolidayModeService } from '@/services/holidayModeService';
 import { StreakSaverService } from '@/services/StreakSaverService';
 
 // Utils
-import { getAchievementByLevel, getAchievementTitle } from '@/utils/achievements';
+import { getAchievementByLevel, getAchievementTitle, achievementTitles } from '@/utils/achievements';
 import { HapticFeedback } from '@/utils/haptics';
 import Logger from '@/utils/logger';
 import { getTodayString, isWeeklyHabitCompletedThisWeek, getWeeklyCompletedTasksCount } from '@/utils/dateHelpers';
 import { versionManager } from '@/utils/versionManager';
 import { getModalTexts, getUpdatesForVersion } from '@/utils/updateContent';
+import { getAchievementTierTheme } from '@/utils/tierTheme';
 
 // Types & Config
 import { HolidayPeriod } from '@/types/holiday.types';
 import { Config } from '@/config';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { useMultipleHabitMilestonesCount } from '@/hooks/useHabitMilestones';
+import { useDailyMotivation } from '@/hooks/useDailyMotivation';
 
 // ============================================================================
 // Main Component
@@ -57,7 +60,7 @@ import { useMultipleHabitMilestonesCount } from '@/hooks/useHabitMilestones';
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
-  const { user } = useAuth();
+  const { user, username } = useAuth();
   const { habits, loading: habitsLoading, toggleHabitDay, toggleTask, deleteHabit, refreshHabits } = useHabits();
   const { stats, loading: statsLoading, refreshStats } = useStats();
   const { triggerLevelUp } = useLevelUp();
@@ -74,6 +77,9 @@ const Dashboard: React.FC = () => {
   const [frozenTasksMap, setFrozenTasksMap] = useState<Map<string, Record<string, { pausedUntil: string }>>>(new Map());
   const [streakSaverRefreshTrigger, setStreakSaverRefreshTrigger] = useState(0);
   const { showModal, isChecking, handleClose } = useVersionCheck();
+
+  // Daily Motivation Modal
+  const { showModal: showMotivationModal, closeModal: closeMotivationModal, forceShow: forceShowMotivation, isTestMode: isMotivationTestMode } = useDailyMotivation();
 
   const locale = getLocales()[0]?.languageCode ?? 'en';
   const currentVersion = versionManager.getCurrentVersion();
@@ -259,6 +265,14 @@ const Dashboard: React.FC = () => {
   // Load milestones counts for all habits
   const habitIds = useMemo(() => habits.map((h) => h.id), [habits]);
   const milestoneCounts = useMultipleHabitMilestonesCount(habitIds);
+
+  // Get user's current tier theme for motivation modal
+  const userTierTheme = useMemo(() => {
+    if (!stats?.level) return null;
+    const currentTitle = achievementTitles.find((t) => stats.level >= t.level && stats.level < (achievementTitles.find((next) => next.level > t.level)?.level || Infinity));
+    if (!currentTitle) return null;
+    return getAchievementTierTheme(currentTitle.tierKey);
+  }, [stats?.level]);
 
   // ============================================================================
   // Event Handlers
@@ -535,7 +549,33 @@ const Dashboard: React.FC = () => {
               <View style={tw`mt-4`}>
                 <TaskBadge completed={realTimeTasksStats.completed} total={realTimeTasksStats.total} onAddPress={handleCreateHabit} showAddButton={habits.length > 0} />
 
-                {/* Free user habit limit indicator - below TaskBadge */}
+                {/* Daily Motivation Button - below TaskBadge (DEBUG ONLY) */}
+                {Config.debug.enabled && (
+                  <Pressable
+                    onPress={() => {
+                      HapticFeedback.light();
+                      forceShowMotivation();
+                    }}
+                    style={({ pressed }) => [
+                      tw`mx-1 mt-3 rounded-2xl overflow-hidden`,
+                      pressed && tw`opacity-80`,
+                    ]}
+                  >
+                    <LinearGradient
+                      colors={(userTierTheme?.gradient as any) || ['#8B5CF6', '#7C3AED', '#6D28D9']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={tw`px-4 py-3 flex-row items-center justify-center`}
+                    >
+                      <Zap size={16} color="#FFFFFF" strokeWidth={2.5} fill="rgba(255,255,255,0.3)" style={tw`mr-2`} />
+                      <Text style={tw`text-white text-sm font-bold tracking-wide`}>
+                        {t('dashboard.dailyMotivation', { defaultValue: 'Daily Motivation' })}
+                      </Text>
+                    </LinearGradient>
+                  </Pressable>
+                )}
+
+                {/* Free user habit limit indicator - below Daily Motivation Button */}
                 {!isPremium && habitCount > 0 && (
                   <View
                     style={[
@@ -672,15 +712,29 @@ const Dashboard: React.FC = () => {
                 </Pressable>
               </View>
             )}
-            {/* Bouton pour tester la modal - DEV ONLY */}
+            {/* Boutons de debug - DEV ONLY */}
             {Config.debug.enabled && (
-              <TouchableOpacity onPress={handleResetVersion} style={tw`bg-slate-200 px-6 py-3 rounded-xl`}>
-                <Text style={tw`text-slate-700 font-medium`}>Reset Version (Debug Mode)</Text>
-              </TouchableOpacity>
+              <View style={tw`gap-3 mt-4`}>
+                <TouchableOpacity onPress={handleResetVersion} style={tw`bg-slate-200 px-6 py-3 rounded-xl`}>
+                  <Text style={tw`text-slate-700 font-medium`}>Reset Version (Debug Mode)</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={forceShowMotivation} style={tw`bg-purple-200 px-6 py-3 rounded-xl`}>
+                  <Text style={tw`text-purple-700 font-medium`}>Show Daily Motivation (Debug)</Text>
+                </TouchableOpacity>
+              </View>
             )}
             <UpdateModal visible={showModal} onClose={handleClose} version={currentVersion} updates={updates} texts={modalTexts} />
           </Animated.View>
         </ScrollView>
+
+        {/* Daily Motivation Modal */}
+        <DailyMotivationModal
+          visible={showMotivationModal}
+          onClose={closeMotivationModal}
+          gradientColors={userTierTheme?.gradient || ['#8B5CF6', '#7C3AED', '#6D28D9']}
+          username={username || user?.email?.split('@')[0]}
+          random={isMotivationTestMode}
+        />
       </SafeAreaView>
     </ImageBackground>
   );

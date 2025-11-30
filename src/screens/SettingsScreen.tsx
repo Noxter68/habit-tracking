@@ -39,6 +39,7 @@ import { StreakSaverShopModal } from '@/components/streakSaver/StreakSaverShopMo
 import { useAuth } from '@/context/AuthContext';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { useGroupCelebration } from '@/context/GroupCelebrationContext';
+import { useDailyMotivation } from '@/hooks/useDailyMotivation';
 
 import { HolidayModeService } from '@/services/holidayModeService';
 import { NotificationPreferencesService } from '@/services/notificationPreferenceService';
@@ -404,6 +405,7 @@ const SettingsScreen: React.FC = () => {
   const { isPremium } = useSubscription();
   const navigation = useNavigation<NavigationProp>();
   const { triggerTierUp, triggerLevelUp } = useGroupCelebration();
+  const { forceShow: showDailyMotivation } = useDailyMotivation();
 
   // ============================================================================
   // HOOKS - State
@@ -788,6 +790,15 @@ const SettingsScreen: React.FC = () => {
               <SettingsSection title="Debug Tools" delay={500}>
                 <SettingsItem icon="bug" title="Test Level Up" subtitle="Celebration simple (5s)" onPress={() => triggerLevelUp(30, 14)} />
                 <SettingsItem icon="sparkles" title="Test Tier Up" subtitle="Celebration epique (8s)" onPress={() => triggerTierUp(50, 9)} />
+                <SettingsItem
+                  icon="sparkles"
+                  title="Test Daily Motivation"
+                  subtitle="Afficher la citation du jour"
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    showDailyMotivation();
+                  }}
+                />
                 <SettingsItem
                   icon="sparkles"
                   title="Test Streak Saver Shop"
