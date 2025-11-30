@@ -405,7 +405,7 @@ const SettingsScreen: React.FC = () => {
   const { isPremium } = useSubscription();
   const navigation = useNavigation<NavigationProp>();
   const { triggerTierUp, triggerLevelUp } = useGroupCelebration();
-  const { forceShow: showDailyMotivation } = useDailyMotivation();
+  const { forceShow: showDailyMotivation, isEnabled: dailyMotivationEnabled, toggleEnabled: toggleDailyMotivation } = useDailyMotivation();
 
   // ============================================================================
   // HOOKS - State
@@ -755,6 +755,26 @@ const SettingsScreen: React.FC = () => {
                 subtitle={i18n.language === 'fr' ? 'Français' : 'English'}
                 trailing={<Icon name="chevron-forward" size={20} color="#52525B" />}
                 onPress={() => navigation.navigate('LanguageSelector')}
+              />
+
+              {/* Motivation Quotidienne */}
+              <SettingsItem
+                icon="sparkles"
+                title={t('settings.dailyMotivation')}
+                subtitle={dailyMotivationEnabled ? t('settings.dailyMotivationEnabled') : t('settings.dailyMotivationDisabled')}
+                trailing={
+                  <Switch
+                    value={dailyMotivationEnabled}
+                    onValueChange={(value) => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      toggleDailyMotivation(value);
+                    }}
+                    trackColor={{ false: '#E4E4E7', true: '#A1A1AA' }}
+                    thumbColor={dailyMotivationEnabled ? '#52525B' : '#FFFFFF'}
+                    ios_backgroundColor="#E4E4E7"
+                  />
+                }
+                isLast
               />
             </SettingsSection>
 

@@ -351,7 +351,10 @@
     "reviewTourPrompt": "Souhaitez-vous revoir le tour d'introduction ?",
     "reviewTourConfirm": "Oui, montrez-moi",
     "languageChangeInfo": "L'application se mettra à jour immédiatement lorsque vous sélectionnerez une nouvelle langue.",
-    "languageChangeError": "Échec du changement de langue. Veuillez réessayer."
+    "languageChangeError": "Échec du changement de langue. Veuillez réessayer.",
+    "dailyMotivation": "Motivation Quotidienne",
+    "dailyMotivationEnabled": "À chaque ouverture",
+    "dailyMotivationDisabled": "Une fois par jour"
   },
 
   "paywall": {

@@ -276,7 +276,10 @@
     "reviewTourPrompt": "Would you like to see the introduction tour again?",
     "reviewTourConfirm": "Yes, Show Me",
     "languageChangeInfo": "The app will update immediately when you select a new language.",
-    "languageChangeError": "Failed to change language. Please try again."
+    "languageChangeError": "Failed to change language. Please try again.",
+    "dailyMotivation": "Daily Motivation",
+    "dailyMotivationEnabled": "Every app launch",
+    "dailyMotivationDisabled": "Once per day"
   },
 
   "paywall": {

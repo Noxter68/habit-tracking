@@ -79,7 +79,13 @@ const Dashboard: React.FC = () => {
   const { showModal, isChecking, handleClose } = useVersionCheck();
 
   // Daily Motivation Modal
-  const { showModal: showMotivationModal, closeModal: closeMotivationModal, forceShow: forceShowMotivation, isTestMode: isMotivationTestMode } = useDailyMotivation();
+  const {
+    showModal: showMotivationModal,
+    closeModal: closeMotivationModal,
+    forceShow: forceShowMotivation,
+    isTestMode: isMotivationTestMode,
+    triggerShow: triggerMotivationShow,
+  } = useDailyMotivation();
 
   const locale = getLocales()[0]?.languageCode ?? 'en';
   const currentVersion = versionManager.getCurrentVersion();
@@ -91,6 +97,15 @@ const Dashboard: React.FC = () => {
   const handleResetVersion = async () => {
     await versionManager.clearLastSeenVersion();
     Alert.alert('Version reset! Restart the app to see the modal again.');
+  };
+
+  // Handle Update Modal close and trigger Motivation Modal if needed
+  const handleUpdateModalClose = async () => {
+    await handleClose();
+    // Small delay before showing motivation modal
+    setTimeout(() => {
+      triggerMotivationShow();
+    }, 500);
   };
 
   // State: Debug
@@ -723,7 +738,7 @@ const Dashboard: React.FC = () => {
                 </TouchableOpacity>
               </View>
             )}
-            <UpdateModal visible={showModal} onClose={handleClose} version={currentVersion} updates={updates} texts={modalTexts} />
+            <UpdateModal visible={showModal} onClose={handleUpdateModalClose} version={currentVersion} updates={updates} texts={modalTexts} />
           </Animated.View>
         </ScrollView>
 
