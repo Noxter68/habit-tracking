@@ -23,43 +23,45 @@ const modalTexts_fr: UpdateModalTexts = {
   getStarted: 'Commencer',
 };
 
-// Version 1.1.2 - English
-const updates_1_1_2_en: UpdateItem[] = [
+// Version 1.1.3 - English
+const updates_1_1_3_en: UpdateItem[] = [
   {
-    title: 'Account Deletion',
-    description: 'You can now permanently delete your account and all associated data directly from the settings menu.',
+    title: 'Subscription Modal Improvements',
+    description: 'Fixed subscription modal display issues and added Terms of Use and Privacy Policy links to comply with App Store requirements.',
   },
   {
-    title: 'Improved Animations in Habit Details',
-    description: 'Task checking is now instant and satisfying! New optimistic UI with smooth 3D button effects and beautiful Lottie animations - zero waiting time.',
+    title: 'Subscription Access in Settings',
+    description: 'You can now access subscription plans and manage your Premium subscription directly from the settings screen.',
   },
   {
-    title: 'Enhanced User Interface',
-    description: 'Improved visual feedback with 3D depth effects on buttons, smoother transitions, and more polished animations throughout the app.',
+    title: 'Customizable Motivation Modal',
+    description: 'Choose how often you want to see the daily motivation modal: once per day or every time you open the app. Configure it in settings to match your preferences.',
   },
   {
-    title: 'Daily/Weekly Task Logic Fix',
-    description: 'Fixed logic issues between daily and weekly task completion tracking - your progress is now accurately recorded for both frequency types.',
+    title: 'iPad Support Removed',
+    description: 'The app is now iPhone-only for a better optimized experience.',
   },
 ];
 
-// Version 1.1.2 - French
-const updates_1_1_2_fr: UpdateItem[] = [
+// Version 1.1.3 - French
+const updates_1_1_3_fr: UpdateItem[] = [
   {
-    title: 'Suppression de compte',
-    description: 'Vous pouvez maintenant supprimer définitivement votre compte et toutes les données associées directement depuis les paramètres.',
+    title: "Améliorations de la Modal d'Abonnement",
+    description:
+      "Correction des problèmes d'affichage de la modal d'abonnement et ajout des liens Conditions d'Utilisation et Politique de Confidentialité pour respecter les exigences de l'App Store.",
   },
   {
-    title: 'Animations Améliorés dans vos habitudes',
-    description: 'Cocher une tâche est maintenant instantané et plus satisfaisant !',
+    title: 'Accès Abonnement dans les Paramètres',
+    description: "Vous pouvez maintenant accéder aux plans d'abonnement et gérer votre abonnement Premium directement depuis l'écran des paramètres.",
   },
   {
-    title: 'Interface utilisateur améliorée',
-    description: "Retour visuel amélioré avec effets de profondeur 3D sur les boutons, transitions plus fluides et animations plus soignées dans toute l'application.",
+    title: 'Modal de Motivation Personnalisable',
+    description:
+      "Choisissez la fréquence d'affichage de la modal de motivation quotidienne : une fois par jour ou à chaque ouverture de l'application. Configurez-la dans les paramètres selon vos préférences.",
   },
   {
-    title: 'Correction logique tâches quotidiennes/hebdomadaires',
-    description: 'Correction des problèmes de logique entre le suivi des tâches quotidiennes et hebdomadaires - votre progression est maintenant enregistrée avec précision pour les deux types.',
+    title: 'Support iPad Retiré',
+    description: "L'application est maintenant uniquement disponible sur iPhone pour une expérience mieux optimisée.",
   },
 ];
 
@@ -77,8 +79,8 @@ export const getUpdatesForVersion = (version: string, locale: string = 'en'): Up
 
   // Map des versions disponibles
   const updatesMap: Record<string, UpdateItem[]> = {
-    updates_1_1_2_en: updates_1_1_2_en,
-    updates_1_1_2_fr: updates_1_1_2_fr,
+    updates_1_1_3_en: updates_1_1_3_en,
+    updates_1_1_3_fr: updates_1_1_3_fr,
   };
 
   return updatesMap[key] || updatesMap[`updates_${version.replace(/\./g, '_')}_en`] || [];
