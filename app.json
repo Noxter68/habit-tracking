@@ -8,6 +8,7 @@
     "icon": "./icons/icon/nuvoria_icon.png",
     "userInterfaceStyle": "light",
     "splash": {
+      "image": "./icons/icon/nuvoria_icon.png",
       "backgroundColor": "#ffffff",
       "resizeMode": "contain"
     },
