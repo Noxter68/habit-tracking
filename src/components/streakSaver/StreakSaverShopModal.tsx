@@ -1,9 +1,9 @@
 // src/components/streakSaver/StreakSaverShopModal.tsx
 import React, { useEffect, useState } from 'react';
-import { View, Text, Modal, Pressable, Image, ActivityIndicator } from 'react-native';
+import { View, Text, Modal, Pressable, Image, ActivityIndicator, Linking } from 'react-native';
 import Animated, { FadeIn, FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
-import { X, CheckCircle, XCircle } from 'lucide-react-native';
+import { X, CheckCircle, XCircle, Shield } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import tw from '@/lib/tailwind';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -151,16 +151,17 @@ export const StreakSaverShopModal: React.FC<StreakSaverShopModalProps> = ({ visi
 
           <Animated.View entering={FadeInDown.duration(400).springify()} style={tw`bg-white rounded-3xl overflow-hidden w-full max-w-md shadow-2xl`}>
             {/* Header avec gradient violet Amethyst */}
-            <LinearGradient colors={['#f3e8ff', '#e9d5ff']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`px-5 pt-5 pb-3 relative`}>
+            <LinearGradient colors={['#f3e8ff', '#e9d5ff']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`px-5 pt-5 pb-4 relative`}>
               <Pressable onPress={onClose} style={tw`absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/95 items-center justify-center shadow-sm`}>
                 <X size={18} color="#57534E" strokeWidth={2.5} />
               </Pressable>
 
               <Animated.View entering={ZoomIn.duration(600).springify()} style={tw`items-center`}>
-                <View style={tw`w-14 h-14 rounded-full bg-white items-center justify-center shadow-xl mb-2`}>
-                  <Image source={require('../../../assets/interface/streak-saver.png')} style={{ width: 32, height: 32 }} resizeMode="contain" />
+                <View style={tw`w-16 h-16 rounded-xl bg-white items-center justify-center shadow-lg mb-3`}>
+                  <Image source={require('../../../assets/interface/streak-saver.png')} style={{ width: 38, height: 38 }} resizeMode="contain" />
                 </View>
-                <Text style={tw`text-lg font-black text-purple-900`}>{t('streakSaver.shop.title')}</Text>
+                <Text style={tw`text-lg font-black text-purple-900 mb-1`}>{t('streakSaver.shop.title')}</Text>
+                <Text style={tw`text-xs text-purple-700/70 text-center`}>{t('streakSaver.shop.subtitle')}</Text>
               </Animated.View>
             </LinearGradient>
 
@@ -216,31 +217,49 @@ export const StreakSaverShopModal: React.FC<StreakSaverShopModalProps> = ({ visi
                           (isPurchasing || purchasing) && tw`opacity-50`,
                         ]}
                       >
-                        <LinearGradient colors={isPopular ? ['#faf5ff', '#FFFFFF'] : ['#FAFAF9', '#FFFFFF']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={tw`p-4`}>
-                          <View style={tw`flex-row items-center justify-between mb-3`}>
-                            <View style={tw`flex-row items-center flex-1`}>
-                              <View style={tw`w-12 h-12 rounded-xl bg-purple-50 items-center justify-center mr-3`}>
-                                <Image source={require('../../../assets/interface/streak-saver.png')} style={{ width: 28, height: 28 }} resizeMode="contain" />
-                              </View>
-                              <View style={tw`flex-1`}>
-                                <Text style={tw`text-base font-black text-stone-900`}>{t('streakSaver.shop.savers', { count: quantity })}</Text>
-                                {isPopular && (
-                                  <View style={tw`bg-purple-600 px-2.5 py-1 rounded-full mt-1 self-start`}>
-                                    <Text style={tw`text-white text-[9px] font-black`}>{t('streakSaver.shop.popular')}</Text>
-                                  </View>
-                                )}
-                              </View>
+                        {/* Badge Popular */}
+                        {isPopular && (
+                          <View style={tw`absolute top-0 right-0 bg-purple-600 px-2.5 py-0.5 rounded-bl-lg z-10`}>
+                            <Text style={tw`text-white text-[9px] font-black`}>{t('streakSaver.shop.popular')}</Text>
+                          </View>
+                        )}
+
+                        <LinearGradient
+                          colors={isPopular ? ['#faf5ff', '#FFFFFF'] : ['#FAFAF9', '#FFFFFF']}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 0, y: 1 }}
+                          style={tw`p-3.5`}
+                        >
+                          <View style={tw`flex-row items-center mb-4`}>
+                            <View style={tw`w-12 h-12 rounded-xl ${isPopular ? 'bg-purple-100' : 'bg-purple-50'} items-center justify-center mr-3`}>
+                              <Image source={require('../../../assets/interface/streak-saver.png')} style={{ width: 30, height: 30 }} resizeMode="contain" />
                             </View>
 
-                            <View style={tw`items-end ml-2`}>
-                              <Text style={tw`text-xl font-black text-stone-900`}>{pkg.product.priceString}</Text>
-                              {savings && <Text style={tw`text-[10px] font-bold text-purple-600 mt-0.5`}>{savings}</Text>}
+                            <View style={tw`flex-1`}>
+                              <Text style={tw`text-[15px] font-black text-stone-900`}>{t('streakSaver.shop.savers', { count: quantity })}</Text>
+                              <Text style={tw`text-[11px] text-stone-500`}>
+                                {t('streakSaver.shop.receiveDescription', { count: quantity })}
+                              </Text>
+                            </View>
+
+                            <View style={tw`items-end`}>
+                              <Text style={tw`text-lg font-black text-stone-900`}>{pkg.product.priceString}</Text>
+                              {savings && <Text style={tw`text-[10px] font-bold text-purple-600`}>{savings}</Text>}
                             </View>
                           </View>
 
-                          {/* Bouton d'achat avec gradient Amethyst */}
-                          <LinearGradient colors={['#8b5cf6', '#7c3aed']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={tw`py-2.5 rounded-lg items-center`}>
-                            {isPurchasing ? <ActivityIndicator size="small" color="white" /> : <Text style={tw`text-white text-xs font-black`}>{t('streakSaver.shop.buyNow')}</Text>}
+                          {/* Bouton d'achat */}
+                          <LinearGradient
+                            colors={['#8b5cf6', '#7c3aed']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={tw`py-2.5 rounded-lg items-center`}
+                          >
+                            {isPurchasing ? (
+                              <ActivityIndicator size="small" color="white" />
+                            ) : (
+                              <Text style={tw`text-white text-xs font-bold`}>{t('streakSaver.shop.buyNow')}</Text>
+                            )}
                           </LinearGradient>
                         </LinearGradient>
                       </Pressable>
@@ -249,7 +268,26 @@ export const StreakSaverShopModal: React.FC<StreakSaverShopModalProps> = ({ visi
                 })
               )}
 
-              {!loading && packages.length > 0 && <Text style={tw`text-[10px] text-center text-stone-500 mt-2`}>{t('streakSaver.shop.footer')}</Text>}
+              {/* Footer */}
+              {!loading && packages.length > 0 && (
+                <>
+                  <View style={tw`flex-row items-center justify-center mt-2`}>
+                    <Shield size={12} color="#a1a1aa" strokeWidth={2} />
+                    <Text style={tw`text-[10px] text-stone-400 ml-1`}>{t('streakSaver.shop.footer')}</Text>
+                  </View>
+
+                  {/* Legal Links */}
+                  <View style={tw`flex-row items-center justify-center mt-2`}>
+                    <Pressable onPress={() => Linking.openURL('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')}>
+                      <Text style={tw`text-[10px] text-stone-400 underline`}>{t('paywall.termsOfUse')}</Text>
+                    </Pressable>
+                    <Text style={tw`text-[10px] text-stone-400 mx-1.5`}>•</Text>
+                    <Pressable onPress={() => Linking.openURL('https://angry-cinnamon-945.notion.site/Privacy-Policy-Nuvoria-2b777cf8858880aca7befe0e62643bcd?source=copy_link')}>
+                      <Text style={tw`text-[10px] text-stone-400 underline`}>{t('paywall.privacyPolicy')}</Text>
+                    </Pressable>
+                  </View>
+                </>
+              )}
             </View>
           </Animated.View>
         </Animated.View>

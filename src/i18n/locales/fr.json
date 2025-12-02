@@ -331,6 +331,10 @@
     "holidayDaysRemaining": "Se termine le {{date}} • {{count}} jours restants",
     "active": "Actif",
     "streakSavers": "Sauvegardes de série",
+    "buyStreakSavers": "Acheter des Sauvegardes",
+    "buyStreakSaversSubtitle": "Protégez vos séries des jours manqués",
+    "viewPaywall": "Voir les offres Premium",
+    "viewPaywallSubtitle": "Découvrir les fonctionnalités et tarifs",
     "support": "Support",
     "help": "Aide",
     "version": "Version",
@@ -2244,6 +2248,8 @@
     ],
     "shop": {
       "title": "Sauveurs de Série",
+      "subtitle": "Protégez votre progression des jours manqués",
+      "description": "Choisissez un pack et recevez vos Sauveurs instantanément",
       "yourInventory": "Votre inventaire",
       "monthlyRefill": "Recharge mensuelle",
       "refillDate": "Prochaine recharge : {{date}}",
@@ -2262,7 +2268,8 @@
       "savers_other": "{{count}} Sauveurs",
       "footer": "Restaurez les jours manqués sous 24h",
       "loading": "Chargement...",
-      "savers": "{{count}} Sauvegardes"
+      "savers": "{{count}} Sauvegardes",
+      "receiveDescription": "Vous recevrez {{count}} Sauveurs de série"
     }
   },
   "taskManager": {

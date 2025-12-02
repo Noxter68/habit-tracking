@@ -684,6 +684,28 @@ const SettingsScreen: React.FC = () => {
                     </View>
                   )
                 }
+              />
+              {!isPremium && (
+                <SettingsItem
+                  icon="crown"
+                  title={t('settings.viewPaywall')}
+                  subtitle={t('settings.viewPaywallSubtitle')}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    navigation.navigate('Paywall', { source: 'settings' });
+                  }}
+                  trailing={<Icon name="chevron-forward" size={20} color="#52525B" />}
+                />
+              )}
+              <SettingsItem
+                icon="sparkles"
+                title={t('settings.buyStreakSavers')}
+                subtitle={t('settings.buyStreakSaversSubtitle')}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setShowStreakSaverShop(true);
+                }}
+                trailing={<Icon name="chevron-forward" size={20} color="#52525B" />}
                 isLast
               />
             </SettingsSection>

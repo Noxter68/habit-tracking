@@ -256,6 +256,10 @@
     "holidayDaysRemaining": "Ends on {{date}} • {{count}} days remaining",
     "active": "Active",
     "streakSavers": "Streak Savers",
+    "buyStreakSavers": "Buy Streak Savers",
+    "buyStreakSaversSubtitle": "Protect your streaks from missed days",
+    "viewPaywall": "View Premium Plans",
+    "viewPaywallSubtitle": "See all premium features and pricing",
     "support": "Support",
     "help": "Help",
     "version": "Version",
@@ -2198,6 +2202,8 @@
     ],
     "shop": {
       "title": "Streak Savers",
+      "subtitle": "Protect your progress from missed days",
+      "description": "Choose a pack and receive your Streak Savers instantly",
       "yourInventory": "Your Inventory",
       "monthlyRefill": "Monthly Refill",
       "refillDate": "Next refill: {{date}}",
@@ -2216,7 +2222,8 @@
       "savers_other": "{{count}} Savers",
       "footer": "Restore missed days within 24h",
       "loading": "Loading...",
-      "savers": "{{count}} Savers"
+      "savers": "{{count}} Savers",
+      "receiveDescription": "You will receive {{count}} Streak Savers"
     }
   },
   "taskManager": {
