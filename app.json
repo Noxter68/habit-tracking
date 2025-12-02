@@ -19,7 +19,6 @@
         "resizeMode": "contain"
       },
       "supportsTablet": false,
-      "devices": ["iphone"],
       "bundleIdentifier": "com.davidplanchon.nuvoria",
       "usesAppleSignIn": true,
       "buildNumber": "14",
