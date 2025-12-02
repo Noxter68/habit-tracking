@@ -19,7 +19,7 @@
         "resizeMode": "contain"
       },
       "supportsTablet": false,
-      "requireFullScreen": true,
+      "devices": ["iphone"],
       "bundleIdentifier": "com.davidplanchon.nuvoria",
       "usesAppleSignIn": true,
       "buildNumber": "14",
