@@ -1,6 +1,6 @@
 // src/screens/PaywallScreen.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, ScrollView, Alert, ActivityIndicator, ImageBackground, StyleSheet } from 'react-native';
+import { View, Text, Pressable, ScrollView, Alert, ActivityIndicator, ImageBackground, StyleSheet, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -249,7 +249,9 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
 
           {/* Features List */}
           <Animated.View entering={FadeInDown.delay(300)} style={tw`mb-8`}>
-            <Text style={tw`text-sm font-bold text-white/90 mb-4 tracking-wide`}>{t('paywall.includedIn', { plan: isYearlySelected ? t('paywall.plans.yearly').toUpperCase() : t('paywall.plans.monthly').toUpperCase() })}</Text>
+            <Text style={tw`text-sm font-bold text-white/90 mb-4 tracking-wide`}>
+              {t('paywall.includedIn', { plan: isYearlySelected ? t('paywall.plans.yearly').toUpperCase() : t('paywall.plans.monthly').toUpperCase() })}
+            </Text>
 
             <View style={tw`gap-3`}>
               {displayFeatures.map((feature, index) => {
@@ -292,6 +294,17 @@ const PaywallScreen: React.FC<PaywallScreenProps> = ({ route }) => {
           <Animated.View entering={FadeInUp.delay(600)} style={tw`items-center mb-4`}>
             <Pressable onPress={handleRestore} disabled={loading}>
               <Text style={tw`text-sm text-white/80 font-medium underline`}>{t('paywall.restore')}</Text>
+            </Pressable>
+          </Animated.View>
+
+          {/* Legal Links */}
+          <Animated.View entering={FadeInUp.delay(700)} style={tw`flex-row items-center justify-center mb-4`}>
+            <Pressable onPress={() => Linking.openURL('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')}>
+              <Text style={tw`text-xs text-white/60 underline`}>{t('paywall.termsOfUse')}</Text>
+            </Pressable>
+            <Text style={tw`text-xs text-white/60 mx-2`}>•</Text>
+            <Pressable onPress={() => Linking.openURL('https://angry-cinnamon-945.notion.site/Privacy-Policy-Nuvoria-2b777cf8858880aca7befe0e62643bcd?source=copy_link')}>
+              <Text style={tw`text-xs text-white/60 underline`}>{t('paywall.privacyPolicy')}</Text>
             </Pressable>
           </Animated.View>
         </ScrollView>
