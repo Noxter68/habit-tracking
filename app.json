@@ -21,6 +21,11 @@
       "bundleIdentifier": "com.davidplanchon.nuvoria",
       "usesAppleSignIn": true,
       "buildNumber": "14",
+      "splash": {
+        "image": "./icons/icon/nuvoria_icon.png",
+        "backgroundColor": "#ffffff",
+        "resizeMode": "contain"
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": ["remote-notification"],
