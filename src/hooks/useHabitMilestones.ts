@@ -2,26 +2,47 @@
  * useHabitMilestones.ts
  *
  * Hook pour charger les milestones debloques d'une habitude
- * Utilise current_tier_level stocké directement dans habits
+ * Calcule basé sur l'âge de l'habitude (jours depuis création)
  */
 
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useHabits } from '@/context/HabitContext';
-import { Habit } from '@/types';
+
+// Jours requis pour chaque milestone (doit correspondre à habit_milestones)
+const MILESTONE_DAYS = [3, 7, 14, 21, 30, 45, 60, 75, 90, 100, 150, 200, 250, 300, 365];
+
+/**
+ * Calcule le nombre de milestones débloqués basé sur l'âge de l'habitude
+ * @param createdAt - Date de création de l'habitude
+ * @returns Le nombre de milestones débloqués
+ */
+function calculateMilestonesFromAge(createdAt: Date | undefined): number {
+  if (!createdAt) return 0;
+
+  const created = new Date(createdAt);
+  const today = new Date();
+  created.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+
+  const habitAge = Math.floor((today.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+  // Compter combien de milestones sont débloqués basé sur l'âge
+  return MILESTONE_DAYS.filter(days => days <= habitAge).length;
+}
 
 /**
  * Hook pour obtenir le nombre de milestones debloques pour une habitude
  * @param habitId - L'identifiant de l'habitude
- * @returns Le nombre de milestones debloques (current_tier_level)
+ * @returns Le nombre de milestones debloques
  */
 export function useHabitMilestonesCount(habitId: string): number {
   const { habits } = useHabits();
 
   const count = useMemo(() => {
     const habit = habits.find((h) => h.id === habitId);
-    return habit?.currentTierLevel ?? 0;
+    return calculateMilestonesFromAge(habit?.createdAt);
   }, [habits, habitId]);
 
   return count;
@@ -29,7 +50,7 @@ export function useHabitMilestonesCount(habitId: string): number {
 
 /**
  * Hook pour charger les milestones debloques pour plusieurs habitudes
- * Utilise les habits déjà chargés dans le context
+ * Calcule basé sur l'âge de l'habitude (jours depuis création)
  * @param habitIds - Liste des identifiants d'habitudes
  * @returns Map de habitId vers le nombre de milestones debloques
  */
@@ -40,7 +61,7 @@ export function useMultipleHabitMilestonesCount(habitIds: string[]): Record<stri
     const result: Record<string, number> = {};
     habitIds.forEach((id) => {
       const habit = habits.find((h) => h.id === id);
-      result[id] = habit?.currentTierLevel ?? 0;
+      result[id] = calculateMilestonesFromAge(habit?.createdAt);
     });
     return result;
   }, [habits, habitIds.join(',')]);

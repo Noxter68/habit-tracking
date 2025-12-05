@@ -46,3 +46,6 @@ yarn-error.*
 .env.production
 .env*
 
+# Project notes
+project.md
+
