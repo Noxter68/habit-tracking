@@ -293,13 +293,14 @@ export class HabitProgressionService {
       }
 
       // 3. Récupérer les transactions XP existantes pour cette habitude (milestones déjà récompensés)
+      // Note: le pattern doit correspondre à "Milestone: {title}" (avec espace après les deux-points)
       const { data: existingTransactions, error: txError } = await supabase
         .from('xp_transactions')
         .select('description')
         .eq('user_id', userId)
         .eq('habit_id', habitId)
         .eq('source_type', 'achievement_unlock')
-        .like('description', 'Milestone:%');
+        .like('description', 'Milestone: %');
 
       if (txError) {
         Logger.error('Error fetching xp_transactions:', txError);
@@ -309,10 +310,10 @@ export class HabitProgressionService {
       // Extraire les titres des milestones déjà récompensés
       const rewardedTitles = new Set<string>();
       existingTransactions?.forEach((tx) => {
-        // Format: "Milestone: {title}"
-        const match = tx.description?.match(/^Milestone:\s*(.+)$/);
+        // Format: "Milestone: {title}" (avec espace après les deux-points)
+        const match = tx.description?.match(/^Milestone:\s+(.+)$/);
         if (match) {
-          rewardedTitles.add(match[1]);
+          rewardedTitles.add(match[1].trim());
         }
       });
 
