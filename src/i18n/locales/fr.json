@@ -25,7 +25,8 @@
     "xp": "XP",
     "premium": "Premium",
     "ok": "OK",
-    "tier": "Rang"
+    "tier": "Rang",
+    "connectionError": "Problème de connexion"
   },
   "navigation": {
     "dashboard": "Accueil",

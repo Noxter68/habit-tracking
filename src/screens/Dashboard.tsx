@@ -472,9 +472,9 @@ const Dashboard: React.FC = () => {
   // ============================================================================
 
   return (
-    <ImageBackground source={require('../../assets/interface/textures/texture-white.png')} style={tw`flex-1`} imageStyle={{ opacity: 0.2 }} resizeMode="repeat">
-      <SafeAreaView style={tw`flex-1 bg-transparent mt-4 `} edges={['top']}>
-        <StatusBar barStyle="dark-content" />
+    <ImageBackground source={require('../../assets/interface/textures/texture-white.png')} style={tw`flex-1 bg-white`} imageStyle={{ opacity: 0.2 }} resizeMode="repeat">
+      <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
+      <SafeAreaView style={tw`flex-1 bg-transparent`} edges={['top']}>
 
         <ScrollView
           style={tw`flex-1 px-5`}

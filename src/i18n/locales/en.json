@@ -24,7 +24,8 @@
     "level": "Level",
     "xp": "XP",
     "premium": "Premium",
-    "tier": "Tier"
+    "tier": "Tier",
+    "connectionError": "Connection issue"
   },
   "navigation": {
     "dashboard": "Home",
