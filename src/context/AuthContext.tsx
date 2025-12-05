@@ -41,7 +41,7 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 // ============================================================================
 // IMPORTS - Services
 // ============================================================================
-import { supabase } from '../lib/supabase';
+import { supabase, isNetworkError, isAuthError } from '../lib/supabase';
 import { RevenueCatService } from '@/services/RevenueCatService';
 import { PushTokenService } from '@/services/pushTokenService';
 import { OnboardingService } from '@/services/onboardingService';
@@ -68,6 +68,8 @@ interface AuthContextType {
   username: string | null;
   /** Indicateur de chargement */
   loading: boolean;
+  /** true si erreur de connexion reseau/serveur */
+  hasConnectionError: boolean;
   /** Inscription par email */
   signUp: (email: string, password: string, username?: string) => Promise<void>;
   /** Connexion par email */
@@ -116,6 +118,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [hasConnectionError, setHasConnectionError] = useState(false);
 
   // ==========================================================================
   // REFS - Prevention des race conditions
@@ -225,8 +228,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   /**
    * Recupere et valide la session courante
    * Rafraichit automatiquement si proche de l'expiration
+   * IMPORTANT: Ne deconnecte pas l'utilisateur en cas d'erreur reseau
    *
-   * @returns Session valide ou null
+   * @returns Session valide, session actuelle (si erreur reseau), ou null
    */
   const getValidSession = async (): Promise<Session | null> => {
     if (sessionRefreshInProgress.current) {
@@ -245,9 +249,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } = await supabase.auth.getSession();
 
       if (error) {
+        // Si erreur reseau, on garde la session actuelle et on signale l'erreur
+        if (isNetworkError(error)) {
+          Logger.warn('[Auth] Network error during session check, keeping current session');
+          setHasConnectionError(true);
+          return session; // Retourne la session actuelle, pas null
+        }
         Logger.error('[Auth] Session error:', error);
+        setHasConnectionError(false);
         return null;
       }
+
+      // Connexion OK, on efface l'erreur
+      setHasConnectionError(false);
 
       if (!currentSession) {
         Logger.debug('[Auth] No session');
@@ -271,10 +285,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             error: refreshError,
           } = await supabase.auth.refreshSession();
 
-          if (refreshError || !newSession) {
+          if (refreshError) {
+            // Si erreur reseau pendant le refresh, on garde la session actuelle
+            if (isNetworkError(refreshError)) {
+              Logger.warn('[Auth] Network error during refresh, keeping current session');
+              setHasConnectionError(true);
+              return currentSession;
+            }
+            // Si erreur d'auth (token invalide), on deconnecte
+            if (isAuthError(refreshError)) {
+              Logger.error('[Auth] Auth error during refresh, signing out');
+              await supabase.auth.signOut();
+              return null;
+            }
             Logger.error('[Auth] Refresh failed:', refreshError);
-            await supabase.auth.signOut();
-            return null;
+            return currentSession; // Garde la session en attendant
+          }
+
+          if (!newSession) {
+            Logger.error('[Auth] Refresh returned no session');
+            return currentSession;
           }
 
           Logger.debug('[Auth] Session refreshed');
@@ -283,7 +313,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       return currentSession;
-    } catch (error) {
+    } catch (error: any) {
+      // Erreur inattendue - verifier si c'est reseau
+      if (isNetworkError(error)) {
+        Logger.warn('[Auth] Network error (catch), keeping current session');
+        setHasConnectionError(true);
+        return session;
+      }
       Logger.error('[Auth] Session check failed:', error);
       return null;
     } finally {
@@ -365,23 +401,43 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         const {
           data: { session: currentSession },
+          error,
         } = await supabase.auth.getSession();
 
         if (!isMounted) return;
 
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
+        // Si erreur reseau, on garde l'etat actuel et on signale l'erreur
+        if (error && isNetworkError(error)) {
+          Logger.warn('[Auth] Network error during init, keeping current state');
+          setHasConnectionError(true);
+          // Ne pas modifier user/session, garder l'etat precedent
+        } else if (error) {
+          Logger.error('[Auth] Init error:', error);
+          setSession(null);
+          setUser(null);
+          setHasConnectionError(false);
+        } else {
+          setHasConnectionError(false);
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
 
-        if (currentSession?.user?.id) {
-          await fetchUserProfile(currentSession.user.id);
+          if (currentSession?.user?.id) {
+            await fetchUserProfile(currentSession.user.id);
+          }
         }
 
         Logger.debug('[Auth] Initialized');
-      } catch (error) {
+      } catch (error: any) {
         Logger.error('[Auth] Init error:', error);
         if (isMounted) {
-          setSession(null);
-          setUser(null);
+          // Si erreur reseau, on ne deconnecte pas
+          if (isNetworkError(error)) {
+            Logger.warn('[Auth] Network error (catch) during init');
+            setHasConnectionError(true);
+          } else {
+            setSession(null);
+            setUser(null);
+          }
         }
       } finally {
         if (isMounted) {
@@ -426,6 +482,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   /**
    * Verifie la session quand l'app revient au premier plan
+   * Ne deconnecte pas l'utilisateur en cas d'erreur reseau
    */
   useEffect(() => {
     let lastCheck = 0;
@@ -445,13 +502,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       const validSession = await getValidSession();
 
-      if (!validSession) {
+      // Si validSession est null ET qu'on n'a pas d'erreur de connexion, c'est une vraie deconnexion
+      // Si on a une erreur de connexion, getValidSession() a deja retourne la session actuelle
+      if (!validSession && !hasConnectionError) {
         Logger.warn('[Auth] Invalid session, signing out...');
         setSession(null);
         setUser(null);
         setUsername(null);
         setHasCompletedOnboarding(false);
-      } else if (validSession !== session) {
+      } else if (validSession && validSession !== session) {
         setSession(validSession);
         setUser(validSession.user);
       }
@@ -459,7 +518,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const subscription = AppState.addEventListener('change', handleAppStateChange);
     return () => subscription.remove();
-  }, [user, session]);
+  }, [user, session, hasConnectionError]);
 
   // ==========================================================================
   // CALLBACKS - Methodes d'authentification
@@ -643,6 +702,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         username,
         session,
         loading,
+        hasConnectionError,
         signUp,
         signIn,
         signInWithGoogle,

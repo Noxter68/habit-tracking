@@ -95,6 +95,99 @@ export async function isSessionValid(): Promise<boolean> {
   }
 }
 
+// ============================================================================
+// Helper pour détecter les erreurs réseau/connexion
+// ============================================================================
+
+/**
+ * Vérifie si une erreur est une erreur réseau/connexion
+ * (pas une erreur d'authentification ou de données)
+ */
+export function isNetworkError(error: any): boolean {
+  if (!error) return false;
+
+  const errorMessage = error.message?.toLowerCase() || '';
+  const errorCode = error.code?.toLowerCase() || '';
+
+  // Erreurs réseau communes
+  const networkErrorPatterns = [
+    'network request failed',
+    'network error',
+    'failed to fetch',
+    'fetch failed',
+    'timeout',
+    'econnrefused',
+    'enotfound',
+    'econnreset',
+    'etimedout',
+    'socket hang up',
+    'dns',
+    'unable to resolve host',
+    'no internet',
+    'offline',
+    'unreachable',
+  ];
+
+  // Vérifier si le message ou le code correspond à une erreur réseau
+  for (const pattern of networkErrorPatterns) {
+    if (errorMessage.includes(pattern) || errorCode.includes(pattern)) {
+      return true;
+    }
+  }
+
+  // Codes d'erreur HTTP qui indiquent un problème serveur/réseau (pas auth)
+  const status = error.status || error.statusCode;
+  if (status) {
+    // 5xx = erreur serveur, 0 = pas de réponse
+    if (status >= 500 || status === 0) {
+      return true;
+    }
+  }
+
+  // TypeError souvent lié à fetch qui échoue
+  if (error.name === 'TypeError' && errorMessage.includes('fetch')) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Vérifie si une erreur est une erreur d'authentification
+ * (session expirée, token invalide, etc.)
+ */
+export function isAuthError(error: any): boolean {
+  if (!error) return false;
+
+  const errorMessage = error.message?.toLowerCase() || '';
+  const status = error.status || error.statusCode;
+
+  // 401 = non autorisé, 403 = interdit
+  if (status === 401 || status === 403) {
+    return true;
+  }
+
+  // Messages d'erreur d'auth
+  const authErrorPatterns = [
+    'jwt expired',
+    'invalid token',
+    'token expired',
+    'session expired',
+    'refresh token',
+    'unauthorized',
+    'invalid claim',
+    'not authenticated',
+  ];
+
+  for (const pattern of authErrorPatterns) {
+    if (errorMessage.includes(pattern)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 // Database types
 export interface Profile {
   id: string;

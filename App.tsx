@@ -40,6 +40,10 @@ import { SubscriptionProvider } from './src/context/SubscriptionContext';
 import { EpicLevelUpModal } from '@/components/dashboard/EpicLevelUpModal';
 import BeautifulLoader from '@/components/BeautifulLoader';
 import CustomTabBar from '@/components/CustomTabBar';
+import { ConnectionToast } from '@/components/ConnectionToast';
+
+// Hooks
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 
 // Utils & Config
 import { Config } from './src/config';
@@ -170,11 +174,15 @@ function MainTabs() {
 // ============================================
 
 function AppNavigator() {
-  const { user, loading: authLoading, hasCompletedOnboarding } = useAuth();
+  const { user, loading: authLoading, hasCompletedOnboarding, hasConnectionError } = useAuth();
+  const networkStatus = useNetworkStatus();
   const [isFirstLaunch, setIsFirstLaunch] = useState<boolean | null>(null);
   const [isCheckingFirstLaunch, setIsCheckingFirstLaunch] = useState(true);
   const [minLoadingTimePassed, setMinLoadingTimePassed] = useState(false);
   const [languageInitialized, setLanguageInitialized] = useState(false);
+
+  // Combine les erreurs de connexion : soit du réseau, soit de Supabase
+  const showConnectionError = hasConnectionError || networkStatus.hasConnectionIssue;
 
   // ============================================================================
   // INITIALIZATION
@@ -243,7 +251,12 @@ function AppNavigator() {
   // ============================================================================
 
   if (!canShowUI) {
-    return <BeautifulLoader />;
+    return (
+      <>
+        <BeautifulLoader />
+        <ConnectionToast visible={showConnectionError} />
+      </>
+    );
   }
 
   // ============================================================================
@@ -252,9 +265,12 @@ function AppNavigator() {
 
   if (!user) {
     return (
-      <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
-        <Stack.Screen name="Auth" component={AuthScreen} />
-      </Stack.Navigator>
+      <>
+        <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
+          <Stack.Screen name="Auth" component={AuthScreen} />
+        </Stack.Navigator>
+        <ConnectionToast visible={showConnectionError} />
+      </>
     );
   }
 
@@ -316,6 +332,7 @@ function AppNavigator() {
       </Stack.Navigator>
 
       <EpicLevelUpModal />
+      <ConnectionToast visible={showConnectionError} />
     </>
   );
 }
