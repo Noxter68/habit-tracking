@@ -134,14 +134,15 @@ export const LevelUpProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       const newAchievement = getAchievementByLevel(stats.level);
 
+      hasShownForLevel.current.add(stats.level);
+
       setLevelUpData({
         newLevel: stats.level,
         previousLevel: previousLevelRef.current,
         achievement: newAchievement,
       });
-
       setShowLevelUpModal(true);
-      hasShownForLevel.current.add(stats.level);
+
       previousLevelRef.current = stats.level;
     } else if (stats.level !== previousLevelRef.current) {
       // Met a jour la reference si le niveau a change

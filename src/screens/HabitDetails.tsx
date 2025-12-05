@@ -16,7 +16,7 @@
  * - Support des habitudes hebdomadaires
  */
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, Pressable, Dimensions, StatusBar, ActivityIndicator, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -24,7 +24,6 @@ import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, FadeInUp, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ArrowLeft, Zap, Trophy } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -40,6 +39,7 @@ import { DebugButton } from '@/components/debug/DebugButton';
 
 import { useHabits } from '@/context/HabitContext';
 import { useAuth } from '@/context/AuthContext';
+import { useStats } from '@/context/StatsContext';
 
 import { useHabitDetails } from '@/hooks/useHabitDetails';
 import { useStreakSaver } from '@/hooks/useStreakSaver';
@@ -96,6 +96,7 @@ const HabitDetails: React.FC = () => {
   const route = useRoute<RouteProps>();
   const { user } = useAuth();
   const { habits, toggleTask, refreshHabits } = useHabits();
+  const { updateStatsOptimistically } = useStats();
 
   // ============================================================================
   // HOOKS - State
@@ -148,6 +149,7 @@ const HabitDetails: React.FC = () => {
   // ============================================================================
 
   const heroScale = useSharedValue(1);
+  const statsUpdatedRef = useRef(false);
 
   // ============================================================================
   // VARIABLES DERIVEES - Paramètres de route
@@ -220,19 +222,41 @@ const HabitDetails: React.FC = () => {
   /**
    * Vérifie si la semaine est complétée pour les habitudes hebdomadaires
    * Utilise les semaines calendaires (lundi à dimanche)
+   *
+   * Note: Prend en compte l'état optimistic (todayTasks) pour le jour actuel
    */
   const isWeekCompleted = useMemo(() => {
     if (habit?.frequency !== 'weekly') return false;
 
-    const today = new Date();
-    const weekStart = getWeekStart(today);
+    const todayDate = new Date();
+    const weekStart = getWeekStart(todayDate);
     const createdAt = new Date(habit.createdAt);
     createdAt.setHours(0, 0, 0, 0);
+    const todayStr = getLocalDateString(todayDate);
+
+    Logger.debug('isWeekCompleted check:', {
+      frequency: habit.frequency,
+      weekStart: weekStart.toISOString(),
+      dailyTasksKeys: Object.keys(habit.dailyTasks || {}),
+      todayStr,
+      todayTasksAllCompleted: todayTasks.allCompleted,
+    });
+
+    // D'abord vérifier si aujourd'hui est complété (état optimistic)
+    if (todayTasks.allCompleted) {
+      Logger.debug('Week is completed! Today is complete (optimistic)');
+      return true;
+    }
 
     // Vérifie chaque jour de la semaine calendaire (lundi à dimanche)
     for (let i = 0; i < 7; i++) {
       const checkDate = new Date(weekStart);
       checkDate.setDate(weekStart.getDate() + i);
+
+      // Ignore les jours dans le futur
+      if (checkDate.getTime() > todayDate.getTime()) {
+        continue;
+      }
 
       // Ignore les jours avant la création de l'habitude
       if (checkDate.getTime() < createdAt.getTime()) {
@@ -240,15 +264,23 @@ const HabitDetails: React.FC = () => {
       }
 
       const dateStr = getLocalDateString(checkDate);
+
+      // Pour aujourd'hui, utiliser l'état optimistic (déjà vérifié ci-dessus)
+      if (dateStr === todayStr) {
+        continue;
+      }
+
       const dayData = habit.dailyTasks?.[dateStr];
 
       if (dayData?.allCompleted) {
+        Logger.debug('Week is completed! Found on:', dateStr);
         return true;
       }
     }
 
+    Logger.debug('Week is NOT completed');
     return false;
-  }, [habit]);
+  }, [habit, todayTasks.allCompleted]);
 
   const completedTasksToday = todayTasks.completedTasks?.length || 0;
   const totalTasks = habit?.tasks?.length || 0;
@@ -257,7 +289,7 @@ const HabitDetails: React.FC = () => {
   // HOOKS - Données de progression
   // ============================================================================
 
-  const { tierInfo, nextTier, milestoneStatus, performanceMetrics, refreshProgression, loading } = useHabitDetails(habit?.id || '', user?.id || '', habit?.currentStreak || 0, habit?.currentTierLevel, habit?.createdAt);
+  const { tierInfo, nextTier, milestoneStatus, newlyUnlockedMilestones, milestoneXpAwarded, performanceMetrics, refreshProgression, loading } = useHabitDetails(habit?.id || '', user?.id || '', habit?.currentStreak || 0, habit?.currentTierLevel, habit?.createdAt);
 
   // ============================================================================
   // VARIABLES DERIVEES - Métriques
@@ -459,41 +491,19 @@ const HabitDetails: React.FC = () => {
 
   /**
    * Ferme le modal de célébration de milestone (1 seul nouveau)
+   * Note: L'XP a déjà été octroyé dans xp_transactions, donc pas besoin de sauvegarder localement
    */
   const handleMilestoneModalClose = useCallback(() => {
     setShowMilestoneModal(false);
-    // Sauvegarder que ce milestone a été vu
-    if (celebrationMilestone && habit) {
-      const key = `seen_milestones_${habit.id}`;
-      AsyncStorage.getItem(key).then((data) => {
-        const seenMilestones: string[] = data ? JSON.parse(data) : [];
-        if (!seenMilestones.includes(celebrationMilestone.title)) {
-          seenMilestones.push(celebrationMilestone.title);
-          AsyncStorage.setItem(key, JSON.stringify(seenMilestones));
-        }
-      });
-    }
-  }, [celebrationMilestone, habit]);
+  }, []);
 
   /**
    * Ferme le modal récap de milestones (plusieurs à rattraper)
+   * Note: L'XP a déjà été octroyé dans xp_transactions, donc pas besoin de sauvegarder localement
    */
   const handleMilestoneRecapModalClose = useCallback(() => {
     setShowMilestoneRecapModal(false);
-    // Sauvegarder tous les milestones du récap comme vus
-    if (recapMilestones.length > 0 && habit) {
-      const key = `seen_milestones_${habit.id}`;
-      AsyncStorage.getItem(key).then((data) => {
-        const seenMilestones: string[] = data ? JSON.parse(data) : [];
-        recapMilestones.forEach(({ milestone }) => {
-          if (!seenMilestones.includes(milestone.title)) {
-            seenMilestones.push(milestone.title);
-          }
-        });
-        AsyncStorage.setItem(key, JSON.stringify(seenMilestones));
-      });
-    }
-  }, [recapMilestones, habit]);
+  }, []);
 
   /**
    * Affiche le modal de test milestone (single)
@@ -527,64 +537,58 @@ const HabitDetails: React.FC = () => {
   // HOOKS - useEffect
   // ============================================================================
 
-  // Détecte et affiche les milestones non vus à l'ouverture de l'écran
+  /**
+   * Affiche les milestones nouvellement débloqués
+   */
   useEffect(() => {
-    const checkUnseenMilestones = async () => {
-      if (!habit || !milestoneStatus?.unlocked || milestoneStatus.unlocked.length === 0) {
-        return;
-      }
-
-      const key = `seen_milestones_${habit.id}`;
-      const data = await AsyncStorage.getItem(key);
-      const seenMilestones: string[] = data ? JSON.parse(data) : [];
-
-      // Trouve tous les milestones débloqués qui n'ont pas été vus
-      const unlockedMilestones = milestoneStatus.unlocked;
-      const allMilestones = milestoneStatus.all;
-
-      const unseenMilestones: MilestoneWithIndex[] = [];
-
-      for (const milestone of unlockedMilestones) {
-        if (!seenMilestones.includes(milestone.title)) {
-          const index = allMilestones.findIndex((m) => m.title === milestone.title);
-          unseenMilestones.push({ milestone, index: index >= 0 ? index : 0 });
-        }
-      }
-
-      Logger.debug('Found unseen milestones:', unseenMilestones.length);
-
-      if (unseenMilestones.length === 0) {
-        // Aucun milestone à afficher
-        return;
-      } else if (unseenMilestones.length === 1) {
-        // Un seul milestone non vu → modal épique
-        const { milestone, index } = unseenMilestones[0];
-        setCelebrationMilestone(milestone);
-        setCelebrationMilestoneIndex(index);
-        setShowMilestoneModal(true);
-      } else {
-        // Plusieurs milestones non vus → modal récap
-        setRecapMilestones(unseenMilestones);
-        setShowMilestoneRecapModal(true);
-      }
-    };
-
-    // Attendre que le loading soit terminé avant de vérifier
-    if (!loading) {
-      checkUnseenMilestones();
+    if (!habit || !newlyUnlockedMilestones || newlyUnlockedMilestones.length === 0) {
+      return;
     }
-  }, [habit?.id, milestoneStatus?.unlocked, loading]);
 
-  // Détecte et célèbre les montées de tier
+    const allMilestones = milestoneStatus?.all || [];
+
+    // Convertir en MilestoneWithIndex pour les modals
+    const milestonesWithIndex: MilestoneWithIndex[] = newlyUnlockedMilestones.map((milestone) => {
+      const index = allMilestones.findIndex((m) => m.title === milestone.title);
+      return { milestone, index: index >= 0 ? index : 0 };
+    });
+
+    Logger.debug('Showing milestone celebration:', milestonesWithIndex.length);
+
+    if (milestonesWithIndex.length === 1) {
+      // Un seul milestone → modal epic
+      const { milestone, index } = milestonesWithIndex[0];
+      setCelebrationMilestone(milestone);
+      setCelebrationMilestoneIndex(index);
+      setShowMilestoneModal(true);
+    } else {
+      // Plusieurs milestones → modal récap
+      setRecapMilestones(milestonesWithIndex);
+      setShowMilestoneRecapModal(true);
+    }
+  }, [habit?.id, newlyUnlockedMilestones, milestoneStatus?.all]);
+
+  /**
+   * Détecte les montées de tier
+   */
   useEffect(() => {
     if (prevTier && prevTier !== currentTierData.tier.name) {
-      Logger.debug(`TIER UP! ${prevTier} -> ${currentTierData.tier.name}`);
+      Logger.debug(`TIER UP detected! ${prevTier} -> ${currentTierData.tier.name}`);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setCelebrationTier(currentTierData.tier);
       setShowCelebration(true);
     }
     setPrevTier(currentTierData.tier.name);
   }, [currentTierData.tier.name, prevTier]);
+
+  // Met à jour les stats globales quand l'XP des milestones est octroyée (une seule fois)
+  useEffect(() => {
+    if (milestoneXpAwarded > 0 && !statsUpdatedRef.current) {
+      statsUpdatedRef.current = true;
+      Logger.debug('Updating global stats with milestone XP:', milestoneXpAwarded);
+      updateStatsOptimistically(milestoneXpAwarded);
+    }
+  }, [milestoneXpAwarded]);
 
   // ============================================================================
   // HOOKS - Styles animés

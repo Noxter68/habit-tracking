@@ -388,15 +388,8 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             overrideStreak: result.streakUpdated,
             allTasksCompleted: result.allTasksComplete,
           });
-
-          // Verifie les milestones debloques
-          const milestoneRes = await HabitProgressionService.checkMilestoneUnlock(habitId, user.id, {
-            overrideStreak: result.streakUpdated,
-          });
-
-          if (milestoneRes.unlocked) {
-            // La modal EpicModal gère maintenant l'affichage des milestones
-          }
+          // Note: Les milestones sont maintenant vérifiés dans useHabitDetails
+          // via checkAndAwardMilestoneXP() à l'arrivée sur HabitDetails
         }
 
         // Met a jour l'etat local avec les donnees du backend

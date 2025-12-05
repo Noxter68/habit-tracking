@@ -13,6 +13,8 @@ interface UseHabitDetailsResult {
     upcoming: HabitMilestone[];
     all: HabitMilestone[];
   };
+  newlyUnlockedMilestones: HabitMilestone[];
+  milestoneXpAwarded: number;
   performanceMetrics: {
     avgTasksPerDay: number;
     perfectDayRate: number;
@@ -37,8 +39,13 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
     upcoming: HabitMilestone[];
     all: HabitMilestone[];
   }>({ unlocked: [], next: null, upcoming: [], all: [] });
+  const [newlyUnlockedMilestones, setNewlyUnlockedMilestones] = useState<HabitMilestone[]>([]);
+  const [milestoneXpAwarded, setMilestoneXpAwarded] = useState(0);
   const [performanceMetrics, setPerformanceMetrics] = useState<UseHabitDetailsResult['performanceMetrics']>(null);
   const [loading, setLoading] = useState(true);
+
+  // Ref pour éviter de checker les milestones plusieurs fois
+  const milestoneCheckDone = useRef(false);
 
   // Use ref to avoid fetchData recreating when currentStreak changes
   const currentStreakRef = useRef(currentStreak);
@@ -91,45 +98,62 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
         setLoading(true);
       }
 
-      // Fetch async data in parallel
-      const [progression, metrics] = await Promise.all([HabitProgressionService.getOrCreateProgression(habitId, userId), HabitProgressionService.getPerformanceMetrics(habitId, userId)]);
-
-      // Update milestones - basé sur l'ancienneté de l'habitude (jours depuis création)
-      if (progression) {
-        const unlockedData = currentTierLevel !== undefined && currentTierLevel > 0
-          ? currentTierLevel
-          : progression.milestones_unlocked || [];
-
-        // Calculer l'ancienneté de l'habitude
-        let habitAge = 1; // Par défaut, 1 jour
-        if (createdAt) {
-          const created = new Date(createdAt);
-          const today = new Date();
-          created.setHours(0, 0, 0, 0);
-          today.setHours(0, 0, 0, 0);
-          habitAge = Math.floor((today.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-        }
-
-        const status = await HabitProgressionService.getMilestoneStatus(habitAge, unlockedData);
-        setMilestoneStatus(status);
+      // Calculer l'ancienneté de l'habitude une seule fois
+      let habitAge = 1;
+      if (createdAt) {
+        const created = new Date(createdAt);
+        const today = new Date();
+        created.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+        habitAge = Math.floor((today.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)) + 1;
       }
+
+      // Fetch async data in parallel (progression, metrics, et milestone status)
+      const [progression, metrics, milestoneStatusResult] = await Promise.all([
+        HabitProgressionService.getOrCreateProgression(habitId, userId),
+        HabitProgressionService.getPerformanceMetrics(habitId, userId),
+        HabitProgressionService.getMilestoneStatus(
+          habitAge,
+          currentTierLevel !== undefined && currentTierLevel > 0 ? currentTierLevel : []
+        ),
+      ]);
+
+      // Update milestone status immédiatement
+      setMilestoneStatus(milestoneStatusResult);
 
       // Update performance metrics with real data from backend
       if (metrics) {
         const currentStreakValue = currentStreakRef.current;
         setPerformanceMetrics((prev) => ({
           ...metrics,
-          currentStreak: currentStreakValue, // Always use real-time value from ref
+          currentStreak: currentStreakValue,
           bestStreak: Math.max(metrics.bestStreak || 0, currentStreakValue),
-          // Preserve existing values if new ones are 0 or null (optimistic update)
           totalXPEarned: metrics.totalXPEarned || prev?.totalXPEarned || 0,
           consistency: metrics.consistency !== undefined ? metrics.consistency : (prev?.consistency || 0),
         }));
       }
+
+      // Terminer le loading AVANT le check des milestones (non-bloquant)
+      if (!silent) {
+        setLoading(false);
+      }
+
+      // Vérifier et octroyer l'XP des milestones EN ARRIÈRE-PLAN (ne bloque pas l'UI)
+      if (createdAt && !milestoneCheckDone.current) {
+        milestoneCheckDone.current = true;
+        // Fire and forget - l'UI est déjà affichée
+        HabitProgressionService.checkAndAwardMilestoneXP(habitId, userId, createdAt)
+          .then(({ newlyUnlocked, totalXpAwarded }) => {
+            if (newlyUnlocked.length > 0) {
+              setNewlyUnlockedMilestones(newlyUnlocked);
+              setMilestoneXpAwarded(totalXpAwarded);
+              Logger.debug('Newly unlocked milestones:', newlyUnlocked.map((m) => m.title), 'XP:', totalXpAwarded);
+            }
+          })
+          .catch((err) => Logger.error('checkAndAwardMilestoneXP error:', err));
+      }
     } catch (err) {
       Logger.error('useHabitDetails error', err);
-      // Keep the initial values set in useEffect above
-    } finally {
       if (!silent) {
         setLoading(false);
       }
@@ -149,6 +173,8 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
     tierProgress,
     nextTier,
     milestoneStatus,
+    newlyUnlockedMilestones,
+    milestoneXpAwarded,
     performanceMetrics,
     refreshProgression: () => fetchData(true), // Silent refresh
     loading,

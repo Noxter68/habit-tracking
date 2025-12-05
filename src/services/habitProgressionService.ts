@@ -252,6 +252,162 @@ export class HabitProgressionService {
   }
 
   /**
+   * Vérifie et octroie l'XP pour les milestones éligibles
+   * Appelé à l'arrivée sur HabitDetails - vérifie en DB si l'XP a déjà été donnée
+   *
+   * @param habitId - L'identifiant de l'habitude
+   * @param userId - L'identifiant de l'utilisateur
+   * @param createdAt - Date de création de l'habitude
+   * @returns Les milestones nouvellement débloqués et le total d'XP octroyé
+   */
+  static async checkAndAwardMilestoneXP(
+    habitId: string,
+    userId: string,
+    createdAt: Date
+  ): Promise<{ newlyUnlocked: HabitMilestone[]; totalXpAwarded: number }> {
+    try {
+      // 1. Calculer l'âge de l'habitude
+      const created = new Date(createdAt);
+      const today = new Date();
+      created.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
+      const habitAge = Math.floor((today.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+      Logger.debug('checkAndAwardMilestoneXP - habitAge:', habitAge);
+
+      // 2. Récupérer tous les milestones éligibles (days <= habitAge)
+      const { data: allMilestones, error: milestonesError } = await supabase
+        .from('habit_milestones')
+        .select('id, days, title, description, xp_reward, badge, tier, icon')
+        .lte('days', habitAge)
+        .order('days', { ascending: true });
+
+      if (milestonesError) {
+        Logger.error('Error fetching milestones:', milestonesError);
+        return { newlyUnlocked: [], totalXpAwarded: 0 };
+      }
+
+      if (!allMilestones || allMilestones.length === 0) {
+        Logger.debug('No eligible milestones for habitAge:', habitAge);
+        return { newlyUnlocked: [], totalXpAwarded: 0 };
+      }
+
+      // 3. Récupérer les transactions XP existantes pour cette habitude (milestones déjà récompensés)
+      const { data: existingTransactions, error: txError } = await supabase
+        .from('xp_transactions')
+        .select('description')
+        .eq('user_id', userId)
+        .eq('habit_id', habitId)
+        .eq('source_type', 'achievement_unlock')
+        .like('description', 'Milestone:%');
+
+      if (txError) {
+        Logger.error('Error fetching xp_transactions:', txError);
+        return { newlyUnlocked: [], totalXpAwarded: 0 };
+      }
+
+      // Extraire les titres des milestones déjà récompensés
+      const rewardedTitles = new Set<string>();
+      existingTransactions?.forEach((tx) => {
+        // Format: "Milestone: {title}"
+        const match = tx.description?.match(/^Milestone:\s*(.+)$/);
+        if (match) {
+          rewardedTitles.add(match[1]);
+        }
+      });
+
+      Logger.debug('Already rewarded milestones:', Array.from(rewardedTitles));
+
+      // 4. Filtrer les milestones non encore récompensés
+      const milestonesToReward = allMilestones.filter(
+        (m) => !rewardedTitles.has(m.title)
+      );
+
+      if (milestonesToReward.length === 0) {
+        Logger.debug('All eligible milestones already rewarded');
+        return { newlyUnlocked: [], totalXpAwarded: 0 };
+      }
+
+      Logger.debug('Milestones to reward:', milestonesToReward.map((m) => m.title));
+
+      // 5. Octroyer l'XP pour chaque nouveau milestone
+      const { XPService } = await import('./xpService');
+      const newlyUnlocked: HabitMilestone[] = [];
+      let totalXpAwarded = 0;
+
+      for (const m of milestonesToReward) {
+        const xpReward = m.xp_reward;
+
+        if (!xpReward || xpReward <= 0) {
+          Logger.warn('Invalid XP reward for milestone:', m.title);
+          continue;
+        }
+
+        const success = await XPService.awardXP(userId, {
+          amount: xpReward,
+          source_type: 'achievement_unlock',
+          source_id: habitId,
+          description: `Milestone: ${m.title}`,
+          habit_id: habitId,
+        });
+
+        if (success) {
+          newlyUnlocked.push({
+            id: m.id,
+            days: m.days,
+            title: m.title,
+            description: m.description,
+            xpReward: xpReward,
+            badge: m.badge,
+            tier: m.tier as MilestoneTier,
+          });
+          totalXpAwarded += xpReward;
+          Logger.debug('XP awarded for milestone:', m.title, xpReward);
+        } else {
+          Logger.error('Failed to award XP for milestone:', m.title);
+        }
+      }
+
+      // 6. Mettre à jour habit_progression.milestones_unlocked
+      if (newlyUnlocked.length > 0) {
+        const progression = await this.getOrCreateProgression(habitId, userId);
+        if (progression) {
+          const existingUnlocked = progression.milestones_unlocked ?? [];
+          const newTitles = newlyUnlocked.map((m) => m.title);
+          const updatedUnlocked = [...new Set([...existingUnlocked, ...newTitles])];
+
+          await supabase
+            .from('habit_progression')
+            .update({
+              milestones_unlocked: updatedUnlocked,
+              last_milestone_date: new Date().toISOString(),
+            })
+            .eq('id', progression.id);
+
+          // Mettre à jour current_tier_level dans habits
+          await supabase
+            .from('habits')
+            .update({ current_tier_level: updatedUnlocked.length })
+            .eq('id', habitId);
+
+          Logger.debug('Updated milestones_unlocked:', updatedUnlocked);
+        }
+      }
+
+      Logger.debug('checkAndAwardMilestoneXP completed:', {
+        newlyUnlocked: newlyUnlocked.length,
+        totalXpAwarded,
+      });
+
+      return { newlyUnlocked, totalXpAwarded };
+    } catch (err) {
+      Logger.error('checkAndAwardMilestoneXP error:', err);
+      return { newlyUnlocked: [], totalXpAwarded: 0 };
+    }
+  }
+
+  /**
+   * @deprecated Utiliser checkAndAwardMilestoneXP à la place
    * Verifier et debloquer un jalon basé sur l'ancienneté de l'habitude
    * Les milestones sont débloqués quand l'habitude atteint un certain âge (jours depuis création),
    * indépendamment du streak.

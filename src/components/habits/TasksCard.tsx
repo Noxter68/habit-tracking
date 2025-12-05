@@ -56,6 +56,9 @@ const TaskCheckItem: React.FC<{
   isWeekLocked?: boolean;
   totalTasks: number;
 }> = ({ task, isCompleted, theme, onPress, index, isPaused, pausedUntil, disabled, isWeekLocked, totalTasks }) => {
+  // Pour les habitudes weekly déjà complétées, afficher comme complété
+  const showAsCompleted = isCompleted || isWeekLocked;
+
   // DUOLINGO-STYLE 3D PRESS ANIMATION
   // Vertical translation for "press down" effect
   const pressY = useSharedValue(0);
@@ -67,7 +70,8 @@ const TaskCheckItem: React.FC<{
   const scale = useSharedValue(1);
 
   // OPTIMISTIC UI: Checkmark animation scale (60fps native thread)
-  const checkScale = useSharedValue(isCompleted ? 1 : 0);
+  // Utilise showAsCompleted pour inclure les weekly locked
+  const checkScale = useSharedValue(showAsCompleted ? 1 : 0);
 
   // Lottie animation ref for checkmark
   const lottieRef = useRef<LottieView>(null);
@@ -80,25 +84,25 @@ const TaskCheckItem: React.FC<{
   }, []);
 
   // Track previous completed state to detect changes
-  const prevCompleted = React.useRef(isCompleted);
+  const prevCompleted = React.useRef(showAsCompleted);
 
   // INSTANT checkmark animation when completed changes
   React.useEffect(() => {
-    checkScale.value = withSpring(isCompleted ? 1 : 0, {
+    checkScale.value = withSpring(showAsCompleted ? 1 : 0, {
       damping: 15,
       stiffness: 400,
       mass: 0.5,
     });
 
     // Play Lottie animation when task becomes completed (not on mount)
-    if (isCompleted && !prevCompleted.current && lottieRef.current) {
+    if (showAsCompleted && !prevCompleted.current && lottieRef.current) {
       // Reset and play from start
       lottieRef.current.reset();
       lottieRef.current.play();
     }
 
-    prevCompleted.current = isCompleted;
-  }, [isCompleted]);
+    prevCompleted.current = showAsCompleted;
+  }, [showAsCompleted]);
 
   const handlePressIn = () => {
     if (isPaused || isCompleted || disabled || isWeekLocked) return;
@@ -168,8 +172,6 @@ const TaskCheckItem: React.FC<{
     }
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
-
-  const showAsCompleted = isCompleted || isWeekLocked;
 
   return (
     <AnimatedPressable
@@ -365,8 +367,10 @@ export const TasksCard: React.FC<TasksCardProps> = ({
     // Note: No need to refresh habits here - the context already handles updates
   };
 
-  const completedTasksToday = todayTasks.completedTasks?.length || 0;
   const totalTasks = tasks?.length || 0;
+  const isWeekLocked = frequency === 'weekly' && isWeekCompleted;
+  // Pour les habitudes weekly déjà complétées, afficher toutes les tâches comme complétées
+  const completedTasksToday = isWeekLocked ? totalTasks : (todayTasks.completedTasks?.length || 0);
 
   // Wrapper for onToggleTask that updates optimistic progress
   const handleToggleTaskWithProgress = React.useCallback(async (taskId: string) => {
@@ -383,12 +387,17 @@ export const TasksCard: React.FC<TasksCardProps> = ({
     // Call the original toggle function
     await onToggleTask(taskId);
   }, [todayTasks.completedTasks, totalTasks, onToggleTask]);
-  const serverProgress = totalTasks > 0 ? (completedTasksToday / totalTasks) * 100 : 0;
+  // Pour les habitudes weekly déjà complétées cette semaine, afficher 100%
+  const serverProgress = isWeekLocked
+    ? 100
+    : totalTasks > 0 ? (completedTasksToday / totalTasks) * 100 : 0;
 
   // OPTIMISTIC PROGRESS: Use optimistic value if available and greater than server value
-  const taskProgress = optimisticProgress !== null && optimisticProgress > serverProgress
-    ? optimisticProgress
-    : serverProgress;
+  const taskProgress = isWeekLocked
+    ? 100
+    : optimisticProgress !== null && optimisticProgress > serverProgress
+      ? optimisticProgress
+      : serverProgress;
 
   // Clear optimistic progress when server catches up
   React.useEffect(() => {
@@ -465,7 +474,8 @@ export const TasksCard: React.FC<TasksCardProps> = ({
     }
   };
 
-  const allCompleted = completedTasksToday === totalTasks && totalTasks > 0;
+  // Pour les habitudes weekly déjà complétées, considérer comme "all completed"
+  const allCompleted = isWeekLocked || (completedTasksToday === totalTasks && totalTasks > 0);
 
   return (
     <>
@@ -601,7 +611,6 @@ export const TasksCard: React.FC<TasksCardProps> = ({
         const isCompleted = todayTasks.completedTasks.includes(taskId);
         const isPaused = !!pausedTasks[taskId];
         const pausedInfo = pausedTasks[taskId];
-        const isWeekLocked = frequency === 'weekly' && isWeekCompleted;
 
         return (
           <TaskCheckItem
