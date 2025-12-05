@@ -23,45 +23,28 @@ const modalTexts_fr: UpdateModalTexts = {
   getStarted: 'Commencer',
 };
 
-// Version 1.1.3 - English
-const updates_1_1_3_en: UpdateItem[] = [
+// Version 1.1.4 - English
+const updates_1_1_4_en: UpdateItem[] = [
   {
-    title: 'Subscription Modal Improvements',
-    description: 'Fixed subscription modal display issues and added Terms of Use and Privacy Policy links to comply with App Store requirements.',
+    title: 'Better Connection Handling',
+    description: 'The app now handles connection issues gracefully. If Supabase is temporarily unavailable, you stay logged in and see a connection toast instead of being redirected to login.',
   },
   {
-    title: 'Subscription Access in Settings',
-    description: 'You can now access subscription plans and manage your Premium subscription directly from the settings screen.',
-  },
-  {
-    title: 'Customizable Motivation Modal',
-    description: 'Choose how often you want to see the daily motivation modal: once per day or every time you open the app. Configure it in settings to match your preferences.',
-  },
-  {
-    title: 'iPad Support Removed',
-    description: 'The app is now iPhone-only for a better optimized experience.',
+    title: 'Improved Dashboard Layout',
+    description: 'Refined the status bar and safe area spacing for a cleaner look on all iPhone models.',
   },
 ];
 
-// Version 1.1.3 - French
-const updates_1_1_3_fr: UpdateItem[] = [
+// Version 1.1.4 - French
+const updates_1_1_4_fr: UpdateItem[] = [
   {
-    title: "Améliorations de la Modal d'Abonnement",
+    title: 'Meilleure Gestion de la Connexion',
     description:
-      "Correction des problèmes d'affichage de la modal d'abonnement et ajout des liens Conditions d'Utilisation et Politique de Confidentialité pour respecter les exigences de l'App Store.",
+      "L'application gère maintenant les problèmes de connexion de manière élégante. Si Supabase est temporairement indisponible, vous restez connecté et voyez un toast de connexion au lieu d'être redirigé vers la page de connexion.",
   },
   {
-    title: 'Accès Abonnement dans les Paramètres',
-    description: "Vous pouvez maintenant accéder aux plans d'abonnement et gérer votre abonnement Premium directement depuis l'écran des paramètres.",
-  },
-  {
-    title: 'Modal de Motivation Personnalisable',
-    description:
-      "Choisissez la fréquence d'affichage de la modal de motivation quotidienne : une fois par jour ou à chaque ouverture de l'application. Configurez-la dans les paramètres selon vos préférences.",
-  },
-  {
-    title: 'Support iPad Retiré',
-    description: "L'application est maintenant uniquement disponible sur iPhone pour une expérience mieux optimisée.",
+    title: 'Amélioration du Dashboard',
+    description: "Ajustement de la barre de statut et de l'espacement de la zone de sécurité pour un affichage plus propre sur tous les modèles d'iPhone.",
   },
 ];
 
@@ -79,8 +62,8 @@ export const getUpdatesForVersion = (version: string, locale: string = 'en'): Up
 
   // Map des versions disponibles
   const updatesMap: Record<string, UpdateItem[]> = {
-    updates_1_1_3_en: updates_1_1_3_en,
-    updates_1_1_3_fr: updates_1_1_3_fr,
+    updates_1_1_4_en: updates_1_1_4_en,
+    updates_1_1_4_fr: updates_1_1_4_fr,
   };
 
   return updatesMap[key] || updatesMap[`updates_${version.replace(/\./g, '_')}_en`] || [];
