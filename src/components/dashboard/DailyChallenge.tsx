@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { CheckCircle2 } from 'lucide-react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withSequence, withRepeat, Easing, runOnJS, cancelAnimation } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
-import { XPService } from '../../services/xpService';
+import { XPService, getProgressiveXPReward } from '../../services/xpService';
 import { supabase } from '../../lib/supabase';
 import { getTodayString, isWeeklyHabitCompletedThisWeek, getWeeklyCompletedTasksCount } from '@/utils/dateHelpers';
 import Logger from '@/utils/logger';
@@ -24,17 +24,22 @@ interface DailyChallengeProps {
   habits: Habit[];
   onCollect: (amount: number) => void;
   userId: string;
+  userLevel: number;
   currentLevelXP: number;
   xpForNextLevel: number;
   onLevelUp?: () => void;
   tierTheme?: TierTheme;
 }
 
-const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, userId, currentLevelXP, xpForNextLevel, onLevelUp, tierTheme }) => {
+const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, userId, userLevel, currentLevelXP, xpForNextLevel, onLevelUp, tierTheme }) => {
   const [isCollected, setIsCollected] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showXPBadge, setShowXPBadge] = useState(false);
+  const [collectedXP, setCollectedXP] = useState(0);
   const { t } = useTranslation();
+
+  // Calculate XP reward based on user level
+  const xpReward = useMemo(() => getProgressiveXPReward(userLevel), [userLevel]);
 
   // Get tier-based challenge image
   const getChallengeImage = () => {
@@ -196,11 +201,12 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
     cardTranslateY.value = withSequence(withTiming(-8, { duration: 100, easing: Easing.out(Easing.ease) }), withSpring(0, { damping: 10, stiffness: 350 }));
 
     try {
-      const result = await XPService.collectDailyChallenge(userId);
+      const result = await XPService.collectDailyChallenge(userId, userLevel);
 
       if (result.success) {
         setIsCollected(true);
         setShowXPBadge(true);
+        setCollectedXP(result.xpEarned);
 
         badgeTranslateY.value = 0;
         badgeOpacity.value = 0;
@@ -343,7 +349,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
       <View style={{ position: 'relative' }}>
         {showXPBadge && (
           <Animated.View style={badgeAnimatedStyle}>
-            <FloatingXP show={showXPBadge} amount={20} accentColor={accentColor} texture={tierTheme?.texture} onComplete={hideBadge} />
+            <FloatingXP show={showXPBadge} amount={collectedXP || xpReward} accentColor={accentColor} texture={tierTheme?.texture} onComplete={hideBadge} />
           </Animated.View>
         )}
 
@@ -463,7 +469,7 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
                         textShadowRadius: 3,
                       }}
                     >
-                      {isCollected ? '✓' : t('dashboard.dailyChallenge.xpReward', { amount: 20 })}
+                      {isCollected ? '✓' : t('dashboard.dailyChallenge.xpReward', { amount: xpReward })}
                     </Text>
                   </View>
                 </View>

@@ -557,6 +557,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 habits={habits}
                 onCollect={handleXPCollect}
                 userId={user.id}
+                userLevel={userLevel}
                 currentLevelXP={optimisticXP}
                 xpForNextLevel={xpForNextLevel}
                 onLevelUp={handleLevelUp}

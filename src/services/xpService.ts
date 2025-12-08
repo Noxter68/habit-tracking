@@ -34,6 +34,28 @@ export interface XPTransaction {
   habit_id?: string;
 }
 
+/**
+ * Calcule l'XP progressif basé sur le niveau de l'utilisateur
+ * Les tiers sont de 5 niveaux chacun avec une progression de 20 XP par tier
+ *
+ * Tier 1 (1-5):   20 XP
+ * Tier 2 (6-10):  40 XP
+ * Tier 3 (11-15): 60 XP
+ * Tier 4 (16-20): 80 XP
+ * Tier 5 (21-25): 100 XP
+ * Tier 6 (26-30): 120 XP
+ * Tier 7 (31+):   140 XP
+ *
+ * @param level - Le niveau actuel de l'utilisateur
+ * @returns Le montant d'XP à attribuer
+ */
+export const getProgressiveXPReward = (level: number): number => {
+  const tier = Math.floor((level - 1) / 5);
+  const baseXP = 20;
+  const xpPerTier = 20;
+  return baseXP + (tier * xpPerTier);
+};
+
 // =============================================================================
 // SERVICE PRINCIPAL
 // =============================================================================
@@ -148,11 +170,20 @@ export class XPService {
 
   /**
    * Collecter les XP du defi quotidien
+   * L'XP est progressif selon le niveau de l'utilisateur:
+   * - Tier 1 (1-5):   20 XP
+   * - Tier 2 (6-10):  40 XP
+   * - Tier 3 (11-15): 60 XP
+   * - Tier 4 (16-20): 80 XP
+   * - Tier 5 (21-25): 100 XP
+   * - Tier 6 (26-30): 120 XP
+   * - Tier 7 (31+):   140 XP
    *
    * @param userId - L'identifiant de l'utilisateur
+   * @param userLevel - Le niveau actuel de l'utilisateur (defaut: 1)
    * @returns Le resultat de la collection
    */
-  static async collectDailyChallenge(userId: string): Promise<{
+  static async collectDailyChallenge(userId: string, userLevel: number = 1): Promise<{
     success: boolean;
     xpEarned: number;
   }> {
@@ -180,12 +211,15 @@ export class XPService {
         return { success: false, xpEarned: 0 };
       }
 
-      const xpAmount = 20;
+      // XP progressif basé sur le niveau
+      const xpAmount = getProgressiveXPReward(userLevel);
+      Logger.debug(`Daily challenge XP reward: ${xpAmount} (Level ${userLevel})`);
+
       const success = await this.awardXP(userId, {
         amount: xpAmount,
         source_type: 'daily_challenge',
         source_id: challenge.id,
-        description: 'Perfect Day - All tasks completed!',
+        description: `Perfect Day - All tasks completed! (Level ${userLevel} bonus)`,
       });
 
       if (success) {
