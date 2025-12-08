@@ -87,10 +87,10 @@ const baseAchievementData: BaseAchievementData[] = [
 
   // Celestial Ascension (31-35)
   { level: 31, tierKey: 'celestialAscension', color: '#3f7eea', image: require('../../assets/interface/gems/celeste-gem.png') },
-  // { level: 32, tierKey: 'celestialAscension', color: '#3f7eea', image: require('../../assets/interface/gems/celeste-gem.png') },
-  // { level: 33, tierKey: 'celestialAscension', color: '#3f7eea', image: require('../../assets/interface/gems/celeste-gem.png') },
-  // { level: 34, tierKey: 'celestialAscension', color: '#3f7eea', image: require('../../assets/interface/gems/celeste-gem.png') },
-  // { level: 35, tierKey: 'celestialAscension', color: '#3f7eea', image: require('../../assets/interface/gems/celeste-gem.png') },
+  { level: 32, tierKey: 'celestialAscension', color: '#3f7eea', image: require('../../assets/achievements/level-32.png') },
+  { level: 33, tierKey: 'celestialAscension', color: '#3f7eea', image: require('../../assets/achievements/level-33.png') },
+  { level: 34, tierKey: 'celestialAscension', color: '#3f7eea', image: require('../../assets/achievements/level-34.png') },
+  { level: 35, tierKey: 'celestialAscension', color: '#3f7eea', image: require('../../assets/achievements/level-35.png') },
 ];
 
 // =============================================================================

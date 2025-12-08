@@ -73,6 +73,9 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
   const tierGradient = tierTheme.gradient;
   const tierTexture = tierTheme.texture;
 
+  // Détermine si c'est un tier sombre (comme Mythic Glory)
+  const isDarkTier = achievement.tierKey === 'mythicGlory';
+
   /**
    * Détermine les couleurs de texte selon le type de gemme
    * @param gemName - Nom de la gemme du tier
@@ -88,13 +91,13 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
 
   const textColors = getTextColors(tierTheme.gemName);
 
-  // Gradients pour l'état verrouillé
-  const lockedGradient = [
-    tierGradient[0] + '70',
-    tierGradient[1] + '65',
-    tierGradient[2] + '60',
-  ];
-  const lockedProgressGradient = [tierGradient[0] + '85', tierGradient[1] + '75'];
+  // Gradients pour l'état verrouillé - plus opaques pour les tiers sombres
+  const lockedGradient = isDarkTier
+    ? [tierGradient[0] + 'ee', tierGradient[1] + 'ee', tierGradient[2] + 'dd']
+    : [tierGradient[0] + '70', tierGradient[1] + '65', tierGradient[2] + '60'];
+  const lockedProgressGradient = isDarkTier
+    ? [tierGradient[0] + 'f5', tierGradient[1] + 'ee']
+    : [tierGradient[0] + '85', tierGradient[1] + '75'];
   const lockedButtonGradient = [tierGradient[0] + 'B0', tierGradient[1] + 'B0'];
 
   // ---------------------------------------------------------------------------
@@ -153,7 +156,7 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
                           style={{
                             width: 250,
                             height: 180,
-                            opacity: isUnlocked ? 1 : 0.5,
+                            opacity: isUnlocked ? 1 : isDarkTier ? 0.7 : 0.5,
                           }}
                           resizeMode="contain"
                         />
@@ -269,7 +272,10 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
                             />
                           </View>
                           <Text
-                            style={tw`text-xs text-sand-700 text-center mt-2 font-medium`}
+                            style={[
+                              tw`text-xs text-center mt-2 font-medium`,
+                              { color: isDarkTier ? 'rgba(255, 255, 255, 0.8)' : '#78716C' },
+                            ]}
                           >
                             {t('achievements.moreNeeded', {
                               count: remaining,
