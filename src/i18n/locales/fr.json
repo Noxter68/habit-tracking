@@ -26,7 +26,8 @@
     "premium": "Premium",
     "ok": "OK",
     "tier": "Rang",
-    "connectionError": "Problème de connexion"
+    "connectionError": "Problème de connexion",
+    "friend": "ami"
   },
   "navigation": {
     "dashboard": "Accueil",
@@ -109,34 +110,34 @@
     "taskBadge": {
       "legendary": {
         "title": "Légendaire !",
-        "subtitle": "Maîtrise parfaite atteinte !",
-        "message": "Incroyable ! Vous avez tout terminé aujourd'hui !"
+        "subtitle": "{{name}}, tu as tout déchiré !",
+        "message": "Bravo {{name}} ! Journée parfaite, tu es inarrêtable !"
       },
       "almostPerfect": {
         "title": "Presque Parfait !",
-        "subtitle": "Progrès dorés qui brillent !",
-        "message_one": "Plus que {{count}} tâche ! Vous pouvez le faire !",
-        "message_other": "Plus que {{count}} tâches ! Vous pouvez le faire !"
+        "subtitle": "{{name}}, la victoire est proche !",
+        "message_one": "Plus que {{count}} tâche {{name}}, tu y es presque !",
+        "message_other": "Plus que {{count}} tâches {{name}}, tu y es presque !"
       },
       "greatMomentum": {
-        "title": "Super Élan !",
-        "subtitle": "Plus fort à chaque tâche !",
-        "message": "Vous êtes en feu ! Maintenez cette énergie !"
+        "title": "En Feu !",
+        "subtitle": "{{name}}, quel rythme !",
+        "message": "Continue comme ça {{name}}, tu assures !"
       },
       "halfwayThere": {
         "title": "À Mi-Chemin !",
-        "subtitle": "Construisez votre chemin vers le succès !",
-        "message": "Progrès incroyable ! Vous assurez aujourd'hui !"
+        "subtitle": "{{name}}, belle progression !",
+        "message": "Tu gères {{name}} ! La moitié est faite !"
       },
       "gettingStarted": {
         "title": "C'est Parti !",
-        "subtitle": "Chaque pas vous rapproche !",
-        "message": "Super début ! Continuez sur cette lancée !"
+        "subtitle": "{{name}}, le premier pas est fait !",
+        "message": "Bien joué {{name}} ! Continue sur ta lancée !"
       },
       "readyToShine": {
-        "title": "Prêt à Briller !",
-        "subtitle": "Votre voyage commence maintenant !",
-        "message": "Faisons de cette journée quelque chose d'incroyable ! 🌟"
+        "title": "Nouvelle Journée !",
+        "subtitle": "{{name}}, c'est ton moment !",
+        "message": "Allez {{name}}, montre ce que tu sais faire !"
       }
     },
     "progressStatus": {

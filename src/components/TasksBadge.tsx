@@ -8,6 +8,7 @@ import tw from '@/lib/tailwind';
 interface TaskBadgeProps {
   completed: number;
   total: number;
+  username?: string;
 }
 
 interface ThemeConfig {
@@ -20,8 +21,9 @@ interface ThemeConfig {
   textColor: string;
 }
 
-export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total }) => {
+export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total, username }) => {
   const { t } = useTranslation();
+  const displayName = username || t('common.friend');
 
   const completionRate = useMemo(() => {
     return total > 0 ? Math.round((completed / total) * 100) : 0;
@@ -105,13 +107,13 @@ export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total }) => {
     };
   }, [completionRate, total, completed]);
 
-  // Get the translated message with count for almostPerfect case
+  // Get the translated message with username and count
   const getMessage = () => {
     if (completionRate >= 80 && completionRate < 100) {
       const remaining = total - completed;
-      return t(theme.messageKey, { count: remaining });
+      return t(theme.messageKey, { count: remaining, name: displayName });
     }
-    return t(theme.messageKey);
+    return t(theme.messageKey, { name: displayName });
   };
 
   return (
@@ -158,7 +160,7 @@ export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total }) => {
                     },
                   ]}
                 >
-                  {t(theme.subtitleKey)}
+                  {t(theme.subtitleKey, { name: displayName })}
                 </Text>
               </View>
 

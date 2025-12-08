@@ -25,7 +25,8 @@
     "xp": "XP",
     "premium": "Premium",
     "tier": "Tier",
-    "connectionError": "Connection issue"
+    "connectionError": "Connection issue",
+    "friend": "friend"
   },
   "navigation": {
     "dashboard": "Home",
@@ -108,34 +109,34 @@
     "taskBadge": {
       "legendary": {
         "title": "Legendary!",
-        "subtitle": "Perfect mastery achieved!",
-        "message": "Incredible! You've completed everything today!"
+        "subtitle": "{{name}}, you crushed it!",
+        "message": "Amazing {{name}}! Perfect day, you're unstoppable!"
       },
       "almostPerfect": {
         "title": "Almost Perfect!",
-        "subtitle": "Golden progress shining through!",
-        "message_one": "Just {{count}} more task! You've got this!",
-        "message_other": "Just {{count}} more tasks! You've got this!"
+        "subtitle": "{{name}}, victory is near!",
+        "message_one": "Just {{count}} task left {{name}}, you're so close!",
+        "message_other": "Just {{count}} tasks left {{name}}, you're so close!"
       },
       "greatMomentum": {
-        "title": "Great Momentum!",
-        "subtitle": "Growing stronger every task!",
-        "message": "You're on fire! Keep that energy flowing!"
+        "title": "On Fire!",
+        "subtitle": "{{name}}, what a pace!",
+        "message": "Keep it up {{name}}, you're killing it!"
       },
       "halfwayThere": {
         "title": "Halfway There!",
-        "subtitle": "Building your path to success!",
-        "message": "Amazing progress! You're crushing it today!"
+        "subtitle": "{{name}}, great progress!",
+        "message": "You're doing great {{name}}! Halfway done!"
       },
       "gettingStarted": {
-        "title": "Getting Started!",
-        "subtitle": "Every step brings you closer!",
-        "message": "Great start! Keep the momentum building!"
+        "title": "Let's Go!",
+        "subtitle": "{{name}}, first step done!",
+        "message": "Nice start {{name}}! Keep the momentum going!"
       },
       "readyToShine": {
-        "title": "Ready to Shine!",
-        "subtitle": "Your journey begins now!",
-        "message": "Let's make today incredible! 🌟"
+        "title": "New Day!",
+        "subtitle": "{{name}}, it's your time!",
+        "message": "Come on {{name}}, show what you've got!"
       }
     },
     "progressStatus": {

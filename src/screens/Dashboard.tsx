@@ -651,7 +651,7 @@ const Dashboard: React.FC = () => {
             {/* Section Header */}
             {!showFullHolidayMode && activeHabits.length > 0 ? (
               <View style={tw`mt-4`}>
-                <TaskBadge completed={realTimeTasksStats.completed} total={realTimeTasksStats.total} onAddPress={handleCreateHabit} showAddButton={habits.length > 0} />
+                <TaskBadge completed={realTimeTasksStats.completed} total={realTimeTasksStats.total} username={username || user?.email?.split('@')[0]} />
 
                 {/* Daily Motivation Button - below TaskBadge (DEBUG ONLY) */}
                 {Config.debug.enabled && (
