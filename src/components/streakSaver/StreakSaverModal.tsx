@@ -1,14 +1,15 @@
 // src/components/streakSaver/StreakSaverModal.tsx
-// Version avec gestion d'erreur
+// Version avec progress bar pendant le chargement
 
-import React, { useEffect, useState } from 'react';
-import { View, Text, Modal, Pressable, ActivityIndicator, Image } from 'react-native';
-import Animated, { FadeIn, FadeInDown, FadeOut, useSharedValue, useAnimatedStyle, withRepeat, withSequence, withSpring, withTiming, Easing, ZoomIn, interpolate } from 'react-native-reanimated';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, Modal, Pressable, Image } from 'react-native';
+import Animated, { FadeIn, FadeInDown, FadeOut, useSharedValue, useAnimatedStyle, withRepeat, withSequence, withSpring, withTiming, Easing, ZoomIn, interpolate, runOnJS } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
-import { Flame, X, Clock, Sparkles, AlertTriangle } from 'lucide-react-native';
+import { Flame, X, Clock, Sparkles, AlertTriangle, Check } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import tw from '@/lib/tailwind';
+import { HapticFeedback } from '@/utils/haptics';
 
 interface StreakSaverModalProps {
   visible: boolean;
@@ -22,6 +23,34 @@ interface StreakSaverModalProps {
   onUse: () => void;
   onClose: () => void;
 }
+
+// ============================================================================
+// Animated Progress Bar Component
+// ============================================================================
+const AnimatedProgressBar = ({ progress, isComplete }: { progress: number; isComplete: boolean }) => {
+  const animatedWidth = useSharedValue(0);
+
+  useEffect(() => {
+    animatedWidth.value = withTiming(progress, { duration: 300, easing: Easing.out(Easing.ease) });
+  }, [progress]);
+
+  const progressStyle = useAnimatedStyle(() => ({
+    width: `${animatedWidth.value}%`,
+  }));
+
+  return (
+    <View style={tw`w-full h-3 bg-purple-100 rounded-full overflow-hidden`}>
+      <Animated.View style={[tw`h-full rounded-full`, progressStyle]}>
+        <LinearGradient
+          colors={isComplete ? ['#22c55e', '#16a34a', '#15803d'] : ['#8B5CF6', '#7C3AED', '#6D28D9']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={tw`flex-1`}
+        />
+      </Animated.View>
+    </View>
+  );
+};
 
 // ============================================================================
 // Animated Icon Component
@@ -134,7 +163,8 @@ export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const glowPulse = useSharedValue(0);
-  const [countdown, setCountdown] = useState(8);
+  const [progress, setProgress] = useState(0);
+  const progressInterval = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (visible) {
@@ -142,39 +172,57 @@ export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({
     }
   }, [visible]);
 
-  // Auto-close countdown on success
+  // Simuler une progression pendant le chargement
   useEffect(() => {
-    if (success) {
-      setCountdown(8);
-      const interval = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+    if (loading) {
+      setProgress(0);
+      let currentProgress = 0;
 
-      const timer = setTimeout(() => {
-        onClose();
-      }, 8000);
+      progressInterval.current = setInterval(() => {
+        // Progression rapide au début, puis ralentit vers 90%
+        const increment = currentProgress < 30 ? 8 : currentProgress < 60 ? 4 : currentProgress < 80 ? 2 : 0.5;
+        currentProgress = Math.min(currentProgress + increment, 90);
+        setProgress(currentProgress);
+      }, 100);
 
       return () => {
-        clearTimeout(timer);
-        clearInterval(interval);
+        if (progressInterval.current) {
+          clearInterval(progressInterval.current);
+        }
       };
     }
+  }, [loading]);
+
+  // Compléter la progression et fermer le modal après succès
+  useEffect(() => {
+    if (success) {
+      if (progressInterval.current) {
+        clearInterval(progressInterval.current);
+      }
+
+      // Compléter la barre à 100%
+      setProgress(100);
+      HapticFeedback.success();
+
+      // Fermer le modal après un court délai
+      const timer = setTimeout(() => {
+        onClose();
+      }, 1200);
+
+      return () => clearTimeout(timer);
+    }
   }, [success, onClose]);
+
+  // Reset progress quand le modal se ferme
+  useEffect(() => {
+    if (!visible) {
+      setProgress(0);
+    }
+  }, [visible]);
 
   const glowStyle = useAnimatedStyle(() => ({
     opacity: glowPulse.value * 0.5,
   }));
-
-  const motivationalMessages = t('habitDetails.streakSaver.motivational', {
-    returnObjects: true,
-  }) as string[];
-  const randomMessage = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
 
   if (!visible) return null;
 
@@ -185,50 +233,68 @@ export const StreakSaverModal: React.FC<StreakSaverModalProps> = ({
           <Pressable style={tw`absolute inset-0`} onPress={!loading && !success ? onClose : undefined} />
 
           <Animated.View entering={FadeInDown.duration(400).springify()} style={tw`bg-white rounded-3xl overflow-hidden w-full max-w-md shadow-2xl`}>
-            {success ? (
+            {(loading || success) ? (
               // ============================================================
-              // SUCCESS VIEW
+              // LOADING / SUCCESS VIEW WITH PROGRESS BAR
               // ============================================================
               <>
-                <LinearGradient colors={['#f3e8ff', '#e9d5ff', '#ddd6fe']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`relative`}>
+                <LinearGradient
+                  colors={success ? ['#dcfce7', '#bbf7d0', '#86efac'] : ['#f3e8ff', '#e9d5ff', '#ddd6fe']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={tw`relative`}
+                >
                   <View style={tw`px-5 pt-8 pb-6`}>
-                    <Animated.View entering={ZoomIn.duration(600).springify()} style={tw`items-center mb-3`}>
+                    <Animated.View entering={ZoomIn.duration(600).springify()} style={tw`items-center mb-4`}>
                       <View style={tw`relative`}>
-                        <View style={tw`absolute inset-0 bg-purple-300 rounded-full opacity-30 blur-xl scale-110`} />
+                        <View style={[tw`absolute inset-0 rounded-full opacity-30 blur-xl scale-110`, success ? tw`bg-green-300` : tw`bg-purple-300`]} />
                         <View style={tw`w-20 h-20 rounded-2xl bg-white items-center justify-center shadow-2xl`}>
-                          <Image source={require('../../../assets/interface/streak-saver.png')} style={{ width: 48, height: 48 }} resizeMode="contain" />
+                          {success ? (
+                            <View style={tw`w-12 h-12 rounded-full bg-green-500 items-center justify-center`}>
+                              <Check size={32} color="white" strokeWidth={3} />
+                            </View>
+                          ) : (
+                            <Image source={require('../../../assets/interface/streak-saver.png')} style={{ width: 48, height: 48 }} resizeMode="contain" />
+                          )}
                         </View>
-                        <View style={tw`absolute -top-1 -right-1 bg-green-500 rounded-full p-1.5 border-2 border-white`}>
-                          <Sparkles size={14} color="white" fill="white" />
-                        </View>
+                        {success && (
+                          <View style={tw`absolute -top-1 -right-1 bg-green-500 rounded-full p-1.5 border-2 border-white`}>
+                            <Sparkles size={14} color="white" fill="white" />
+                          </View>
+                        )}
                       </View>
                     </Animated.View>
 
-                    <Text style={tw`text-3xl font-black text-center text-purple-900 mb-2`}>{t('habitDetails.streakSaver.success.title')}</Text>
-                    <Text style={tw`text-base text-center text-purple-700 font-medium`}>{t('habitDetails.streakSaver.success.subtitle')}</Text>
+                    <Text style={[tw`text-2xl font-black text-center mb-2`, success ? tw`text-green-900` : tw`text-purple-900`]}>
+                      {success ? t('habitDetails.streakSaver.success.title') : t('habitDetails.streakSaver.loading.title')}
+                    </Text>
+                    <Text style={[tw`text-sm text-center font-medium mb-1`, success ? tw`text-green-700` : tw`text-purple-700`]}>
+                      "{habitName}"
+                    </Text>
                   </View>
                 </LinearGradient>
 
                 <View style={tw`px-5 py-6`}>
-                  <View style={tw`bg-purple-50 rounded-2xl p-4 mb-4 border-2 border-purple-200`}>
-                    <View style={tw`flex-row items-center justify-center mb-3`}>
-                      <Flame size={28} color="#8B5CF6" fill="#8B5CF6" />
-                      <Text style={tw`text-4xl font-black text-purple-900 ml-2`}>{newStreak}</Text>
-                      <Text style={tw`text-lg font-bold text-purple-700 ml-2`}>{t('habitDetails.streakSaver.success.days')}</Text>
-                    </View>
-                    <Text style={tw`text-center text-sm font-semibold text-purple-800`}>"{habitName}"</Text>
+                  {/* Progress Bar */}
+                  <View style={tw`mb-4`}>
+                    <AnimatedProgressBar progress={progress} isComplete={success} />
+                    <Text style={tw`text-center text-xs font-semibold mt-2 ${success ? 'text-green-600' : 'text-purple-600'}`}>
+                      {success ? t('habitDetails.streakSaver.loading.complete') : t('habitDetails.streakSaver.loading.saving')}
+                    </Text>
                   </View>
 
-                  <View style={tw`bg-amber-50 rounded-xl p-4 border border-amber-200`}>
-                    <View style={tw`flex-row items-start`}>
-                      <View style={tw`flex-1`}>
-                        <Text style={tw`text-xs font-bold text-amber-900 mb-1`}>{t('habitDetails.streakSaver.success.keepGoing')}</Text>
-                        <Text style={tw`text-xs text-amber-800 leading-4`}>{randomMessage}</Text>
-                      </View>
+                  {/* Streak info */}
+                  <View style={[tw`rounded-2xl p-4 border-2`, success ? tw`bg-green-50 border-green-200` : tw`bg-purple-50 border-purple-200`]}>
+                    <View style={tw`flex-row items-center justify-center`}>
+                      <Flame size={24} color={success ? '#16a34a' : '#8B5CF6'} fill={success ? '#16a34a' : '#8B5CF6'} />
+                      <Text style={[tw`text-3xl font-black ml-2`, success ? tw`text-green-900` : tw`text-purple-900`]}>
+                        {success ? newStreak : previousStreak}
+                      </Text>
+                      <Text style={[tw`text-base font-bold ml-2`, success ? tw`text-green-700` : tw`text-purple-700`]}>
+                        {t('habitDetails.streakSaver.success.days')}
+                      </Text>
                     </View>
                   </View>
-
-                  <Text style={tw`text-center text-xs text-stone-400 mt-4`}>{t('habitDetails.streakSaver.success.closingIn', { seconds: countdown })}</Text>
                 </View>
               </>
             ) : error ? (

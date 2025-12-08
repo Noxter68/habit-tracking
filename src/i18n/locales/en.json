@@ -1944,6 +1944,11 @@
         "keepGoing": "Keep Going!",
         "closingIn": "Closing in {{seconds}} seconds..."
       },
+      "loading": {
+        "title": "Saving Streak...",
+        "saving": "Restoring your streak...",
+        "complete": "Streak saved!"
+      },
       "motivational": [
         "Consistency is the key to mastery!",
         "Every day counts towards your goal!",
@@ -2181,6 +2186,17 @@
       "allSafe": "All streaks are safe",
       "available_one": "{{count}} Streak Saver ready",
       "available_other": "{{count}} Streak Savers ready"
+    },
+    "selection": {
+      "title": "Habits at Risk",
+      "subtitle": "Choose which habit to save",
+      "streakDays_one": "{{count}} day streak",
+      "streakDays_other": "{{count}} day streak",
+      "saversAvailable_one": "{{count}} saver available",
+      "saversAvailable_other": "{{count}} savers available",
+      "noSaversTitle": "No savers left!",
+      "noSaversMessage": "You're out of streak savers. Buy more to protect your streaks.",
+      "goToShop": "Buy Streak Savers"
     },
     "buttons": {
       "use": "USE STREAK SAVER",

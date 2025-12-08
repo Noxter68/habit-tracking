@@ -20,6 +20,8 @@ import { HolidayModeDisplay } from '../components/dashboard/HolidayModeDisplay';
 import { DebugButton } from '@/components/debug/DebugButton';
 import { StreakSaverBadge } from '@/components/streakSaver/StreakSaverBadge';
 import { StreakSaverShopModal } from '@/components/streakSaver/StreakSaverShopModal';
+import { StreakSaverSelectionModal } from '@/components/streakSaver/StreakSaverSelectionModal';
+import { StreakSaverModal } from '@/components/streakSaver/StreakSaverModal';
 import TaskBadge from '@/components/TasksBadge';
 import { UpdateModal } from '@/components/updateModal';
 import { HabitsSectionHeader } from '@/components/dashboard/HabitsSectionHeader';
@@ -69,6 +71,26 @@ const Dashboard: React.FC = () => {
   // State: Loading & UI
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [showShop, setShowShop] = useState(false);
+  const [showStreakSaverSelection, setShowStreakSaverSelection] = useState(false);
+  const [saveableHabits, setSaveableHabits] = useState<Array<{
+    habitId: string;
+    habitName: string;
+    previousStreak: number;
+    missedDate: string;
+  }>>([]);
+  const [streakSaverInventory, setStreakSaverInventory] = useState({ available: 0, totalUsed: 0 });
+
+  // State: Streak Saver Modal (pour sauvegarder directement depuis le Dashboard)
+  const [showStreakSaverModal, setShowStreakSaverModal] = useState(false);
+  const [selectedHabitToSave, setSelectedHabitToSave] = useState<{
+    habitId: string;
+    habitName: string;
+    previousStreak: number;
+  } | null>(null);
+  const [streakSaverLoading, setStreakSaverLoading] = useState(false);
+  const [streakSaverSuccess, setStreakSaverSuccess] = useState(false);
+  const [streakSaverError, setStreakSaverError] = useState<string | null>(null);
+  const [newStreak, setNewStreak] = useState(0);
 
   // State: Holiday Mode
   const [activeHoliday, setActiveHoliday] = useState<HolidayPeriod | null>(null);
@@ -389,31 +411,98 @@ const Dashboard: React.FC = () => {
     HapticFeedback.light();
 
     try {
-      const saveableHabits = await StreakSaverService.getSaveableHabits(user.id);
+      const [habits, inventory] = await Promise.all([
+        StreakSaverService.getSaveableHabits(user.id),
+        StreakSaverService.getInventory(user.id),
+      ]);
 
-      if (saveableHabits.length === 0) {
+      Logger.debug('🎯 Saveable habits:', habits.length, 'Inventory:', inventory.available);
+
+      if (habits.length === 0) {
         Logger.debug('No saveable habits found');
-        // return;
+        return;
       }
 
-      if (saveableHabits.length === 1) {
-        const habit = saveableHabits[0];
-        Logger.debug('🎯 Navigating to habit:', habit.habitId);
-        navigation.navigate('HabitDetails', {
+      // Stocker l'inventaire pour l'utiliser dans les modals
+      setStreakSaverInventory(inventory);
+
+      // Si une seule habitude, ouvrir directement le modal de sauvegarde
+      if (habits.length === 1) {
+        const habit = habits[0];
+        Logger.debug('🎯 Single habit, opening save modal directly:', habit.habitId);
+        setSelectedHabitToSave({
           habitId: habit.habitId,
-          pausedTasks: frozenTasksMap.get(habit.habitId) || {},
+          habitName: habit.habitName,
+          previousStreak: habit.previousStreak,
         });
+        setStreakSaverSuccess(false);
+        setStreakSaverError(null);
+        setShowStreakSaverModal(true);
       } else {
-        const firstHabit = saveableHabits[0];
-        Logger.debug('🎯 Multiple saveable habits, navigating to first:', firstHabit.habitId);
-        navigation.navigate('HabitDetails', {
-          habitId: firstHabit.habitId,
-          pausedTasks: frozenTasksMap.get(firstHabit.habitId) || {},
-        });
+        // Plusieurs habitudes : ouvrir le modal de sélection
+        Logger.debug('🎯 Multiple habits, showing selection modal');
+        setSaveableHabits(habits);
+        setShowStreakSaverSelection(true);
       }
     } catch (error) {
       Logger.error('Error handling streak saver press:', error);
     }
+  };
+
+  const handleSelectHabitToSave = (habit: { habitId: string; habitName: string; previousStreak: number; missedDate: string }) => {
+    Logger.debug('🎯 Selected habit to save:', habit.habitId);
+    setShowStreakSaverSelection(false);
+
+    // Préparer les données de l'habitude sélectionnée
+    const habitData = {
+      habitId: habit.habitId,
+      habitName: habit.habitName,
+      previousStreak: habit.previousStreak,
+    };
+
+    // Petit délai pour laisser le modal de sélection se fermer avant d'ouvrir le modal de sauvegarde
+    setTimeout(() => {
+      setSelectedHabitToSave(habitData);
+      setStreakSaverSuccess(false);
+      setStreakSaverError(null);
+      setShowStreakSaverModal(true);
+    }, 300);
+  };
+
+  const handleUseStreakSaver = async () => {
+    if (!user || !selectedHabitToSave) return;
+
+    setStreakSaverLoading(true);
+    setStreakSaverError(null);
+
+    try {
+      const result = await StreakSaverService.useStreakSaver(selectedHabitToSave.habitId, user.id);
+
+      if (result.success) {
+        Logger.debug('✅ Streak saved successfully:', result.newStreak);
+        setNewStreak(result.newStreak || selectedHabitToSave.previousStreak);
+        setStreakSaverSuccess(true);
+
+        // Rafraîchir les données après sauvegarde
+        setStreakSaverRefreshTrigger((prev) => prev + 1);
+        await Promise.all([refreshHabits(), refreshStats()]);
+      } else {
+        Logger.error('❌ Failed to save streak:', result.message);
+        setStreakSaverError(result.message);
+      }
+    } catch (error: any) {
+      Logger.error('❌ Error using streak saver:', error);
+      setStreakSaverError(error.message || 'An error occurred');
+    } finally {
+      setStreakSaverLoading(false);
+    }
+  };
+
+  const handleCloseStreakSaverModal = () => {
+    setShowStreakSaverModal(false);
+    setSelectedHabitToSave(null);
+    setStreakSaverSuccess(false);
+    setStreakSaverError(null);
   };
 
   // ============================================================================
@@ -750,6 +839,35 @@ const Dashboard: React.FC = () => {
           username={username || user?.email?.split('@')[0]}
           random={isMotivationTestMode}
         />
+
+        {/* Streak Saver Selection Modal */}
+        <StreakSaverSelectionModal
+          visible={showStreakSaverSelection}
+          habits={saveableHabits}
+          availableSavers={streakSaverInventory.available}
+          onSelectHabit={handleSelectHabitToSave}
+          onClose={() => setShowStreakSaverSelection(false)}
+          onShopPress={() => {
+            setShowStreakSaverSelection(false);
+            setShowShop(true);
+          }}
+        />
+
+        {/* Streak Saver Modal (sauvegarde directe depuis Dashboard) */}
+        {selectedHabitToSave && (
+          <StreakSaverModal
+            visible={showStreakSaverModal}
+            habitName={selectedHabitToSave.habitName}
+            previousStreak={selectedHabitToSave.previousStreak}
+            availableSavers={streakSaverInventory.available}
+            loading={streakSaverLoading}
+            success={streakSaverSuccess}
+            error={streakSaverError}
+            newStreak={newStreak}
+            onUse={handleUseStreakSaver}
+            onClose={handleCloseStreakSaverModal}
+          />
+        )}
       </SafeAreaView>
     </ImageBackground>
   );

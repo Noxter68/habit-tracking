@@ -1989,6 +1989,11 @@
         "keepGoing": "Continuez !",
         "closingIn": "Fermeture dans {{seconds}} secondes..."
       },
+      "loading": {
+        "title": "Sauvegarde en cours...",
+        "saving": "Restauration de votre série...",
+        "complete": "Série sauvegardée !"
+      },
       "motivational": [
         "La constance est la clé de la maîtrise !",
         "Chaque jour compte pour votre objectif !",
@@ -2228,6 +2233,17 @@
       "available_one": "{{count}} Sauveur de Série disponible",
       "available_other": "{{count}} Sauveurs de Série disponibles"
     },
+    "selection": {
+      "title": "Habitudes en Danger",
+      "subtitle": "Choisissez quelle habitude sauvegarder",
+      "streakDays_one": "Série de {{count}} jour",
+      "streakDays_other": "Série de {{count}} jours",
+      "saversAvailable_one": "{{count}} sauveur disponible",
+      "saversAvailable_other": "{{count}} sauveurs disponibles",
+      "noSaversTitle": "Plus de sauveurs !",
+      "noSaversMessage": "Vous n'avez plus de sauveurs de série. Achetez-en pour protéger vos séries.",
+      "goToShop": "Acheter des sauveurs"
+    },
     "buttons": {
       "use": "UTILISER SAUVEGARDE",
       "maybeLater": "Plus Tard",
@@ -2239,6 +2255,11 @@
       "days": "jours",
       "keepGoing": "Continuez !",
       "closingIn": "Fermeture dans {{seconds}} secondes..."
+    },
+    "loading": {
+      "title": "Sauvegarde en cours...",
+      "saving": "Restauration de votre série...",
+      "complete": "Série sauvegardée !"
     },
     "motivational": [
       "La régularité est la clé de la maîtrise !",
