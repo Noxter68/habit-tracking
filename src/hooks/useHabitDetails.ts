@@ -26,6 +26,7 @@ interface UseHabitDetailsResult {
     bestStreak: number;
   } | null;
   refreshProgression: () => Promise<void>;
+  clearNewlyUnlockedMilestones: () => void;
   loading: boolean;
 }
 
@@ -168,6 +169,10 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
     fetchData();
   }, [habitId, userId, currentTierLevel]);
 
+  const clearNewlyUnlockedMilestones = useCallback(() => {
+    setNewlyUnlockedMilestones([]);
+  }, []);
+
   return {
     tierInfo,
     tierProgress,
@@ -177,6 +182,7 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
     milestoneXpAwarded,
     performanceMetrics,
     refreshProgression: () => fetchData(true), // Silent refresh
+    clearNewlyUnlockedMilestones,
     loading,
   };
 }

@@ -289,7 +289,7 @@ const HabitDetails: React.FC = () => {
   // HOOKS - Données de progression
   // ============================================================================
 
-  const { tierInfo, nextTier, milestoneStatus, newlyUnlockedMilestones, milestoneXpAwarded, performanceMetrics, refreshProgression, loading } = useHabitDetails(habit?.id || '', user?.id || '', habit?.currentStreak || 0, habit?.currentTierLevel, habit?.createdAt);
+  const { tierInfo, nextTier, milestoneStatus, newlyUnlockedMilestones, milestoneXpAwarded, performanceMetrics, refreshProgression, clearNewlyUnlockedMilestones, loading } = useHabitDetails(habit?.id || '', user?.id || '', habit?.currentStreak || 0, habit?.currentTierLevel, habit?.createdAt);
 
   // ============================================================================
   // VARIABLES DERIVEES - Métriques
@@ -539,6 +539,7 @@ const HabitDetails: React.FC = () => {
 
   /**
    * Affiche les milestones nouvellement débloqués
+   * Clear immédiatement après avoir préparé l'affichage pour éviter les re-triggers
    */
   useEffect(() => {
     if (!habit || !newlyUnlockedMilestones || newlyUnlockedMilestones.length === 0) {
@@ -566,7 +567,10 @@ const HabitDetails: React.FC = () => {
       setRecapMilestones(milestonesWithIndex);
       setShowMilestoneRecapModal(true);
     }
-  }, [habit?.id, newlyUnlockedMilestones, milestoneStatus?.all]);
+
+    // Clear immédiatement pour éviter que le modal se ré-affiche lors des refreshProgression()
+    clearNewlyUnlockedMilestones();
+  }, [habit?.id, newlyUnlockedMilestones, milestoneStatus?.all, clearNewlyUnlockedMilestones]);
 
   /**
    * Détecte les montées de tier
