@@ -6,7 +6,8 @@
  *
  * Features:
  * - Smooth slide down + fade in animation (60fps)
- * - Auto-dismiss after 10 seconds
+ * - Auto-dismiss after 15 seconds
+ * - Only dismissible via close button (not backdrop tap)
  * - Gemstone-themed design with textures
  * - Compact rectangular design
  * - Textured borders
@@ -143,14 +144,14 @@ export const DailyMotivationModal: React.FC<DailyMotivationModalProps> = ({
       // Start progress bar animation separately (JS thread)
       RNAnimated.timing(progressAnim, {
         toValue: 1,
-        duration: 10000,
+        duration: 15000,
         useNativeDriver: false, // Must be false for width
       }).start();
 
-      // Auto-dismiss after 10 seconds
+      // Auto-dismiss after 15 seconds
       dismissTimerRef.current = setTimeout(() => {
         handleClose();
-      }, 10000);
+      }, 15000);
     } else {
       // Reset animations when modal is hidden
       slideAnim.setValue(-300);
@@ -170,7 +171,7 @@ export const DailyMotivationModal: React.FC<DailyMotivationModalProps> = ({
 
   return (
     <Modal visible={visible} transparent animationType="none" statusBarTranslucent>
-      {/* Backdrop with fade */}
+      {/* Backdrop with fade - No tap to dismiss, only close button */}
       <RNAnimated.View
         style={[
           tw`absolute inset-0 bg-black`,
@@ -181,9 +182,8 @@ export const DailyMotivationModal: React.FC<DailyMotivationModalProps> = ({
             }),
           },
         ]}
-      >
-        <Pressable style={tw`flex-1`} onPress={handleClose} />
-      </RNAnimated.View>
+        pointerEvents="none"
+      />
 
       {/* Modal content - Compact and rectangular */}
       <View style={tw`flex-1 px-4 pt-16`} pointerEvents="box-none">
