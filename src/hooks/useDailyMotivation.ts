@@ -11,6 +11,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const STORAGE_KEY = '@daily_motivation_last_shown';
 const SETTING_KEY = '@daily_motivation_enabled';
 
+// Flag global pour tracker si le modal a déjà été affiché dans cette session
+// Évite les re-affichages lors de la navigation entre écrans
+let hasShownThisSession = false;
+
 /**
  * Get today's date string in YYYY-MM-DD format
  */
@@ -27,81 +31,71 @@ export const useDailyMotivation = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isTestMode, setIsTestMode] = useState(false);
   const [isEnabled, setIsEnabled] = useState(false); // Default: once per day (false = not every time)
-  const [shouldShowToday, setShouldShowToday] = useState(false);
 
   /**
-   * Check if the modal should be shown today
+   * Check if the modal should be shown today and show it after delay
+   * Runs only once on mount
    */
-  const checkShouldShow = useCallback(async () => {
-    try {
-      // Check if the feature is enabled (show every time)
-      const enabledValue = await AsyncStorage.getItem(SETTING_KEY);
-
-      // If no value stored yet, initialize with default (false = once per day)
-      if (enabledValue === null) {
-        await AsyncStorage.setItem(SETTING_KEY, 'false');
-      }
-
-      const showEveryTime = enabledValue === 'true'; // Default to false (once per day)
-      setIsEnabled(showEveryTime);
-
-      if (showEveryTime) {
-        // Show every time the app opens
-        setShouldShowToday(true);
-        setIsLoading(false);
-        return;
-      }
-
-      // Show once per day (default behavior)
-      const lastShownDate = await AsyncStorage.getItem(STORAGE_KEY);
-      const todayDate = getTodayDateString();
-
-      // If never shown or last shown date is different from today, mark as should show
-      if (!lastShownDate || lastShownDate !== todayDate) {
-        setShouldShowToday(true);
-        // Save today's date
-        await AsyncStorage.setItem(STORAGE_KEY, todayDate);
-      }
-    } catch (error) {
-      console.error('Error checking daily motivation:', error);
-    } finally {
+  useEffect(() => {
+    // Si déjà affiché dans cette session, ne rien faire
+    if (hasShownThisSession) {
       setIsLoading(false);
+      return;
     }
-  }, []);
 
-  /**
-   * Initialize check on mount
-   */
-  useEffect(() => {
-    checkShouldShow();
-  }, [checkShouldShow]);
+    let timer: ReturnType<typeof setTimeout> | null = null;
 
-  /**
-   * Auto-show the modal when shouldShowToday becomes true
-   * This triggers after a delay to let other modals (like What's New) show first
-   */
-  useEffect(() => {
-    if (shouldShowToday && !isLoading && !showModal) {
-      const timer = setTimeout(() => {
-        setShowModal(true);
-        setIsTestMode(false);
-        // Reset shouldShowToday to prevent showing again on re-navigation
-        setShouldShowToday(false);
-      }, 2000); // 2 second delay to let other modals show first
+    const checkAndShow = async () => {
+      try {
+        // Check if the feature is enabled (show every time)
+        const enabledValue = await AsyncStorage.getItem(SETTING_KEY);
 
-      return () => clearTimeout(timer);
-    }
-  }, [shouldShowToday, isLoading, showModal]);
+        // If no value stored yet, initialize with default (false = once per day)
+        if (enabledValue === null) {
+          await AsyncStorage.setItem(SETTING_KEY, 'false');
+        }
 
-  /**
-   * Trigger the modal to show (can be called after other modals are closed)
-   */
-  const triggerShow = useCallback(() => {
-    if (shouldShowToday) {
-      setShowModal(true);
-      setIsTestMode(false);
-    }
-  }, [shouldShowToday]);
+        const showEveryTime = enabledValue === 'true';
+        setIsEnabled(showEveryTime);
+
+        let shouldShow = false;
+
+        if (showEveryTime) {
+          // Show every time the app opens (but only once per session)
+          shouldShow = true;
+        } else {
+          // Show once per day (default behavior)
+          const lastShownDate = await AsyncStorage.getItem(STORAGE_KEY);
+          const todayDate = getTodayDateString();
+
+          if (!lastShownDate || lastShownDate !== todayDate) {
+            shouldShow = true;
+            await AsyncStorage.setItem(STORAGE_KEY, todayDate);
+          }
+        }
+
+        setIsLoading(false);
+
+        // Show modal after delay if needed
+        if (shouldShow && !hasShownThisSession) {
+          timer = setTimeout(() => {
+            hasShownThisSession = true;
+            setShowModal(true);
+            setIsTestMode(false);
+          }, 2000);
+        }
+      } catch (error) {
+        console.error('Error checking daily motivation:', error);
+        setIsLoading(false);
+      }
+    };
+
+    checkAndShow();
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, []); // Empty deps - run only once on mount
 
   /**
    * Close the modal
@@ -156,7 +150,5 @@ export const useDailyMotivation = () => {
     isTestMode,
     isEnabled,
     toggleEnabled,
-    triggerShow,
-    shouldShowToday,
   };
 };

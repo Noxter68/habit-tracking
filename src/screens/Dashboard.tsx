@@ -106,7 +106,6 @@ const Dashboard: React.FC = () => {
     closeModal: closeMotivationModal,
     forceShow: forceShowMotivation,
     isTestMode: isMotivationTestMode,
-    triggerShow: triggerMotivationShow,
   } = useDailyMotivation();
 
   const locale = getLocales()[0]?.languageCode ?? 'en';
@@ -121,13 +120,9 @@ const Dashboard: React.FC = () => {
     Alert.alert('Version reset! Restart the app to see the modal again.');
   };
 
-  // Handle Update Modal close and trigger Motivation Modal if needed
+  // Handle Update Modal close
   const handleUpdateModalClose = async () => {
     await handleClose();
-    // Small delay before showing motivation modal
-    setTimeout(() => {
-      triggerMotivationShow();
-    }, 500);
   };
 
   // State: Debug
