@@ -197,10 +197,15 @@ const Icon: React.FC<IconProps> = ({ name, size = 22, color = '#52525B' }) => {
 // COMPOSANT - En-tête du profil
 // ============================================================================
 
+interface ProfileHeaderProps {
+  username: string;
+  onUsernameUpdate: (newUsername: string) => void;
+}
+
 /**
  * Affiche l'en-tête du profil avec avatar, nom et statut premium
  */
-const ProfileHeader: React.FC = () => {
+const ProfileHeader: React.FC<ProfileHeaderProps> = ({ username, onUsernameUpdate }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { isPremium } = useSubscription();
@@ -210,44 +215,16 @@ const ProfileHeader: React.FC = () => {
   // ============================================================================
 
   const [showEditModal, setShowEditModal] = useState(false);
-  const [currentUsername, setCurrentUsername] = useState<string>('');
-
-  // ============================================================================
-  // HOOKS - useEffect
-  // ============================================================================
-
-  useEffect(() => {
-    if (user?.id) {
-      fetchUsername();
-    }
-  }, [user?.id]);
 
   // ============================================================================
   // FONCTIONS UTILITAIRES
   // ============================================================================
 
   /**
-   * Récupère le nom d'utilisateur depuis la base de données
-   */
-  const fetchUsername = async () => {
-    if (!user?.id) return;
-
-    try {
-      const { data, error } = await supabase.from('profiles').select('username').eq('id', user.id).single();
-
-      if (!error && data) {
-        setCurrentUsername(data.username || getDisplayName());
-      }
-    } catch (error) {
-      Logger.error('Error fetching username:', error);
-    }
-  };
-
-  /**
    * Retourne les initiales de l'utilisateur
    */
   const getInitials = () => {
-    const name = currentUsername || user?.email || 'User';
+    const name = username || user?.email || 'User';
     return name.substring(0, 2).toUpperCase();
   };
 
@@ -255,14 +232,7 @@ const ProfileHeader: React.FC = () => {
    * Retourne le nom d'affichage de l'utilisateur
    */
   const getDisplayName = () => {
-    return currentUsername || user?.email?.split('@')[0] || 'User';
-  };
-
-  /**
-   * Met à jour le nom d'utilisateur local après modification
-   */
-  const handleUsernameUpdate = (newUsername: string) => {
-    setCurrentUsername(newUsername);
+    return username || user?.email?.split('@')[0] || 'User';
   };
 
   // ============================================================================
@@ -322,7 +292,7 @@ const ProfileHeader: React.FC = () => {
       </Animated.View>
 
       {/* Modal d'édition du nom */}
-      <EditUsernameModal visible={showEditModal} currentUsername={currentUsername} userId={user?.id || ''} onClose={() => setShowEditModal(false)} onSuccess={handleUsernameUpdate} />
+      <EditUsernameModal visible={showEditModal} currentUsername={username} userId={user?.id || ''} onClose={() => setShowEditModal(false)} onSuccess={onUsernameUpdate} />
     </>
   );
 };
@@ -411,6 +381,8 @@ const SettingsScreen: React.FC = () => {
   // HOOKS - State
   // ============================================================================
 
+  const [loading, setLoading] = useState(true);
+  const [username, setUsername] = useState<string>('');
   const [notifications, setNotifications] = useState(false);
   const [notificationLoading, setNotificationLoading] = useState(false);
   const [activeHoliday, setActiveHoliday] = useState<HolidayPeriod | null>(null);
@@ -438,17 +410,51 @@ const SettingsScreen: React.FC = () => {
     }
   }, [user?.id]);
 
+  /**
+   * Charge le nom d'utilisateur depuis la base de données
+   */
+  const loadUsername = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data, error } = await supabase.from('profiles').select('username').eq('id', user.id).single();
+
+      if (!error && data) {
+        setUsername(data.username || user?.email?.split('@')[0] || 'User');
+      }
+    } catch (error) {
+      Logger.error('Error fetching username:', error);
+    }
+  }, [user?.id, user?.email]);
+
   // ============================================================================
   // HOOKS - useEffect
   // ============================================================================
 
+  /**
+   * Charge toutes les données initiales au montage
+   */
   useEffect(() => {
-    loadNotificationPreferences();
+    const loadInitialData = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([
+          loadNotificationPreferences(),
+          loadHolidayStatus(),
+          loadUsername(),
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadInitialData();
   }, [user]);
 
   useFocusEffect(
     useCallback(() => {
       StatusBar.setBarStyle('dark-content');
+      // Rafraîchir les données en background (sans loader)
       loadHolidayStatus();
     }, [loadHolidayStatus])
   );
@@ -644,6 +650,18 @@ const SettingsScreen: React.FC = () => {
   // RENDU PRINCIPAL
   // ============================================================================
 
+  // Afficher un loader pendant le chargement initial des données
+  if (loading) {
+    return (
+      <ImageBackground source={TEXTURE_BG} style={tw`flex-1`} resizeMode="repeat" imageStyle={{ opacity: 0.15 }}>
+        <SafeAreaView style={tw`flex-1 items-center justify-center`}>
+          <StatusBar barStyle="dark-content" />
+          <ActivityIndicator size="large" color="#52525B" />
+        </SafeAreaView>
+      </ImageBackground>
+    );
+  }
+
   return (
     <ImageBackground source={TEXTURE_BG} style={tw`flex-1`} resizeMode="repeat" imageStyle={{ opacity: 0.15 }}>
       <SafeAreaView style={tw`flex-1`}>
@@ -665,7 +683,7 @@ const SettingsScreen: React.FC = () => {
           </Animated.View>
 
           {/* En-tête du profil */}
-          <ProfileHeader />
+          <ProfileHeader username={username} onUsernameUpdate={setUsername} />
 
           <View style={tw`px-6`}>
             {/* Section Abonnement */}
