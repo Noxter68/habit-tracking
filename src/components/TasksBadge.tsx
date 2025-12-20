@@ -117,27 +117,27 @@ export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total, username
   };
 
   return (
-    <Animated.View entering={FadeIn.duration(600)} style={tw``}>
+    <Animated.View entering={FadeIn.duration(600)}>
       <View
         style={[
-          tw`rounded-3xl overflow-hidden`,
+          tw`rounded-2xl overflow-hidden`,
           {
             shadowColor: theme.gradient[1],
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.3,
-            shadowRadius: 16,
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.25,
+            shadowRadius: 12,
             borderRadius: 16,
-            elevation: 8,
+            elevation: 6,
           },
         ]}
       >
         <ImageBackground source={theme.texture} style={tw`w-full`} imageStyle={{ opacity: 1 }} resizeMode="cover">
-          <View style={[tw`px-5 py-2`, { backgroundColor: `${theme.gradient[1]}80` }]}>
-            <View style={tw`flex-row items-center justify-between mb-2`}>
-              <View style={tw`flex-1 mr-4`}>
+          <View style={[tw`px-4 py-3`, { backgroundColor: `${theme.gradient[1]}80` }]}>
+            <View style={tw`flex-row items-center justify-between`}>
+              <View style={tw`flex-1 mr-3`}>
                 <Text
                   style={[
-                    tw`text-2xl font-black mb-1`,
+                    tw`text-xl font-black`,
                     {
                       color: theme.textColor,
                       textShadowColor: 'rgba(0, 0, 0, 0.3)',
@@ -150,7 +150,7 @@ export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total, username
                 </Text>
                 <Text
                   style={[
-                    tw`text-sm font-semibold`,
+                    tw`text-xs font-semibold`,
                     {
                       color: theme.textColor,
                       opacity: 0.9,
@@ -164,58 +164,45 @@ export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total, username
                 </Text>
               </View>
 
-              <Image
-                source={theme.gemImage}
-                style={{
-                  width: 80,
-                  height: 80,
-                  transform: [{ rotate: '-15deg' }],
-                }}
-                resizeMode="contain"
-              />
-            </View>
+              {/* Stats compacts */}
+              <View style={tw`flex-row items-center gap-3`}>
+                <View style={tw`flex-row items-baseline gap-1`}>
+                  <Text
+                    style={[
+                      tw`text-2xl font-black`,
+                      {
+                        color: theme.textColor,
+                        textShadowColor: 'rgba(0, 0, 0, 0.2)',
+                        textShadowOffset: { width: 0, height: 1 },
+                        textShadowRadius: 3,
+                      },
+                    ]}
+                  >
+                    {completed}
+                  </Text>
+                  <Text
+                    style={[
+                      tw`text-base font-semibold`,
+                      {
+                        color: theme.textColor,
+                        opacity: 0.7,
+                      },
+                    ]}
+                  >
+                    /{total}
+                  </Text>
+                </View>
 
-            <View style={tw`flex-row items-center justify-between`}>
-              <View style={tw`flex-row items-baseline gap-1.5`}>
-                <Text
-                  style={[
-                    tw`text-3xl font-black`,
-                    {
-                      color: theme.textColor,
-                      textShadowColor: 'rgba(0, 0, 0, 0.2)',
-                      textShadowOffset: { width: 0, height: 1 },
-                      textShadowRadius: 3,
-                    },
-                  ]}
-                >
-                  {completed}
-                </Text>
-                <Text
-                  style={[
-                    tw`text-lg font-semibold`,
-                    {
-                      color: theme.textColor,
-                      opacity: 0.7,
-                    },
-                  ]}
-                >
-                  / {total}
-                </Text>
+                <Image
+                  source={theme.gemImage}
+                  style={{
+                    width: 50,
+                    height: 50,
+                    transform: [{ rotate: '-15deg' }],
+                  }}
+                  resizeMode="contain"
+                />
               </View>
-
-              <Text
-                style={[
-                  tw`text-2xl font-black`,
-                  {
-                    color: theme.textColor,
-                    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-                    textShadowOffset: { width: 0, height: 1 },
-                    textShadowRadius: 3,
-                  },
-                ]}
-              >
-                {completionRate}%
-              </Text>
             </View>
           </View>
         </ImageBackground>

@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable, Image } from 'react-native';
-import Animated, { FadeInRight, useSharedValue, useAnimatedStyle, withRepeat, withTiming, Easing, interpolate } from 'react-native-reanimated';
+import Animated, { FadeInRight } from 'react-native-reanimated';
 import { ChevronRight, Zap, Sparkles } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -48,44 +48,10 @@ export const StreakSaverBadge: React.FC<StreakSaverBadgeProps> = ({ onPress, onS
   const displayInventory = DEV_MODE ? mockData.inventory : inventory;
 
   // ============================================================================
-  // Smooth breathing animation (no jumping)
+  // Static styles (no animations to save CPU)
   // ============================================================================
-  const breathe = useSharedValue(0);
-  const glow = useSharedValue(0);
-
-  useEffect(() => {
-    // Breathing effect - smooth infinite loop
-    breathe.value = withRepeat(
-      withTiming(1, {
-        duration: 2000,
-        easing: Easing.inOut(Easing.ease),
-      }),
-      -1,
-      true // reverse = true pour un aller-retour fluide
-    );
-
-    // Glow effect - smooth infinite loop
-    glow.value = withRepeat(
-      withTiming(1, {
-        duration: 2500,
-        easing: Easing.inOut(Easing.ease),
-      }),
-      -1,
-      true
-    );
-  }, []);
-
-  const breatheStyle = useAnimatedStyle(() => {
-    const scale = interpolate(breathe.value, [0, 1], [1, 1.08]);
-    return {
-      transform: [{ scale }],
-    };
-  });
-
-  const glowStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(glow.value, [0, 1], [0.3, 0.7]);
-    return { opacity };
-  });
+  const breatheStyle = { transform: [{ scale: 1 }] };
+  const glowStyle = { opacity: 0.5 };
 
   // ============================================================================
   // Data loading

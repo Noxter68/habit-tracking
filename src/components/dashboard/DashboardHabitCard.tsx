@@ -5,10 +5,9 @@
  * Permet de valider les tâches directement sans naviguer vers HabitDetail.
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, memo, useCallback } from 'react';
 import { View, Text, ImageBackground } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeIn } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import * as Haptics from 'expo-haptics';
 import tw from '@/lib/tailwind';
@@ -53,7 +52,7 @@ const getTranslatedHabitName = (habit: Habit, t: (key: string) => string): strin
   return habit.name;
 };
 
-export const DashboardHabitCard: React.FC<DashboardHabitCardProps> = ({
+const DashboardHabitCardComponent: React.FC<DashboardHabitCardProps> = ({
   habit,
   onToggleTask,
   onNavigateToDetails,
@@ -79,8 +78,8 @@ export const DashboardHabitCard: React.FC<DashboardHabitCardProps> = ({
     return getTasksForCategory(habit.category, habit.type as HabitType);
   }, [habit.category, habit.type]);
 
-  // Enrichir une tâche avec les traductions
-  const getEnrichedTask = (task: Task): Task => {
+  // Enrichir une tâche avec les traductions - memoized
+  const getEnrichedTask = useCallback((task: Task): Task => {
     if (task.id.startsWith('custom-task-') || task.id.startsWith('custom_')) {
       return task;
     }
@@ -94,7 +93,7 @@ export const DashboardHabitCard: React.FC<DashboardHabitCardProps> = ({
       };
     }
     return task;
-  };
+  }, [predefinedTasks]);
 
   // Calcul des tâches complétées
   const completedTasks = useMemo(() => {
@@ -117,20 +116,20 @@ export const DashboardHabitCard: React.FC<DashboardHabitCardProps> = ({
   const activeTasks = totalTasks - pausedTaskCount;
   const taskProgress = activeTasks > 0 ? Math.round((completedTasks / activeTasks) * 100) : 0;
 
-  // Handler pour toggle une tâche
-  const handleTaskToggle = (taskId: string) => {
+  // Handler pour toggle une tâche - memoized
+  const handleTaskToggle = useCallback((taskId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onToggleTask(habit.id, today, taskId);
-  };
+  }, [habit.id, today, onToggleTask]);
 
-  // Handler pour navigation
-  const handleNavigate = () => {
+  // Handler pour navigation - memoized
+  const handleNavigate = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onNavigateToDetails();
-  };
+  }, [onNavigateToDetails]);
 
   return (
-    <Animated.View entering={FadeIn.delay(index * 50)}>
+    <View>
       {/* Card container with shadow */}
       <View
         style={[
@@ -261,8 +260,34 @@ export const DashboardHabitCard: React.FC<DashboardHabitCardProps> = ({
           </ImageBackground>
         </View>
       </View>
-    </Animated.View>
+    </View>
   );
 };
+
+// Comparateur shallow pour pausedTasks (évite JSON.stringify coûteux)
+const arePausedTasksEqual = (
+  prev: Record<string, { pausedUntil: string; reason?: string }>,
+  next: Record<string, { pausedUntil: string; reason?: string }>
+): boolean => {
+  const prevKeys = Object.keys(prev);
+  const nextKeys = Object.keys(next);
+  if (prevKeys.length !== nextKeys.length) return false;
+  return prevKeys.every(key => key in next);
+};
+
+// Memoize pour éviter les re-renders pendant le scroll
+export const DashboardHabitCard = memo(DashboardHabitCardComponent, (prev, next) => {
+  // Re-render seulement si les données importantes changent
+  const prevTodayTasks = prev.habit.dailyTasks?.[getTodayString()];
+  const nextTodayTasks = next.habit.dailyTasks?.[getTodayString()];
+
+  return (
+    prev.habit.id === next.habit.id &&
+    prev.habit.currentStreak === next.habit.currentStreak &&
+    prev.unlockedMilestonesCount === next.unlockedMilestonesCount &&
+    prevTodayTasks?.completedTasks?.length === nextTodayTasks?.completedTasks?.length &&
+    arePausedTasksEqual(prev.pausedTasks || {}, next.pausedTasks || {})
+  );
+});
 
 export default DashboardHabitCard;

@@ -1,9 +1,8 @@
 // src/components/dashboard/DailyChallenge.tsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, Pressable, Image } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { CheckCircle2 } from 'lucide-react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withSequence, withRepeat, Easing, runOnJS, cancelAnimation } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withSequence, withRepeat, Easing, cancelAnimation } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { XPService, getProgressiveXPReward } from '../../services/xpService';
 import { supabase } from '../../lib/supabase';
@@ -11,7 +10,6 @@ import { getTodayString, isWeeklyHabitCompletedThisWeek, getWeeklyCompletedTasks
 import Logger from '@/utils/logger';
 import { Config } from '@/config';
 import { Habit } from '@/types';
-import FloatingXP from './FloatingXp';
 
 interface TierTheme {
   gradient: string[];
@@ -34,8 +32,6 @@ interface DailyChallengeProps {
 const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, userId, userLevel, currentLevelXP, xpForNextLevel, onLevelUp, tierTheme }) => {
   const [isCollected, setIsCollected] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [showXPBadge, setShowXPBadge] = useState(false);
-  const [collectedXP, setCollectedXP] = useState(0);
   const { t } = useTranslation();
 
   // Calculate XP reward based on user level
@@ -116,8 +112,6 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
 
   const scale = useSharedValue(1);
   const cardTranslateY = useSharedValue(0);
-  const badgeTranslateY = useSharedValue(0);
-  const badgeOpacity = useSharedValue(0);
   const breatheScale = useSharedValue(1);
 
   const animatedButtonStyle = useAnimatedStyle(() => ({
@@ -128,11 +122,6 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
     transform: [{ scale: breatheScale.value }, { translateY: cardTranslateY.value }],
   }));
 
-  const badgeAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: badgeTranslateY.value }],
-    opacity: badgeOpacity.value,
-  }));
-
   const defaultTheme = {
     gradient: ['#9333EA', '#7C3AED'],
     accent: '#9333EA',
@@ -141,25 +130,21 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
 
   const theme = tierTheme || defaultTheme;
   const accentColor = theme.accent;
-  const progressColor = `${accentColor}E6`;
 
   useEffect(() => {
     if (canClaimChallenge && !isCollected) {
-      const animate = () => {
-        'worklet';
-        breatheScale.value = withRepeat(
-          withTiming(1.015, {
-            duration: 2000,
-            easing: Easing.inOut(Easing.ease),
-          }),
-          -1,
-          true
-        );
-      };
-      animate();
+      // Animation limitée à 3 cycles au lieu d'infini pour économiser CPU
+      breatheScale.value = withRepeat(
+        withTiming(1.015, {
+          duration: 2000,
+          easing: Easing.inOut(Easing.ease),
+        }),
+        6, // 3 cycles (aller-retour = 2)
+        true
+      );
     } else {
       cancelAnimation(breatheScale);
-      breatheScale.value = withTiming(1.0, { duration: 300 });
+      breatheScale.value = 1.0;
     }
 
     return () => {
@@ -187,10 +172,6 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
     }
   };
 
-  const hideBadge = () => {
-    setShowXPBadge(false);
-  };
-
   const handleCollect = async () => {
     if (!canClaimChallenge || isCollected || isAnimating) return;
 
@@ -205,40 +186,20 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
 
       if (result.success) {
         setIsCollected(true);
-        setShowXPBadge(true);
-        setCollectedXP(result.xpEarned);
+        onCollect(result.xpEarned);
 
-        badgeTranslateY.value = 0;
-        badgeOpacity.value = 0;
-
-        badgeOpacity.value = withTiming(1, { duration: 200 });
-        badgeTranslateY.value = withSequence(
-          withTiming(-50, { duration: 1200, easing: Easing.out(Easing.cubic) }),
-          withTiming(-50, { duration: 0 }, (finished) => {
-            if (finished) {
-              runOnJS(hideBadge)();
-            }
-          })
-        );
-
-        badgeOpacity.value = withSequence(withTiming(1, { duration: 200 }), withTiming(1, { duration: 600 }), withTiming(0, { duration: 400 }));
-
-        setTimeout(() => {
-          onCollect(result.xpEarned);
-
-          if (currentLevelXP + result.xpEarned >= xpForNextLevel && onLevelUp) {
-            setTimeout(() => {
-              onLevelUp();
-            }, 100);
-          }
-        }, 300);
+        if (currentLevelXP + result.xpEarned >= xpForNextLevel && onLevelUp) {
+          setTimeout(() => {
+            onLevelUp();
+          }, 100);
+        }
       }
     } catch (error) {
       Logger.error('Error collecting daily challenge:', error);
     } finally {
       setTimeout(() => {
         setIsAnimating(false);
-      }, 1300);
+      }, 500);
     }
   };
 
@@ -347,12 +308,6 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
   return (
     <View>
       <View style={{ position: 'relative' }}>
-        {showXPBadge && (
-          <Animated.View style={badgeAnimatedStyle}>
-            <FloatingXP show={showXPBadge} amount={collectedXP || xpReward} accentColor={accentColor} texture={tierTheme?.texture} onComplete={hideBadge} />
-          </Animated.View>
-        )}
-
         <View
           style={{
             shadowColor: accentColor,
@@ -475,30 +430,23 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
                 </View>
 
                 {!isCollected && (
-                  <View
-                    style={{
-                      marginBottom: 6,
-                    }}
-                  >
+                  <View style={{ marginBottom: 6 }}>
+                    {/* Progress bar - même style épuré que DashboardHeader */}
                     <View
                       style={{
                         height: 10,
                         backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                        borderRadius: 8,
+                        borderRadius: 5,
                         overflow: 'hidden',
-                        borderWidth: 1,
-                        borderColor: 'rgba(255, 255, 255, 0.25)',
                       }}
                     >
-                      <LinearGradient
-                        colors={canClaimChallenge ? [progressColor, `${accentColor}B3`] : ['rgba(255, 255, 255, 0.95)', 'rgba(255, 255, 255, 0.75)']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
+                      <View
                         style={{
                           width: `${Math.min(completionPercentage, 100)}%`,
                           height: '100%',
-                          borderRadius: 8,
-                          shadowColor: canClaimChallenge ? accentColor : '#FFFFFF',
+                          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                          borderRadius: 5,
+                          shadowColor: '#FFFFFF',
                           shadowOffset: { width: 0, height: 0 },
                           shadowOpacity: 0.5,
                           shadowRadius: 4,

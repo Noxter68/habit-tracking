@@ -6,7 +6,6 @@ import React, { useCallback, useRef, useEffect, useState, useMemo } from 'react'
 import { ScrollView, RefreshControl, View, Text, ActivityIndicator, Pressable, Alert, StatusBar, ImageBackground, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Lock, Plus, Zap, PauseCircle } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
@@ -143,6 +142,11 @@ const Dashboard: React.FC = () => {
   const isFetchingHolidayRef = useRef(false);
   const lastLoadTime = useRef<number>(0);
   const MIN_RELOAD_INTERVAL = 1000; // 1 second
+  // Track optimistic task completions for correct XP calculation
+  const optimisticTaskCountRef = useRef<Map<string, number>>(new Map());
+  // Ref to access habits without causing re-renders
+  const habitsRef = useRef(habits);
+  habitsRef.current = habits;
 
   // ============================================================================
   // LOADING STATE MANAGEMENT
@@ -354,11 +358,11 @@ const Dashboard: React.FC = () => {
     });
   };
 
-  const handleTaskToggle = (habitId: string, date: string, taskId: string) => {
+  const handleTaskToggle = useCallback((habitId: string, date: string, taskId: string) => {
     HapticFeedback.success();
 
-    // Trouver l'habitude et la tâche pour la popup XP
-    const habit = habits.find(h => h.id === habitId);
+    // Utiliser la ref pour éviter de recréer ce callback à chaque changement de habits
+    const habit = habitsRef.current.find(h => h.id === habitId);
     if (habit) {
       const today = getTodayString();
       const todayTasks = habit.dailyTasks?.[today];
@@ -382,9 +386,20 @@ const Dashboard: React.FC = () => {
         const theme = tierThemes[tier.name];
 
         // Calculer l'XP basé sur le numéro de la tâche complétée
+        // Utiliser la ref optimiste pour tracker les clics rapides
         // 1ère tâche = 3 XP, 2ème = 7 XP, 3ème+ = 12 XP
-        const completedCount = todayTasks?.completedTasks?.length || 0;
-        const taskNumber = completedCount + 1; // La tâche qu'on est en train de compléter
+        const optimisticKey = `${habitId}-${today}`;
+
+        // Obtenir le compteur actuel ou initialiser depuis le state
+        let currentCount = optimisticTaskCountRef.current.get(optimisticKey);
+        if (currentCount === undefined) {
+          // Premier clic sur cette habitude aujourd'hui dans cette session
+          currentCount = todayTasks?.completedTasks?.length || 0;
+        }
+
+        const taskNumber = currentCount + 1;
+        optimisticTaskCountRef.current.set(optimisticKey, taskNumber);
+
         let xpAmount = 12; // Par défaut pour 3ème tâche et plus
         if (taskNumber === 1) xpAmount = 3;
         else if (taskNumber === 2) xpAmount = 7;
@@ -395,11 +410,19 @@ const Dashboard: React.FC = () => {
           xpAmount: xpAmount,
           accentColor: theme?.accent || '#3b82f6',
         });
+      } else {
+        // Si on décoche, décrémenter le compteur optimiste
+        const today = getTodayString();
+        const optimisticKey = `${habitId}-${today}`;
+        const currentOptimistic = optimisticTaskCountRef.current.get(optimisticKey);
+        if (currentOptimistic !== undefined && currentOptimistic > 0) {
+          optimisticTaskCountRef.current.set(optimisticKey, currentOptimistic - 1);
+        }
       }
     }
 
     toggleTask(habitId, date, taskId);
-  };
+  }, [toggleTask]);
 
   const handleTestLevelUp = () => {
     HapticFeedback.light();
@@ -632,6 +655,15 @@ const Dashboard: React.FC = () => {
             onStatsRefresh={handleStatsRefresh}
             totalXP={stats?.totalXP ?? 0}
             habits={habits}
+            onXPCollected={(amount, taskName) => {
+              // Afficher la popup XP pour le daily challenge
+              setXpPopup({
+                visible: true,
+                taskName: taskName || t('dashboard.dailyChallenge.title'),
+                xpAmount: amount,
+                accentColor: userTierTheme?.accent || '#9333EA',
+              });
+            }}
           />
 
           {Config.debug.enabled && (
@@ -667,7 +699,7 @@ const Dashboard: React.FC = () => {
 
           {/* Partial Holiday Mode Banner */}
           {(showPartialPauseMode || hasTasksPaused) && !showFullHolidayMode && (
-            <Animated.View entering={FadeInUp.delay(100)} style={tw`mt-4 mb-2`}>
+            <View style={tw`mt-4 mb-2`}>
               <LinearGradient
                 colors={['rgba(59, 130, 246, 0.08)', 'rgba(37, 99, 235, 0.05)']}
                 start={{ x: 0, y: 0 }}
@@ -686,11 +718,11 @@ const Dashboard: React.FC = () => {
                   </Text>
                 </View>
               </LinearGradient>
-            </Animated.View>
+            </View>
           )}
 
           {/* Habits Section */}
-          <Animated.View entering={FadeInUp.delay(200)}>
+          <View>
             {/* Section Header */}
             {!showFullHolidayMode && activeHabits.length > 0 ? (
               <View style={tw`mt-4`}>
@@ -871,7 +903,7 @@ const Dashboard: React.FC = () => {
               </View>
             )}
             <UpdateModal visible={showModal} onClose={handleUpdateModalClose} version={currentVersion} updates={updates} texts={modalTexts} />
-          </Animated.View>
+          </View>
         </ScrollView>
 
         {/* Daily Motivation Modal */}

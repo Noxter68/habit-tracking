@@ -189,47 +189,120 @@ export class XPService {
   }> {
     try {
       const today = getTodayString();
-      const { data: challenge, error } = await supabase
+
+      // 1. Check if already collected today
+      const { data: existingChallenge } = await supabase
         .from('daily_challenges')
-        .select('*')
+        .select('id, xp_collected')
         .eq('user_id', userId)
         .eq('date', today)
         .single();
 
-      if (error || !challenge) {
-        Logger.debug('No daily challenge found for today');
-        return { success: false, xpEarned: 0 };
-      }
-
-      if (challenge.xp_collected) {
+      if (existingChallenge?.xp_collected) {
         Logger.debug('Daily challenge already collected');
         return { success: false, xpEarned: 0 };
       }
 
-      if (!challenge.total_tasks || challenge.completed_tasks < challenge.total_tasks) {
-        Logger.debug('Daily challenge not complete');
+      // 2. Calculate stats from daily habits only (not weekly)
+      const { data: habits, error: habitsError } = await supabase
+        .from('habits')
+        .select('id, tasks, frequency')
+        .eq('user_id', userId);
+
+      if (habitsError || !habits) {
+        Logger.error('Error fetching habits:', habitsError);
         return { success: false, xpEarned: 0 };
       }
 
-      // XP progressif basé sur le niveau
-      const xpAmount = getProgressiveXPReward(userLevel);
-      Logger.debug(`Daily challenge XP reward: ${xpAmount} (Level ${userLevel})`);
+      // Filter only daily habits
+      const dailyHabits = habits.filter(h => h.frequency === 'daily');
 
+      if (dailyHabits.length === 0) {
+        Logger.debug('No daily habits found');
+        return { success: false, xpEarned: 0 };
+      }
+
+      const dailyHabitIds = dailyHabits.map(h => h.id);
+
+      // 3. Get today's completions for daily habits
+      const { data: completions, error: completionsError } = await supabase
+        .from('task_completions')
+        .select('habit_id, completed_tasks')
+        .eq('user_id', userId)
+        .eq('date', today)
+        .in('habit_id', dailyHabitIds);
+
+      if (completionsError) {
+        Logger.error('Error fetching completions:', completionsError);
+        return { success: false, xpEarned: 0 };
+      }
+
+      // 4. Calculate totals
+      let totalDailyTasks = 0;
+      let completedDailyTasks = 0;
+
+      dailyHabits.forEach(habit => {
+        const taskCount = Array.isArray(habit.tasks) ? habit.tasks.length : 0;
+        totalDailyTasks += taskCount;
+
+        const completion = completions?.find(c => c.habit_id === habit.id);
+        if (completion?.completed_tasks) {
+          completedDailyTasks += Array.isArray(completion.completed_tasks)
+            ? completion.completed_tasks.length
+            : 0;
+        }
+      });
+
+      // 5. Check if all daily tasks are complete
+      if (totalDailyTasks === 0 || completedDailyTasks < totalDailyTasks) {
+        return { success: false, xpEarned: 0 };
+      }
+
+      // 6. XP progressif basé sur le niveau
+      const xpAmount = getProgressiveXPReward(userLevel);
+
+      // 7. Award XP
       const success = await this.awardXP(userId, {
         amount: xpAmount,
         source_type: 'daily_challenge',
-        source_id: challenge.id,
+        source_id: existingChallenge?.id || `daily_${today}`,
         description: `Perfect Day - All tasks completed! (Level ${userLevel} bonus)`,
       });
 
       if (success) {
-        await supabase
-          .from('daily_challenges')
-          .update({
-            xp_collected: true,
-            collected_at: new Date().toISOString(),
-          })
-          .eq('id', challenge.id);
+        // 8. Update or insert daily_challenges record
+        if (existingChallenge?.id) {
+          // Update existing record
+          const { error: updateError } = await supabase
+            .from('daily_challenges')
+            .update({
+              total_tasks: totalDailyTasks,
+              completed_tasks: completedDailyTasks,
+              xp_collected: true,
+              collected_at: new Date().toISOString(),
+            })
+            .eq('id', existingChallenge.id);
+
+          if (updateError) {
+            Logger.error('Error updating daily challenge:', updateError);
+          }
+        } else {
+          // Insert new record
+          const { error: insertError } = await supabase
+            .from('daily_challenges')
+            .insert({
+              user_id: userId,
+              date: today,
+              total_tasks: totalDailyTasks,
+              completed_tasks: completedDailyTasks,
+              xp_collected: true,
+              collected_at: new Date().toISOString(),
+            });
+
+          if (insertError) {
+            Logger.error('Error inserting daily challenge:', insertError);
+          }
+        }
 
         return { success: true, xpEarned: xpAmount };
       }

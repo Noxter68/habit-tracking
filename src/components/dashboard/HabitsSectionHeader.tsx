@@ -14,7 +14,7 @@ export const HabitsSectionHeader: React.FC<HabitsSectionHeaderProps> = ({ onAddP
   const { t } = useTranslation();
 
   return (
-    <View style={tw`flex-row items-center justify-between mt-8`}>
+    <View style={tw`flex-row items-center justify-between mt-2`}>
       <View>
         <Text style={tw`text-xl font-black text-stone-800`}>{t('dashboard.habitsSection.title')}</Text>
         <Text style={tw`text-sm text-stone-500 mt-0.5`}>
