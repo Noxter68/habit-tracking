@@ -23,28 +23,35 @@ const modalTexts_fr: UpdateModalTexts = {
   getStarted: 'Commencer',
 };
 
-// Version 1.1.4 - English
-const updates_1_1_4_en: UpdateItem[] = [
+// Version 1.1.5 - English
+const updates_1_1_5_en: UpdateItem[] = [
   {
-    title: 'Better Connection Handling',
-    description: 'The app now handles connection issues gracefully. If Supabase is temporarily unavailable, you stay logged in and see a connection toast instead of being redirected to login.',
+    title: 'Complete Tasks from Dashboard',
+    description: 'You can now check off your habit tasks directly from the home screen! No need to open each habit individually anymore.',
   },
   {
-    title: 'Improved Dashboard Layout',
-    description: 'Refined the status bar and safe area spacing for a cleaner look on all iPhone models.',
+    title: 'Refreshed Dashboard Design',
+    description: 'The dashboard header and habit cards have been redesigned for a cleaner, more intuitive experience.',
+  },
+  {
+    title: 'Celebration Queue System',
+    description: 'Milestone and level up celebrations now display in order. No more missed celebrations when multiple achievements unlock at once!',
   },
 ];
 
-// Version 1.1.4 - French
-const updates_1_1_4_fr: UpdateItem[] = [
+// Version 1.1.5 - French
+const updates_1_1_5_fr: UpdateItem[] = [
   {
-    title: 'Meilleure Gestion de la Connexion',
-    description:
-      "L'application gère maintenant les problèmes de connexion de manière élégante. Si Supabase est temporairement indisponible, vous restez connecté et voyez un toast de connexion au lieu d'être redirigé vers la page de connexion.",
+    title: 'Validez vos tâches depuis le Dashboard',
+    description: 'Vous pouvez maintenant cocher vos tâches directement depuis l\'écran d\'accueil ! Plus besoin d\'ouvrir chaque habitude individuellement.',
   },
   {
-    title: 'Amélioration du Dashboard',
-    description: "Ajustement de la barre de statut et de l'espacement de la zone de sécurité pour un affichage plus propre sur tous les modèles d'iPhone.",
+    title: 'Nouveau design du Dashboard',
+    description: 'L\'en-tête et les cartes d\'habitudes ont été redessinés pour une expérience plus claire et intuitive.',
+  },
+  {
+    title: 'File de célébrations',
+    description: 'Les célébrations de milestones et de level up s\'affichent maintenant dans l\'ordre. Plus de célébrations manquées !',
   },
 ];
 
@@ -62,8 +69,8 @@ export const getUpdatesForVersion = (version: string, locale: string = 'en'): Up
 
   // Map des versions disponibles
   const updatesMap: Record<string, UpdateItem[]> = {
-    updates_1_1_4_en: updates_1_1_4_en,
-    updates_1_1_4_fr: updates_1_1_4_fr,
+    updates_1_1_5_en: updates_1_1_5_en,
+    updates_1_1_5_fr: updates_1_1_5_fr,
   };
 
   return updatesMap[key] || updatesMap[`updates_${version.replace(/\./g, '_')}_en`] || [];
