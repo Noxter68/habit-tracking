@@ -1059,6 +1059,26 @@
             "name": "No Vending Machines",
             "description": "Avoid unhealthy snacks",
             "duration": "All day"
+          },
+          "no-fast-food": {
+            "name": "No Fast Food",
+            "description": "Avoid fast food restaurants",
+            "duration": "All day"
+          },
+          "cook-home": {
+            "name": "Cook at Home",
+            "description": "Prepare your own meals",
+            "duration": "Meals"
+          },
+          "grocery-list": {
+            "name": "Grocery List",
+            "description": "Plan your food shopping",
+            "duration": "Weekly"
+          },
+          "read-labels": {
+            "name": "Read Labels",
+            "description": "Check ingredients",
+            "duration": "Shopping"
           }
         }
       },

@@ -1255,6 +1255,26 @@
             "name": "Pas de Distributeurs",
             "description": "Éviter les collations malsaines",
             "duration": "Toute la journée"
+          },
+          "no-fast-food": {
+            "name": "Pas de Fast-Food",
+            "description": "Éviter les restaurants rapides",
+            "duration": "Toute la journée"
+          },
+          "cook-home": {
+            "name": "Cuisiner à la Maison",
+            "description": "Préparer ses repas soi-même",
+            "duration": "Repas"
+          },
+          "grocery-list": {
+            "name": "Liste de Courses",
+            "description": "Planifier ses achats alimentaires",
+            "duration": "Hebdomadaire"
+          },
+          "read-labels": {
+            "name": "Lire les Étiquettes",
+            "description": "Vérifier les ingrédients",
+            "duration": "Courses"
           }
         }
       },
