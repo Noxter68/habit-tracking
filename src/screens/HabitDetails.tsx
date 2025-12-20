@@ -17,19 +17,17 @@
  */
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, Pressable, Dimensions, StatusBar, ActivityIndicator, ImageBackground } from 'react-native';
+import { View, Text, ScrollView, Pressable, StatusBar, ActivityIndicator, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown, FadeInUp, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import Animated, { FadeInDown, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { ArrowLeft, Zap, Trophy } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
 import { HabitHero } from '@/components/habits/HabitHero';
-import { TabSelector } from '@/components/habits/TabSelector';
-import { TasksCard } from '@/components/habits/TasksCard';
 import MilestonesCard from '@/components/habits/MilestoneCard';
 import { TierCelebration } from '@/components/habits/TierCelebration';
 import { StreakSaverModal } from '@/components/streakSaver/StreakSaverModal';
@@ -47,11 +45,10 @@ import { useStreakSaver } from '@/hooks/useStreakSaver';
 import { HabitProgressionService, HabitMilestone } from '@/services/habitProgressionService';
 
 import tw from '@/lib/tailwind';
-import { getTodayString, getLocalDateString } from '@/utils/dateHelpers';
 import { tierThemes } from '@/utils/tierTheme';
 import Logger from '@/utils/logger';
 
-import { Habit, DailyTaskProgress } from '@/types';
+import { Habit } from '@/types';
 import { RootStackParamList } from '@/navigation/types';
 import { Config } from '@/config';
 
@@ -61,13 +58,7 @@ import { Config } from '@/config';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'HabitDetails'>;
 type RouteProps = RouteProp<RootStackParamList, 'HabitDetails'>;
-type TabType = 'overview' | 'tiers';
 
-// ============================================================================
-// CONSTANTES
-// ============================================================================
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ============================================================================
 // FONCTIONS UTILITAIRES
@@ -95,35 +86,17 @@ const HabitDetails: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
   const { user } = useAuth();
-  const { habits, toggleTask, refreshHabits } = useHabits();
+  const { habits, refreshHabits } = useHabits();
   const { updateStatsOptimistically } = useStats();
 
   // ============================================================================
   // HOOKS - State
   // ============================================================================
 
-  const [selectedTab, setSelectedTab] = useState<TabType>('overview');
   const [prevTier, setPrevTier] = useState<string | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationTier, setCelebrationTier] = useState<any>(null);
   const [debugStreak, setDebugStreak] = useState<number | null>(null);
-
-  // ============================================================================
-  // OPTIMISTIC UI STATE - Instant feedback without network wait
-  // ============================================================================
-
-  /**
-   * Local optimistic state for completed tasks
-   * Updates IMMEDIATELY on tap (before server response)
-   * Provides Duolingo-like instant feedback
-   */
-  const [optimisticCompletedTasks, setOptimisticCompletedTasks] = useState<string[]>([]);
-
-  /**
-   * Tracks tasks pending server confirmation
-   * Used for rollback if server returns error (<1% cases)
-   */
-  const [pendingTasks, setPendingTasks] = useState<Set<string>>(new Set());
 
   // État pour le modal de test en mode développeur
   const [showTestModal, setShowTestModal] = useState(false);
@@ -156,7 +129,6 @@ const HabitDetails: React.FC = () => {
   // ============================================================================
 
   const { habitId } = route.params;
-  const pausedTasks = route.params.pausedTasks || {};
 
   // ============================================================================
   // VARIABLES DERIVEES - Données d'habitude
@@ -173,123 +145,11 @@ const HabitDetails: React.FC = () => {
     return { tier, progress };
   }, [habit?.currentStreak, debugStreak]);
 
-  /**
-   * Récupère la couleur du tier depuis le thème
-   */
-  const tierColor = useMemo(() => {
-    return tierThemes[currentTierData.tier.name]?.accent || '#3b82f6';
-  }, [currentTierData.tier.name]);
-
-  const today = useMemo(() => getTodayString(), []);
-
-  // Server data from habit context
-  const serverTodayTasks: DailyTaskProgress = habit?.dailyTasks?.[today] || {
-    completedTasks: [],
-    allCompleted: false,
-  };
-
-  /**
-   * OPTIMISTIC MERGED STATE
-   * Combine server data with local optimistic updates
-   * This ensures instant UI updates while server is processing
-   */
-  const todayTasks: DailyTaskProgress = useMemo(() => {
-    // If we have optimistic state, use it
-    if (optimisticCompletedTasks.length > 0) {
-      const totalTasks = habit?.tasks?.length || 0;
-      return {
-        completedTasks: optimisticCompletedTasks,
-        allCompleted: optimisticCompletedTasks.length === totalTasks && totalTasks > 0,
-      };
-    }
-    // Otherwise use server data
-    return serverTodayTasks;
-  }, [optimisticCompletedTasks, serverTodayTasks, habit?.tasks?.length]);
-
-  /**
-   * Retourne le lundi de la semaine contenant la date donnée
-   */
-  const getWeekStart = (date: Date): Date => {
-    const d = new Date(date);
-    const day = d.getDay();
-    // Convertit dimanche (0) en 7 pour un calcul basé sur lundi
-    const dayFromMonday = day === 0 ? 7 : day;
-    d.setDate(d.getDate() - (dayFromMonday - 1));
-    d.setHours(0, 0, 0, 0);
-    return d;
-  };
-
-  /**
-   * Vérifie si la semaine est complétée pour les habitudes hebdomadaires
-   * Utilise les semaines calendaires (lundi à dimanche)
-   *
-   * Note: Prend en compte l'état optimistic (todayTasks) pour le jour actuel
-   */
-  const isWeekCompleted = useMemo(() => {
-    if (habit?.frequency !== 'weekly') return false;
-
-    const todayDate = new Date();
-    const weekStart = getWeekStart(todayDate);
-    const createdAt = new Date(habit.createdAt);
-    createdAt.setHours(0, 0, 0, 0);
-    const todayStr = getLocalDateString(todayDate);
-
-    Logger.debug('isWeekCompleted check:', {
-      frequency: habit.frequency,
-      weekStart: weekStart.toISOString(),
-      dailyTasksKeys: Object.keys(habit.dailyTasks || {}),
-      todayStr,
-      todayTasksAllCompleted: todayTasks.allCompleted,
-    });
-
-    // D'abord vérifier si aujourd'hui est complété (état optimistic)
-    if (todayTasks.allCompleted) {
-      Logger.debug('Week is completed! Today is complete (optimistic)');
-      return true;
-    }
-
-    // Vérifie chaque jour de la semaine calendaire (lundi à dimanche)
-    for (let i = 0; i < 7; i++) {
-      const checkDate = new Date(weekStart);
-      checkDate.setDate(weekStart.getDate() + i);
-
-      // Ignore les jours dans le futur
-      if (checkDate.getTime() > todayDate.getTime()) {
-        continue;
-      }
-
-      // Ignore les jours avant la création de l'habitude
-      if (checkDate.getTime() < createdAt.getTime()) {
-        continue;
-      }
-
-      const dateStr = getLocalDateString(checkDate);
-
-      // Pour aujourd'hui, utiliser l'état optimistic (déjà vérifié ci-dessus)
-      if (dateStr === todayStr) {
-        continue;
-      }
-
-      const dayData = habit.dailyTasks?.[dateStr];
-
-      if (dayData?.allCompleted) {
-        Logger.debug('Week is completed! Found on:', dateStr);
-        return true;
-      }
-    }
-
-    Logger.debug('Week is NOT completed');
-    return false;
-  }, [habit, todayTasks.allCompleted]);
-
-  const completedTasksToday = todayTasks.completedTasks?.length || 0;
-  const totalTasks = habit?.tasks?.length || 0;
-
   // ============================================================================
   // HOOKS - Données de progression
   // ============================================================================
 
-  const { tierInfo, nextTier, milestoneStatus, newlyUnlockedMilestones, milestoneXpAwarded, performanceMetrics, refreshProgression, clearNewlyUnlockedMilestones, loading } = useHabitDetails(habit?.id || '', user?.id || '', habit?.currentStreak || 0, habit?.currentTierLevel, habit?.createdAt);
+  const { tierInfo, nextTier, milestoneStatus, newlyUnlockedMilestones, milestoneXpAwarded, performanceMetrics, clearNewlyUnlockedMilestones, loading } = useHabitDetails(habit?.id || '', user?.id || '', habit?.currentStreak || 0, habit?.currentTierLevel, habit?.createdAt);
 
   // ============================================================================
   // VARIABLES DERIVEES - Métriques
@@ -362,89 +222,12 @@ const HabitDetails: React.FC = () => {
   // ============================================================================
 
   /**
-   * OPTIMISTIC UI - Toggle tâche avec mise à jour instantanée
-   *
-   * Pattern Duolingo:
-   * 1. Update UI IMMÉDIATEMENT (optimiste)
-   * 2. Animation native 60fps sur thread UI
-   * 3. API call en background (non-bloquant)
-   * 4. Rollback silencieux si erreur (<1% des cas)
-   */
-  const handleToggleTask = useCallback(
-    async (taskId: string): Promise<void> => {
-      if (!habit) return;
-
-      // Ignore si déjà en attente de confirmation
-      if (pendingTasks.has(taskId)) return;
-
-      // Haptic feedback instantané
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-      // STEP 1: UPDATE OPTIMISTE IMMÉDIAT (0ms latence)
-      const currentCompleted = todayTasks.completedTasks || [];
-      const isCurrentlyCompleted = currentCompleted.includes(taskId);
-
-      const newOptimisticState = isCurrentlyCompleted
-        ? currentCompleted.filter(id => id !== taskId)
-        : [...currentCompleted, taskId];
-
-      setOptimisticCompletedTasks(newOptimisticState);
-      setPendingTasks(prev => new Set(prev).add(taskId));
-
-      // STEP 2: API CALL EN BACKGROUND (non-bloquant)
-      try {
-        const result = await toggleTask(habit.id, today, taskId);
-
-        // Success: remove from pending
-        setPendingTasks(prev => {
-          const next = new Set(prev);
-          next.delete(taskId);
-          return next;
-        });
-
-        // Clear optimistic state after server confirms
-        setOptimisticCompletedTasks([]);
-
-        // Refresh progression after animations complete (700ms)
-        // This prevents interrupting AnimatedNumber and ProgressBar animations
-        setTimeout(() => {
-          refreshProgression();
-        }, 700);
-
-      } catch (error) {
-        Logger.error('Task toggle failed:', error);
-
-        // STEP 3: ROLLBACK SILENCIEUX en cas d'erreur
-        setOptimisticCompletedTasks([]);
-        setPendingTasks(prev => {
-          const next = new Set(prev);
-          next.delete(taskId);
-          return next;
-        });
-
-        // User feedback pour erreur
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      }
-    },
-    [habit, today, toggleTask, pendingTasks, todayTasks, refreshProgression]
-  );
-
-
-  /**
    * Retourne à l'écran précédent
    */
   const handleGoBack = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.goBack();
   }, [navigation]);
-
-  /**
-   * Change d'onglet avec retour haptique
-   */
-  const handleTabChange = useCallback((tab: TabType) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSelectedTab(tab);
-  }, []);
 
   /**
    * Ferme la célébration de tier
@@ -744,44 +527,16 @@ const HabitDetails: React.FC = () => {
           </LinearGradient>
         </Animated.View>
 
-        {/* Contenu des onglets */}
-        <ScrollView contentContainerStyle={[tw`pb-8 pt-5`]} showsVerticalScrollIndicator={false}>
-          {/* Sélecteur d'onglets */}
-          <Animated.View entering={FadeInUp.delay(200).springify()} style={tw`px-5 mb-5 mt-2`}>
-            <TabSelector tier={currentTierData.tier.name} selected={selectedTab} onChange={handleTabChange} />
+        {/* Milestones - Affichés directement sans tabs */}
+        <View style={tw`px-5 pt-8 pb-8`}>
+          <Animated.View entering={FadeInDown.delay(200).duration(300)}>
+            <MilestonesCard
+              milestones={milestoneStatus?.all || []}
+              habitAge={Math.floor((new Date().getTime() - new Date(habit.createdAt).getTime()) / (1000 * 60 * 60 * 24)) + 1}
+              unlockedMilestones={milestoneStatus?.unlocked || []}
+            />
           </Animated.View>
-
-          <View style={tw`px-5`}>
-            {/* Onglet Vue d'ensemble */}
-            {selectedTab === 'overview' && (
-              <Animated.View entering={FadeInDown.duration(300)}>
-                {/* Carte des tâches avec gestion intégrée */}
-                <TasksCard
-                  tasks={habit.tasks || []}
-                  todayTasks={todayTasks}
-                  habitId={habit.id}
-                  habitCategory={habit.category}
-                  habitType={habit.type}
-                  today={today}
-                  onToggleTask={handleToggleTask}
-                  tier={currentTierData.tier.name}
-                  pausedTasks={pausedTasks}
-                  frequency={habit.frequency}
-                  isWeekCompleted={isWeekCompleted}
-                  tierColor={tierColor}
-                  onTasksUpdated={refreshHabits}
-                />
-              </Animated.View>
-            )}
-
-            {/* Onglet Tiers */}
-            {selectedTab === 'tiers' && (
-              <Animated.View entering={FadeInDown.duration(300)}>
-                <MilestonesCard milestones={milestoneStatus?.all || []} habitAge={Math.floor((new Date().getTime() - new Date(habit.createdAt).getTime()) / (1000 * 60 * 60 * 24)) + 1} unlockedMilestones={milestoneStatus?.unlocked || []} />
-              </Animated.View>
-            )}
-          </View>
-        </ScrollView>
+        </View>
       </ScrollView>
 
         {/* Animation de célébration de tier */}

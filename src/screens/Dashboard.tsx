@@ -15,8 +15,9 @@ import tw from '../lib/tailwind';
 
 // Components
 import DashboardHeader from '../components/dashboard/DashboardHeader';
-import SwipeableHabitCard from '../components/SwipeableHabitCard';
+import { SwipeableDashboardCard } from '../components/dashboard/SwipeableDashboardCard';
 import { HolidayModeDisplay } from '../components/dashboard/HolidayModeDisplay';
+import { XPPopup } from '../components/dashboard/XPPopup';
 import { DebugButton } from '@/components/debug/DebugButton';
 import { StreakSaverBadge } from '@/components/streakSaver/StreakSaverBadge';
 import { StreakSaverShopModal } from '@/components/streakSaver/StreakSaverShopModal';
@@ -46,7 +47,9 @@ import Logger from '@/utils/logger';
 import { getTodayString, isWeeklyHabitCompletedThisWeek, getWeeklyCompletedTasksCount } from '@/utils/dateHelpers';
 import { versionManager } from '@/utils/versionManager';
 import { getModalTexts, getUpdatesForVersion } from '@/utils/updateContent';
-import { getAchievementTierTheme } from '@/utils/tierTheme';
+import { getAchievementTierTheme, tierThemes } from '@/utils/tierTheme';
+import { HabitProgressionService } from '@/services/habitProgressionService';
+import { getTasksForCategory } from '@/utils/habitHelpers';
 
 // Types & Config
 import { HolidayPeriod } from '@/types/holiday.types';
@@ -63,7 +66,7 @@ const Dashboard: React.FC = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const { user, username } = useAuth();
-  const { habits, loading: habitsLoading, toggleHabitDay, toggleTask, deleteHabit, refreshHabits } = useHabits();
+  const { habits, loading: habitsLoading, toggleTask, deleteHabit, refreshHabits } = useHabits();
   const { stats, loading: statsLoading, refreshStats } = useStats();
   const { triggerLevelUp } = useLevelUp();
   const { checkHabitLimit, habitCount, maxHabits, isPremium, refreshSubscription } = useSubscription();
@@ -127,6 +130,14 @@ const Dashboard: React.FC = () => {
 
   // State: Debug
   const [testLevel, setTestLevel] = useState(1);
+
+  // State: XP Popup
+  const [xpPopup, setXpPopup] = useState<{
+    visible: boolean;
+    taskName: string;
+    xpAmount: number;
+    accentColor: string;
+  }>({ visible: false, taskName: '', xpAmount: 0, accentColor: '#3b82f6' });
 
   // Refs
   const isFetchingHolidayRef = useRef(false);
@@ -345,12 +356,49 @@ const Dashboard: React.FC = () => {
 
   const handleTaskToggle = (habitId: string, date: string, taskId: string) => {
     HapticFeedback.success();
-    toggleTask(habitId, date, taskId);
-  };
 
-  const handleDayToggle = (habitId: string, date: string) => {
-    HapticFeedback.success();
-    toggleHabitDay(habitId, date);
+    // Trouver l'habitude et la tâche pour la popup XP
+    const habit = habits.find(h => h.id === habitId);
+    if (habit) {
+      const today = getTodayString();
+      const todayTasks = habit.dailyTasks?.[today];
+      const isCompleting = !todayTasks?.completedTasks?.includes(taskId);
+
+      // Afficher la popup seulement quand on complète (pas quand on décoche)
+      if (isCompleting) {
+        // Trouver le nom de la tâche
+        const task = habit.tasks.find((t: any) =>
+          (typeof t === 'string' ? t : t.id) === taskId
+        );
+        const taskName = typeof task === 'string' ? task : task?.name || taskId;
+
+        // Récupérer les infos de traduction de la tâche
+        const predefinedTasks = getTasksForCategory(habit.category, habit.type as any);
+        const translatedTask = predefinedTasks.find(t => t.id === taskId);
+        const displayName = translatedTask?.name || taskName;
+
+        // Calculer le tier pour la couleur
+        const { tier } = HabitProgressionService.calculateTierFromStreak(habit.currentStreak);
+        const theme = tierThemes[tier.name];
+
+        // Calculer l'XP basé sur le numéro de la tâche complétée
+        // 1ère tâche = 3 XP, 2ème = 7 XP, 3ème+ = 12 XP
+        const completedCount = todayTasks?.completedTasks?.length || 0;
+        const taskNumber = completedCount + 1; // La tâche qu'on est en train de compléter
+        let xpAmount = 12; // Par défaut pour 3ème tâche et plus
+        if (taskNumber === 1) xpAmount = 3;
+        else if (taskNumber === 2) xpAmount = 7;
+
+        setXpPopup({
+          visible: true,
+          taskName: displayName,
+          xpAmount: xpAmount,
+          accentColor: theme?.accent || '#3b82f6',
+        });
+      }
+    }
+
+    toggleTask(habitId, date, taskId);
   };
 
   const handleTestLevelUp = () => {
@@ -754,14 +802,14 @@ const Dashboard: React.FC = () => {
                     <HabitCategoryBadge type="daily" count={dailyHabits.length} />
                     <View style={tw`gap-4`}>
                       {dailyHabits.map((habit, index) => (
-                        <SwipeableHabitCard
+                        <SwipeableDashboardCard
                           key={habit.id}
                           habit={habit}
-                          onToggleDay={handleDayToggle}
                           onToggleTask={handleTaskToggle}
                           onDelete={handleDeleteHabit}
-                          onPress={() => handleHabitPress(habit.id)}
+                          onNavigateToDetails={() => handleHabitPress(habit.id)}
                           index={index}
+                          pausedTasks={frozenTasksMap.get(habit.id) || {}}
                           unlockedMilestonesCount={milestoneCounts[habit.id] || 0}
                         />
                       ))}
@@ -775,14 +823,14 @@ const Dashboard: React.FC = () => {
                     <HabitCategoryBadge type="weekly" count={weeklyHabits.length} />
                     <View style={tw`gap-4`}>
                       {weeklyHabits.map((habit, index) => (
-                        <SwipeableHabitCard
+                        <SwipeableDashboardCard
                           key={habit.id}
                           habit={habit}
-                          onToggleDay={handleDayToggle}
                           onToggleTask={handleTaskToggle}
                           onDelete={handleDeleteHabit}
-                          onPress={() => handleHabitPress(habit.id)}
+                          onNavigateToDetails={() => handleHabitPress(habit.id)}
                           index={dailyHabits.length + index}
+                          pausedTasks={frozenTasksMap.get(habit.id) || {}}
                           unlockedMilestonesCount={milestoneCounts[habit.id] || 0}
                         />
                       ))}
@@ -846,6 +894,15 @@ const Dashboard: React.FC = () => {
             setShowStreakSaverSelection(false);
             setShowShop(true);
           }}
+        />
+
+        {/* XP Popup */}
+        <XPPopup
+          visible={xpPopup.visible}
+          taskName={xpPopup.taskName}
+          xpAmount={xpPopup.xpAmount}
+          accentColor={xpPopup.accentColor}
+          onHide={() => setXpPopup(prev => ({ ...prev, visible: false }))}
         />
 
         {/* Streak Saver Modal (sauvegarde directe depuis Dashboard) */}
