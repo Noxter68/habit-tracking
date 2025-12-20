@@ -167,15 +167,45 @@ const ShockwaveRing: React.FC<{
 });
 
 // =============================================================================
+// TYPES
+// =============================================================================
+
+/**
+ * Props pour le modal de level up
+ * Les props sont optionnelles et prennent la priorite sur le context
+ */
+interface EpicLevelUpModalProps {
+  /** Affichage du modal (si fourni, priorite sur le context) */
+  visible?: boolean;
+  /** Donnees du level up (si fourni, priorite sur le context) */
+  levelUpData?: {
+    newLevel: number;
+    previousLevel: number;
+    achievement: any;
+  } | null;
+  /** Callback de fermeture (si fourni, priorite sur le context) */
+  onClose?: () => void;
+}
+
+// =============================================================================
 // COMPOSANT PRINCIPAL
 // =============================================================================
 
-export const EpicLevelUpModal: React.FC = () => {
+export const EpicLevelUpModal: React.FC<EpicLevelUpModalProps> = ({
+  visible: visibleProp,
+  levelUpData: levelUpDataProp,
+  onClose: onCloseProp,
+}) => {
   // ---------------------------------------------------------------------------
   // Hooks
   // ---------------------------------------------------------------------------
   const { t } = useTranslation();
-  const { showLevelUpModal, levelUpData, closeLevelUpModal } = useLevelUp();
+  const { showLevelUpModal: showFromContext, levelUpData: dataFromContext, closeLevelUpModal } = useLevelUp();
+
+  // Use props if provided, otherwise fall back to context
+  const showLevelUpModal = visibleProp !== undefined ? visibleProp : showFromContext;
+  const levelUpData = levelUpDataProp !== undefined ? levelUpDataProp : dataFromContext;
+  const handleCloseCallback = onCloseProp || closeLevelUpModal;
 
   // ---------------------------------------------------------------------------
   // State
@@ -331,7 +361,7 @@ export const EpicLevelUpModal: React.FC = () => {
     cardOpacity.value = withTiming(0, { duration: 300 });
     cardScale.value = withTiming(0.8, { duration: 300 });
     levelBounce.value = 0;
-    setTimeout(() => closeLevelUpModal(), 300);
+    setTimeout(() => handleCloseCallback(), 300);
   };
 
   // ---------------------------------------------------------------------------

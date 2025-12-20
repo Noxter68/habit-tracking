@@ -38,6 +38,7 @@ import { DebugButton } from '@/components/debug/DebugButton';
 import { useHabits } from '@/context/HabitContext';
 import { useAuth } from '@/context/AuthContext';
 import { useStats } from '@/context/StatsContext';
+import { useCelebrationQueue } from '@/context/CelebrationQueueContext';
 
 import { useHabitDetails } from '@/hooks/useHabitDetails';
 import { useStreakSaver } from '@/hooks/useStreakSaver';
@@ -88,6 +89,7 @@ const HabitDetails: React.FC = () => {
   const { user } = useAuth();
   const { habits, refreshHabits } = useHabits();
   const { updateStatsOptimistically } = useStats();
+  const { queueMilestoneSingle, queueMilestoneMultiple } = useCelebrationQueue();
 
   // ============================================================================
   // HOOKS - State
@@ -321,8 +323,8 @@ const HabitDetails: React.FC = () => {
   // ============================================================================
 
   /**
-   * Affiche les milestones nouvellement débloqués
-   * Clear immédiatement après avoir préparé l'affichage pour éviter les re-triggers
+   * Affiche les milestones nouvellement débloqués via la CelebrationQueue
+   * Clear immédiatement après avoir ajouté à la queue pour éviter les re-triggers
    */
   useEffect(() => {
     if (!habit || !newlyUnlockedMilestones || newlyUnlockedMilestones.length === 0) {
@@ -337,23 +339,27 @@ const HabitDetails: React.FC = () => {
       return { milestone, index: index >= 0 ? index : 0 };
     });
 
-    Logger.debug('Showing milestone celebration:', milestonesWithIndex.length);
+    Logger.debug('Queueing milestone celebration:', milestonesWithIndex.length);
 
     if (milestonesWithIndex.length === 1) {
-      // Un seul milestone → modal epic
+      // Un seul milestone → queue modal epic
       const { milestone, index } = milestonesWithIndex[0];
+      queueMilestoneSingle(milestone, index);
+      // Keep local state for backwards compatibility
       setCelebrationMilestone(milestone);
       setCelebrationMilestoneIndex(index);
       setShowMilestoneModal(true);
     } else {
-      // Plusieurs milestones → modal récap
+      // Plusieurs milestones → queue modal récap
+      queueMilestoneMultiple(milestonesWithIndex);
+      // Keep local state for backwards compatibility
       setRecapMilestones(milestonesWithIndex);
       setShowMilestoneRecapModal(true);
     }
 
     // Clear immédiatement pour éviter que le modal se ré-affiche lors des refreshProgression()
     clearNewlyUnlockedMilestones();
-  }, [habit?.id, newlyUnlockedMilestones, milestoneStatus?.all, clearNewlyUnlockedMilestones]);
+  }, [habit?.id, newlyUnlockedMilestones, milestoneStatus?.all, clearNewlyUnlockedMilestones, queueMilestoneSingle, queueMilestoneMultiple]);
 
   /**
    * Détecte les montées de tier

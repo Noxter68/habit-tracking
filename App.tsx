@@ -33,11 +33,12 @@ import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { HabitProvider } from './src/context/HabitContext';
 import { AchievementProvider } from './src/context/AchievementContext';
 import { StatsProvider } from './src/context/StatsContext';
+import { CelebrationQueueProvider } from './src/context/CelebrationQueueContext';
 import { LevelUpProvider } from './src/context/LevelUpContext';
 import { SubscriptionProvider } from './src/context/SubscriptionContext';
 
 // Components
-import { EpicLevelUpModal } from '@/components/dashboard/EpicLevelUpModal';
+import { CelebrationRenderer } from '@/components/celebrations/CelebrationRenderer';
 import BeautifulLoader from '@/components/BeautifulLoader';
 import CustomTabBar from '@/components/CustomTabBar';
 import { ConnectionToast } from '@/components/ConnectionToast';
@@ -331,7 +332,7 @@ function AppNavigator() {
         )}
       </Stack.Navigator>
 
-      <EpicLevelUpModal />
+      <CelebrationRenderer />
       <ConnectionToast visible={showConnectionError} />
     </>
   );
@@ -488,18 +489,20 @@ export default function App() {
         <AuthProvider>
           <SubscriptionProvider>
             <StatsProvider>
-              <HabitProvider>
-                <AchievementProvider>
-                  <LevelUpProvider>
-                    <GroupCelebrationProvider>
-                      <NavigationContainer linking={linking} fallback={<BeautifulLoader />}>
-                        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
-                        <AppNavigator />
-                      </NavigationContainer>
-                    </GroupCelebrationProvider>
-                  </LevelUpProvider>
-                </AchievementProvider>
-              </HabitProvider>
+              <CelebrationQueueProvider>
+                <HabitProvider>
+                  <AchievementProvider>
+                    <LevelUpProvider>
+                      <GroupCelebrationProvider>
+                        <NavigationContainer linking={linking} fallback={<BeautifulLoader />}>
+                          <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
+                          <AppNavigator />
+                        </NavigationContainer>
+                      </GroupCelebrationProvider>
+                    </LevelUpProvider>
+                  </AchievementProvider>
+                </HabitProvider>
+              </CelebrationQueueProvider>
             </StatsProvider>
           </SubscriptionProvider>
         </AuthProvider>

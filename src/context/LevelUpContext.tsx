@@ -6,11 +6,11 @@
  * Contexte de gestion des celebrations de level up.
  *
  * Ce contexte surveille les changements de niveau et declenche
- * l'affichage des modales de celebration.
+ * l'affichage des modales de celebration via la CelebrationQueue.
  *
  * Fonctionnalites principales:
  * - Detection automatique des level up
- * - Gestion de l'etat de la modale
+ * - Integration avec CelebrationQueue pour l'affichage
  * - Prevention des affichages multiples pour le meme niveau
  * - Trigger manuel pour tests
  *
@@ -39,6 +39,7 @@ import Logger from '@/utils/logger';
 // IMPORTS - Contextes
 // ============================================================================
 import { useStats } from './StatsContext';
+import { useCelebrationQueue } from './CelebrationQueueContext';
 
 // ============================================================================
 // TYPES ET INTERFACES
@@ -60,13 +61,13 @@ interface LevelUpData {
  * Type du contexte de level up
  */
 interface LevelUpContextType {
-  /** Affichage de la modale */
+  /** Affichage de la modale (deprecated - use CelebrationQueue) */
   showLevelUpModal: boolean;
-  /** Donnees du level up */
+  /** Donnees du level up (deprecated - use CelebrationQueue) */
   levelUpData: LevelUpData | null;
   /** Declenche manuellement un level up */
   triggerLevelUp: (newLevel: number, previousLevel: number) => void;
-  /** Ferme la modale */
+  /** Ferme la modale (deprecated - use CelebrationQueue.dismissCurrentCelebration) */
   closeLevelUpModal: () => void;
   /** Verifie s'il y a un level up */
   checkForLevelUp: () => void;
@@ -85,8 +86,8 @@ const LevelUpContext = createContext<LevelUpContextType | undefined>(undefined);
 /**
  * Provider du contexte de level up
  *
- * Surveille les changements de niveau et gere l'affichage
- * des celebrations.
+ * Surveille les changements de niveau et envoie les celebrations
+ * a la CelebrationQueue pour affichage.
  *
  * @param children - Composants enfants
  */
@@ -95,6 +96,7 @@ export const LevelUpProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // STATE HOOKS
   // ==========================================================================
 
+  // Keep for backwards compatibility but these are now managed by CelebrationQueue
   const [showLevelUpModal, setShowLevelUpModal] = useState(false);
   const [levelUpData, setLevelUpData] = useState<LevelUpData | null>(null);
 
@@ -104,12 +106,15 @@ export const LevelUpProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const previousLevelRef = useRef<number | null>(null);
   const hasShownForLevel = useRef<Set<number>>(new Set());
+  // Track if we've initialized the level (to avoid false positives on first load)
+  const isInitialized = useRef(false);
 
   // ==========================================================================
   // CONTEXT HOOKS
   // ==========================================================================
 
   const { stats } = useStats();
+  const { queueLevelUp } = useCelebrationQueue();
 
   // ==========================================================================
   // CALLBACKS
@@ -122,9 +127,21 @@ export const LevelUpProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!stats?.level) return;
 
     // Initialise le niveau precedent au premier chargement
+    // On attend que les stats soient stables avant de commencer a detecter
     if (previousLevelRef.current === null) {
       previousLevelRef.current = stats.level;
       Logger.debug('LevelUpContext: Initial level set:', stats.level);
+      // Mark as initialized after a short delay to allow stats to stabilize
+      setTimeout(() => {
+        isInitialized.current = true;
+        Logger.debug('LevelUpContext: Now initialized, will detect future level ups');
+      }, 500);
+      return;
+    }
+
+    // Only detect level ups after initialization
+    if (!isInitialized.current) {
+      previousLevelRef.current = stats.level;
       return;
     }
 
@@ -136,6 +153,10 @@ export const LevelUpProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       hasShownForLevel.current.add(stats.level);
 
+      // Queue the level up celebration
+      queueLevelUp(stats.level, previousLevelRef.current, newAchievement);
+
+      // Also update local state for backwards compatibility
       setLevelUpData({
         newLevel: stats.level,
         previousLevel: previousLevelRef.current,
@@ -148,7 +169,7 @@ export const LevelUpProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // Met a jour la reference si le niveau a change
       previousLevelRef.current = stats.level;
     }
-  }, [stats?.level]);
+  }, [stats?.level, queueLevelUp]);
 
   /**
    * Declenche manuellement un level up (pour tests)
@@ -159,14 +180,17 @@ export const LevelUpProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const triggerLevelUp = useCallback((newLevel: number, previousLevel: number) => {
     const achievement = getAchievementByLevel(newLevel);
 
+    // Queue the level up celebration
+    queueLevelUp(newLevel, previousLevel, achievement);
+
+    // Also update local state for backwards compatibility
     setLevelUpData({
       newLevel,
       previousLevel,
       achievement,
     });
-
     setShowLevelUpModal(true);
-  }, []);
+  }, [queueLevelUp]);
 
   /**
    * Ferme la modale de level up
@@ -197,6 +221,7 @@ export const LevelUpProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!stats) {
       previousLevelRef.current = null;
       hasShownForLevel.current.clear();
+      isInitialized.current = false;
     }
   }, [stats]);
 
