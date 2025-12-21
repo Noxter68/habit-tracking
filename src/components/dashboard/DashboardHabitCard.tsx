@@ -116,11 +116,12 @@ const DashboardHabitCardComponent: React.FC<DashboardHabitCardProps> = ({
   const activeTasks = totalTasks - pausedTaskCount;
   const taskProgress = activeTasks > 0 ? Math.round((completedTasks / activeTasks) * 100) : 0;
 
-  // Handler pour toggle une tâche - memoized
-  const handleTaskToggle = useCallback((taskId: string) => {
+  // Handler pour toggle une tâche
+  // Note: Ne pas memoizer pour éviter les closures stale avec les taskIds
+  const handleTaskToggle = (taskId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onToggleTask(habit.id, today, taskId);
-  }, [habit.id, today, onToggleTask]);
+  };
 
   // Handler pour navigation - memoized
   const handleNavigate = useCallback(() => {
@@ -275,6 +276,24 @@ const arePausedTasksEqual = (
   return prevKeys.every(key => key in next);
 };
 
+// Comparateur pour completedTasks - compare les IDs, pas juste la longueur
+const areCompletedTasksEqual = (
+  prev: string[] | undefined,
+  next: string[] | undefined
+): boolean => {
+  if (!prev && !next) return true;
+  if (!prev || !next) return false;
+  if (prev.length !== next.length) return false;
+  // Compare les IDs (l'ordre peut être différent donc on utilise Set)
+  const prevSet = new Set(prev);
+  const nextSet = new Set(next);
+  if (prevSet.size !== nextSet.size) return false;
+  for (const id of prevSet) {
+    if (!nextSet.has(id)) return false;
+  }
+  return true;
+};
+
 // Memoize pour éviter les re-renders pendant le scroll
 export const DashboardHabitCard = memo(DashboardHabitCardComponent, (prev, next) => {
   // Re-render seulement si les données importantes changent
@@ -285,7 +304,7 @@ export const DashboardHabitCard = memo(DashboardHabitCardComponent, (prev, next)
     prev.habit.id === next.habit.id &&
     prev.habit.currentStreak === next.habit.currentStreak &&
     prev.unlockedMilestonesCount === next.unlockedMilestonesCount &&
-    prevTodayTasks?.completedTasks?.length === nextTodayTasks?.completedTasks?.length &&
+    areCompletedTasksEqual(prevTodayTasks?.completedTasks, nextTodayTasks?.completedTasks) &&
     arePausedTasksEqual(prev.pausedTasks || {}, next.pausedTasks || {})
   );
 });

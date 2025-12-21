@@ -254,8 +254,8 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           );
         }
 
-        // Ajoute a l'etat local
-        setHabits([createdHabit, ...habits]);
+        // Ajoute a l'etat local (functional update pour éviter closures stale)
+        setHabits((prevHabits) => [createdHabit, ...prevHabits]);
       } catch (error: any) {
         Logger.error('Error adding habit:', error);
 
@@ -318,14 +318,17 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       try {
         await HabitService.updateHabit(habitId, user.id, updates);
-        setHabits(habits.map((habit) => (habit.id === habitId ? { ...habit, ...updates } : habit)));
+        // Functional update pour éviter closures stale
+        setHabits((prevHabits) =>
+          prevHabits.map((habit) => (habit.id === habitId ? { ...habit, ...updates } : habit))
+        );
       } catch (error: any) {
         Logger.error('Error updating habit:', error);
         Alert.alert('Error', 'Failed to update habit');
         await loadHabits();
       }
     },
-    [user, habits]
+    [user]
   );
 
   /**
@@ -340,7 +343,8 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       try {
         setLoading(true);
         await HabitService.deleteHabit(habitId, user.id);
-        setHabits(habits.filter((h) => h.id !== habitId));
+        // Functional update pour éviter closures stale
+        setHabits((prevHabits) => prevHabits.filter((h) => h.id !== habitId));
       } catch (error: any) {
         Logger.error('Error deleting habit:', error);
         Alert.alert('Error', 'Failed to delete habit');
@@ -349,7 +353,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         setLoading(false);
       }
     },
-    [user, habits]
+    [user]
   );
 
   // ==========================================================================
@@ -371,9 +375,6 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     async (habitId: string, date: string, taskId: string): Promise<ToggleTaskResult | undefined> => {
       if (!user) return;
 
-      const habit = habits.find((h) => h.id === habitId);
-      if (!habit) return;
-
       try {
         // Appelle le backend qui gere toute la logique
         const result = await HabitService.toggleTask(habitId, user.id, date, taskId);
@@ -388,40 +389,39 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             overrideStreak: result.streakUpdated,
             allTasksCompleted: result.allTasksComplete,
           });
-          // Note: Les milestones sont maintenant vérifiés dans useHabitDetails
-          // via checkAndAwardMilestoneXP() à l'arrivée sur HabitDetails
         }
 
         // Met a jour l'etat local avec les donnees du backend
+        // IMPORTANT: Utiliser functional update pour éviter les closures stale
         const actualCompletedTasks = Array.isArray(result.completedTasks) ? result.completedTasks : [];
         const actualAllCompleted = result.allTasksComplete;
 
-        const updatedCompletedDays = actualAllCompleted
-          ? [...habit.completedDays, date].filter((v, i, a) => a.indexOf(v) === i).sort()
-          : habit.completedDays.filter((d) => d !== date);
+        setHabits((prevHabits) =>
+          prevHabits.map((h) => {
+            if (h.id !== habitId) return h;
 
-        setHabits(
-          habits.map((h) =>
-            h.id === habitId
-              ? {
-                  ...h,
-                  dailyTasks: {
-                    ...h.dailyTasks,
-                    [date]: {
-                      completedTasks: actualCompletedTasks,
-                      allCompleted: actualAllCompleted,
-                    },
-                  },
-                  completedDays: updatedCompletedDays,
-                  ...(result.streakUpdated !== undefined && result.streakUpdated !== null
-                    ? {
-                        currentStreak: result.streakUpdated,
-                        bestStreak: Math.max(h.bestStreak, result.streakUpdated),
-                      }
-                    : {}),
-                }
-              : h
-          )
+            const updatedCompletedDays = actualAllCompleted
+              ? [...h.completedDays, date].filter((v, i, a) => a.indexOf(v) === i).sort()
+              : h.completedDays.filter((d) => d !== date);
+
+            return {
+              ...h,
+              dailyTasks: {
+                ...h.dailyTasks,
+                [date]: {
+                  completedTasks: actualCompletedTasks,
+                  allCompleted: actualAllCompleted,
+                },
+              },
+              completedDays: updatedCompletedDays,
+              ...(result.streakUpdated !== undefined && result.streakUpdated !== null
+                ? {
+                    currentStreak: result.streakUpdated,
+                    bestStreak: Math.max(h.bestStreak, result.streakUpdated),
+                  }
+                : {}),
+            };
+          })
         );
 
         // Rafraichit les stats globales
@@ -434,7 +434,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         await loadHabits();
       }
     },
-    [user, habits, refreshStats]
+    [user, refreshStats]
   );
 
   /**
@@ -448,24 +448,18 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       if (!user) return;
 
       try {
-        const habit = habits.find((h) => h.id === habitId);
-        if (!habit) return;
+        // Récupérer l'habit depuis l'état actuel via une promesse
+        let habitData: Habit | undefined;
+        setHabits((prevHabits) => {
+          habitData = prevHabits.find((h) => h.id === habitId);
+          return prevHabits; // Ne modifie pas l'état
+        });
 
-        const isCurrentlyCompleted = habit.completedDays.includes(date);
-        const completedTasks = isCurrentlyCompleted ? [] : habit.tasks;
-        const allCompleted = !isCurrentlyCompleted && habit.tasks.length > 0;
+        if (!habitData) return;
 
-        const updatedDailyTasks = {
-          ...habit.dailyTasks,
-          [date]: {
-            completedTasks,
-            allCompleted,
-          },
-        };
-
-        const completedDays = isCurrentlyCompleted
-          ? habit.completedDays.filter((d) => d !== date)
-          : [...habit.completedDays, date].sort();
+        const isCurrentlyCompleted = habitData.completedDays.includes(date);
+        const completedTasks = isCurrentlyCompleted ? [] : habitData.tasks;
+        const allCompleted = !isCurrentlyCompleted && habitData.tasks.length > 0;
 
         const { currentStreak, bestStreak } = await HabitService.calculateStreaks(
           habitId,
@@ -474,28 +468,41 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           allCompleted
         );
 
-        setHabits(
-          habits.map((h) =>
-            h.id === habitId
-              ? {
-                  ...h,
-                  dailyTasks: updatedDailyTasks,
-                  completedDays,
-                  currentStreak,
-                  bestStreak,
-                }
-              : h
-          )
+        // Functional update pour éviter closures stale
+        setHabits((prevHabits) =>
+          prevHabits.map((h) => {
+            if (h.id !== habitId) return h;
+
+            const updatedDailyTasks = {
+              ...h.dailyTasks,
+              [date]: {
+                completedTasks,
+                allCompleted,
+              },
+            };
+
+            const updatedCompletedDays = isCurrentlyCompleted
+              ? h.completedDays.filter((d) => d !== date)
+              : [...h.completedDays, date].sort();
+
+            return {
+              ...h,
+              dailyTasks: updatedDailyTasks,
+              completedDays: updatedCompletedDays,
+              currentStreak,
+              bestStreak,
+            };
+          })
         );
 
-        await HabitService.updateTaskCompletion(habitId, user.id, date, completedTasks, habit.tasks.length);
+        await HabitService.updateTaskCompletion(habitId, user.id, date, completedTasks, habitData.tasks.length);
       } catch (error: any) {
         Logger.error('Error toggling habit day:', error);
         Alert.alert('Error', 'Failed to update habit');
         await loadHabits();
       }
     },
-    [user, habits]
+    [user]
   );
 
   // ==========================================================================

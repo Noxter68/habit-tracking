@@ -142,8 +142,6 @@ const Dashboard: React.FC = () => {
   const isFetchingHolidayRef = useRef(false);
   const lastLoadTime = useRef<number>(0);
   const MIN_RELOAD_INTERVAL = 1000; // 1 second
-  // Track optimistic task completions for correct XP calculation
-  const optimisticTaskCountRef = useRef<Map<string, number>>(new Map());
   // Ref to access habits without causing re-renders
   const habitsRef = useRef(habits);
   habitsRef.current = habits;
@@ -273,40 +271,34 @@ const Dashboard: React.FC = () => {
   const showPartialPauseMode = hasPartialPause && !showFullHolidayMode;
   const isHabitLimitReached = !isPremium && habitCount >= maxHabits;
 
-  // Separate habits by frequency (daily vs weekly) and sort by completion status
+  // Separate habits by frequency (daily vs weekly)
+  // Sort: completed habits go to the bottom, incomplete ones stay on top (stable order)
   const { dailyHabits, weeklyHabits } = useMemo(() => {
     const today = getTodayString();
 
-    // Helper function to check if a habit is completed
+    // Helper: check if a habit is fully completed today
     const isHabitCompleted = (habit: any) => {
-      if (habit.frequency === 'weekly') {
-        return isWeeklyHabitCompletedThisWeek(habit.dailyTasks, habit.createdAt);
-      } else {
-        const todayData = habit.dailyTasks?.[today];
-        return todayData?.allCompleted || false;
-      }
+      const todayTasks = habit.dailyTasks?.[today];
+      const totalTasks = habit.tasks?.length || 0;
+      const completedCount = todayTasks?.completedTasks?.length || 0;
+      return totalTasks > 0 && completedCount >= totalTasks;
     };
 
-    // Separate and sort: incomplete habits first, then completed ones
-    const daily = activeHabits
-      .filter((habit) => habit.frequency !== 'weekly')
-      .sort((a, b) => {
-        const aCompleted = isHabitCompleted(a);
-        const bCompleted = isHabitCompleted(b);
-        if (aCompleted === bCompleted) return 0;
-        return aCompleted ? 1 : -1; // incomplete first
-      });
+    const daily = activeHabits.filter((habit) => habit.frequency !== 'weekly');
+    const weekly = activeHabits.filter((habit) => habit.frequency === 'weekly');
 
-    const weekly = activeHabits
-      .filter((habit) => habit.frequency === 'weekly')
-      .sort((a, b) => {
-        const aCompleted = isHabitCompleted(a);
-        const bCompleted = isHabitCompleted(b);
-        if (aCompleted === bCompleted) return 0;
-        return aCompleted ? 1 : -1; // incomplete first
-      });
+    // Sort: incomplete habits first, then completed habits
+    const sortByCompletion = (a: any, b: any) => {
+      const aCompleted = isHabitCompleted(a);
+      const bCompleted = isHabitCompleted(b);
+      if (aCompleted === bCompleted) return 0; // Keep original order
+      return aCompleted ? 1 : -1; // Completed goes to bottom
+    };
 
-    return { dailyHabits: daily, weeklyHabits: weekly };
+    return {
+      dailyHabits: [...daily].sort(sortByCompletion),
+      weeklyHabits: [...weekly].sort(sortByCompletion)
+    };
   }, [activeHabits]);
 
   // Load milestones counts for all habits
@@ -386,19 +378,10 @@ const Dashboard: React.FC = () => {
         const theme = tierThemes[tier.name];
 
         // Calculer l'XP basé sur le numéro de la tâche complétée
-        // Utiliser la ref optimiste pour tracker les clics rapides
         // 1ère tâche = 3 XP, 2ème = 7 XP, 3ème+ = 12 XP
-        const optimisticKey = `${habitId}-${today}`;
-
-        // Obtenir le compteur actuel ou initialiser depuis le state
-        let currentCount = optimisticTaskCountRef.current.get(optimisticKey);
-        if (currentCount === undefined) {
-          // Premier clic sur cette habitude aujourd'hui dans cette session
-          currentCount = todayTasks?.completedTasks?.length || 0;
-        }
-
-        const taskNumber = currentCount + 1;
-        optimisticTaskCountRef.current.set(optimisticKey, taskNumber);
+        // On compte les tâches déjà complétées + 1 pour la tâche actuelle
+        const completedCount = todayTasks?.completedTasks?.length || 0;
+        const taskNumber = completedCount + 1;
 
         let xpAmount = 12; // Par défaut pour 3ème tâche et plus
         if (taskNumber === 1) xpAmount = 3;
@@ -410,15 +393,8 @@ const Dashboard: React.FC = () => {
           xpAmount: xpAmount,
           accentColor: theme?.accent || '#3b82f6',
         });
-      } else {
-        // Si on décoche, décrémenter le compteur optimiste
-        const today = getTodayString();
-        const optimisticKey = `${habitId}-${today}`;
-        const currentOptimistic = optimisticTaskCountRef.current.get(optimisticKey);
-        if (currentOptimistic !== undefined && currentOptimistic > 0) {
-          optimisticTaskCountRef.current.set(optimisticKey, currentOptimistic - 1);
-        }
       }
+      // Note: pas de popup XP quand on décoche une tâche
     }
 
     toggleTask(habitId, date, taskId);
