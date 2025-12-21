@@ -137,25 +137,28 @@ const DashboardTaskItemComponent: React.FC<DashboardTaskItemProps> = ({
       {/* Checkbox */}
       <View style={tw`mr-2.5 w-5 h-5 items-center justify-center`}>
         {showAsCompleted ? (
-          showLottie ? (
-            <Animated.View style={[tw`items-center justify-center`, checkmarkStyle]}>
-              <LottieView
-                ref={lottieRef}
-                source={require('../../../assets/animations/blue-checkmark.json')}
-                autoPlay
-                loop={false}
-                speed={1.2}
-                style={{ width: 36, height: 36 }}
-                resizeMode="contain"
-                colorFilters={[
-                  { keypath: 'Shape Layer 1.Ellipse 1.Fill 1', color: tierAccent },
-                  { keypath: 'trait.Shape Layer 1.Shape 1.Stroke 1', color: tierAccent },
-                ]}
-              />
-            </Animated.View>
-          ) : (
+          <>
+            {/* Animation Lottie temporaire lors du clic */}
+            {showLottie && (
+              <Animated.View style={[tw`absolute items-center justify-center`, checkmarkStyle]}>
+                <LottieView
+                  ref={lottieRef}
+                  source={require('../../../assets/animations/blue-checkmark.json')}
+                  autoPlay
+                  loop={false}
+                  speed={1.2}
+                  style={{ width: 36, height: 36 }}
+                  resizeMode="contain"
+                  colorFilters={[
+                    { keypath: 'Shape Layer 1.Ellipse 1.Fill 1', color: tierAccent },
+                    { keypath: 'trait.Shape Layer 1.Shape 1.Stroke 1', color: tierAccent },
+                  ]}
+                />
+              </Animated.View>
+            )}
+            {/* Checkmark statique (toujours visible, même style pour daily et weekly) */}
             <CheckCircle2 size={20} color={tierAccent} strokeWidth={2.5} fill={tierAccent + '30'} />
-          )
+          </>
         ) : isPaused ? (
           <PauseCircle size={20} color="#a8a29e" strokeWidth={2} />
         ) : (

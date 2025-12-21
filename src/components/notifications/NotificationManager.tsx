@@ -42,12 +42,19 @@ const NotificationManager: React.FC<NotificationManagerProps> = ({ onClose }) =>
   const [isLoading, setIsLoading] = useState(true);
   const [globalEnabled, setGlobalEnabled] = useState(true);
 
+  // Consolidation: un seul useEffect pour charger toutes les données
+  // Évite les appels DB dupliqués au montage
   useEffect(() => {
-    loadHabitsWithSchedules();
-  }, [user]);
+    if (!user) return;
 
-  useEffect(() => {
-    checkGlobalNotificationState();
+    const loadAllData = async () => {
+      await Promise.all([
+        loadHabitsWithSchedules(),
+        checkGlobalNotificationState(),
+      ]);
+    };
+
+    loadAllData();
   }, [user]);
 
   const checkGlobalNotificationState = async () => {

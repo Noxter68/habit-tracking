@@ -454,9 +454,9 @@ const SettingsScreen: React.FC = () => {
   useFocusEffect(
     useCallback(() => {
       StatusBar.setBarStyle('dark-content');
-      // Rafraîchir les données en background (sans loader)
-      loadHolidayStatus();
-    }, [loadHolidayStatus])
+      // Note: On ne recharge PAS les données ici pour éviter les appels DB dupliqués
+      // Les données sont chargées une seule fois au montage via useEffect
+    }, [])
   );
 
   // ============================================================================

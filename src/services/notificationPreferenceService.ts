@@ -18,6 +18,7 @@ import * as Notifications from 'expo-notifications';
 // =============================================================================
 import { supabase } from '@/lib/supabase';
 import Logger from '@/utils/logger';
+import { queryCache, CACHE_KEYS, CACHE_TTL } from '@/utils/queryCache';
 
 // =============================================================================
 // IMPORTS - Services internes
@@ -55,11 +56,23 @@ export class NotificationPreferencesService {
 
   /**
    * Recuperer les preferences de notification depuis le profil utilisateur
+   * Utilise le cache pour éviter les appels DB répétitifs
    *
    * @param userId - L'identifiant de l'utilisateur
+   * @param forceRefresh - Force le rafraîchissement du cache
    * @returns Les preferences de notification
    */
-  static async getPreferences(userId: string): Promise<NotificationPreferences> {
+  static async getPreferences(userId: string, forceRefresh = false): Promise<NotificationPreferences> {
+    const cacheKey = CACHE_KEYS.notificationPrefs(userId);
+
+    // Check cache first (unless forced refresh)
+    if (!forceRefresh) {
+      const cached = queryCache.get<NotificationPreferences>(cacheKey);
+      if (cached !== null) {
+        return cached;
+      }
+    }
+
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -69,19 +82,20 @@ export class NotificationPreferencesService {
 
       if (error) throw error;
 
-      if (!data) {
-        return {
-          globalEnabled: false,
-          permissionStatus: 'undetermined',
-        };
-      }
+      const prefs: NotificationPreferences = !data
+        ? {
+            globalEnabled: false,
+            permissionStatus: 'undetermined',
+          }
+        : data.notification_preferences || {
+            globalEnabled: false,
+            permissionStatus: 'undetermined',
+          };
 
-      return (
-        data.notification_preferences || {
-          globalEnabled: false,
-          permissionStatus: 'undetermined',
-        }
-      );
+      // Cache for 5 minutes
+      queryCache.set(cacheKey, prefs, CACHE_TTL.LONG);
+
+      return prefs;
     } catch (error) {
       Logger.error('Error fetching notification preferences:', error);
       return {
@@ -114,6 +128,9 @@ export class NotificationPreferencesService {
         .eq('id', userId);
 
       if (error) throw error;
+
+      // Invalidate and update cache with new values
+      queryCache.set(CACHE_KEYS.notificationPrefs(userId), updated, CACHE_TTL.LONG);
     } catch (error) {
       Logger.error('Error updating notification preferences:', error);
       throw error;

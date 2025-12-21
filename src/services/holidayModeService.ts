@@ -18,6 +18,7 @@ import { supabase } from '../lib/supabase';
 // =============================================================================
 import Logger from '@/utils/logger';
 import { getLocalDateString } from '@/utils/dateHelpers';
+import { queryCache, CACHE_KEYS, CACHE_TTL } from '@/utils/queryCache';
 
 // =============================================================================
 // IMPORTS - Types
@@ -374,6 +375,12 @@ export class HolidayModeService {
 
       if (error) throw error;
 
+      // Invalidate cache on success
+      if (data.success) {
+        queryCache.invalidate(CACHE_KEYS.activeHoliday(userId));
+        queryCache.invalidate(CACHE_KEYS.holidayStats(userId));
+      }
+
       return {
         success: data.success || false,
         holidayId: data.holiday_id,
@@ -398,11 +405,23 @@ export class HolidayModeService {
   /**
    * Recuperer la periode de vacances active
    * Inclut le calcul des jours restants
+   * Utilise le cache pour éviter les appels DB répétitifs
    *
    * @param userId - L'identifiant de l'utilisateur
+   * @param forceRefresh - Force le rafraîchissement du cache
    * @returns La periode active ou null
    */
-  static async getActiveHoliday(userId: string): Promise<HolidayPeriod | null> {
+  static async getActiveHoliday(userId: string, forceRefresh = false): Promise<HolidayPeriod | null> {
+    const cacheKey = CACHE_KEYS.activeHoliday(userId);
+
+    // Check cache first (unless forced refresh)
+    if (!forceRefresh) {
+      const cached = queryCache.get<HolidayPeriod | null>(cacheKey);
+      if (cached !== null) {
+        return cached;
+      }
+    }
+
     try {
       const { data, error } = await supabase
         .from('holiday_periods')
@@ -412,7 +431,12 @@ export class HolidayModeService {
         .maybeSingle();
 
       if (error) throw error;
-      if (!data) return null;
+
+      if (!data) {
+        // Cache null result too (no active holiday)
+        queryCache.set(cacheKey, null, CACHE_TTL.MEDIUM);
+        return null;
+      }
 
       const daysRemaining = calculateDaysRemaining(data.end_date);
 
@@ -430,6 +454,9 @@ export class HolidayModeService {
         deactivatedAt: data.deactivated_at,
         daysRemaining,
       };
+
+      // Cache for 2 minutes
+      queryCache.set(cacheKey, holiday, CACHE_TTL.MEDIUM);
 
       Logger.debug('Active holiday found:', {
         id: holiday.id,
@@ -623,6 +650,12 @@ export class HolidayModeService {
 
       if (error) throw error;
 
+      // Invalidate cache on success
+      if (data.success) {
+        queryCache.invalidate(CACHE_KEYS.activeHoliday(userId));
+        queryCache.invalidate(CACHE_KEYS.holidayStats(userId));
+      }
+
       return {
         success: data.success || false,
         message: data.message,
@@ -644,7 +677,7 @@ export class HolidayModeService {
    * @param holidayId - L'identifiant de la periode
    * @returns Vrai si l'operation a reussi
    */
-  static async endHolidayEarly(holidayId: string): Promise<boolean> {
+  static async endHolidayEarly(holidayId: string, userId?: string): Promise<boolean> {
     try {
       const { error } = await supabase
         .from('holiday_periods')
@@ -657,6 +690,12 @@ export class HolidayModeService {
       if (error) {
         Logger.error('Error ending holiday early:', error);
         return false;
+      }
+
+      // Invalidate cache if userId provided
+      if (userId) {
+        queryCache.invalidate(CACHE_KEYS.activeHoliday(userId));
+        queryCache.invalidate(CACHE_KEYS.holidayStats(userId));
       }
 
       Logger.debug('Holiday ended early:', holidayId);
@@ -674,11 +713,23 @@ export class HolidayModeService {
   /**
    * Recuperer les statistiques de vacances de l'utilisateur
    * Inclut les compteurs d'habitudes et taches
+   * Utilise le cache pour éviter les appels DB répétitifs
    *
    * @param userId - L'identifiant de l'utilisateur
+   * @param forceRefresh - Force le rafraîchissement du cache
    * @returns Les statistiques de vacances
    */
-  static async getHolidayStats(userId: string): Promise<HolidayStats> {
+  static async getHolidayStats(userId: string, forceRefresh = false): Promise<HolidayStats> {
+    const cacheKey = CACHE_KEYS.holidayStats(userId);
+
+    // Check cache first (unless forced refresh)
+    if (!forceRefresh) {
+      const cached = queryCache.get<HolidayStats>(cacheKey);
+      if (cached !== null) {
+        return cached;
+      }
+    }
+
     try {
       const { data, error } = await supabase.rpc('get_holiday_stats', {
         p_user_id: userId,
@@ -714,7 +765,7 @@ export class HolidayModeService {
         if (maxDuration < 0) maxDuration = 14;
       }
 
-      return {
+      const stats: HolidayStats = {
         isPremium,
         holidaysThisYear: data?.holidaysThisYear || 0,
         totalDaysThisYear: data?.totalDaysThisYear || 0,
@@ -723,6 +774,11 @@ export class HolidayModeService {
         totalHabits,
         totalTasks,
       };
+
+      // Cache for 5 minutes (stats don't change often)
+      queryCache.set(cacheKey, stats, CACHE_TTL.LONG);
+
+      return stats;
     } catch (error) {
       Logger.error('Error fetching holiday stats:', error);
       return {
