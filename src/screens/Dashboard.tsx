@@ -630,7 +630,7 @@ const Dashboard: React.FC = () => {
             levelProgress={stats?.levelProgress ?? 0}
             onStatsRefresh={handleStatsRefresh}
             totalXP={stats?.totalXP ?? 0}
-            habits={habits}
+            habits={activeHabits}
             onXPCollected={(amount, taskName) => {
               // Afficher la popup XP pour le daily challenge
               setXpPopup({

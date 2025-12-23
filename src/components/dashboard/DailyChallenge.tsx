@@ -71,18 +71,16 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
       const todayData = habit.dailyTasks?.[today];
       const completedCount = todayData?.completedTasks?.length || 0;
 
-      if (habit.frequency === 'daily') {
+      // Les habitudes daily ET custom sont traitées comme quotidiennes
+      if (habit.frequency === 'daily' || habit.frequency === 'custom') {
         dailyTasksTotal += taskCount;
         dailyTasksCompleted += completedCount;
       } else if (habit.frequency === 'weekly') {
         weeklyTasksTotal += taskCount;
 
-        // Utilise la fonction centralisée qui utilise les semaines calendaires (lundi-dimanche)
         if (isWeeklyHabitCompletedThisWeek(habit.dailyTasks, habit.createdAt)) {
-          // Weekly complétée cette semaine → compte toutes les tâches
           weeklyTasksCompletedThisWeek += taskCount;
         } else {
-          // Weekly en cours → compte les tâches uniques complétées cette semaine
           weeklyTasksCompletedThisWeek += getWeeklyCompletedTasksCount(habit.dailyTasks, habit.createdAt);
         }
       }
