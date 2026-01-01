@@ -17,14 +17,14 @@
  */
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, Pressable, StatusBar, ActivityIndicator, ImageBackground } from 'react-native';
+import { View, Text, ScrollView, Pressable, StatusBar, ActivityIndicator, ImageBackground, Modal, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { ArrowLeft, Zap, Trophy } from 'lucide-react-native';
+import { ArrowLeft, Zap, Trophy, Settings2, X, Plus, Trash2 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
 import { HabitHero } from '@/components/habits/HabitHero';
@@ -34,6 +34,8 @@ import { StreakSaverModal } from '@/components/streakSaver/StreakSaverModal';
 import { EpicMilestoneUnlockModal } from '@/components/habits/EpicMilestoneUnlockModal';
 import { MilestoneRecapModal, MilestoneWithIndex } from '@/components/habits/MilestoneRecapModal';
 import { DebugButton } from '@/components/debug/DebugButton';
+import TaskCategoryPicker from '@/components/tasks/TaskCategoryPicker';
+import TaskItem from '@/components/tasks/TaskItem';
 
 import { useHabits } from '@/context/HabitContext';
 import { useAuth } from '@/context/AuthContext';
@@ -118,6 +120,10 @@ const HabitDetails: React.FC = () => {
   // État pour les modals de test milestone en mode développeur
   const [showTestMilestoneModal, setShowTestMilestoneModal] = useState(false);
   const [showTestMilestoneRecapModal, setShowTestMilestoneRecapModal] = useState(false);
+
+  // État pour le modal de gestion des tâches
+  const [showTaskManageModal, setShowTaskManageModal] = useState(false);
+  const [showTaskCategoryPicker, setShowTaskCategoryPicker] = useState(false);
 
   // ============================================================================
   // HOOKS - Refs & Shared Values
@@ -318,6 +324,45 @@ const HabitDetails: React.FC = () => {
     setShowTestMilestoneRecapModal(false);
   }, []);
 
+  /**
+   * Ouvre le modal de gestion des tâches
+   */
+  const handleOpenTaskManager = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowTaskManageModal(true);
+  }, []);
+
+  /**
+   * Ferme le modal de gestion des tâches
+   */
+  const handleCloseTaskManager = useCallback(() => {
+    setShowTaskManageModal(false);
+  }, []);
+
+  /**
+   * Ouvre le picker de catégorie de tâche (pour ajouter une nouvelle tâche)
+   */
+  const handleAddTaskPress = useCallback(() => {
+    setShowTaskManageModal(false);
+    setTimeout(() => setShowTaskCategoryPicker(true), 300);
+  }, []);
+
+  /**
+   * Callback quand les tâches sont mises à jour
+   */
+  const handleTasksUpdated = useCallback(async () => {
+    setShowTaskCategoryPicker(false);
+    setShowTaskManageModal(false);
+    await refreshHabits();
+  }, [refreshHabits]);
+
+  /**
+   * Callback quand une tâche est supprimée
+   */
+  const handleTaskDeleted = useCallback(async () => {
+    await refreshHabits();
+  }, [refreshHabits]);
+
   // ============================================================================
   // HOOKS - useEffect
   // ============================================================================
@@ -446,13 +491,24 @@ const HabitDetails: React.FC = () => {
 
                 <Text style={tw`text-lg font-black text-white`}>{t('habitDetails.title')}</Text>
 
-                <View style={tw`w-11`}>
-                  <DebugButton
-                    onPress={handleDebugStreakCycle}
-                    label={debugStreak !== null ? debugStreak.toString() : ''}
-                    variant="secondary"
-                    customStyle={tw`w-11 h-11 rounded-2xl bg-sand/20 px-0 py-0 mb-0`}
-                  />
+                <View style={tw`flex-row items-center gap-2`}>
+                  {Config.debug.enabled && (
+                    <DebugButton
+                      onPress={handleDebugStreakCycle}
+                      label={debugStreak !== null ? debugStreak.toString() : ''}
+                      variant="secondary"
+                      customStyle={tw`w-11 h-11 rounded-2xl bg-sand/20 px-0 py-0 mb-0`}
+                    />
+                  )}
+                  <Pressable
+                    onPress={handleOpenTaskManager}
+                    style={({ pressed }) => [
+                      tw`w-11 h-11 rounded-2xl items-center justify-center bg-sand/20`,
+                      pressed && tw`scale-95`,
+                    ]}
+                  >
+                    <Settings2 size={22} color="#fff" strokeWidth={2.5} />
+                  </Pressable>
                 </View>
               </View>
 
@@ -590,6 +646,107 @@ const HabitDetails: React.FC = () => {
             />
           </>
         )}
+
+        {/* Modal de gestion des tâches */}
+        <Modal visible={showTaskManageModal} animationType="slide" transparent onRequestClose={handleCloseTaskManager}>
+          <View style={tw`flex-1 bg-black/50`}>
+            <ImageBackground
+              source={require('../../assets/interface/textures/texture-white.png')}
+              style={{
+                flex: 1,
+                marginTop: 80,
+                borderTopLeftRadius: 24,
+                borderTopRightRadius: 24,
+                overflow: 'hidden',
+              }}
+              imageStyle={{
+                opacity: 0.6,
+                borderTopLeftRadius: 24,
+                borderTopRightRadius: 24,
+              }}
+              resizeMode="cover"
+            >
+              <View style={tw`flex-1 bg-white/80`}>
+                {/* Header */}
+                <View style={tw`px-6 py-5 border-b border-stone-200`}>
+                  <View style={tw`flex-row items-center justify-between`}>
+                    <View style={tw`flex-1`}>
+                      <Text style={tw`text-stone-900 text-2xl font-bold`}>{t('taskManager.manageTitle')}</Text>
+                      <Text style={tw`text-stone-500 text-sm mt-1`}>{t('taskManager.maxTasks')}</Text>
+                    </View>
+
+                    <Pressable onPress={handleCloseTaskManager} style={tw`w-10 h-10 items-center justify-center rounded-xl bg-stone-100`}>
+                      <X size={20} color="#57534e" />
+                    </Pressable>
+                  </View>
+                </View>
+
+                {/* Task List */}
+                <FlatList
+                  data={habit.tasks || []}
+                  keyExtractor={(item) => item.id}
+                  contentContainerStyle={tw`p-5`}
+                  ListEmptyComponent={
+                    <View style={tw`items-center justify-center py-16`}>
+                      <View style={tw`w-20 h-20 rounded-full bg-stone-100 items-center justify-center mb-4`}>
+                        <Trash2 size={32} color="#a8a29e" />
+                      </View>
+                      <Text style={tw`text-stone-900 font-bold text-lg mb-2`}>{t('taskManager.noTasksTitle')}</Text>
+                      <Text style={tw`text-stone-500 text-center px-8`}>{t('taskManager.noTasks')}</Text>
+                    </View>
+                  }
+                  renderItem={({ item }) => (
+                    <TaskItem
+                      task={item}
+                      habitId={habitId}
+                      habitCategory={habit.category}
+                      habitType={habit.type}
+                      onTaskDeleted={handleTaskDeleted}
+                      tierColor={tierThemes[currentTierData.tier.name].accent}
+                    />
+                  )}
+                  ItemSeparatorComponent={() => <View style={tw`h-3`} />}
+                />
+
+                {/* Add Task Button */}
+                <View style={tw`p-6 border-t border-stone-200`}>
+                  <View
+                    style={{
+                      borderRadius: 16,
+                      overflow: 'hidden',
+                      shadowColor: tierThemes[currentTierData.tier.name].accent,
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 8,
+                      elevation: 4,
+                    }}
+                  >
+                    <LinearGradient colors={tierThemes[currentTierData.tier.name].gradient as unknown as readonly [string, string, ...string[]]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                      <Pressable onPress={handleAddTaskPress} style={tw`flex-row items-center justify-center py-4`}>
+                        <Plus size={22} color="white" strokeWidth={2.5} />
+                        <Text style={tw`text-white font-bold text-base ml-2`}>{t('taskManager.addNewTask')}</Text>
+                      </Pressable>
+                    </LinearGradient>
+                  </View>
+                </View>
+              </View>
+            </ImageBackground>
+          </View>
+        </Modal>
+
+        {/* Task Category Picker Modal */}
+        <TaskCategoryPicker
+          visible={showTaskCategoryPicker}
+          habitId={habitId}
+          habitCategory={habit.category}
+          habitType={habit.type}
+          currentTaskCount={habit.tasks?.length || 0}
+          currentTier={currentTierData.tier.name as 'Crystal' | 'Ruby' | 'Amethyst'}
+          tierColor={tierThemes[currentTierData.tier.name].accent}
+          existingTaskIds={(habit.tasks || []).map((t) => t.id)}
+          onClose={() => setShowTaskCategoryPicker(false)}
+          onTasksUpdated={handleTasksUpdated}
+        />
       </View>
     </ImageBackground>
   );

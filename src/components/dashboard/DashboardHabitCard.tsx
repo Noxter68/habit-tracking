@@ -300,10 +300,15 @@ export const DashboardHabitCard = memo(DashboardHabitCardComponent, (prev, next)
   const prevTodayTasks = prev.habit.dailyTasks?.[getTodayString()];
   const nextTodayTasks = next.habit.dailyTasks?.[getTodayString()];
 
+  // Comparer les tasks (IDs uniquement pour performance)
+  const prevTaskIds = prev.habit.tasks?.map((t) => (typeof t === 'string' ? t : t.id)).join(',') || '';
+  const nextTaskIds = next.habit.tasks?.map((t) => (typeof t === 'string' ? t : t.id)).join(',') || '';
+
   return (
     prev.habit.id === next.habit.id &&
     prev.habit.currentStreak === next.habit.currentStreak &&
     prev.unlockedMilestonesCount === next.unlockedMilestonesCount &&
+    prevTaskIds === nextTaskIds &&
     areCompletedTasksEqual(prevTodayTasks?.completedTasks, nextTodayTasks?.completedTasks) &&
     arePausedTasksEqual(prev.pausedTasks || {}, next.pausedTasks || {})
   );

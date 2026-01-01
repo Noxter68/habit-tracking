@@ -38,7 +38,7 @@ interface TaskCategoryPickerProps {
   tierColor: string;
   existingTaskIds?: string[]; // ✅ NOUVEAU: Liste des IDs de tâches déjà ajoutées
   onClose: () => void;
-  onTasksUpdated: () => void;
+  onTasksUpdated: () => void | Promise<void>;
 }
 
 type Step = 'select' | 'custom';
@@ -165,7 +165,7 @@ const TaskCategoryPicker: React.FC<TaskCategoryPickerProps> = ({
         }
       }
 
-      onTasksUpdated();
+      await onTasksUpdated();
       handleClose();
 
       Alert.alert(t('taskManager.alerts.tasksAdded.title'), t('taskManager.alerts.tasksAdded.message', { count: selectedTasks.length }));
@@ -208,7 +208,7 @@ const TaskCategoryPicker: React.FC<TaskCategoryPickerProps> = ({
         category: 'custom',
       });
 
-      onTasksUpdated();
+      await onTasksUpdated();
       handleClose();
 
       Alert.alert(t('taskManager.alerts.taskAdded.title'), t('taskManager.alerts.taskAdded.message'));
