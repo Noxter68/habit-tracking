@@ -360,7 +360,23 @@
     "languageChangeError": "Échec du changement de langue. Veuillez réessayer.",
     "dailyMotivation": "Motivation Quotidienne",
     "dailyMotivationEnabled": "À chaque ouverture",
-    "dailyMotivationDisabled": "Une fois par jour"
+    "dailyMotivationDisabled": "Une fois par jour",
+    "rating": {
+      "sectionTitle": "Nous soutenir",
+      "title": "Noter l'application",
+      "subtitle": "Votre avis compte pour nous !",
+      "settingsSubtitle": "Gagnez 500 XP en nous laissant un avis",
+      "reward": "Récompense",
+      "rewardDescription": "Pour votre avis sur l'App Store",
+      "howTo": "Comment faire ?",
+      "step1": "Ouvrez l'App Store et cherchez \"Nuvoria\"",
+      "step2": "Laissez-nous un avis et une note",
+      "step3": "Revenez ici pour récupérer vos 500 XP !",
+      "claimReward": "J'ai noté, récupérer mes XP",
+      "later": "Plus tard",
+      "thankYou": "Merci !",
+      "rewardReceived": "Votre récompense a été ajoutée à votre compte."
+    }
   },
 
   "paywall": {

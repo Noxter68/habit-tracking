@@ -285,7 +285,23 @@
     "languageChangeError": "Failed to change language. Please try again.",
     "dailyMotivation": "Daily Motivation",
     "dailyMotivationEnabled": "Every app launch",
-    "dailyMotivationDisabled": "Once per day"
+    "dailyMotivationDisabled": "Once per day",
+    "rating": {
+      "sectionTitle": "Support Us",
+      "title": "Rate the App",
+      "subtitle": "Your feedback matters to us!",
+      "settingsSubtitle": "Earn 500 XP by leaving us a review",
+      "reward": "Reward",
+      "rewardDescription": "For your App Store review",
+      "howTo": "How to do it?",
+      "step1": "Open the App Store and search for \"Nuvoria\"",
+      "step2": "Leave us a review and rating",
+      "step3": "Come back here to claim your 500 XP!",
+      "claimReward": "I rated, claim my XP",
+      "later": "Maybe Later",
+      "thankYou": "Thank You!",
+      "rewardReceived": "Your reward has been added to your account."
+    }
   },
 
   "paywall": {

@@ -32,6 +32,7 @@ import tw from 'twrnc';
 
 import EditUsernameModal from '@/components/settings/EditUserModal';
 import DeleteAccountModal from '@/components/settings/DeleteAccountModal';
+import { RatingRewardModal } from '@/components/settings/RatingRewardModal';
 import { GroupTierUpModal } from '@/components/groups/GroupTierUpModal';
 import { GroupLevelUpModal } from '@/components/groups/GroupLevelUpModal';
 import { StreakSaverShopModal } from '@/components/streakSaver/StreakSaverShopModal';
@@ -45,6 +46,7 @@ import { HolidayModeService } from '@/services/holidayModeService';
 import { NotificationPreferencesService } from '@/services/notificationPreferenceService';
 import { OnboardingService } from '@/services/onboardingService';
 import { AccountDeletionService } from '@/services/accountDeletionService';
+import { RatingService } from '@/services/ratingService';
 
 import Logger from '@/utils/logger';
 import { supabase } from '@/lib/supabase';
@@ -85,7 +87,8 @@ type IconName =
   | 'beach-outline'
   | 'bug'
   | 'diagnostic'
-  | 'create-outline';
+  | 'create-outline'
+  | 'star';
 
 interface SettingsSectionProps {
   title: string;
@@ -186,6 +189,11 @@ const Icon: React.FC<IconProps> = ({ name, size = 22, color = '#52525B' }) => {
       <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
         <Path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
         <Path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      </Svg>
+    ),
+    star: (
+      <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" fill={`${color}20`} />
       </Svg>
     ),
   };
@@ -390,6 +398,8 @@ const SettingsScreen: React.FC = () => {
   const [signingOut, setSigningOut] = useState(false);
   const [showStreakSaverShop, setShowStreakSaverShop] = useState(false);
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [hasRated, setHasRated] = useState(false);
 
   // ============================================================================
   // HOOKS - useCallback
@@ -427,6 +437,20 @@ const SettingsScreen: React.FC = () => {
     }
   }, [user?.id, user?.email]);
 
+  /**
+   * Charge le statut de notation de l'app
+   */
+  const loadRatingStatus = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      const rated = await RatingService.hasUserRated(user.id);
+      setHasRated(rated);
+    } catch (error) {
+      Logger.error('Error loading rating status:', error);
+    }
+  }, [user?.id]);
+
   // ============================================================================
   // HOOKS - useEffect
   // ============================================================================
@@ -442,6 +466,7 @@ const SettingsScreen: React.FC = () => {
           loadNotificationPreferences(),
           loadHolidayStatus(),
           loadUsername(),
+          loadRatingStatus(),
         ]);
       } finally {
         setLoading(false);
@@ -881,8 +906,29 @@ const SettingsScreen: React.FC = () => {
               </SettingsSection>
             )}
 
+            {/* Section Noter l'application - Cachée si déjà noté */}
+            {!hasRated && (
+              <SettingsSection title={t('settings.rating.sectionTitle')} delay={400}>
+                <SettingsItem
+                  icon="star"
+                  title={t('settings.rating.title')}
+                  subtitle={t('settings.rating.settingsSubtitle')}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setShowRatingModal(true);
+                  }}
+                  trailing={
+                    <View style={tw`px-3 py-1.5 bg-amber-500 rounded-lg`}>
+                      <Text style={tw`text-white text-xs font-bold`}>+500 XP</Text>
+                    </View>
+                  }
+                  isLast
+                />
+              </SettingsSection>
+            )}
+
             {/* Section Support */}
-            <SettingsSection title={t('settings.support')} delay={400}>
+            <SettingsSection title={t('settings.support')} delay={450}>
               <SettingsItem icon="information-circle-outline" title={t('settings.version')} subtitle={Constants.expoConfig?.version || '1.0.0'} />
             </SettingsSection>
 
@@ -928,6 +974,15 @@ const SettingsScreen: React.FC = () => {
               visible={showDeleteAccountModal}
               onClose={() => setShowDeleteAccountModal(false)}
               onConfirm={handleDeleteAccount}
+            />
+
+            {/* Modal de notation de l'application */}
+            <RatingRewardModal
+              visible={showRatingModal}
+              onClose={() => setShowRatingModal(false)}
+              onSuccess={() => {
+                setHasRated(true);
+              }}
             />
 
             {/* Bouton de déconnexion */}
