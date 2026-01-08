@@ -89,6 +89,11 @@ const OnboardingScreen: React.FC = () => {
   const [isUsernameValid, setIsUsernameValid] = useState(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
+  // Filtrer les steps selon le provider d'authentification
+  // L'étape username n'est affichée que pour les utilisateurs Apple (qui n'ont pas choisi de username à l'inscription)
+  const isAppleAuth = user?.app_metadata?.provider === 'apple';
+  const steps = isAppleAuth ? STEPS : STEPS.filter(step => step.id !== 'username');
+
   const opacity = useSharedValue(0);
   const gemOpacity = useSharedValue(1);
   const gemScale = useSharedValue(1);
@@ -121,7 +126,7 @@ const OnboardingScreen: React.FC = () => {
 
   const handleNext = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (currentStep < STEPS.length - 1) {
+    if (currentStep < steps.length - 1) {
       setCurrentStep((prev) => prev + 1);
     } else {
       await handleComplete();
@@ -138,8 +143,9 @@ const OnboardingScreen: React.FC = () => {
   const handleComplete = async () => {
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-    // Si on est sur le dernier step (username) et que le pseudo est valide, le sauvegarder en base de données
-    if (currentStep === STEPS.length - 1 && isUsernameValid && username.trim()) {
+    // Si on est sur le dernier step et que c'est l'étape username avec un pseudo valide, le sauvegarder en base de données
+    const currentStepConfig = steps[currentStep];
+    if (currentStepConfig.id === 'username' && isUsernameValid && username.trim()) {
       try {
         const { error } = await supabase
           .from('profiles')
@@ -177,8 +183,10 @@ const OnboardingScreen: React.FC = () => {
     transform: [{ scale: gemScale.value }],
   }));
 
-  const step = STEPS[currentStep];
+  const step = steps[currentStep];
   const StepComponent = step.component;
+  const isUsernameStep = step.id === 'username';
+  const isLastStep = currentStep === steps.length - 1;
 
   return (
     <ImageBackground source={require('../../assets/interface/purple-background-stars.png')} style={tw`flex-1`} resizeMode="cover">
@@ -194,7 +202,7 @@ const OnboardingScreen: React.FC = () => {
 
             {/* Progress Indicators - Centered */}
             <View style={tw`flex-row gap-2`}>
-              {STEPS.map((_, index) => (
+              {steps.map((_, index) => (
                 <View
                   key={index}
                   style={[
@@ -229,7 +237,7 @@ const OnboardingScreen: React.FC = () => {
           key={`gem-${currentStep}`}
           style={[
             tw`items-center mt-4 mb-3`,
-            currentStep === STEPS.length - 1 ? animatedGemStyle : {}
+            isUsernameStep ? animatedGemStyle : {}
           ]}
         >
           <View
@@ -257,7 +265,7 @@ const OnboardingScreen: React.FC = () => {
               setUsername(newUsername);
               setIsUsernameValid(isValid);
             }}
-            onKeyboardVisibilityChange={currentStep === STEPS.length - 1 ? handleKeyboardVisibilityChange : undefined}
+            onKeyboardVisibilityChange={isUsernameStep ? handleKeyboardVisibilityChange : undefined}
           />
         </Animated.View>
 
@@ -307,13 +315,13 @@ const OnboardingScreen: React.FC = () => {
 
               <Pressable
                 onPress={handleNext}
-                // Désactiver le bouton sur le dernier step si le pseudo n'est pas valide
-                disabled={currentStep === STEPS.length - 1 && !isUsernameValid}
+                // Désactiver le bouton sur l'étape username si le pseudo n'est pas valide
+                disabled={isUsernameStep && !isUsernameValid}
                 style={({ pressed }) => [
                   tw`flex-1 h-14 rounded-full flex-row items-center justify-center gap-2`,
                   {
                     // Opacité réduite si le bouton est désactivé
-                    backgroundColor: currentStep === STEPS.length - 1 && !isUsernameValid
+                    backgroundColor: isUsernameStep && !isUsernameValid
                       ? 'rgba(255, 255, 255, 0.3)'
                       : 'rgba(255, 255, 255, 0.95)',
                     opacity: pressed ? 0.9 : 1,
@@ -329,16 +337,16 @@ const OnboardingScreen: React.FC = () => {
                   tw`text-base font-bold`,
                   {
                     // Couleur atténuée si le bouton est désactivé
-                    color: currentStep === STEPS.length - 1 && !isUsernameValid
+                    color: isUsernameStep && !isUsernameValid
                       ? 'rgba(88, 28, 135, 0.4)'
                       : '#581c87'
                   }
                 ]}>
-                  {currentStep === STEPS.length - 1 ? t('onboarding.letsStart') : t('onboarding.continue')}
+                  {isLastStep ? t('onboarding.letsStart') : t('onboarding.continue')}
                 </Text>
                 <ChevronRight
                   size={20}
-                  color={currentStep === STEPS.length - 1 && !isUsernameValid ? 'rgba(88, 28, 135, 0.4)' : '#581c87'}
+                  color={isUsernameStep && !isUsernameValid ? 'rgba(88, 28, 135, 0.4)' : '#581c87'}
                   strokeWidth={2.5}
                 />
               </Pressable>
