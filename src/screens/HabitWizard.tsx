@@ -263,7 +263,11 @@ const HabitWizard: React.FC = () => {
             <GoalSetting
               hasEndGoal={habitData.hasEndGoal || false}
               endGoalDays={habitData.endGoalDays}
-              onChange={(hasEndGoal, days) => setHabitData((prev) => ({ ...prev, hasEndGoal, endGoalDays: days, totalDays: days || 61 }))}
+              onChange={(hasEndGoal, days) => {
+                // Si "Default 61 Days" est sélectionné (hasEndGoal=false), on stocke quand même 61 dans endGoalDays
+                const effectiveDays = hasEndGoal ? days : 61;
+                setHabitData((prev) => ({ ...prev, hasEndGoal, endGoalDays: effectiveDays, totalDays: effectiveDays || 61 }));
+              }}
             />
           );
         case 7:
@@ -300,7 +304,11 @@ const HabitWizard: React.FC = () => {
           <GoalSetting
             hasEndGoal={habitData.hasEndGoal || false}
             endGoalDays={habitData.endGoalDays}
-            onChange={(hasEndGoal, days) => setHabitData((prev) => ({ ...prev, hasEndGoal, endGoalDays: days, totalDays: days || 61 }))}
+            onChange={(hasEndGoal, days) => {
+              // Si "Default 61 Days" est sélectionné (hasEndGoal=false), on stocke quand même 61 dans endGoalDays
+              const effectiveDays = hasEndGoal ? days : 61;
+              setHabitData((prev) => ({ ...prev, hasEndGoal, endGoalDays: effectiveDays, totalDays: effectiveDays || 61 }));
+            }}
           />
         );
       case 5:

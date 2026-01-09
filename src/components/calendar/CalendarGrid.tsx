@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { ChevronLeft, ChevronRight, Flame } from 'lucide-react-native';
+import { GoalDayOverlay, GoalFlagBadge } from './GoalFlag';
 import { useTranslation } from 'react-i18next';
 import tw from '@/lib/tailwind';
 import { Habit } from '@/types';
@@ -26,6 +27,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ habit, currentMonth, select
   const { tier } = HabitProgressionService.calculateTierFromStreak(habit.currentStreak);
   const theme = tierThemes[tier.name];
   const days = getDaysInMonth(currentMonth);
+  const goalDate = getGoalDate(habit);
 
   // Week days avec traduction - commence par lundi
   const weekDays = [
@@ -219,6 +221,9 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ habit, currentMonth, select
             }
           }
 
+          // Check if this date is the goal date
+          const isGoalDate = goalDate && date ? isSameDay(date, goalDate) : false;
+
           return (
             <CalendarDay
               key={`day-${index}`}
@@ -238,6 +243,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ habit, currentMonth, select
               isInHolidayStreak={isInHolidayStreak}
               isHolidayStreakStart={isHolidayStreakStart}
               isHolidayStreakEnd={isHolidayStreakEnd}
+              isGoalDate={isGoalDate}
             />
           );
         })}
@@ -254,6 +260,21 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ habit, currentMonth, select
       </View>
     </View>
   );
+};
+
+/**
+ * Calculate the goal date based on habit creation date and endGoalDays
+ * Affiche le flag si endGoalDays est défini (que hasEndGoal soit true ou false)
+ */
+const getGoalDate = (habit: Habit): Date | null => {
+  if (!habit.endGoalDays) {
+    return null;
+  }
+  const creationDate = new Date(habit.createdAt);
+  creationDate.setHours(0, 0, 0, 0);
+  const goalDate = new Date(creationDate);
+  goalDate.setDate(creationDate.getDate() + habit.endGoalDays);
+  return goalDate;
 };
 
 /**
@@ -339,6 +360,7 @@ const CalendarDay: React.FC<{
   isInHolidayStreak?: boolean;
   isHolidayStreakStart?: boolean;
   isHolidayStreakEnd?: boolean;
+  isGoalDate?: boolean;
 }> = ({
   date,
   habit,
@@ -350,6 +372,7 @@ const CalendarDay: React.FC<{
   isInStreak = false,
   isInMissedStreak = false,
   isInHolidayStreak = false,
+  isGoalDate = false,
 }) => {
   if (!date) {
     return <View style={tw`w-1/7 h-11 mb-1`} />;
@@ -436,6 +459,11 @@ const CalendarDay: React.FC<{
     }
   }
 
+  // Goal date: white text for visibility on orange background
+  if (isGoalDate) {
+    textColor = '#ffffff';
+  }
+
   return (
     <View style={tw`w-1/7 h-11 mb-1 items-center justify-center px-0.5`}>
       <Pressable
@@ -447,18 +475,22 @@ const CalendarDay: React.FC<{
         disabled={beforeCreation}
       >
         <View style={tw`relative`}>
+          {/* Goal day: background overlay with particles - rendered first (behind) */}
+          {isGoalDate && <GoalDayOverlay showParticles={true} />}
+
           <View
             style={[
               tw`w-9 h-9 rounded-xl items-center justify-center`,
               {
-                backgroundColor,
+                backgroundColor: isGoalDate ? 'transparent' : backgroundColor,
                 borderWidth,
                 borderColor,
+                zIndex: 1,
               },
               isSelected && !beforeCreation && {
                 borderWidth: 2,
-                borderColor: theme.accent,
-                shadowColor: theme.accent,
+                borderColor: isGoalDate ? '#d97706' : theme.accent,
+                shadowColor: isGoalDate ? '#d97706' : theme.accent,
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.3,
                 shadowRadius: 4,
@@ -482,12 +514,15 @@ const CalendarDay: React.FC<{
             <View
               style={[
                 tw`absolute -top-1 -right-1 w-4 h-4 rounded-full items-center justify-center`,
-                { backgroundColor: theme.accent }
+                { backgroundColor: theme.accent, zIndex: 2 }
               ]}
             >
               <Flame size={10} color="#ffffff" fill="#ffffff" />
             </View>
           )}
+
+          {/* Goal flag badge - same position as streak flame */}
+          {isGoalDate && <GoalFlagBadge />}
         </View>
       </Pressable>
     </View>

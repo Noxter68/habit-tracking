@@ -23,7 +23,6 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react-native';
 
-import CalendarHeader from '../components/calendar/CalendarHeader';
 import CalendarGrid from '../components/calendar/CalendarGrid';
 import DateDetails from '../components/calendar/DateDetails';
 import EmptyState from '../components/shared/EmptyState';
@@ -294,9 +293,6 @@ const CalendarScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" />
       <SafeAreaView style={tw`flex-1 bg-transparent`} edges={['top']}>
         <ImageBackground source={require('../../assets/interface/textures/texture-white.png')} style={tw`flex-1`} imageStyle={{ opacity: 0.05 }} resizeMode="repeat">
-          {/* Header - Commenté pour le moment */}
-          {/* <CalendarHeader habit={selectedHabit} /> */}
-
           <ScrollView
             ref={scrollViewRef}
             style={tw`flex-1`}
@@ -329,7 +325,7 @@ const CalendarScreen: React.FC = () => {
                 ItemSeparatorComponent={() => <View style={{ width: 12 }} />}
                 renderItem={({ item: habit }) => (
                   <View style={{ width: screenWidth - 32 - 12 }}>
-                    <DateDetails habit={normalizeHabitTasks(habit)} selectedDate={selectedDate} activeHoliday={activeHoliday} allHolidays={allHolidays} showStats={true} />
+                    <DateDetails habit={normalizeHabitTasks(habit)} selectedDate={selectedDate} activeHoliday={activeHoliday} allHolidays={allHolidays} showStats={true} isActiveCard={selectedHabit?.id === habit.id} />
                   </View>
                 )}
               />

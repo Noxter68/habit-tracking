@@ -2,7 +2,7 @@
 import React from 'react';
 import { View, Text, ImageBackground } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Sun, CheckCircle2, Flame, Calendar, Repeat, CalendarDays } from 'lucide-react-native';
+import { Sun, CheckCircle2, Flame, Calendar, Repeat, CalendarDays, Flag } from 'lucide-react-native';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import tw from '@/lib/tailwind';
@@ -11,7 +11,8 @@ import { HolidayPeriod } from '@/types/holiday.types';
 import { HolidayModeService } from '@/services/holidayModeService';
 import { HabitProgressionService } from '@/services/habitProgressionService';
 import { tierThemes } from '@/utils/tierTheme';
-import { getLocalDateString } from '@/utils/dateHelpers';
+import { getLocalDateString, isSameDay } from '@/utils/dateHelpers';
+import { GoalDateDetailsParticles } from './GoalFlag';
 
 interface DateDetailsProps {
   habit: Habit;
@@ -19,9 +20,47 @@ interface DateDetailsProps {
   activeHoliday?: HolidayPeriod | null;
   allHolidays?: HolidayPeriod[];
   showStats?: boolean;
+  isActiveCard?: boolean;
 }
 
-const DateDetails: React.FC<DateDetailsProps> = ({ habit, selectedDate, activeHoliday = null, allHolidays = [], showStats = true }) => {
+/**
+ * Calculate days remaining until goal
+ */
+const getDaysRemaining = (habit: Habit): number | null => {
+  if (!habit.endGoalDays || !habit.createdAt) {
+    return null;
+  }
+
+  const creationDate = new Date(habit.createdAt);
+  creationDate.setHours(0, 0, 0, 0);
+
+  const goalDate = new Date(creationDate);
+  goalDate.setDate(creationDate.getDate() + habit.endGoalDays);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const diffTime = goalDate.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  return diffDays > 0 ? diffDays : 0;
+};
+
+/**
+ * Get the goal date for a habit
+ */
+const getGoalDate = (habit: Habit): Date | null => {
+  if (!habit.endGoalDays || !habit.createdAt) {
+    return null;
+  }
+  const creationDate = new Date(habit.createdAt);
+  creationDate.setHours(0, 0, 0, 0);
+  const goalDate = new Date(creationDate);
+  goalDate.setDate(creationDate.getDate() + habit.endGoalDays);
+  return goalDate;
+};
+
+const DateDetails: React.FC<DateDetailsProps> = ({ habit, selectedDate, activeHoliday = null, allHolidays = [], showStats = true, isActiveCard = true }) => {
   const { t, i18n } = useTranslation();
   const dateString = getLocalDateString(selectedDate);
   const dayTasks = habit.dailyTasks[dateString];
@@ -56,6 +95,10 @@ const DateDetails: React.FC<DateDetailsProps> = ({ habit, selectedDate, activeHo
 
   const isPast = checkDate < now && !isHoliday;
   const isToday = selectedDate.toDateString() === new Date().toDateString();
+
+  // Check if selected date is the goal date (only for active card)
+  const goalDate = getGoalDate(habit);
+  const isGoalDate = isActiveCard && goalDate ? isSameDay(selectedDate, goalDate) : false;
 
   const formattedDate = selectedDate.toLocaleDateString(i18n.language, {
     weekday: 'long',
@@ -165,21 +208,27 @@ const DateDetails: React.FC<DateDetailsProps> = ({ habit, selectedDate, activeHo
 
   // ============================================================================
   // NORMAL STATE - Minimalist & Gamified with Tier Theme
+  // Goal date uses orange gradient with particles
   // ============================================================================
+  const goalGradient = ['#fbbf24', '#f59e0b', '#d97706'] as const;
+
   return (
     <Animated.View entering={FadeInDown.duration(400)} style={tw`mt-4`}>
-      <ImageBackground
-        source={theme.texture}
-        style={tw`rounded-2xl overflow-hidden`}
-        imageStyle={tw`opacity-70`}
-        resizeMode="cover"
-      >
-        <LinearGradient
-          colors={[theme.gradient[0] + 'e6', theme.gradient[1] + 'dd', theme.gradient[2] + 'cc']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={tw`p-3`}
+      <View style={tw`rounded-2xl overflow-hidden`}>
+        <ImageBackground
+          source={theme.texture}
+          style={tw`overflow-hidden`}
+          imageStyle={tw`opacity-70`}
+          resizeMode="cover"
         >
+          <LinearGradient
+            colors={isGoalDate ? [...goalGradient] : [theme.gradient[0] + 'e6', theme.gradient[1] + 'dd', theme.gradient[2] + 'cc']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={tw`p-3`}
+          >
+            {/* Particles overlay for goal date */}
+            {isGoalDate && <GoalDateDetailsParticles />}
           {/* Habit Name + Percentage - Top Row */}
           <View style={tw`flex-row items-center justify-between mb-1`}>
             <Text style={tw`text-white font-black text-lg flex-1 mr-2`} numberOfLines={1}>
@@ -227,10 +276,18 @@ const DateDetails: React.FC<DateDetailsProps> = ({ habit, selectedDate, activeHo
                 <Text style={tw`text-xl font-black text-white mt-1`}>{habit.completedDays.length}</Text>
                 <Text style={tw`text-xs font-bold text-white/70`}>{t('calendar.stats.total')}</Text>
               </View>
+              {getDaysRemaining(habit) !== null && (
+                <View style={tw`items-center flex-1`}>
+                  <Flag size={20} color="#fff" fill="#fff" />
+                  <Text style={tw`text-xl font-black text-white mt-1`}>{getDaysRemaining(habit)}</Text>
+                  <Text style={tw`text-xs font-bold text-white/70`}>{t('calendar.stats.goal')}</Text>
+                </View>
+              )}
             </View>
           )}
-        </LinearGradient>
-      </ImageBackground>
+          </LinearGradient>
+        </ImageBackground>
+      </View>
     </Animated.View>
   );
 };

@@ -1559,13 +1559,16 @@
     "noHabits": "No habits to display",
     "createHabit": "Create a habit to get started",
     "trackYourJourney": "Track your habit journey",
+    "daysLeft": "days left",
+    "goalReached": "Goal reached!",
     "stats": {
       "current": "Current",
       "streak": "Streak",
       "best": "Best",
       "month": "Month",
       "total": "Total",
-      "tier": "Tier"
+      "tier": "Tier",
+      "goal": "Goal"
     },
     "status": {
       "complete": "Complete",
@@ -1627,7 +1630,8 @@
       "complete": "Complete",
       "partial": "Partial",
       "missed": "Missed",
-      "holiday": "Holiday"
+      "holiday": "Holiday",
+      "goal": "Goal"
     },
     "frequency": {
       "daily": "Daily",

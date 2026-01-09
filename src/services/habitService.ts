@@ -567,6 +567,9 @@ export class HabitService {
           bestStreak: habit.best_streak || 0,
           createdAt: new Date(habit.created_at),
           currentTierLevel: habit.current_tier_level ?? 0,
+          hasEndGoal: habit.has_end_goal ?? false,
+          endGoalDays: habit.end_goal_days,
+          totalDays: habit.total_days,
         };
       });
     } catch (error) {

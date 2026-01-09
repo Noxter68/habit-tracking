@@ -1680,13 +1680,16 @@
     "noHabits": "Aucune habitude à afficher",
     "createHabit": "Créez une habitude pour commencer",
     "trackYourJourney": "Suivez votre parcours d'habitudes",
+    "daysLeft": "jours restants",
+    "goalReached": "Objectif atteint !",
     "stats": {
       "current": "Actuel",
       "streak": "Série",
       "best": "Meilleur",
       "month": "Mois",
       "total": "Total",
-      "tier": "Pourcentage"
+      "tier": "Pourcentage",
+      "goal": "Objectif"
     },
     "status": {
       "complete": "Terminé",
@@ -1748,7 +1751,8 @@
       "complete": "Terminé",
       "partial": "Partiel",
       "missed": "Manqué",
-      "holiday": "Vacances"
+      "holiday": "Vacances",
+      "goal": "Objectif"
     },
     "frequency": {
       "daily": "Quotidien",
