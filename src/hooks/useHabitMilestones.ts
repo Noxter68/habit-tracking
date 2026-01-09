@@ -11,7 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useHabits } from '@/context/HabitContext';
 
 // Jours requis pour chaque milestone (doit correspondre à habit_milestones)
-const MILESTONE_DAYS = [3, 7, 14, 21, 30, 45, 60, 75, 90, 100, 150, 200, 250, 300, 365];
+export const MILESTONE_DAYS = [3, 7, 14, 21, 30, 45, 60, 75, 90, 100, 150, 200, 250, 300, 365];
 
 /**
  * Calcule le nombre de milestones débloqués basé sur l'âge de l'habitude
@@ -101,4 +101,41 @@ export function useLegacyHabitMilestonesCount(habitId: string): number {
   }, [habitId, user?.id]);
 
   return count;
+}
+
+/**
+ * Vérifie si une habitude a un nouveau milestone non réclamé
+ * Compare le nombre de milestones attendus (basé sur l'âge) vs le currentTierLevel stocké
+ * @param createdAt - Date de création de l'habitude
+ * @param currentTierLevel - Niveau de tier actuel stocké en DB (0-14)
+ * @returns true si un nouveau milestone est disponible
+ */
+export function hasUnclaimedMilestone(createdAt: Date | undefined, currentTierLevel: number | undefined): boolean {
+  if (!createdAt) return false;
+
+  const expectedMilestones = calculateMilestonesFromAge(createdAt);
+  const claimedMilestones = currentTierLevel ?? 0;
+
+  return expectedMilestones > claimedMilestones;
+}
+
+/**
+ * Hook pour détecter les milestones non réclamés pour plusieurs habitudes
+ * @param habits - Liste des habitudes avec createdAt et currentTierLevel
+ * @param forceAll - Force tous les habits à être marqués comme ayant un milestone (debug)
+ * @returns Map de habitId vers boolean indiquant si un milestone est non réclamé
+ */
+export function useUnclaimedMilestones(
+  habits: Array<{ id: string; createdAt?: Date; currentTierLevel?: number }>,
+  forceAll: boolean = false
+): Record<string, boolean> {
+  const result = useMemo(() => {
+    const map: Record<string, boolean> = {};
+    habits.forEach((habit) => {
+      map[habit.id] = forceAll || hasUnclaimedMilestone(habit.createdAt, habit.currentTierLevel);
+    });
+    return map;
+  }, [habits, forceAll]);
+
+  return result;
 }

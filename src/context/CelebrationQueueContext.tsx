@@ -140,8 +140,7 @@ export const CelebrationQueueProvider: React.FC<{ children: React.ReactNode }> =
 
   // Pour eviter les doublons de level up
   const shownLevelUps = useRef<Set<number>>(new Set());
-  // Pour eviter les doublons de milestones (par titre)
-  const shownMilestones = useRef<Set<string>>(new Set());
+  // Note: La déduplication des milestones est gérée par HabitDetails.tsx (shownMilestoneTitlesRef)
 
   // ==========================================================================
   // CALLBACKS - Gestion de la queue
@@ -169,12 +168,9 @@ export const CelebrationQueueProvider: React.FC<{ children: React.ReactNode }> =
    * Ajoute une celebration a la queue
    */
   const addToQueue = useCallback((celebration: Celebration) => {
-    Logger.debug('CelebrationQueue: Adding to queue:', celebration.type, celebration.id);
-
     setQueue((prevQueue) => {
       // Si aucune celebration n'est en cours, afficher directement
       if (!currentCelebration && prevQueue.length === 0) {
-        Logger.debug('CelebrationQueue: No current celebration, showing immediately');
         setCurrentCelebration(celebration);
         return [];
       }
@@ -209,16 +205,9 @@ export const CelebrationQueueProvider: React.FC<{ children: React.ReactNode }> =
 
   /**
    * Ajoute un milestone unique a la queue
+   * Note: La déduplication est gérée par le composant appelant (HabitDetails.tsx)
    */
   const queueMilestoneSingle = useCallback((milestone: HabitMilestone, milestoneIndex: number) => {
-    // Eviter les doublons
-    if (shownMilestones.current.has(milestone.title)) {
-      Logger.debug('CelebrationQueue: Milestone already shown:', milestone.title);
-      return;
-    }
-
-    shownMilestones.current.add(milestone.title);
-
     const celebration: MilestoneSingleCelebration = {
       type: 'milestone_single',
       id: `milestone_${milestone.title}_${Date.now()}`,
@@ -231,23 +220,17 @@ export const CelebrationQueueProvider: React.FC<{ children: React.ReactNode }> =
 
   /**
    * Ajoute plusieurs milestones a la queue
+   * Note: La déduplication est gérée par le composant appelant (HabitDetails.tsx)
    */
   const queueMilestoneMultiple = useCallback((milestones: Array<{ milestone: HabitMilestone; index: number }>) => {
-    // Filtrer les doublons
-    const newMilestones = milestones.filter((m) => !shownMilestones.current.has(m.milestone.title));
-
-    if (newMilestones.length === 0) {
-      Logger.debug('CelebrationQueue: All milestones already shown');
+    if (milestones.length === 0) {
       return;
     }
-
-    // Marquer comme montres
-    newMilestones.forEach((m) => shownMilestones.current.add(m.milestone.title));
 
     const celebration: MilestoneMultipleCelebration = {
       type: 'milestone_multiple',
       id: `milestones_multiple_${Date.now()}`,
-      milestones: newMilestones,
+      milestones,
     };
 
     addToQueue(celebration);

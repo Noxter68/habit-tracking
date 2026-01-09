@@ -13,7 +13,7 @@
 // =============================================================================
 
 // React et React Native
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { View, Text, Modal, Pressable, Dimensions, StyleSheet, Image } from 'react-native';
 
 // Bibliothèques externes
@@ -219,6 +219,16 @@ export const EpicMilestoneUnlockModal: React.FC<EpicMilestoneUnlockModalProps> =
   // State
   // ---------------------------------------------------------------------------
   const [countdown, setCountdown] = useState(8);
+  const [isClosing, setIsClosing] = useState(false);
+
+  // ---------------------------------------------------------------------------
+  // Refs
+  // ---------------------------------------------------------------------------
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const autoCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  // Track which milestone we've already opened to prevent re-opening on re-renders
+  const openedForMilestoneRef = useRef<string | null>(null);
 
   // ---------------------------------------------------------------------------
   // Valeurs d'animation
@@ -286,10 +296,42 @@ export const EpicMilestoneUnlockModal: React.FC<EpicMilestoneUnlockModalProps> =
   };
 
   // ---------------------------------------------------------------------------
+  // Handlers - déclarés avant les useEffects qui les utilisent
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Nettoie tous les timers actifs
+   */
+  const clearAllTimers = useCallback(() => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    if (autoCloseTimeoutRef.current) {
+      clearTimeout(autoCloseTimeoutRef.current);
+      autoCloseTimeoutRef.current = null;
+    }
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+  }, []);
+
+  // ---------------------------------------------------------------------------
   // Effets
   // ---------------------------------------------------------------------------
   useEffect(() => {
     if (visible && milestone) {
+      // Check if we've already opened for this milestone to prevent re-triggering on re-renders
+      if (openedForMilestoneRef.current === milestone.title) {
+        return;
+      }
+
+      openedForMilestoneRef.current = milestone.title;
+
+      // Réinitialisation de l'état de fermeture
+      setIsClosing(false);
+
       // Réinitialisation des animations
       cardOpacity.value = 0;
       cardScale.value = 0.5;
@@ -332,43 +374,68 @@ export const EpicMilestoneUnlockModal: React.FC<EpicMilestoneUnlockModalProps> =
       setTimeout(() => runOnJS(triggerLightHaptic)(), 600);
       setTimeout(() => runOnJS(triggerLightHaptic)(), 800);
 
-      // Compte à rebours
-      const interval = setInterval(() => {
+      // Compte à rebours avec ref
+      countdownIntervalRef.current = setInterval(() => {
         setCountdown((prev) => {
           if (prev <= 1) {
-            clearInterval(interval);
+            if (countdownIntervalRef.current) {
+              clearInterval(countdownIntervalRef.current);
+              countdownIntervalRef.current = null;
+            }
             return 0;
           }
           return prev - 1;
         });
       }, 1000);
 
-      // Fermeture automatique après 8 secondes
-      const timer = setTimeout(() => {
+      // Fermeture automatique après 8 secondes avec ref
+      autoCloseTimeoutRef.current = setTimeout(() => {
         handleClose();
       }, 8000);
 
       return () => {
-        clearTimeout(timer);
-        clearInterval(interval);
+        clearAllTimers();
         iconBounce.value = 0;
       };
     }
   }, [visible, milestone]);
 
-  // ---------------------------------------------------------------------------
-  // Handlers
-  // ---------------------------------------------------------------------------
+  // Reset the openedForMilestoneRef when modal becomes invisible
+  // This allows the modal to open for a new milestone in the future
+  useEffect(() => {
+    if (!visible) {
+      openedForMilestoneRef.current = null;
+    }
+  }, [visible]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      clearAllTimers();
+    };
+  }, [clearAllTimers]);
 
   /**
    * Gère la fermeture du modal avec animation
    */
-  const handleClose = () => {
-    cardOpacity.value = withTiming(0, { duration: 300 });
-    cardScale.value = withTiming(0.8, { duration: 300 });
+  const handleClose = useCallback(() => {
+    // Éviter les fermetures multiples
+    if (isClosing) return;
+    setIsClosing(true);
+
+    // Nettoyer tous les timers immédiatement
+    clearAllTimers();
+
+    // Animation de fermeture
+    cardOpacity.value = withTiming(0, { duration: 200 });
+    cardScale.value = withTiming(0.8, { duration: 200 });
     iconBounce.value = 0;
-    setTimeout(() => onClose(), 300);
-  };
+
+    // Appeler onClose après l'animation
+    closeTimeoutRef.current = setTimeout(() => {
+      onClose();
+    }, 200);
+  }, [isClosing, clearAllTimers, onClose, cardOpacity, cardScale, iconBounce]);
 
   // ---------------------------------------------------------------------------
   // Styles animés

@@ -273,8 +273,6 @@ export class HabitProgressionService {
       today.setHours(0, 0, 0, 0);
       const habitAge = Math.floor((today.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
-      Logger.debug('checkAndAwardMilestoneXP - habitAge:', habitAge);
-
       // 2. Récupérer tous les milestones éligibles (days <= habitAge)
       const { data: allMilestones, error: milestonesError } = await supabase
         .from('habit_milestones')
@@ -317,19 +315,30 @@ export class HabitProgressionService {
         }
       });
 
-      Logger.debug('Already rewarded milestones:', Array.from(rewardedTitles));
-
       // 4. Filtrer les milestones non encore récompensés
       const milestonesToReward = allMilestones.filter(
         (m) => !rewardedTitles.has(m.title)
       );
 
       if (milestonesToReward.length === 0) {
-        Logger.debug('All eligible milestones already rewarded');
+        // S'assurer que current_tier_level est synchronisé avec le nombre de milestones éligibles
+        // Même si pas de nouveau XP, on met à jour le compteur si nécessaire
+        const expectedTierLevel = allMilestones.length;
+        const { data: habitData } = await supabase
+          .from('habits')
+          .select('current_tier_level')
+          .eq('id', habitId)
+          .single();
+
+        if (habitData && (habitData.current_tier_level ?? 0) < expectedTierLevel) {
+          await supabase
+            .from('habits')
+            .update({ current_tier_level: expectedTierLevel })
+            .eq('id', habitId);
+        }
+
         return { newlyUnlocked: [], totalXpAwarded: 0 };
       }
-
-      Logger.debug('Milestones to reward:', milestonesToReward.map((m) => m.title));
 
       // 5. Octroyer l'XP pour chaque nouveau milestone
       const { XPService } = await import('./xpService');
@@ -386,19 +395,16 @@ export class HabitProgressionService {
             .eq('id', progression.id);
 
           // Mettre à jour current_tier_level dans habits
-          await supabase
+          const { error: tierUpdateError } = await supabase
             .from('habits')
             .update({ current_tier_level: updatedUnlocked.length })
             .eq('id', habitId);
 
-          Logger.debug('Updated milestones_unlocked:', updatedUnlocked);
+          if (tierUpdateError) {
+            Logger.error('Failed to update current_tier_level:', tierUpdateError);
+          }
         }
       }
-
-      Logger.debug('checkAndAwardMilestoneXP completed:', {
-        newlyUnlocked: newlyUnlocked.length,
-        totalXpAwarded,
-      });
 
       return { newlyUnlocked, totalXpAwarded };
     } catch (err) {

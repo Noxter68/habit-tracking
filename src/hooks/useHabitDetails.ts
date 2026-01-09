@@ -45,8 +45,9 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
   const [performanceMetrics, setPerformanceMetrics] = useState<UseHabitDetailsResult['performanceMetrics']>(null);
   const [loading, setLoading] = useState(true);
 
-  // Ref pour éviter de checker les milestones plusieurs fois
-  const milestoneCheckDone = useRef(false);
+  // Ref pour éviter de checker les milestones plusieurs fois par habitId
+  // Stocke le habitId pour lequel on a déjà fait le check
+  const milestoneCheckDoneForHabit = useRef<string | null>(null);
 
   // Use ref to avoid fetchData recreating when currentStreak changes
   const currentStreakRef = useRef(currentStreak);
@@ -140,15 +141,15 @@ export function useHabitDetails(habitId: string, userId: string, currentStreak: 
       }
 
       // Vérifier et octroyer l'XP des milestones EN ARRIÈRE-PLAN (ne bloque pas l'UI)
-      if (createdAt && !milestoneCheckDone.current) {
-        milestoneCheckDone.current = true;
+      // On vérifie par habitId pour éviter les doubles checks même si le composant est re-rendu
+      if (createdAt && milestoneCheckDoneForHabit.current !== habitId) {
+        milestoneCheckDoneForHabit.current = habitId;
         // Fire and forget - l'UI est déjà affichée
         HabitProgressionService.checkAndAwardMilestoneXP(habitId, userId, createdAt)
           .then(({ newlyUnlocked, totalXpAwarded }) => {
             if (newlyUnlocked.length > 0) {
               setNewlyUnlockedMilestones(newlyUnlocked);
               setMilestoneXpAwarded(totalXpAwarded);
-              Logger.debug('Newly unlocked milestones:', newlyUnlocked.map((m) => m.title), 'XP:', totalXpAwarded);
             }
           })
           .catch((err) => Logger.error('checkAndAwardMilestoneXP error:', err));

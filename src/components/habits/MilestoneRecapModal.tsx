@@ -11,7 +11,7 @@
 // IMPORTS
 // =============================================================================
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { View, Text, Modal, Pressable, Dimensions, StyleSheet, Image, ScrollView } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -88,13 +88,56 @@ export const MilestoneRecapModal: React.FC<MilestoneRecapModalProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const [countdown, setCountdown] = useState(10);
+  const [isClosing, setIsClosing] = useState(false);
+
+  // Refs pour les timers
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const autoCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Animations
   const cardOpacity = useSharedValue(0);
   const cardScale = useSharedValue(0.8);
 
+  /**
+   * Nettoie tous les timers actifs
+   */
+  const clearAllTimers = useCallback(() => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    if (autoCloseTimeoutRef.current) {
+      clearTimeout(autoCloseTimeoutRef.current);
+      autoCloseTimeoutRef.current = null;
+    }
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+  }, []);
+
+  const handleClose = useCallback(() => {
+    // Éviter les fermetures multiples
+    if (isClosing) return;
+    setIsClosing(true);
+
+    // Nettoyer tous les timers immédiatement
+    clearAllTimers();
+
+    cardOpacity.value = withTiming(0, { duration: 200 });
+    cardScale.value = withTiming(0.8, { duration: 200 });
+
+    closeTimeoutRef.current = setTimeout(() => {
+      onClose();
+    }, 200);
+  }, [isClosing, clearAllTimers, onClose, cardOpacity, cardScale]);
+
   useEffect(() => {
     if (visible && milestones.length > 0) {
+      // Réinitialisation de l'état de fermeture
+      setIsClosing(false);
+
       cardOpacity.value = 0;
       cardScale.value = 0.8;
       setCountdown(10);
@@ -104,34 +147,37 @@ export const MilestoneRecapModal: React.FC<MilestoneRecapModalProps> = ({
       cardOpacity.value = withTiming(1, { duration: 300 });
       cardScale.value = withSpring(1, { damping: 15, stiffness: 100 });
 
-      // Countdown
-      const interval = setInterval(() => {
+      // Countdown avec ref
+      countdownIntervalRef.current = setInterval(() => {
         setCountdown((prev) => {
           if (prev <= 1) {
-            clearInterval(interval);
+            if (countdownIntervalRef.current) {
+              clearInterval(countdownIntervalRef.current);
+              countdownIntervalRef.current = null;
+            }
             return 0;
           }
           return prev - 1;
         });
       }, 1000);
 
-      // Auto-close
-      const timer = setTimeout(() => {
+      // Auto-close avec ref
+      autoCloseTimeoutRef.current = setTimeout(() => {
         handleClose();
       }, 10000);
 
       return () => {
-        clearTimeout(timer);
-        clearInterval(interval);
+        clearAllTimers();
       };
     }
   }, [visible, milestones]);
 
-  const handleClose = () => {
-    cardOpacity.value = withTiming(0, { duration: 200 });
-    cardScale.value = withTiming(0.8, { duration: 200 });
-    setTimeout(() => onClose(), 200);
-  };
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      clearAllTimers();
+    };
+  }, [clearAllTimers]);
 
   const cardStyle = useAnimatedStyle(() => ({
     opacity: cardOpacity.value,

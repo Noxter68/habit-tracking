@@ -54,7 +54,7 @@ import { getTasksForCategory } from '@/utils/habitHelpers';
 import { HolidayPeriod } from '@/types/holiday.types';
 import { Config } from '@/config';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
-import { useMultipleHabitMilestonesCount } from '@/hooks/useHabitMilestones';
+import { useMultipleHabitMilestonesCount, useUnclaimedMilestones } from '@/hooks/useHabitMilestones';
 import { useDailyMotivation } from '@/hooks/useDailyMotivation';
 
 // ============================================================================
@@ -129,6 +129,8 @@ const Dashboard: React.FC = () => {
 
   // State: Debug
   const [testLevel, setTestLevel] = useState(1);
+  const [debugForceUnclaimedMilestones, setDebugForceUnclaimedMilestones] = useState(false);
+  const [debugFirstHabitMilestone, setDebugFirstHabitMilestone] = useState(false);
 
   // State: XP Popup
   const [xpPopup, setXpPopup] = useState<{
@@ -304,6 +306,18 @@ const Dashboard: React.FC = () => {
   // Load milestones counts for all habits
   const habitIds = useMemo(() => habits.map((h) => h.id), [habits]);
   const milestoneCounts = useMultipleHabitMilestonesCount(habitIds);
+
+  // Detect unclaimed milestones for all habits
+  const baseUnclaimedMilestones = useUnclaimedMilestones(habits, debugForceUnclaimedMilestones);
+
+  // Override for debug: simulate first habit having unclaimed milestone
+  const unclaimedMilestones = useMemo(() => {
+    if (!debugFirstHabitMilestone || habits.length === 0) return baseUnclaimedMilestones;
+    return {
+      ...baseUnclaimedMilestones,
+      [habits[0].id]: true,
+    };
+  }, [baseUnclaimedMilestones, debugFirstHabitMilestone, habits]);
 
   // Get user's current tier theme for motivation modal
   const userTierTheme = useMemo(() => {
@@ -819,6 +833,7 @@ const Dashboard: React.FC = () => {
                           index={index}
                           pausedTasks={frozenTasksMap.get(habit.id) || {}}
                           unlockedMilestonesCount={milestoneCounts[habit.id] || 0}
+                          hasUnclaimedMilestone={unclaimedMilestones[habit.id] || false}
                         />
                       ))}
                     </View>
@@ -840,6 +855,7 @@ const Dashboard: React.FC = () => {
                           index={dailyHabits.length + index}
                           pausedTasks={frozenTasksMap.get(habit.id) || {}}
                           unlockedMilestonesCount={milestoneCounts[habit.id] || 0}
+                          hasUnclaimedMilestone={unclaimedMilestones[habit.id] || false}
                         />
                       ))}
                     </View>
@@ -875,6 +891,22 @@ const Dashboard: React.FC = () => {
                 </TouchableOpacity>
                 <TouchableOpacity onPress={forceShowMotivation} style={tw`bg-purple-200 px-6 py-3 rounded-xl`}>
                   <Text style={tw`text-purple-700 font-medium`}>Show Daily Motivation (Debug)</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setDebugForceUnclaimedMilestones(!debugForceUnclaimedMilestones)}
+                  style={[tw`px-6 py-3 rounded-xl`, { backgroundColor: debugForceUnclaimedMilestones ? '#fbbf24' : '#fef3c7' }]}
+                >
+                  <Text style={tw`text-amber-700 font-medium`}>
+                    {debugForceUnclaimedMilestones ? '✨ ALL Glow ON' : '💎 Glow All Habits'}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setDebugFirstHabitMilestone(!debugFirstHabitMilestone)}
+                  style={[tw`px-6 py-3 rounded-xl`, { backgroundColor: debugFirstHabitMilestone ? '#34d399' : '#d1fae5' }]}
+                >
+                  <Text style={tw`text-emerald-700 font-medium`}>
+                    {debugFirstHabitMilestone ? '🎯 1st Habit Glow ON' : '🎯 Glow 1st Habit Only'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}

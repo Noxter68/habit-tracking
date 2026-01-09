@@ -5,11 +5,19 @@
  * Permet de valider les tâches directement sans naviguer vers HabitDetail.
  */
 
-import React, { useMemo, memo, useCallback } from 'react';
+import React, { useMemo, memo, useCallback, useEffect } from 'react';
 import { View, Text, ImageBackground } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import * as Haptics from 'expo-haptics';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 import tw from '@/lib/tailwind';
 
 import { Habit, HabitType, Task as TaskType } from '@/types';
@@ -32,6 +40,9 @@ interface Task {
   duration?: string;
 }
 
+// Couleur dorée pour les milestones non réclamés (plus bright comme le fond du milestone)
+const MILESTONE_GLOW_COLOR = '#f59e0b';
+
 interface DashboardHabitCardProps {
   habit: Habit;
   onToggleTask: (habitId: string, date: string, taskId: string) => void;
@@ -39,6 +50,7 @@ interface DashboardHabitCardProps {
   index: number;
   pausedTasks?: Record<string, { pausedUntil: string; reason?: string }>;
   unlockedMilestonesCount?: number;
+  hasUnclaimedMilestone?: boolean;
 }
 
 /**
@@ -59,9 +71,33 @@ const DashboardHabitCardComponent: React.FC<DashboardHabitCardProps> = ({
   index,
   pausedTasks = {},
   unlockedMilestonesCount = 0,
+  hasUnclaimedMilestone = false,
 }) => {
   const { t } = useTranslation();
   const today = getTodayString();
+
+  // Animation "breathing" pour le glow shadow de la bordure
+  const glowOpacity = useSharedValue(0.7);
+
+  useEffect(() => {
+    if (hasUnclaimedMilestone) {
+      // Effet de respiration sur l'opacité du glow shadow - plus intense
+      glowOpacity.value = withRepeat(
+        withSequence(
+          withTiming(1, { duration: 1800, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0.7, { duration: 1800, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
+      );
+    } else {
+      glowOpacity.value = withTiming(0, { duration: 300 });
+    }
+  }, [hasUnclaimedMilestone]);
+
+  const animatedGlowStyle = useAnimatedStyle(() => ({
+    shadowOpacity: glowOpacity.value,
+  }));
 
   // Calcul du tier
   const { tier } = useMemo(() => {
@@ -131,16 +167,40 @@ const DashboardHabitCardComponent: React.FC<DashboardHabitCardProps> = ({
 
   return (
     <View>
+      {/* Glow doré "breathing" pour unclaimed milestone - très intense pour fond blanc */}
+      {hasUnclaimedMilestone && (
+        <Animated.View
+          style={[
+            {
+              position: 'absolute',
+              top: -6,
+              left: -6,
+              right: -6,
+              bottom: -6,
+              borderRadius: 22,
+              // Glow principal via shadow - très intense
+              shadowColor: MILESTONE_GLOW_COLOR,
+              shadowOffset: { width: 0, height: 0 },
+              shadowRadius: 28,
+              elevation: 16,
+              // Fond semi-transparent plus bright pour fond blanc
+              backgroundColor: 'rgba(245, 158, 11, 0.18)',
+            },
+            animatedGlowStyle,
+          ]}
+        />
+      )}
+
       {/* Card container with shadow */}
       <View
         style={[
           tw`rounded-2xl`,
           {
-            shadowColor: theme.gradient[1],
+            shadowColor: hasUnclaimedMilestone ? MILESTONE_GLOW_COLOR : theme.gradient[1],
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.2,
-            shadowRadius: 8,
-            elevation: 4,
+            shadowOpacity: hasUnclaimedMilestone ? 0.7 : 0.2,
+            shadowRadius: hasUnclaimedMilestone ? 16 : 8,
+            elevation: hasUnclaimedMilestone ? 12 : 4,
           },
         ]}
       >
@@ -174,6 +234,7 @@ const DashboardHabitCardComponent: React.FC<DashboardHabitCardProps> = ({
                 currentStreak={habit.currentStreak}
                 frequency={habit.frequency}
                 unlockedMilestonesCount={unlockedMilestonesCount}
+                hasUnclaimedMilestone={hasUnclaimedMilestone}
                 onNavigate={handleNavigate}
               />
 
@@ -308,6 +369,7 @@ export const DashboardHabitCard = memo(DashboardHabitCardComponent, (prev, next)
     prev.habit.id === next.habit.id &&
     prev.habit.currentStreak === next.habit.currentStreak &&
     prev.unlockedMilestonesCount === next.unlockedMilestonesCount &&
+    prev.hasUnclaimedMilestone === next.hasUnclaimedMilestone &&
     prevTaskIds === nextTaskIds &&
     areCompletedTasksEqual(prevTodayTasks?.completedTasks, nextTodayTasks?.completedTasks) &&
     arePausedTasksEqual(prev.pausedTasks || {}, next.pausedTasks || {})

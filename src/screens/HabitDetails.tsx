@@ -45,7 +45,7 @@ import { useCelebrationQueue } from '@/context/CelebrationQueueContext';
 import { useHabitDetails } from '@/hooks/useHabitDetails';
 import { useStreakSaver } from '@/hooks/useStreakSaver';
 
-import { HabitProgressionService, HabitMilestone } from '@/services/habitProgressionService';
+import { HabitProgressionService } from '@/services/habitProgressionService';
 
 import tw from '@/lib/tailwind';
 import { tierThemes } from '@/utils/tierTheme';
@@ -108,14 +108,12 @@ const HabitDetails: React.FC = () => {
   const [testModalSuccess, setTestModalSuccess] = useState(false);
   const [testNewStreak, setTestNewStreak] = useState(0);
 
-  // État pour le modal de célébration de milestone (1 seul nouveau)
-  const [showMilestoneModal, setShowMilestoneModal] = useState(false);
-  const [celebrationMilestone, setCelebrationMilestone] = useState<HabitMilestone | null>(null);
-  const [celebrationMilestoneIndex, setCelebrationMilestoneIndex] = useState(0);
+  // Note: Les modals de milestone sont maintenant gérés via CelebrationQueueContext
+  // et affichés via CelebrationRenderer (global dans App.tsx)
 
-  // État pour le modal récap de milestones (plusieurs à rattraper)
-  const [showMilestoneRecapModal, setShowMilestoneRecapModal] = useState(false);
-  const [recapMilestones, setRecapMilestones] = useState<MilestoneWithIndex[]>([]);
+  // Ref pour éviter d'afficher le modal de milestone plusieurs fois
+  // Stocke le JSON des titres de milestones déjà affichés pour cette session
+  const shownMilestoneTitlesRef = useRef<Set<string>>(new Set());
 
   // État pour les modals de test milestone en mode développeur
   const [showTestMilestoneModal, setShowTestMilestoneModal] = useState(false);
@@ -280,21 +278,8 @@ const HabitDetails: React.FC = () => {
     setTestNewStreak(0);
   };
 
-  /**
-   * Ferme le modal de célébration de milestone (1 seul nouveau)
-   * Note: L'XP a déjà été octroyé dans xp_transactions, donc pas besoin de sauvegarder localement
-   */
-  const handleMilestoneModalClose = useCallback(() => {
-    setShowMilestoneModal(false);
-  }, []);
-
-  /**
-   * Ferme le modal récap de milestones (plusieurs à rattraper)
-   * Note: L'XP a déjà été octroyé dans xp_transactions, donc pas besoin de sauvegarder localement
-   */
-  const handleMilestoneRecapModalClose = useCallback(() => {
-    setShowMilestoneRecapModal(false);
-  }, []);
+  // Note: handleMilestoneModalClose et handleMilestoneRecapModalClose supprimés
+  // Les modals de milestone sont maintenant gérés via CelebrationQueueContext
 
   /**
    * Affiche le modal de test milestone (single)
@@ -376,35 +361,44 @@ const HabitDetails: React.FC = () => {
       return;
     }
 
+    // Filtrer les milestones déjà affichés dans cette session
+    const newMilestones = newlyUnlockedMilestones.filter(
+      (m) => !shownMilestoneTitlesRef.current.has(m.title)
+    );
+
+    if (newMilestones.length === 0) {
+      // Tous les milestones ont déjà été affichés, juste nettoyer
+      clearNewlyUnlockedMilestones();
+      return;
+    }
+
     const allMilestones = milestoneStatus?.all || [];
 
     // Convertir en MilestoneWithIndex pour les modals
-    const milestonesWithIndex: MilestoneWithIndex[] = newlyUnlockedMilestones.map((milestone) => {
+    const milestonesWithIndex: MilestoneWithIndex[] = newMilestones.map((milestone) => {
       const index = allMilestones.findIndex((m) => m.title === milestone.title);
       return { milestone, index: index >= 0 ? index : 0 };
     });
 
-    Logger.debug('Queueing milestone celebration:', milestonesWithIndex.length);
+    // Marquer les milestones comme affichés AVANT d'ouvrir le modal
+    newMilestones.forEach((m) => shownMilestoneTitlesRef.current.add(m.title));
 
     if (milestonesWithIndex.length === 1) {
-      // Un seul milestone → queue modal epic
+      // Un seul milestone → queue modal epic via CelebrationQueue (centralisé)
       const { milestone, index } = milestonesWithIndex[0];
       queueMilestoneSingle(milestone, index);
-      // Keep local state for backwards compatibility
-      setCelebrationMilestone(milestone);
-      setCelebrationMilestoneIndex(index);
-      setShowMilestoneModal(true);
     } else {
-      // Plusieurs milestones → queue modal récap
+      // Plusieurs milestones → queue modal récap via CelebrationQueue (centralisé)
       queueMilestoneMultiple(milestonesWithIndex);
-      // Keep local state for backwards compatibility
-      setRecapMilestones(milestonesWithIndex);
-      setShowMilestoneRecapModal(true);
     }
 
     // Clear immédiatement pour éviter que le modal se ré-affiche lors des refreshProgression()
     clearNewlyUnlockedMilestones();
-  }, [habit?.id, newlyUnlockedMilestones, milestoneStatus?.all, clearNewlyUnlockedMilestones, queueMilestoneSingle, queueMilestoneMultiple]);
+
+    // Rafraîchir les habitudes en arrière-plan pour mettre à jour currentTierLevel
+    // Ceci permet de retirer le glow du Dashboard sans bloquer l'UI
+    setTimeout(() => refreshHabits(), 500);
+  }, [habit?.id, newlyUnlockedMilestones, milestoneStatus?.all, clearNewlyUnlockedMilestones, queueMilestoneSingle, queueMilestoneMultiple, refreshHabits]);
 
   /**
    * Détecte les montées de tier
@@ -604,20 +598,8 @@ const HabitDetails: React.FC = () => {
         {/* Animation de célébration de tier */}
         {celebrationTier && <TierCelebration visible={showCelebration} newTier={celebrationTier} onClose={handleCelebrationClose} />}
 
-        {/* Modal de célébration de milestone */}
-        <EpicMilestoneUnlockModal
-          visible={showMilestoneModal}
-          milestone={celebrationMilestone}
-          milestoneIndex={celebrationMilestoneIndex}
-          onClose={handleMilestoneModalClose}
-        />
-
-        {/* Modal récap de milestones (plusieurs à rattraper) */}
-        <MilestoneRecapModal
-          visible={showMilestoneRecapModal}
-          milestones={recapMilestones}
-          onClose={handleMilestoneRecapModalClose}
-        />
+        {/* Note: Les modals de milestone (EpicMilestoneUnlockModal, MilestoneRecapModal) sont
+            maintenant affichés via CelebrationRenderer dans App.tsx pour éviter les doublons */}
 
         {/* Modals de test milestone en mode développeur */}
         {Config.debug.enabled && (
