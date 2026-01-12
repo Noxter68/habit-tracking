@@ -8,7 +8,7 @@ import React from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
 import Svg, { Path, Circle, Rect, G } from 'react-native-svg';
-import { Trophy } from 'lucide-react-native';
+import { Trophy, SquareUserRound } from 'lucide-react-native';
 import tw from '../lib/tailwind';
 
 // =============================================================================
@@ -17,7 +17,7 @@ import tw from '../lib/tailwind';
 
 interface TabBarIconProps {
   /** Nom de l'icône à afficher */
-  name: 'home' | 'calendar' | 'users' | 'settings' | 'leaderboard' | 'trophy';
+  name: 'home' | 'calendar' | 'users' | 'settings' | 'leaderboard' | 'trophy' | 'quest-panel';
   /** Couleur de l'icône (gérée par le parent) */
   color: string;
   /** Indique si l'onglet est actif */
@@ -198,8 +198,12 @@ export const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, focused, si
       case 'leaderboard':
       case 'trophy':
         // Trophy icon from lucide-react-native
+        return <Trophy size={size} color={activeColor} strokeWidth={strokeWidth} fill={focused ? activeColor : 'none'} fillOpacity={focused ? 0.1 : 0} />;
+
+      case 'quest-panel':
+        // Quest panel icon from lucide-react-native
         return (
-          <Trophy
+          <SquareUserRound
             size={size}
             color={activeColor}
             strokeWidth={strokeWidth}

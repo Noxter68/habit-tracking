@@ -1,0 +1,188 @@
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { QuestWithProgress } from '@/types/quest.types';
+import ProgressBar from '@/components/ui/ProgressBar';
+import { useTranslation } from 'react-i18next';
+
+interface QuestCardProps {
+  quest: QuestWithProgress;
+  onPress: () => void;
+  showProgress?: boolean; // Afficher la barre de progression
+}
+
+// Icônes par catégorie
+const CATEGORY_ICONS: Record<string, string> = {
+  constance: '🌱',
+  equilibre: '🧘',
+  resilience: '🔁',
+  exploration: '🌍',
+  philosophie: '🧠',
+};
+
+// Couleurs par type de récompense
+const REWARD_COLORS: Record<string, string> = {
+  XP: '#3b82f6',
+  BOOST: '#f59e0b',
+  TITLE: '#8b5cf6',
+};
+
+export const QuestCard: React.FC<QuestCardProps> = ({
+  quest,
+  onPress,
+  showProgress = true,
+}) => {
+  const { t } = useTranslation();
+
+  const isCompleted = quest.user_progress?.is_completed || false;
+  const progressValue = quest.user_progress?.progress_value || 0;
+  const targetValue = quest.adjusted_target || quest.target_value;
+  const progressPercentage = quest.progress_percentage || 0;
+
+  const categoryIcon = CATEGORY_ICONS[quest.category] || '💎';
+  const rewardColor = REWARD_COLORS[quest.reward.kind] || '#6b7280';
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={[
+        styles.card,
+        isCompleted && styles.cardCompleted,
+      ]}
+      activeOpacity={0.7}
+    >
+      {/* Icon de catégorie */}
+      <View style={styles.iconContainer}>
+        <Text style={styles.categoryIcon}>{categoryIcon}</Text>
+      </View>
+
+      {/* Contenu */}
+      <View style={styles.content}>
+        {/* Nom de la quête */}
+        <Text style={[styles.questName, isCompleted && styles.textCompleted]}>
+          {t(quest.name_key)}
+        </Text>
+
+        {/* Description courte */}
+        <Text style={[styles.questDescription, isCompleted && styles.textMuted]}>
+          {t(quest.description_short_key)}
+        </Text>
+
+        {/* Barre de progression (seulement si non complété) */}
+        {!isCompleted && showProgress && (
+          <View style={styles.progressContainer}>
+            <ProgressBar
+              progress={progressPercentage}
+              tier="crystal"
+              height={8}
+              width={250}
+            />
+            <Text style={styles.progressText}>
+              {progressValue} / {targetValue}
+            </Text>
+          </View>
+        )}
+
+        {/* Badge de complétion */}
+        {isCompleted && (
+          <View style={styles.completedBadge}>
+            <Text style={styles.completedText}>✓ {t('quests.completed')}</Text>
+          </View>
+        )}
+      </View>
+
+      {/* Badge de récompense */}
+      <View style={[styles.rewardBadge, { backgroundColor: rewardColor }]}>
+        <Text style={styles.rewardText}>
+          {quest.reward.kind === 'XP' && `${quest.reward.amount} XP`}
+          {quest.reward.kind === 'BOOST' && `+${quest.reward.boost.percent}%`}
+          {quest.reward.kind === 'TITLE' && '👑'}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+};
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  cardCompleted: {
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#f1f5f9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  categoryIcon: {
+    fontSize: 24,
+  },
+  content: {
+    flex: 1,
+  },
+  questName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1e293b',
+    marginBottom: 4,
+  },
+  textCompleted: {
+    color: '#64748b',
+  },
+  questDescription: {
+    fontSize: 13,
+    color: '#64748b',
+    marginBottom: 8,
+  },
+  textMuted: {
+    color: '#94a3b8',
+  },
+  progressContainer: {
+    marginTop: 8,
+  },
+  progressText: {
+    fontSize: 11,
+    color: '#94a3b8',
+    marginTop: 4,
+  },
+  completedBadge: {
+    marginTop: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    backgroundColor: '#dcfce7',
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  completedText: {
+    fontSize: 12,
+    color: '#16a34a',
+    fontWeight: '600',
+  },
+  rewardBadge: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    marginLeft: 8,
+  },
+  rewardText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+});

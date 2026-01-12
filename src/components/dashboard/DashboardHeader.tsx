@@ -19,6 +19,7 @@ import DailyChallenge from './DailyChallenge';
 import { useAuth } from '../../context/AuthContext';
 import { useStats } from '@/context/StatsContext';
 import { useSubscription } from '@/context/SubscriptionContext';
+import { useInventory } from '@/context/InventoryContext';
 
 import { getGreeting } from '../../utils/progressStatus';
 import { achievementTitles } from '../../utils/achievements';
@@ -62,6 +63,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const { user, username } = useAuth();
   const { refreshStats } = useStats();
   const { streakSavers } = useSubscription();
+  const { activeBoost } = useInventory();
   const { t, i18n } = useTranslation();
 
   const [optimisticXP, setOptimisticXP] = React.useState(currentLevelXP);
@@ -305,6 +307,57 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                   </Text>
                 </View>
               </View>
+
+              {/* Active Boost Indicator */}
+              {activeBoost && new Date(activeBoost.expires_at) > new Date() && (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    alignSelf: 'flex-start',
+                    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                    borderRadius: 12,
+                    paddingVertical: 6,
+                    paddingHorizontal: 12,
+                    borderWidth: 1,
+                    borderColor: 'rgba(245, 158, 11, 0.4)',
+                    marginBottom: 10,
+                  }}
+                >
+                  <Text style={{ fontSize: 14, marginRight: 6 }}>🔥</Text>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontWeight: '700',
+                      color: '#FFFFFF',
+                      marginRight: 8,
+                    }}
+                  >
+                    +{activeBoost.boost_percent}% XP
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 11,
+                      fontWeight: '600',
+                      color: 'rgba(255, 255, 255, 0.8)',
+                    }}
+                  >
+                    {(() => {
+                      const now = new Date();
+                      const expires = new Date(activeBoost.expires_at);
+                      const diffMs = expires.getTime() - now.getTime();
+                      const diffMins = Math.floor(diffMs / (1000 * 60));
+
+                      if (diffMins < 60) {
+                        return `${diffMins}m`;
+                      }
+                      const hours = Math.floor(diffMins / 60);
+                      const mins = diffMins % 60;
+                      return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+                    })()}
+                  </Text>
+                </View>
+              )}
 
               {/* Row 2: Greeting + Title */}
               <View>

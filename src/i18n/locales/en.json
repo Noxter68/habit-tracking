@@ -221,7 +221,6 @@
     "task_one": "Task",
     "task_other": "Tasks"
   },
-
   "settings": {
     "title": "Settings",
     "preferences": "Preferences",
@@ -303,7 +302,6 @@
       "rewardReceived": "Your reward has been added to your account."
     }
   },
-
   "paywall": {
     "title": "Upgrade to Premium",
     "subtitle": "Unlock unlimited potential and\nachieve more every day",
@@ -372,7 +370,6 @@
     "notLoggedIn": "⚠️ Not logged in",
     "pleaseLogin": "Please log in to run diagnostics"
   },
-
   "debug": {
     "title": "Debug Tools",
     "warning": "⚠️ Debug Mode Active",
@@ -384,7 +381,6 @@
     "dailyChallenge": "Daily Challenge Tools",
     "currentUser": "Current User"
   },
-
   "errors": {
     "generic": "Something went wrong",
     "networkError": "Network error. Please check your connection.",
@@ -394,7 +390,6 @@
     "serverError": "Server error. Please try again later.",
     "validationError": "Validation error"
   },
-
   "success": {
     "habitCreated": "Habit created successfully",
     "habitUpdated": "Habit updated successfully",
@@ -1642,13 +1637,11 @@
   "leaderboard": {
     "title": "Leaderboard",
     "subtitle": "Compete with the best habit trackers",
-
     "modes": {
       "global": "ALL TIME",
       "weekly": "THIS WEEK",
       "local": "LOCAL"
     },
-
     "labels": {
       "xp": "XP",
       "level": "LVL",
@@ -1657,25 +1650,21 @@
       "rank": "Rank",
       "position": "Position"
     },
-
     "sections": {
       "otherChampions": "OTHER CHAMPIONS",
       "yourRank": "YOUR RANK",
       "yourPosition": "YOUR POSITION"
     },
-
     "stats": {
       "totalXp": "{{xp}} XP",
       "weeklyXp": "{{xp}} XP",
       "levelWithXp": "{{xp}} XP • Lv.{{level}}"
     },
-
     "rankTypes": {
       "local": "LOCAL RANK",
       "weekly": "WEEKLY RANK",
       "global": "GLOBAL RANK"
     },
-
     "encouragement": {
       "rank1": "You're #1! The absolute champion!",
       "rank2": "Amazing! You're on the podium!",
@@ -1686,7 +1675,6 @@
       "top50": "Well done! You're in the Top {{topPercent}}%!",
       "other": "Keep going! You're in the Top {{topPercent}}%!"
     },
-
     "loading": "Loading leaderboard...",
     "noData": "No leaderboard data available"
   },
@@ -1696,18 +1684,15 @@
     "level": "LEVEL {{level}}",
     "analytics": "ANALYTICS",
     "loading": "Loading statistics...",
-
     "timeRanges": {
       "week": "7d",
       "month": "30d",
       "4weeks": "4w"
     },
-
     "viewModes": {
       "trend": "Trend",
       "heatmap": "Calendar"
     },
-
     "chart": {
       "completion": "Completion",
       "tasks": "Tasks",
@@ -1716,7 +1701,6 @@
       "less": "Less",
       "more": "More"
     },
-
     "prediction": {
       "title": "Success Prediction",
       "noHabits": "No habits to track yet",
@@ -1735,14 +1719,12 @@
       "progressTimeline": "Progress Timeline",
       "day": "Day",
       "days": "days",
-
       "status": {
         "excellent": "Excellent Track",
         "onTrack": "On Track",
         "needsFocus": "Needs Focus",
         "atRisk": "At Risk"
       },
-
       "messages": {
         "excellent": "You're crushing it! Keep shining",
         "onTrack": "Keep up the momentum",
@@ -1750,7 +1732,6 @@
         "atRisk": "Let's get back on track"
       }
     },
-
     "weekDays": {
       "monday": "M",
       "tuesday": "T",
@@ -1804,16 +1785,14 @@
       "daysUsed": "Days used",
       "daysRemaining": "Days remaining",
       "upgradeTitle": "Need more days?",
-      "upgradeMessage": "Free: {{free}} days/year\nPremium: Unlimited",
+      "upgradeMessage": "Upgrade to Premium for unlimited holiday periods",
       "upgrade": "Upgrade to Premium",
       "daysPerPeriod": "Days per period",
       "yourAllowance": "Your Allowance",
       "freePlan": "FREE PLAN",
       "periodLeft": "Period left",
-      "daysMax": "Max days",
-      "upgradeMessage": "Upgrade to Premium for unlimited holiday periods"
+      "daysMax": "Max days"
     },
-
     "form": {
       "scheduleBreak": "Schedule a Break",
       "totalDuration": "Total Duration",
@@ -1827,18 +1806,15 @@
       "tasks": "Tasks",
       "activate": "Activate Holiday Mode"
     },
-
     "scope": {
       "infoAll": "All habits paused. Streaks preserved.",
       "infoHabits": "Selected habits paused. Others continue normally.",
       "infoTasks": "Selected tasks paused. Others continue normally."
     },
-
     "datePicker": {
       "cancel": "Cancel",
       "done": "Done"
     },
-
     "alerts": {
       "selectionRequired": "Selection Required",
       "selectHabit": "Please select at least one habit to freeze",
@@ -1869,12 +1845,10 @@
       "endHoliday": "End Holiday",
       "cancelFailed": "Cancellation Failed"
     },
-
     "premium": {
       "goPremium": "Upgrade to Premium",
       "benefits": "Unlimited holidays • No duration limit • Advanced controls"
     },
-
     "habitSelection": {
       "freezingHabits": "Freezing {{count}} habit | Freezing {{count}} habits",
       "customSelection": "custom selection",
@@ -1906,7 +1880,6 @@
   "habitDetails": {
     "title": "Habit Journey",
     "notFound": "Habit not found",
-
     "hero": {
       "building": "Building",
       "breaking": "Breaking",
@@ -1918,12 +1891,10 @@
         "consistency": "Consistency"
       }
     },
-
     "tabs": {
       "overview": "Overview",
       "tiers": "Tiers"
     },
-
     "tasks": {
       "title": "Today's Tasks",
       "weeklyTitle": "Weekly Tasks",
@@ -1934,7 +1905,6 @@
       "pausedTomorrow": "until tomorrow",
       "weekCompleted": "Task completed !"
     },
-
     "milestones": {
       "title": "Milestones",
       "achieved": "Achieved! +{{xp}} XP",
@@ -1944,7 +1914,6 @@
       "currentTier": "Current Tier",
       "nextMilestone": "Next Milestone"
     },
-
     "milestoneZoomModal": {
       "achieved": "✓ Unlocked",
       "locked": "Locked · Requires {{days}} consecutive days",
@@ -1952,7 +1921,6 @@
       "xpReward": "+{{xp}} XP",
       "tapToClose": "Tap anywhere to close"
     },
-
     "tierCelebration": {
       "unlocked": "Tier Unlocked",
       "streak": "STREAK",
@@ -2041,7 +2009,6 @@
     "continue": "Continue",
     "back": "Back",
     "letsStart": "Let's Start",
-
     "welcome": {
       "title": "Welcome to Nuvoria",
       "subtitle": "Transform your habits into a daily adventure filled with success",
@@ -2049,7 +2016,6 @@
       "trackProgress": "Track your progress visually",
       "unlockAchievements": "Unlock achievements & rewards"
     },
-
     "xp": {
       "title": "Earn XP & Level Up",
       "subtitle": "Complete up to 3 tasks per habit to earn XP. Build streaks to unlock massive bonuses!",
@@ -2058,7 +2024,6 @@
       "thirdTask": "Complete your 3rd task",
       "perfectDay": "Perfect day (all tasks done)"
     },
-
     "tiers": {
       "title": "Your UI Evolves",
       "subtitle": "Watch your interface transform with beautiful gem themes as you progress",
@@ -2072,7 +2037,6 @@
       "daysRange": "{{min}}-{{max}} days",
       "daysPlus": "{{count}}+ days"
     },
-
     "savers": {
       "title": "Never Lose Progress",
       "subtitle": "Use Streak Savers to restore missed days and keep your momentum going",
@@ -2083,7 +2047,6 @@
       "welcomeGift": "Welcome Gift",
       "welcomeGiftDesc": "You earn 3 Streak Savers to get started"
     },
-
     "features": {
       "title": "Stay On Track",
       "subtitle": "Smart reminders and flexible breaks keep you consistent without pressure",
@@ -2092,7 +2055,6 @@
       "ready": "You're Ready!",
       "readyDesc": "Let's create your first habit and start your journey to excellence"
     },
-
     "username": {
       "title": "Create Your Username",
       "subtitle": "Choose a unique name that represents you in the Nuvoria community",
@@ -2396,7 +2358,6 @@
       "tapToContinue": "Tap anywhere to continue",
       "closingIn": "Closing in {{seconds}}s"
     },
-
     "list": {
       "members_one": "{{count}} member",
       "members_other": "{{count}} members",
@@ -2408,7 +2369,6 @@
       "joinWithCode": "Join a group",
       "joinDescription": "Enter an invitation code"
     },
-
     "dashboard": {
       "habits": "Habits",
       "habitsCount_one": "{{count}} active",
@@ -2430,7 +2390,6 @@
       "level": "Level {{level}}",
       "groupHabit": "Group habit"
     },
-
     "card": {
       "bonusXpMidnight": "+{{xp}} XP at midnight",
       "bonusXpPossible": "+{{xp}} XP possible",
@@ -2440,13 +2399,11 @@
       "weekly": "WEEKLY",
       "daily": "DAILY"
     },
-
     "timeline": {
       "today": "TODAY",
       "thisWeek": "THIS WEEK",
       "completions": "{{completed}}/{{total}}"
     },
-
     "tiers": {
       "allTiers": "All tiers",
       "current": "Current",
@@ -2455,7 +2412,6 @@
       "tier": "Tier {{tier}}",
       "tapToClose": "Tap to close"
     },
-
     "settings": {
       "title": "Settings",
       "inviteCode": "Invitation code",
@@ -2480,7 +2436,6 @@
       "codeCopiedMessage": "The code {{code}} has been copied",
       "creatorInfo": "As the creator, if you leave the group, your role will be automatically transferred to the oldest member."
     },
-
     "join": {
       "title": "Join a group",
       "inviteCode": "Invitation code",
@@ -2506,7 +2461,6 @@
       "codeNotFound": "Incorrect Code",
       "codeNotFoundMessage": "This code doesn't match any group. Please check the code and try again."
     },
-
     "create": {
       "title": "New group",
       "groupName": "Group name",
@@ -2523,7 +2477,6 @@
       "later": "Later",
       "seePremium": "See Premium"
     },
-
     "createHabit": {
       "title": "New habit",
       "habitName": "Habit name",
@@ -2545,7 +2498,6 @@
       "later": "Later",
       "seePremium": "See Premium"
     },
-
     "streak": {
       "current": "{{count}} day streak",
       "noStreakSaver": "No Streak Saver",
@@ -2553,10 +2505,123 @@
       "later": "Later",
       "buy": "Buy"
     },
-
     "invite": {
       "codeCopied": "Code copied!",
       "codeMessage": "The code {{code}} has been copied to the clipboard"
     }
+  },
+  "quests": {
+    "title": "Quests",
+    "loading": "Loading quests...",
+    "completed": "Completed",
+    "total": "Total",
+    "pinned": "Tracked",
+    "progress": "Progress",
+    "tracked": "Tracked",
+    "tracked_description": "Keep an eye on your active quests",
+    "all_quests": "All Quests",
+    "quests_available": "quests available",
+    "no_quests_found": "No quests found",
+    "reward": "Reward",
+    "exclusive_title": "Exclusive Title",
+    "quest_completed": "Quest Completed!",
+    "pin": "Track Quest",
+    "unpin": "Untrack",
+    "all": "All",
+    "categories": {
+      "all": "All",
+      "constance": "Constance",
+      "equilibre": "Balance",
+      "resilience": "Resilience",
+      "exploration": "Exploration",
+      "philosophie": "Philosophy"
+    },
+    "seven_sparks": {
+      "name": "Seven Sparks",
+      "description_short": "Complete at least 1 habit on 7 distinct days",
+      "description_long": "Start your journey by completing at least one habit on 7 different days. Small steps lead to big changes."
+    },
+    "two_weeks_gentle": {
+      "name": "Two Weeks Gentle",
+      "description_short": "Complete at least 1 habit on 30 distinct days",
+      "description_long": "A full month of consistent practice. Consistency builds momentum—keep showing up day after day."
+    },
+    "thirty_days_drift": {
+      "name": "Thirty Days Drift",
+      "description_short": "Complete at least 1 habit on 60 distinct days",
+      "description_long": "Two months of sustained progress. Celebrate each day you show up and watch your habits transform your life."
+    },
+    "perfect_day": {
+      "name": "Perfect Day",
+      "description_short": "Complete all your habits in a single day",
+      "description_long": "Your first perfect day. Every habit checked, every promise kept. Feel the satisfaction of a day well done."
+    },
+    "perfect_week": {
+      "name": "Perfect Week",
+      "description_short": "Complete all your habits for 7 days",
+      "description_long": "A week of perfection. Seven days where you showed up completely, proving your commitment to yourself."
+    },
+    "perfect_three_weeks": {
+      "name": "Three Week Perfection",
+      "description_short": "Complete all your habits for 21 days",
+      "description_long": "Three flawless weeks. You've turned excellence into a habit, proving that perfection is a daily choice."
+    },
+    "perfect_month": {
+      "name": "Flawless Month",
+      "description_short": "Complete all your habits for 30 days",
+      "description_long": "An entire month of absolute perfection. You've demonstrated exceptional mastery of your routines and discipline."
+    },
+    "streak_seven": {
+      "name": "First Spark of Consistency",
+      "description_short": "Maintain a 7-day streak on one habit",
+      "description_long": "Seven consecutive days on the same habit. The flame of consistency ignites - keep feeding it."
+    },
+    "streak_twentyone": {
+      "name": "Three Week Ritual",
+      "description_short": "Maintain a 21-day streak on one habit",
+      "description_long": "Twenty-one days of dedication. They say it takes 21 days to form a habit - you've done it."
+    },
+    "streak_thirty": {
+      "name": "Month of Devotion",
+      "description_short": "Maintain a 30-day streak on one habit",
+      "description_long": "An entire month without interruption. This habit is now an integral part of who you are."
+    },
+    "streak_sixty": {
+      "name": "Habit Marathoner",
+      "description_short": "Maintain a 60-day streak on one habit",
+      "description_long": "Sixty days of unwavering consistency. You've proven you're a marathoner of personal change."
+    },
+    "streak_hundred": {
+      "name": "Unshakeable Legend",
+      "description_short": "Maintain a 100-day streak on one habit",
+      "description_long": "One hundred consecutive days. You are a living legend of perseverance. This habit is engraved in your identity."
+    }
+  },
+  "inventory": {
+    "title": "Inventory",
+    "loading": "Loading inventory...",
+    "active_boost": "Active Boost",
+    "available_boosts": "Available Boosts",
+    "unlocked_titles": "Unlocked Titles",
+    "boosts_ready": "boosts ready to activate",
+    "titles_unlocked": "exclusive titles unlocked",
+    "xp_boost": "XP Boost",
+    "habit_xp": "Habit XP",
+    "duration": "Duration",
+    "activate": "Activate",
+    "expires_in": "Expires in",
+    "exclusive_title": "Exclusive Title",
+    "empty_title": "Empty Inventory",
+    "empty_message": "Complete quests to earn boosts and exclusive titles!",
+    "boost_activated": "Boost Activated!",
+    "boost_activated_message": "Your XP boost is now active. All habit XP is multiplied!",
+    "boost_already_active": "Boost Already Active",
+    "boost_already_active_message": "You already have an active boost. Wait for it to expire before activating another.",
+    "activation_failed": "Failed to activate boost. Please try again.",
+    "ok": "OK"
+  },
+  "titles": {
+    "marathon_legend": "Marathon Legend",
+    "zen_voyager": "Zen Voyager"
   }
 }
