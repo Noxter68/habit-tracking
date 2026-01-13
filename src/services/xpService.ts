@@ -259,11 +259,24 @@ export class XPService {
       }
 
       // 6. XP progressif basé sur le niveau
-      const xpAmount = getProgressiveXPReward(userLevel);
+      const baseXpAmount = getProgressiveXPReward(userLevel);
 
-      // 7. Award XP
+      // 6b. Check for active boost to calculate display amount
+      const { data: activeBoost } = await supabase
+        .from('active_boosts')
+        .select('boost_percent')
+        .eq('user_id', userId)
+        .gt('expires_at', new Date().toISOString())
+        .single();
+
+      const boostMultiplier = activeBoost?.boost_percent
+        ? 1 + activeBoost.boost_percent / 100
+        : 1;
+      const xpWithBoost = Math.ceil(baseXpAmount * boostMultiplier);
+
+      // 7. Award XP (SQL will also apply boost, but we need the value for display)
       const success = await this.awardXP(userId, {
-        amount: xpAmount,
+        amount: baseXpAmount,
         source_type: 'daily_challenge',
         source_id: existingChallenge?.id || `daily_${today}`,
         description: `Perfect Day - All tasks completed! (Level ${userLevel} bonus)`,
@@ -304,7 +317,7 @@ export class XPService {
           }
         }
 
-        return { success: true, xpEarned: xpAmount };
+        return { success: true, xpEarned: xpWithBoost };
       }
 
       return { success: false, xpEarned: 0 };

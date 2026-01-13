@@ -117,7 +117,27 @@ export class HabitService {
         completedTasks,
         allCompleted: result.all_completed,
         streakUpdated: result.streak_updated,
+        taskAdded: result.task_added,
       });
+
+      // Mettre à jour le compteur de tâches complétées dans le profil (fire and forget, défensif)
+      // task_added = true si on a ajouté la tâche, false si on l'a retirée
+      // Non-bloquant : si ça échoue, on log mais on ne bloque pas le toggle
+      if (result.success && result.task_added !== undefined) {
+        const increment = result.task_added ? 1 : -1;
+        (async () => {
+          try {
+            await supabase.rpc('update_total_tasks_completed', {
+              p_user_id: userId,
+              p_increment: increment,
+            });
+            Logger.debug('Total tasks counter updated:', { increment });
+          } catch (err) {
+            // Non-bloquant : on log l'erreur mais on continue
+            Logger.warn('Failed to update total_tasks_completed (non-blocking):', err);
+          }
+        })();
+      }
 
       return {
         success: result.success ?? false,

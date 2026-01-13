@@ -225,8 +225,8 @@
   "achievements": {
     "level": "Niveau {{level}}",
     "tapToClose": "Touchez n'importe où pour fermer",
-    "screenTitle": "Succès",
-    "currentAchievement": "Succès Actuel",
+    "screenTitle": "Rangs",
+    "currentAchievement": "Rang Actuel",
     "unlocked": "Débloqués",
     "bestStreak": "Meilleure Série",
     "totalXP": "XP Total",
@@ -234,7 +234,7 @@
     "perfectDays": "Parfait",
     "habits": "Habitudes",
     "streak": "Série",
-    "achievementUnlocked": "Succès Débloqué !",
+    "achievementUnlocked": "Nouveau Rang Débloqué !",
     "progressStatus": "État de Progression",
     "unlockedAt": "Débloqué à {{count}} accomplissements",
     "requiresCompletions": "Nécessite {{count}} accomplissements au total",
@@ -356,6 +356,7 @@
     "reviewTour": "Revoir le tour d'introduction",
     "reviewTourPrompt": "Souhaitez-vous revoir le tour d'introduction ?",
     "reviewTourConfirm": "Oui, montrez-moi",
+    "whatsNew": "Quoi de neuf",
     "languageChangeInfo": "L'application se mettra à jour immédiatement lorsque vous sélectionnerez une nouvelle langue.",
     "languageChangeError": "Échec du changement de langue. Veuillez réessayer.",
     "dailyMotivation": "Motivation Quotidienne",
@@ -378,7 +379,6 @@
       "rewardReceived": "Votre récompense a été ajoutée à votre compte."
     }
   },
-
   "paywall": {
     "title": "Passer à Premium",
     "subtitle": "Débloquez votre plein potentiel et\naccomplissez plus chaque jour",
@@ -434,7 +434,6 @@
       "restoreError": "Échec de la restauration des achats. Veuillez réessayer."
     }
   },
-
   "holidayMode": {
     "title": "Mode Vacances",
     "subtitle": "Mettez vos habitudes en pause sans perdre votre progression",
@@ -486,7 +485,6 @@
       "periodLeft": "Période restante",
       "daysMax": "Jours max"
     },
-
     "form": {
       "scheduleBreak": "Planifier une pause",
       "totalDuration": "Durée totale",
@@ -500,18 +498,15 @@
       "tasks": "Tâches",
       "activate": "Activer le mode vacances"
     },
-
     "scope": {
       "infoAll": "Toutes les habitudes en pause. Séries préservées.",
       "infoHabits": "Habitudes sélectionnées en pause. Les autres continuent normalement.",
       "infoTasks": "Tâches sélectionnées en pause. Les autres continuent normalement."
     },
-
     "datePicker": {
       "cancel": "Annuler",
       "done": "Terminé"
     },
-
     "alerts": {
       "selectionRequired": "Sélection requise",
       "selectHabit": "Veuillez sélectionner au moins une habitude à geler",
@@ -542,12 +537,10 @@
       "endHoliday": "Terminer les vacances",
       "cancelFailed": "Échec de l'annulation"
     },
-
     "premium": {
       "goPremium": "Passer à Premium",
       "benefits": "Vacances illimitées • Aucune limite de durée • Contrôles avancés"
     },
-
     "habitSelection": {
       "freezingHabits": "Gel de {{count}} habitude | Gel de {{count}} habitudes",
       "customSelection": "sélection personnalisée",
@@ -568,7 +561,6 @@
     "notLoggedIn": "⚠️ Non connecté",
     "pleaseLogin": "Veuillez vous connecter pour lancer les diagnostics"
   },
-
   "debug": {
     "title": "Outils de débogage",
     "warning": "⚠️ Mode Debug Actif",
@@ -580,7 +572,6 @@
     "dailyChallenge": "Outils de défi quotidien",
     "currentUser": "Utilisateur actuel"
   },
-
   "errors": {
     "generic": "Une erreur s'est produite",
     "networkError": "Erreur réseau. Veuillez vérifier votre connexion.",
@@ -590,7 +581,6 @@
     "serverError": "Erreur serveur. Veuillez réessayer plus tard.",
     "validationError": "Erreur de validation"
   },
-
   "success": {
     "habitCreated": "Habitude créée avec succès",
     "habitUpdated": "Habitude mise à jour avec succès",
@@ -1760,17 +1750,14 @@
       "custom": "Personnalisé"
     }
   },
-
   "leaderboard": {
     "title": "Classement",
     "subtitle": "Rivalisez avec les meilleurs",
-
     "modes": {
       "global": "TOUT TEMPS",
       "weekly": "CETTE SEMAINE",
       "local": "LOCAL"
     },
-
     "labels": {
       "xp": "XP",
       "level": "NIV",
@@ -1779,25 +1766,21 @@
       "rank": "Rang",
       "position": "Position"
     },
-
     "sections": {
       "otherChampions": "AUTRES CHAMPIONS",
       "yourRank": "VOTRE RANG",
       "yourPosition": "VOTRE POSITION"
     },
-
     "stats": {
       "totalXp": "{{xp}} XP",
       "weeklyXp": "{{xp}} XP",
       "levelWithXp": "{{xp}} XP • Niv.{{level}}"
     },
-
     "rankTypes": {
       "local": "RANG LOCAL",
       "weekly": "RANG HEBDO",
       "global": "RANG GLOBAL"
     },
-
     "encouragement": {
       "rank1": "Tu es #1 ! Le champion absolu !",
       "rank2": "Incroyable ! Tu es sur le podium !",
@@ -1808,7 +1791,6 @@
       "top50": "Bien joué ! Tu fais partie du Top {{topPercent}}% !",
       "other": "Continue ! Tu fais partie du Top {{topPercent}}% !"
     },
-
     "loading": "Chargement du classement...",
     "noData": "Aucune donnée de classement disponible"
   },
@@ -1818,18 +1800,15 @@
     "level": "NIVEAU {{level}}",
     "analytics": "ANALYSES",
     "loading": "Chargement des statistiques...",
-
     "timeRanges": {
       "week": "7j",
       "month": "30j",
       "4weeks": "4s"
     },
-
     "viewModes": {
       "trend": "Tendance",
       "heatmap": "Calendrier"
     },
-
     "chart": {
       "completion": "Réalisation",
       "tasks": "Tâches",
@@ -1838,7 +1817,6 @@
       "less": "Moins",
       "more": "Plus"
     },
-
     "prediction": {
       "title": "Prédiction de Succès",
       "noHabits": "Aucune habitude à suivre",
@@ -1857,14 +1835,12 @@
       "progressTimeline": "Chronologie de Progression",
       "day": "Jour",
       "days": "jours",
-
       "status": {
         "excellent": "Excellent Parcours",
         "onTrack": "Sur la Bonne Voie",
         "needsFocus": "Besoin de Focus",
         "atRisk": "À Risque"
       },
-
       "messages": {
         "excellent": "Vous êtes exceptionnel ! Continuez à briller",
         "onTrack": "Gardez cet élan",
@@ -1872,7 +1848,6 @@
         "atRisk": "Revenons sur la bonne voie"
       }
     },
-
     "weekDays": {
       "monday": "L",
       "tuesday": "M",
@@ -1888,7 +1863,6 @@
     "subtitle": "Prenez une pause sans perdre votre progression",
     "premiumFeature": "Fonctionnalité Premium",
     "description": "Avec Premium, profitez du Mode Vacances illimité pour protéger vos séries quand vous avez besoin d'une pause.",
-
     "benefits": {
       "title": "Avantages",
       "unlimited": "Jours de Vacances Illimités",
@@ -1898,7 +1872,6 @@
       "flexibility": "Flexibilité Totale",
       "flexibilityDesc": "Planifiez à l'avance ou activez instantanément"
     },
-
     "howItWorks": {
       "title": "Comment ça fonctionne",
       "step1": "Activez le Mode Vacances",
@@ -1908,7 +1881,6 @@
       "step3": "Revenez quand vous êtes prêt",
       "step3Desc": "Reprenez exactement où vous vous étiez arrêté"
     },
-
     "comparison": {
       "title": "Gratuit vs Premium",
       "free": "Forfait Gratuit",
@@ -1920,7 +1892,6 @@
       "singlePeriod": "1 période à la fois",
       "multiplePeriods": "Périodes multiples"
     },
-
     "cta": {
       "upgrade": "Passer à Premium",
       "learnMore": "En savoir plus"
@@ -1950,7 +1921,6 @@
   "habitDetails": {
     "title": "Parcours d'Habitude",
     "notFound": "Habitude introuvable",
-
     "hero": {
       "building": "Construction",
       "breaking": "Abandon",
@@ -1962,12 +1932,10 @@
         "consistency": "Régularité"
       }
     },
-
     "tabs": {
       "overview": "Vue d'ensemble",
       "tiers": "Paliers"
     },
-
     "tasks": {
       "title": "Tâches du Jour",
       "weeklyTitle": "Tâches Hebdomadaires",
@@ -1980,7 +1948,6 @@
       "currentTier": "Current Tier",
       "nextMilestone": "Next Milestone"
     },
-
     "milestones": {
       "title": "Paliers",
       "currentTier": "Palier Actuel",
@@ -1997,7 +1964,6 @@
       "xpReward": "+{{xp}} XP",
       "tapToClose": "Appuyez n'importe où pour fermer"
     },
-
     "tierCelebration": {
       "unlocked": "Palier Débloqué",
       "streak": "SÉRIE",
@@ -2086,7 +2052,6 @@
     "continue": "Continuer",
     "back": "Retour",
     "letsStart": "C'est parti",
-
     "welcome": {
       "title": "Bienvenue sur Nuvoria",
       "subtitle": "Transformez vos habitudes en une aventure quotidienne remplie de succès",
@@ -2094,7 +2059,6 @@
       "trackProgress": "Suivez vos progrès visuellement",
       "unlockAchievements": "Débloquez des succès et récompenses"
     },
-
     "xp": {
       "title": "Gagnez des XP et montez de niveau",
       "subtitle": "Complétez jusqu'à 3 tâches par habitude pour gagner de L'XP. Construisez des séries pour débloquer d'énormes bonus !",
@@ -2103,7 +2067,6 @@
       "thirdTask": "Complétez votre 3ème tâche",
       "perfectDay": "Journée parfaite"
     },
-
     "tiers": {
       "title": "Votre interface évolue",
       "subtitle": "Regardez votre interface se transformer avec de magnifiques thèmes de gemmes au fur et à mesure de votre progression",
@@ -2117,7 +2080,6 @@
       "daysRange": "{{min}}-{{max}} jours",
       "daysPlus": "{{count}}+ jours"
     },
-
     "savers": {
       "title": "Ne perdez jamais vos progrès",
       "subtitle": "Utilisez les Sauveurs de Séries pour restaurer les jours manqués et maintenir votre élan",
@@ -2128,7 +2090,6 @@
       "welcomeGift": "Cadeau de bienvenue",
       "welcomeGiftDesc": "Vous gagnez 3 Sauveurs de Séries pour commencer"
     },
-
     "features": {
       "title": "Restez sur la bonne voie",
       "subtitle": "Des rappels intelligents et des pauses flexibles vous gardent constant sans pression",
@@ -2137,7 +2098,6 @@
       "ready": "Vous êtes prêt !",
       "readyDesc": "Créons votre première habitude et commençons votre voyage vers l'excellence"
     },
-
     "username": {
       "title": "Créez votre pseudo",
       "subtitle": "Choisissez un nom unique qui vous représente dans la communauté Nuvoria",
@@ -2250,7 +2210,6 @@
       "login": "Se connecter"
     }
   },
-
   "streakSaver": {
     "title": "Sauvegarde de Série !",
     "description": "Votre série de {{streak}} jours pour \"{{habitName}}\" ne doit pas se terminer !",
@@ -2447,7 +2406,6 @@
       "tapToContinue": "Touchez pour continuer",
       "closingIn": "Fermeture dans {{seconds}}s"
     },
-
     "list": {
       "members_one": "{{count}} membre",
       "members_other": "{{count}} membres",
@@ -2459,7 +2417,6 @@
       "joinWithCode": "Rejoindre un groupe",
       "joinDescription": "Entrez un code d'invitation"
     },
-
     "dashboard": {
       "habits": "Habitudes",
       "habitsCount_one": "{{count}} active",
@@ -2481,7 +2438,6 @@
       "level": "Niveau {{level}}",
       "groupHabit": "Habit de groupe"
     },
-
     "card": {
       "bonusXpMidnight": "+{{xp}} XP à minuit",
       "bonusXpPossible": "+{{xp}} XP possible",
@@ -2491,13 +2447,11 @@
       "weekly": "HEBDO",
       "daily": "QUOTIDIEN"
     },
-
     "timeline": {
       "today": "AUJOURD'HUI",
       "thisWeek": "CETTE SEMAINE",
       "completions": "{{completed}}/{{total}}"
     },
-
     "tiers": {
       "allTiers": "Tous les tiers",
       "current": "Actuel",
@@ -2506,7 +2460,6 @@
       "tier": "Tier {{tier}}",
       "tapToClose": "Toucher pour fermer"
     },
-
     "settings": {
       "title": "Paramètres",
       "inviteCode": "Code d'invitation",
@@ -2531,7 +2484,6 @@
       "codeCopiedMessage": "Le code {{code}} a été copié",
       "creatorInfo": "En tant que créateur, si vous quittez le groupe, votre rôle sera automatiquement transféré au membre le plus ancien."
     },
-
     "join": {
       "title": "Rejoindre un groupe",
       "inviteCode": "Code d'invitation",
@@ -2557,7 +2509,6 @@
       "codeNotFound": "Code incorrect",
       "codeNotFoundMessage": "Ce code ne correspond à aucun groupe. Vérifiez le code et réessayez."
     },
-
     "create": {
       "title": "Nouveau groupe",
       "groupName": "Nom du groupe",
@@ -2574,7 +2525,6 @@
       "later": "Plus tard",
       "seePremium": "Voir Premium"
     },
-
     "createHabit": {
       "title": "Nouvelle habitude",
       "habitName": "Nom de l'habitude",
@@ -2596,7 +2546,6 @@
       "later": "Plus tard",
       "seePremium": "Voir Premium"
     },
-
     "streak": {
       "current": "{{count}} jour de suite",
       "noStreakSaver": "Aucun Streak Saver",
@@ -2604,10 +2553,290 @@
       "later": "Plus tard",
       "buy": "Acheter"
     },
-
     "invite": {
       "codeCopied": "Code copié !",
       "codeMessage": "Le code {{code}} a été copié dans le presse-papier"
     }
+  },
+  "quests": {
+    "title": "Accomplissements",
+    "loading": "Chargement des accomplissements...",
+    "completed": "Complétés",
+    "total": "Total",
+    "pinned": "Suivi",
+    "progress": "Progression",
+    "tracked": "Suivis",
+    "tracked_description": "Gardez un œil sur vos accomplissements actifs",
+    "all_quests": "Tous les Accomplissements",
+    "quests_available": "accomplissements disponibles",
+    "no_quests_found": "Aucun accomplissement trouvé",
+    "no_completed_quests": "Aucun accomplissement complété pour l'instant",
+    "reward": "Récompense",
+    "exclusive_title": "Titre Exclusif",
+    "quest_completed": "Accomplissement Terminé !",
+    "pin": "Suivre",
+    "unpin": "Ne plus suivre",
+    "all": "Toutes",
+    "help": {
+      "title": "Comment ça marche ?",
+      "intro": "Les accomplissements vous permettent de gagner des récompenses en atteignant vos objectifs !",
+      "xp_title": "Gagnez de l'XP",
+      "xp_description": "Chaque accomplissement complété vous rapporte de l'XP pour progresser dans vos rangs.",
+      "titles_title": "Titres Exclusifs",
+      "titles_description": "Débloquez des titres uniques à afficher sur votre profil.",
+      "boosts_title": "Boosts d'XP",
+      "boosts_description": "Obtenez des boosts qui multiplient vos gains d'XP pendant une durée limitée.",
+      "inventory_title": "Inventaire",
+      "inventory_description": "Retrouvez toutes vos récompenses dans l'inventaire et activez vos boosts quand vous le souhaitez.",
+      "got_it": "J'ai compris !"
+    },
+    "categories": {
+      "all": "Toutes",
+      "constance": "Constance",
+      "equilibre": "Équilibre",
+      "resilience": "Résilience",
+      "exploration": "Exploration",
+      "philosophie": "Philosophie"
+    },
+    "seven_sparks": {
+      "name": "Sept Étincelles",
+      "description_short": "Complétez au moins 1 habitude sur 7 jours distincts",
+      "description_long": "Commencez votre voyage en complétant au moins une habitude sur 7 jours différents. Les petits pas mènent aux grands changements."
+    },
+    "task_master": {
+      "name": "Maître des Tâches Quotidiennes",
+      "description_short": "Complétez 50 tâches en 30 jours",
+      "description_long": "Devenez un véritable maître de la productivité en complétant 50 tâches sur une période de 30 jours."
+    },
+    "habit_builder": {
+      "name": "Architecte d'Habitudes Extraordinaires",
+      "description_short": "Créez et maintenez 5 habitudes simultanément",
+      "description_long": "Prouvez votre capacité à jongler avec plusieurs habitudes en maintenant 5 habitudes actives en même temps."
+    },
+    "two_weeks_gentle": {
+      "name": "Deux Semaines Douces",
+      "description_short": "Complétez au moins 1 habitude sur 30 jours distincts",
+      "description_long": "Un mois de pratique régulière. La constance crée l'élan—continuez à vous montrer jour après jour."
+    },
+    "thirty_days_drift": {
+      "name": "Dérive de Trente Jours",
+      "description_short": "Complétez au moins 1 habitude sur 60 jours distincts",
+      "description_long": "Deux mois de progrès soutenu. Célébrez chaque jour où vous vous présentez et regardez vos habitudes transformer votre vie."
+    },
+    "perfect_day": {
+      "name": "Jour Parfait",
+      "description_short": "Complétez toutes vos habitudes en une seule journée",
+      "description_long": "Votre première journée parfaite. Chaque habitude cochée, chaque promesse tenue. Ressentez la satisfaction d'une journée accomplie."
+    },
+    "perfect_week": {
+      "name": "Semaine Parfaite",
+      "description_short": "Complétez toutes vos habitudes pendant 7 jours",
+      "description_long": "Une semaine de perfection. Sept jours où vous vous êtes présenté complètement, prouvant votre engagement envers vous-même."
+    },
+    "perfect_three_weeks": {
+      "name": "Perfection de Trois Semaines",
+      "description_short": "Complétez toutes vos habitudes pendant 21 jours",
+      "description_long": "Trois semaines impeccables. Vous avez transformé l'excellence en habitude, prouvant que la perfection est un choix quotidien."
+    },
+    "perfect_month": {
+      "name": "Mois Impeccable",
+      "description_short": "Complétez toutes vos habitudes pendant 30 jours",
+      "description_long": "Un mois entier de perfection absolue. Vous avez démontré une maîtrise exceptionnelle de vos routines et de votre discipline."
+    },
+    "streak_seven": {
+      "name": "Première Étincelle de Constance",
+      "description_short": "Maintenez une streak de 7 jours sur une habitude",
+      "description_long": "Sept jours consécutifs sur une même habitude. La flamme de la constance s'allume - continuez à la nourrir."
+    },
+    "streak_twentyone": {
+      "name": "Rituel de Trois Semaines",
+      "description_short": "Maintenez une streak de 21 jours sur une habitude",
+      "description_long": "Vingt-et-un jours de dévouement. On dit qu'il faut 21 jours pour former une habitude - vous l'avez fait."
+    },
+    "streak_thirty": {
+      "name": "Mois de Dévotion",
+      "description_short": "Maintenez une streak de 30 jours sur une habitude",
+      "description_long": "Un mois entier sans interruption. Cette habitude fait maintenant partie intégrante de qui vous êtes."
+    },
+    "streak_sixty": {
+      "name": "Marathonien des Habitudes",
+      "description_short": "Maintenez une streak de 60 jours sur une habitude",
+      "description_long": "Soixante jours de constance inébranlable. Vous avez prouvé que vous êtes un marathonien du changement personnel."
+    },
+    "streak_hundred": {
+      "name": "Légende Inébranlable",
+      "description_short": "Maintenez une streak de 100 jours sur une habitude",
+      "description_long": "Cent jours consécutifs. Vous êtes une légende vivante de la persévérance. Cette habitude est gravée dans votre identité."
+    },
+    "test_quest": {
+      "name": "Premier Pas",
+      "description_short": "Complétez 1 habitude",
+      "description_long": "Complétez n'importe quelle habitude une fois pour débloquer cette quête"
+    },
+    "tasks_25": {
+      "name": "Apprenti des Tâches",
+      "description_short": "Complétez 25 tâches",
+      "description_long": "Vos 25 premières tâches complétées ! Chaque petite action s'additionne pour de grands résultats."
+    },
+    "tasks_50": {
+      "name": "Enthousiaste des Tâches",
+      "description_short": "Complétez 50 tâches",
+      "description_long": "Cinquante tâches accomplies ! Vous construisez votre élan et prouvez votre dévouement."
+    },
+    "tasks_100": {
+      "name": "Champion des Tâches",
+      "description_short": "Complétez 100 tâches",
+      "description_long": "Cent tâches conquises ! Vous êtes un vrai champion de la productivité."
+    },
+    "tasks_200": {
+      "name": "Maître des Tâches",
+      "description_short": "Complétez 200 tâches",
+      "description_long": "Deux cents tâches réalisées ! Votre constance est remarquable et inspirante."
+    },
+    "tasks_500": {
+      "name": "Légende des Tâches",
+      "description_short": "Complétez 500 tâches",
+      "description_long": "Cinq cents tâches complétées ! Vous avez atteint le statut légendaire de la complétion de tâches."
+    },
+    "rate_app": {
+      "name": "Soutien de la Communauté",
+      "description_short": "Notez l'application et laissez un avis",
+      "description_long": "Aidez les autres à découvrir l'application en la notant et en partageant votre expérience. Votre soutien compte énormément pour nous !"
+    },
+    "first_comeback": {
+      "name": "Premier Retour",
+      "description_short": "Revenez après une pause de 3+ jours",
+      "description_long": "La vie arrive, mais vous êtes revenu. Votre premier retour prouve que tomber n'est pas échouer—se relever est ce qui compte."
+    },
+    "phoenix": {
+      "name": "Phoenix",
+      "description_short": "Revenez 3 fois après des pauses",
+      "description_long": "Trois fois vous êtes remonté des cendres. Comme le phoenix, vous avez prouvé que chaque revers n'est qu'une préparation pour un retour."
+    },
+    "invincible": {
+      "name": "Esprit Invincible",
+      "description_short": "Revenez 10 fois après des pauses",
+      "description_long": "Dix retours. Vous êtes inarrêtable. Votre résilience est légendaire—rien ne peut vous garder à terre longtemps."
+    },
+    "double_focus": {
+      "name": "Double Focus",
+      "description_short": "Complétez 2 habitudes différentes",
+      "description_long": "L'équilibre commence avec deux. Vous avez commencé à construire une routine multifacette qui touche différents aspects de votre vie."
+    },
+    "quadra": {
+      "name": "Équilibre Quadra",
+      "description_short": "Complétez 4 habitudes différentes",
+      "description_long": "Quatre piliers de croissance personnelle. Vous construisez une routine équilibrée qui couvre plusieurs aspects du développement personnel."
+    },
+    "hexagon": {
+      "name": "Maître Hexagone",
+      "description_short": "Complétez 6 habitudes différentes",
+      "description_long": "Six habitudes distinctes conquises. Vous avez atteint un équilibre remarquable, nourrissant la croissance dans toutes les directions de votre vie."
+    },
+    "light_week": {
+      "name": "Semaine Légère",
+      "description_short": "Complétez 40% des habitudes possibles cette semaine",
+      "description_long": "Un début en douceur vers la constance hebdomadaire. Même un engagement léger construit les fondations de plus grandes réalisations."
+    },
+    "active_week": {
+      "name": "Semaine Active",
+      "description_short": "Complétez 60% des habitudes possibles cette semaine",
+      "description_long": "Plus de la moitié de votre potentiel hebdomadaire atteint ! Vous trouvez votre rythme et construisez un sérieux élan."
+    },
+    "intense_week": {
+      "name": "Semaine Intense",
+      "description_short": "Complétez 80% des habitudes possibles cette semaine",
+      "description_long": "Une semaine intense de dévouement ! Vous repoussez vos limites et montrez ce qu'est un vrai engagement."
+    },
+    "perfect_intensity_week": {
+      "name": "Intensité Hebdomadaire Parfaite",
+      "description_short": "Complétez 100% des habitudes possibles cette semaine",
+      "description_long": "Chaque habitude, chaque jour de cette semaine. Une perfection absolue dans le dévouement hebdomadaire—vous êtes extraordinaire !"
+    },
+    "habit_week": {
+      "name": "Une Semaine Solide",
+      "description_short": "Complétez au moins 1 habitude pendant 7 jours consécutifs",
+      "description_long": "Une semaine complète à vous montrer présent. Cette fondation prouve que vous pouvez maintenir la constance quand ça compte."
+    },
+    "double_routine": {
+      "name": "Double Routine",
+      "description_short": "Complétez au moins 2 habitudes pendant 14 jours",
+      "description_long": "Deux semaines de double dévouement. Vous avez prouvé que vous pouvez jongler avec plusieurs engagements sans en lâcher un."
+    },
+    "discipline_month": {
+      "name": "Mois de Discipline",
+      "description_short": "Complétez au moins 2 habitudes pendant 30 jours",
+      "description_long": "Un mois d'engagement double inébranlable. Votre discipline forge des habitudes qui dureront toute une vie."
+    },
+    "routine_master": {
+      "name": "Maître de la Routine",
+      "description_short": "Complétez au moins 3 habitudes pendant 60 jours",
+      "description_long": "Deux mois avec trois habitudes—vous avez atteint la maîtrise de votre routine. Votre dévouement est vraiment inspirant."
+    },
+    "centenarian": {
+      "name": "Centenaire",
+      "description_short": "Complétez des habitudes sur 100 jours distincts",
+      "description_long": "Cent jours à vous montrer présent. Un siècle d'engagement qui prouve que votre dévouement n'est pas passager."
+    },
+    "bicentenarian": {
+      "name": "Bicentenaire",
+      "description_short": "Complétez des habitudes sur 200 jours distincts",
+      "description_long": "Deux cents jours d'action constante. Vous avez fait de la construction d'habitudes une partie permanente de votre identité."
+    },
+    "full_year": {
+      "name": "Champion de l'Année",
+      "description_short": "Complétez des habitudes sur 365 jours distincts",
+      "description_long": "Une année entière de dévouement. Chaque saison, chaque mois, vous étiez présent. Vous êtes un vrai champion des habitudes."
+    },
+    "streak_150": {
+      "name": "Flamme de Cinq Mois",
+      "description_short": "Maintenez une streak de 150 jours sur une habitude",
+      "description_long": "Cent cinquante jours consécutifs. Cinq mois de dévouement inébranlable envers une seule habitude—vous brillez !"
+    },
+    "streak_365": {
+      "name": "Dévouement Annuel",
+      "description_short": "Maintenez une streak de 365 jours sur une habitude",
+      "description_long": "Une année complète sans manquer un seul jour. Ce niveau de dévouement est rare et remarquable. Vous êtes une légende vivante."
+    },
+    "tasks_1000": {
+      "name": "Accomplisseur Millénaire",
+      "description_short": "Complétez 1000 tâches",
+      "description_long": "Mille tâches complétées ! Un millénaire de micro-accomplissements qui vous ont transformé en puissance de productivité."
+    },
+    "tasks_2500": {
+      "name": "Titan des Tâches",
+      "description_short": "Complétez 2500 tâches",
+      "description_long": "Deux mille cinq cents tâches conquises ! Vous avez atteint le statut de titan—une véritable force de la nature en complétion de tâches."
+    }
+  },
+  "inventory": {
+    "title": "Inventaire",
+    "loading": "Chargement de l'inventaire...",
+    "active_boost": "Boost Actif",
+    "available_boosts": "Boosts Disponibles",
+    "unlocked_titles": "Titres Débloqués",
+    "boosts_ready": "boosts prêts à activer",
+    "titles_unlocked": "titres exclusifs débloqués",
+    "xp_boost": "Boost XP",
+    "habit_xp": "XP d'Habitude",
+    "duration": "Durée",
+    "activate": "Activer",
+    "expires_in": "Expire dans",
+    "exclusive_title": "Titre Exclusif",
+    "empty_title": "Inventaire Vide",
+    "empty_message": "Complétez des quêtes pour gagner des boosts et des titres exclusifs !",
+    "boost_activated": "Boost Activé !",
+    "boost_activated_message": "Votre boost XP est maintenant actif. Tous les XP d'habitudes sont multipliés !",
+    "boost_already_active": "Boost Déjà Actif",
+    "boost_already_active_message": "Vous avez déjà un boost actif. Attendez qu'il expire avant d'en activer un autre.",
+    "activation_failed": "Échec de l'activation du boost. Veuillez réessayer.",
+    "ok": "OK",
+    "activate_boost_title": "Activer ce boost ?",
+    "boost_already_active_warning": "Un boost est déjà actif. Attendez qu'il expire avant d'en activer un autre."
+  },
+  "titles": {
+    "marathon_legend": "Légende du Marathon",
+    "zen_voyager": "Voyageur Zen",
+    "titan_of_tasks": "Titan des Tâches"
   }
 }

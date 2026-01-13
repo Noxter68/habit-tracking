@@ -4,10 +4,11 @@
  * Popup affichant le gain d'XP lors de la validation d'une tâche.
  * Gère jusqu'à 3 popups empilées avec animation smooth.
  * Style identique aux TaskCards du dashboard.
+ * Supporte un style spécial "boosted" avec gradient violet.
  */
 
 import React, { useEffect, useRef, useCallback, memo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -17,6 +18,7 @@ import Animated, {
   runOnJS,
   Easing,
 } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Zap } from 'lucide-react-native';
 import tw from '@/lib/tailwind';
 
@@ -25,6 +27,7 @@ interface PopupData {
   taskName: string;
   xpAmount: number;
   accentColor: string;
+  isBoosted?: boolean;
 }
 
 interface XPPopupProps {
@@ -33,6 +36,7 @@ interface XPPopupProps {
   xpAmount: number;
   onHide: () => void;
   accentColor?: string;
+  isBoosted?: boolean;
 }
 
 interface SinglePopupProps {
@@ -118,6 +122,67 @@ const SinglePopup: React.FC<SinglePopupProps> = memo(({ popup, index, onComplete
     };
   });
 
+  // Boosted style with violet gradient
+  if (popup.isBoosted) {
+    return (
+      <Animated.View style={[styles.popupWrapper, animatedStyle]}>
+        <LinearGradient
+          colors={['#8b5cf6', '#7c3aed', '#6d28d9'] as [string, string, ...string[]]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[
+            styles.popup,
+            {
+              borderWidth: 1,
+              borderColor: 'rgba(255, 255, 255, 0.3)',
+              shadowColor: '#8b5cf6',
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.5,
+              shadowRadius: 12,
+              elevation: 8,
+            },
+          ]}
+        >
+          <View style={tw`flex-row items-center px-4 py-3`}>
+            {/* Boost Icon */}
+            <View
+              style={[
+                tw`w-9 h-9 rounded-xl items-center justify-center mr-3`,
+                { backgroundColor: 'rgba(255, 255, 255, 0.2)' },
+              ]}
+            >
+              <Image
+                source={require('../../../assets/achievement-quests/achievement-boost-xp.png')}
+                style={{ width: 24, height: 24 }}
+                resizeMode="contain"
+              />
+            </View>
+
+            {/* Contenu */}
+            <View style={tw`flex-1 mr-3`}>
+              <Text numberOfLines={1} style={[tw`text-xs font-semibold`, { color: 'rgba(255, 255, 255, 0.9)' }]}>
+                {popup.taskName}
+              </Text>
+            </View>
+
+            {/* XP Amount */}
+            <View
+              style={[
+                tw`px-3 py-1.5 rounded-lg`,
+                { backgroundColor: 'rgba(255, 255, 255, 0.25)' },
+              ]}
+            >
+              <Text style={[tw`text-base font-black`, { color: '#FFFFFF' }]}>
+                +{popup.xpAmount} XP
+              </Text>
+            </View>
+          </View>
+        </LinearGradient>
+      </Animated.View>
+    );
+  }
+
+  // Normal style
   return (
     <Animated.View style={[styles.popupWrapper, animatedStyle]}>
       <View
@@ -182,6 +247,7 @@ export const XPPopup: React.FC<XPPopupProps> = ({
   xpAmount,
   onHide,
   accentColor = '#3b82f6',
+  isBoosted = false,
 }) => {
   const [popups, setPopups] = React.useState<PopupData[]>([]);
   const popupIdRef = useRef(0);
@@ -196,6 +262,7 @@ export const XPPopup: React.FC<XPPopupProps> = ({
         taskName,
         xpAmount,
         accentColor,
+        isBoosted,
       };
 
       setPopups((prev) => {
@@ -214,7 +281,7 @@ export const XPPopup: React.FC<XPPopupProps> = ({
       });
     }
     lastVisibleRef.current = visible;
-  }, [visible, taskName, xpAmount, accentColor, onHide]);
+  }, [visible, taskName, xpAmount, accentColor, isBoosted, onHide]);
 
   const handlePopupComplete = useCallback((id: number) => {
     setPopups((prev) => prev.filter((p) => p.id !== id));

@@ -27,6 +27,8 @@ import DebugScreen from './src/screens/debugScreen';
 import PaywallScreen from './src/screens/PaywallScreen';
 import HolidayModeScreen from './src/screens/HolidayModeScreen';
 import NotificationManagerScreen from './src/screens/NotificationManagerScreen';
+import { QuestScreen } from './src/screens/QuestScreen';
+import { InventoryScreen } from './src/screens/InventoryScreen';
 
 // Contexts
 import { AuthProvider, useAuth } from './src/context/AuthContext';
@@ -36,6 +38,9 @@ import { StatsProvider } from './src/context/StatsContext';
 import { CelebrationQueueProvider } from './src/context/CelebrationQueueContext';
 import { LevelUpProvider } from './src/context/LevelUpContext';
 import { SubscriptionProvider } from './src/context/SubscriptionContext';
+import { QuestProvider } from './src/context/QuestContext';
+import { InventoryProvider } from './src/context/InventoryContext';
+import { QuestNotificationProvider } from './src/context/QuestNotificationContext';
 
 // Components
 import { CelebrationRenderer } from '@/components/celebrations/CelebrationRenderer';
@@ -74,6 +79,8 @@ export type RootStackParamList = {
   MainTabs: undefined;
   HabitDetails: { habitId: string };
   Achievements: undefined;
+  Quests: undefined;
+  Inventory: undefined;
   Paywall: { source?: 'habit_limit' | 'streak_saver' | 'settings' | 'stats' };
   Diagnostic: undefined;
   Debug: undefined;
@@ -92,6 +99,7 @@ export type TabParamList = {
   Dashboard: undefined;
   Calendar: undefined;
   Leaderboard: undefined;
+  Quests: undefined;
   Groups: undefined;
   Settings: undefined;
 };
@@ -164,6 +172,7 @@ function MainTabs() {
       <Tab.Screen name="Dashboard" component={Dashboard} />
       <Tab.Screen name="Calendar" component={CalendarScreen} />
       <Tab.Screen name="Leaderboard" component={LeaderboardScreen} />
+      <Tab.Screen name="Quests" component={QuestScreen} />
       <Tab.Screen name="Groups" component={GroupsNavigator} />
       <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
@@ -286,6 +295,8 @@ function AppNavigator() {
         <Stack.Screen name="HabitWizard" component={HabitWizard} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="HabitDetails" component={HabitDetails} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="Achievements" component={AchievementsScreen} options={{ animation: 'slide_from_bottom', presentation: 'modal' }} />
+        <Stack.Screen name="Quests" component={QuestScreen} options={{ animation: 'slide_from_right', presentation: 'card' }} />
+        <Stack.Screen name="Inventory" component={InventoryScreen} options={{ animation: 'slide_from_right', presentation: 'card' }} />
         <Stack.Screen name="NotificationManager" component={NotificationManagerScreen} options={{ headerShown: false, presentation: 'card', animation: 'slide_from_right' }} />
         <Stack.Screen name="Paywall" component={PaywallScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="HolidayMode" component={HolidayModeScreen} options={{ headerShown: false, presentation: 'card', animation: 'slide_from_right' }} />
@@ -492,14 +503,20 @@ export default function App() {
               <CelebrationQueueProvider>
                 <HabitProvider>
                   <AchievementProvider>
-                    <LevelUpProvider>
-                      <GroupCelebrationProvider>
-                        <NavigationContainer linking={linking} fallback={<BeautifulLoader />}>
-                          <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
-                          <AppNavigator />
-                        </NavigationContainer>
-                      </GroupCelebrationProvider>
-                    </LevelUpProvider>
+                    <QuestNotificationProvider>
+                      <QuestProvider>
+                        <InventoryProvider>
+                          <LevelUpProvider>
+                            <GroupCelebrationProvider>
+                              <NavigationContainer linking={linking} fallback={<BeautifulLoader />}>
+                                <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
+                                <AppNavigator />
+                              </NavigationContainer>
+                            </GroupCelebrationProvider>
+                          </LevelUpProvider>
+                        </InventoryProvider>
+                      </QuestProvider>
+                    </QuestNotificationProvider>
                   </AchievementProvider>
                 </HabitProvider>
               </CelebrationQueueProvider>

@@ -10,6 +10,8 @@
 import { Linking, Platform } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { XPService } from './xpService';
+import { QuestService } from './QuestService';
+import { QuestReward } from '@/types/quest.types';
 import Logger from '@/utils/logger';
 
 // =============================================================================
@@ -67,11 +69,12 @@ export class RatingService {
   }
 
   /**
-   * Marque l'utilisateur comme ayant noté l'application et attribue les XP
+   * Marque l'utilisateur comme ayant noté l'application et attribue les XP + quête
    */
   static async claimRatingReward(userId: string): Promise<{
     success: boolean;
     xpAwarded: number;
+    questReward?: QuestReward;
   }> {
     try {
       // 1. Vérifier si déjà réclamé
@@ -104,8 +107,21 @@ export class RatingService {
         // On ne rollback pas le has_rated_app car l'utilisateur a bien noté
       }
 
+      // 4. Compléter la quête app_rated (si elle existe) pour obtenir le boost
+      let questReward: QuestReward | undefined;
+      try {
+        const questResult = await QuestService.completeQuestByMetricType(userId, 'app_rated');
+        if (questResult?.completed && questResult.reward) {
+          questReward = questResult.reward;
+          Logger.success('App rating quest completed with reward:', questReward);
+        }
+      } catch (questError) {
+        Logger.error('Error completing app_rated quest:', questError);
+        // On continue même si la quête échoue, les XP ont été donnés
+      }
+
       Logger.success('Rating reward claimed successfully');
-      return { success: true, xpAwarded: XP_REWARD };
+      return { success: true, xpAwarded: XP_REWARD, questReward };
     } catch (error) {
       Logger.error('Error in claimRatingReward:', error);
       return { success: false, xpAwarded: 0 };

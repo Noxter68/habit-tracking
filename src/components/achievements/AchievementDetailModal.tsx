@@ -259,30 +259,17 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
                       </Text>
 
                       {!isUnlocked && (
-                        <>
-                          {/* Barre de progression avec gradient du tier */}
-                          <View
-                            style={tw`mt-3 bg-white/50 rounded-full h-2.5 overflow-hidden`}
-                          >
-                            <LinearGradient
-                              colors={tierGradient}
-                              start={{ x: 0, y: 0 }}
-                              end={{ x: 1, y: 0 }}
-                              style={[tw`h-full rounded-full`, { width: `${progress}%` }]}
-                            />
-                          </View>
-                          <Text
-                            style={[
-                              tw`text-xs text-center mt-2 font-medium`,
-                              { color: isDarkTier ? 'rgba(255, 255, 255, 0.8)' : '#78716C' },
-                            ]}
-                          >
-                            {t('achievements.moreNeeded', {
-                              count: remaining,
-                              percent: Math.round(progress),
-                            })}
-                          </Text>
-                        </>
+                        /* Barre de progression avec gradient du tier */
+                        <View
+                          style={tw`mt-3 bg-white/50 rounded-full h-2.5 overflow-hidden`}
+                        >
+                          <LinearGradient
+                            colors={tierGradient}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={[tw`h-full rounded-full`, { width: `${progress}%` }]}
+                          />
+                        </View>
                       )}
                     </LinearGradient>
                   </ImageBackground>

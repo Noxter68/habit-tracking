@@ -23,7 +23,7 @@ interface CustomTabBarProps extends BottomTabBarProps {
 // CONSTANTES
 // =============================================================================
 
-const TAB_NAMES: Array<'home' | 'calendar' | 'trophy' | 'users' | 'settings'> = ['home', 'calendar', 'trophy', 'users', 'settings'];
+const TAB_NAMES: Array<'home' | 'calendar' | 'trophy' | 'quest-panel' | 'users' | 'settings'> = ['home', 'calendar', 'trophy', 'quest-panel', 'users', 'settings'];
 
 // =============================================================================
 // COMPOSANT

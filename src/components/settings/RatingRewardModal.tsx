@@ -36,6 +36,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { RatingService } from '@/services/ratingService';
 import { useAuth } from '@/context/AuthContext';
 import { useStats } from '@/context/StatsContext';
+import { useQuests } from '@/context/QuestContext';
 import Logger from '@/utils/logger';
 import { getAchievementTierTheme } from '@/utils/tierTheme';
 
@@ -186,6 +187,7 @@ export const RatingRewardModal: React.FC<RatingRewardModalProps> = ({
   const { user } = useAuth();
   const { t } = useTranslation();
   const { updateStatsOptimistically } = useStats();
+  const { refreshQuests } = useQuests();
 
   const xpReward = RatingService.getRewardAmount();
 
@@ -333,6 +335,8 @@ export const RatingRewardModal: React.FC<RatingRewardModalProps> = ({
         setState('success');
         // Met à jour les stats immédiatement pour voir le changement dans la barre XP
         updateStatsOptimistically(result.xpAwarded);
+        // Rafraîchit les quêtes pour afficher la quête comme complétée
+        refreshQuests();
         onSuccess?.();
       } else {
         onClose();
@@ -344,14 +348,13 @@ export const RatingRewardModal: React.FC<RatingRewardModalProps> = ({
   };
 
   const handleClose = () => {
-    cardOpacity.value = withTiming(0, { duration: 300 });
-    cardScale.value = withTiming(0.8, { duration: 300 });
+    // Libérer l'écran immédiatement
+    onClose();
+
+    // Réinitialiser l'état pour la prochaine ouverture
+    setState('prompt');
+    setCountdown(8);
     xpBounce.value = 0;
-    setTimeout(() => {
-      setState('prompt');
-      setCountdown(8);
-      onClose();
-    }, 300);
   };
 
   // ---------------------------------------------------------------------------

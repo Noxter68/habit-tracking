@@ -43,6 +43,7 @@ import { Alert } from 'react-native';
 import { HabitService } from '../services/habitService';
 import { HabitProgressionService } from '@/services/habitProgressionService';
 import { NotificationScheduleService } from '@/services/notificationScheduleService';
+import { QuestService } from '@/services/QuestService';
 import { supabase } from '@/lib/supabase';
 
 // ============================================================================
@@ -424,8 +425,27 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           })
         );
 
-        // Rafraichit les stats globales
+        // Refresh global stats
         await refreshStats(true);
+
+        // ✨ Update quests after any task completion
+        // This allows quest progress to update in real-time as users check tasks
+        try {
+          const completedQuests = await QuestService.updateQuestsOnHabitCompletion(
+            user.id,
+            habitId,
+            date
+          );
+
+          // Log completed quests
+          if (completedQuests.length > 0) {
+            Logger.info('[HabitContext] Quests completed after task toggle:', completedQuests);
+            // TODO: Trigger celebration/toast for completed quests
+          }
+        } catch (questError) {
+          // Don't block task completion if quest update fails
+          Logger.error('[HabitContext] Error updating quests after task toggle:', questError);
+        }
 
         return result;
       } catch (error) {
@@ -496,6 +516,27 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         );
 
         await HabitService.updateTaskCompletion(habitId, user.id, date, completedTasks, habitData.tasks.length);
+
+        // ✨ Update quests after habit completion
+        // Only if habit is being completed (not uncompleted)
+        if (allCompleted) {
+          try {
+            const completedQuests = await QuestService.updateQuestsOnHabitCompletion(
+              user.id,
+              habitId,
+              date
+            );
+
+            // Log completed quests (can be used for notifications later)
+            if (completedQuests.length > 0) {
+              Logger.info('[HabitContext] Quests completed:', completedQuests);
+              // TODO: Trigger celebration/toast for completed quests
+            }
+          } catch (questError) {
+            // Don't block habit completion if quest update fails
+            Logger.error('[HabitContext] Error updating quests:', questError);
+          }
+        }
       } catch (error: any) {
         Logger.error('Error toggling habit day:', error);
         Alert.alert('Error', 'Failed to update habit');

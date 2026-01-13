@@ -49,3 +49,6 @@ yarn-error.*
 # Project notes
 project.md
 
+# SQL files (documentation only, not for git)
+*.sql
+

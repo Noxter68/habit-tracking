@@ -34,6 +34,9 @@ import { useHabits } from '../context/HabitContext';
 import { useStats } from '../context/StatsContext';
 import { useLevelUp } from '@/context/LevelUpContext';
 import { useSubscription } from '@/context/SubscriptionContext';
+import { useQuestNotification } from '@/context/QuestNotificationContext';
+import { useQuests } from '@/context/QuestContext';
+import { useInventory } from '@/context/InventoryContext';
 
 // Services
 import { HolidayModeService } from '@/services/holidayModeService';
@@ -69,6 +72,12 @@ const Dashboard: React.FC = () => {
   const { stats, loading: statsLoading, refreshStats } = useStats();
   const { triggerLevelUp } = useLevelUp();
   const { checkHabitLimit, habitCount, maxHabits, isPremium, refreshSubscription } = useSubscription();
+  const { showQuestCompletion } = useQuestNotification();
+  const { refreshQuests } = useQuests();
+  const { activeBoost, toggleDebugBoost, refreshInventory } = useInventory();
+
+  // Check if boost is active
+  const hasActiveBoost = activeBoost && new Date(activeBoost.expires_at) > new Date();
 
   // State: Loading & UI
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -138,7 +147,8 @@ const Dashboard: React.FC = () => {
     taskName: string;
     xpAmount: number;
     accentColor: string;
-  }>({ visible: false, taskName: '', xpAmount: 0, accentColor: '#3b82f6' });
+    isBoosted: boolean;
+  }>({ visible: false, taskName: '', xpAmount: 0, accentColor: '#3b82f6', isBoosted: false });
 
   // Refs
   const isFetchingHolidayRef = useRef(false);
@@ -333,8 +343,8 @@ const Dashboard: React.FC = () => {
 
   const handleManualRefresh = useCallback(async () => {
     HapticFeedback.light();
-    await Promise.all([refreshHabits(), refreshStats(), loadHolidayModeData()]);
-  }, [refreshHabits, refreshStats, loadHolidayModeData]);
+    await Promise.all([refreshHabits(), refreshStats(), loadHolidayModeData(), refreshInventory()]);
+  }, [refreshHabits, refreshStats, loadHolidayModeData, refreshInventory]);
 
   const handleCreateHabit = async () => {
     HapticFeedback.light();
@@ -364,7 +374,7 @@ const Dashboard: React.FC = () => {
     });
   };
 
-  const handleTaskToggle = useCallback((habitId: string, date: string, taskId: string) => {
+  const handleTaskToggle = useCallback(async (habitId: string, date: string, taskId: string) => {
     HapticFeedback.success();
 
     // Utiliser la ref pour éviter de recréer ce callback à chaque changement de habits
@@ -397,22 +407,34 @@ const Dashboard: React.FC = () => {
         const completedCount = todayTasks?.completedTasks?.length || 0;
         const taskNumber = completedCount + 1;
 
-        let xpAmount = 12; // Par défaut pour 3ème tâche et plus
-        if (taskNumber === 1) xpAmount = 3;
-        else if (taskNumber === 2) xpAmount = 7;
+        let baseXpAmount = 12; // Par défaut pour 3ème tâche et plus
+        if (taskNumber === 1) baseXpAmount = 3;
+        else if (taskNumber === 2) baseXpAmount = 7;
+
+        // Apply boost multiplier for display
+        const boostMultiplier = hasActiveBoost && activeBoost?.boost_percent
+          ? 1 + activeBoost.boost_percent / 100
+          : 1;
+        const xpAmount = Math.ceil(baseXpAmount * boostMultiplier);
 
         setXpPopup({
           visible: true,
           taskName: displayName,
           xpAmount: xpAmount,
           accentColor: theme?.accent || '#3b82f6',
+          isBoosted: !!hasActiveBoost,
         });
       }
       // Note: pas de popup XP quand on décoche une tâche
     }
 
-    toggleTask(habitId, date, taskId);
-  }, [toggleTask]);
+    await toggleTask(habitId, date, taskId);
+    // Refresh quests silently to detect newly completed quests
+    // Small delay to ensure Supabase has processed the quest update
+    setTimeout(() => {
+      refreshQuests(true);
+    }, 500);
+  }, [toggleTask, refreshQuests, hasActiveBoost, activeBoost]);
 
   const handleTestLevelUp = () => {
     HapticFeedback.light();
@@ -420,6 +442,47 @@ const Dashboard: React.FC = () => {
     const achievement = getAchievementByLevel(newLevel);
     setTestLevel(newLevel);
     triggerLevelUp(newLevel, testLevel, achievement);
+  };
+
+  const handleTestQuestCompletion = () => {
+    HapticFeedback.light();
+    showQuestCompletion('quests.seven_sparks.name', {
+      kind: 'XP',
+      amount: 40
+    });
+  };
+
+  const handleTestQuestBoost = () => {
+    HapticFeedback.light();
+    showQuestCompletion('quests.task_master.name', {
+      kind: 'BOOST',
+      boost: {
+        percent: 10,
+        durationHours: 24
+      }
+    });
+  };
+
+  const handleTestMultipleQuests = () => {
+    HapticFeedback.light();
+    // Show 3 different quest completions in sequence
+    showQuestCompletion('quests.seven_sparks.name', {
+      kind: 'XP',
+      amount: 40
+    });
+
+    showQuestCompletion('quests.task_master.name', {
+      kind: 'BOOST',
+      boost: {
+        percent: 10,
+        durationHours: 24
+      }
+    });
+
+    showQuestCompletion('quests.habit_builder.name', {
+      kind: 'XP',
+      amount: 60
+    });
   };
 
   const handleStatsRefresh = useCallback(async () => {
@@ -579,7 +642,7 @@ const Dashboard: React.FC = () => {
         }
 
         lastLoadTime.current = now;
-        await Promise.all([loadHolidayModeData(), refreshSubscription()]);
+        await Promise.all([loadHolidayModeData(), refreshSubscription(), refreshStats(true), refreshInventory()]);
       };
 
       loadData();
@@ -587,7 +650,7 @@ const Dashboard: React.FC = () => {
       return () => {
         isMounted = false;
       };
-    }, [user?.id, loadHolidayModeData, refreshSubscription])
+    }, [user?.id, loadHolidayModeData, refreshSubscription, refreshStats, refreshInventory])
   );
 
   useFocusEffect(
@@ -630,6 +693,48 @@ const Dashboard: React.FC = () => {
           {/* Debug: Level Up Test */}
           <DebugButton onPress={handleTestLevelUp} label={`Test Level ${testLevel} → ${testLevel + 1}`} icon={Zap} variant="secondary" />
 
+          {/* Debug: Quest Completion Test */}
+          {Config.debug.enabled && (
+            <View style={tw`gap-2 mb-4`}>
+              <DebugButton onPress={handleTestQuestCompletion} label="Test Quest Completion" icon={Zap} variant="primary" />
+              <DebugButton onPress={handleTestQuestBoost} label="Test Quest Boost (Long Title)" icon={Zap} variant="primary" />
+              <DebugButton onPress={handleTestMultipleQuests} label="Test Multiple Quests (x3)" icon={Zap} variant="primary" />
+              <TouchableOpacity
+                onPress={toggleDebugBoost}
+                style={tw`${hasActiveBoost ? 'bg-violet-500' : 'bg-sage-500'} rounded-lg px-4 py-2.5 flex-row items-center justify-center`}
+              >
+                <Zap size={14} color="white" style={tw`mr-1.5`} />
+                <Text style={tw`text-white font-semibold text-xs`}>
+                  {hasActiveBoost ? 'Boost Mode ON' : 'Test Boost Mode'}
+                </Text>
+              </TouchableOpacity>
+              <DebugButton
+                onPress={() => setXpPopup({
+                  visible: true,
+                  taskName: 'Normal XP Test',
+                  xpAmount: 20,
+                  accentColor: userTierTheme?.accent || '#3b82f6',
+                  isBoosted: false,
+                })}
+                label="Test XP Toast (Normal)"
+                icon={Zap}
+                variant="secondary"
+              />
+              <DebugButton
+                onPress={() => setXpPopup({
+                  visible: true,
+                  taskName: 'Boosted XP Test',
+                  xpAmount: 25,
+                  accentColor: '#8b5cf6',
+                  isBoosted: true,
+                })}
+                label="Test XP Toast (Boosted)"
+                icon={Zap}
+                variant="primary"
+              />
+            </View>
+          )}
+
           {/* Header with stats & progress */}
           <DashboardHeader
             userTitle={stats?.currentAchievement ? getAchievementTitle(stats.level) : t('achievements.tiers.novice')}
@@ -652,6 +757,7 @@ const Dashboard: React.FC = () => {
                 taskName: taskName || t('dashboard.dailyChallenge.title'),
                 xpAmount: amount,
                 accentColor: userTierTheme?.accent || '#9333EA',
+                isBoosted: !!hasActiveBoost,
               });
             }}
           />
@@ -942,6 +1048,7 @@ const Dashboard: React.FC = () => {
           taskName={xpPopup.taskName}
           xpAmount={xpPopup.xpAmount}
           accentColor={xpPopup.accentColor}
+          isBoosted={xpPopup.isBoosted}
           onHide={() => setXpPopup(prev => ({ ...prev, visible: false }))}
         />
 
