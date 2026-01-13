@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { View } from 'react-native';
+import { View, Text } from 'react-native';
 import Animated, { useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
 import Svg, { Path, Circle, Rect, G } from 'react-native-svg';
 import { Trophy, SquareUserRound } from 'lucide-react-native';
@@ -28,6 +28,10 @@ interface TabBarIconProps {
   tierColor?: string;
   /** Déclenche l'animation heart bip */
   triggerPulse?: boolean;
+  /** Affiche le badge "New" sur l'icône */
+  showNewBadge?: boolean;
+  /** Texte du badge (ex: "New" ou "Nouveau") */
+  newBadgeText?: string;
 }
 
 // =============================================================================
@@ -38,7 +42,7 @@ interface TabBarIconProps {
  * Icône de la barre de navigation avec support d'animation heart bip.
  * Utilise la couleur du tier de l'utilisateur quand l'onglet est focalisé.
  */
-export const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, focused, size = 24, tierColor, triggerPulse = false }) => {
+export const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, focused, size = 24, tierColor, triggerPulse = false, showNewBadge = false, newBadgeText = 'New' }) => {
   // Couleur active : tier color si fournie, sinon slate-800
   const activeColor = focused ? tierColor || '#1e293b' : '#64748b';
   const strokeWidth = focused ? 2.2 : 1.8;
@@ -220,6 +224,35 @@ export const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, focused, si
   return (
     <View style={tw`items-center justify-center flex-1`}>
       <Animated.View style={animatedIconStyle}>{getIcon()}</Animated.View>
+      {showNewBadge && (
+        <View
+          style={{
+            position: 'absolute',
+            top: -10,
+            left: '50%',
+            transform: [{ translateX: -18 }],
+            backgroundColor: '#fbbf24',
+            borderWidth: 1.5,
+            borderColor: '#92400e',
+            borderRadius: 6,
+            paddingHorizontal: 4,
+            paddingVertical: 1,
+            minWidth: 24,
+            alignItems: 'center',
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 8,
+              fontWeight: '800',
+              color: '#92400e',
+              textTransform: 'uppercase',
+            }}
+          >
+            {newBadgeText}
+          </Text>
+        </View>
+      )}
     </View>
   );
 };

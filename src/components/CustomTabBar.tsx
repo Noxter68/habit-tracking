@@ -3,13 +3,18 @@
  * @description Custom tab bar avec animation de slide du fond entre les tabs.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, TouchableOpacity, Platform, Dimensions } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslation } from 'react-i18next';
 import TabBarIcon from './TabBarIcon';
 import { HapticFeedback } from '@/utils/haptics';
+
+// Clé de stockage pour savoir si l'utilisateur a vu l'onglet Achievements
+const ACHIEVEMENTS_SEEN_KEY = '@achievements_tab_seen';
 
 // =============================================================================
 // TYPES
@@ -32,6 +37,33 @@ const TAB_NAMES: Array<'home' | 'calendar' | 'trophy' | 'quest-panel' | 'users' 
 export const CustomTabBar: React.FC<CustomTabBarProps> = ({ state, navigation, tierColor }) => {
   const insets = useSafeAreaInsets();
   const { width } = Dimensions.get('window');
+  const { t } = useTranslation();
+
+  // État pour savoir si l'utilisateur a déjà vu l'onglet Achievements
+  const [hasSeenAchievements, setHasSeenAchievements] = useState(true); // Par défaut true pour éviter flash
+
+  // Charger l'état au montage
+  useEffect(() => {
+    const checkAchievementsSeen = async () => {
+      try {
+        const seen = await AsyncStorage.getItem(ACHIEVEMENTS_SEEN_KEY);
+        setHasSeenAchievements(seen === 'true');
+      } catch {
+        setHasSeenAchievements(false);
+      }
+    };
+    checkAchievementsSeen();
+  }, []);
+
+  // Marquer l'onglet Achievements comme vu
+  const markAchievementsSeen = useCallback(async () => {
+    try {
+      await AsyncStorage.setItem(ACHIEVEMENTS_SEEN_KEY, 'true');
+      setHasSeenAchievements(true);
+    } catch {
+      // Ignorer l'erreur
+    }
+  }, []);
 
   // Calcul de la largeur de chaque tab
   const tabWidth = (width - 32) / state.routes.length; // 32 = paddingHorizontal * 2
@@ -119,6 +151,11 @@ export const CustomTabBar: React.FC<CustomTabBarProps> = ({ state, navigation, t
           if (!isFocused && !event.defaultPrevented) {
             navigation.navigate(route.name);
           }
+
+          // Marquer l'onglet Achievements comme vu au premier clic
+          if (TAB_NAMES[index] === 'quest-panel' && !hasSeenAchievements) {
+            markAchievementsSeen();
+          }
         };
 
         const onLongPress = () => {
@@ -142,7 +179,14 @@ export const CustomTabBar: React.FC<CustomTabBarProps> = ({ state, navigation, t
               height: '100%',
             }}
           >
-            <TabBarIcon name={TAB_NAMES[index]} color={isFocused ? tierColor : '#94a3b8'} focused={isFocused} tierColor={tierColor} />
+            <TabBarIcon
+              name={TAB_NAMES[index]}
+              color={isFocused ? tierColor : '#94a3b8'}
+              focused={isFocused}
+              tierColor={tierColor}
+              showNewBadge={TAB_NAMES[index] === 'quest-panel' && !hasSeenAchievements}
+              newBadgeText={t('common.new')}
+            />
           </TouchableOpacity>
         );
       })}
