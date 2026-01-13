@@ -104,7 +104,14 @@ export const QuestCard: React.FC<QuestCardProps> = ({
                     <Text style={[styles.rewardText, { color: questTheme.textColor }]}>{quest.reward.amount} XP</Text>
                   )}
                   {quest.reward.kind === 'BOOST' && (
-                    <Text style={[styles.rewardText, { color: questTheme.textColor }]}>+{quest.reward.boost.percent}%</Text>
+                    <>
+                      <Image
+                        source={require('../../../assets/achievement-quests/achievement-boost-xp.png')}
+                        style={styles.boostIcon}
+                        resizeMode="contain"
+                      />
+                      <Text style={[styles.rewardText, { color: questTheme.textColor }]}>+{quest.reward.boost.percent}%</Text>
+                    </>
                   )}
                 </View>
               </View>
@@ -135,7 +142,7 @@ export const QuestCard: React.FC<QuestCardProps> = ({
                   </View>
                 </View>
                 <Text style={[styles.titleRewardLabel, { color: questTheme.textColor }]}>
-                  Titre: {t(quest.reward.title.key)}
+                  Titre: {t(`titles.${quest.reward.title.key}`)}
                 </Text>
               </View>
             )}
@@ -180,12 +187,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#78350f',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
   },
   iconGrayed: {
     backgroundColor: 'transparent',
@@ -260,6 +261,10 @@ const styles = StyleSheet.create({
   rewardText: {
     fontSize: 11,
     fontWeight: '800',
+  },
+  boostIcon: {
+    width: 16,
+    height: 16,
   },
   titleRewardSection: {
     marginTop: 4,

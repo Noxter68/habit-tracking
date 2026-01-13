@@ -5,6 +5,7 @@ import {
   QuestWithProgress,
   QuestCompletionResult,
   QuestCategory,
+  QuestMetricType,
 } from '@/types/quest.types';
 
 export class QuestService {
@@ -40,9 +41,18 @@ export class QuestService {
 
       const questsWithProgress: QuestWithProgress[] = quests.map((quest) => {
         const userProgress = progressMap.get(quest.id);
-        const adjustedTarget = quest.is_dynamic
-          ? this.calculateDynamicTarget(quest.target_value, habitsCount, quest.dynamic_percentage)
-          : quest.target_value;
+
+        // Pour min_habits_over_days, la target affichée est daysRequired, pas target_value
+        // target_value = nombre d'habitudes minimum par jour
+        // daysRequired = nombre de jours requis (ce qu'on affiche dans la progress bar)
+        let adjustedTarget: number;
+        if (quest.metric_type === 'min_habits_over_days' && quest.params?.daysRequired) {
+          adjustedTarget = quest.params.daysRequired;
+        } else if (quest.is_dynamic) {
+          adjustedTarget = this.calculateDynamicTarget(quest.target_value, habitsCount, quest.dynamic_percentage);
+        } else {
+          adjustedTarget = quest.target_value;
+        }
 
         const progressPercentage = userProgress?.is_completed
           ? 100
@@ -308,6 +318,42 @@ export class QuestService {
     } catch (error) {
       console.error('[QuestService] Error fetching recently completed quests:', error);
       return [];
+    }
+  }
+
+  /**
+   * Complète une quête manuellement par son type de métrique
+   * Utilisé pour des quêtes spéciales comme app_rated qui ne sont pas trackées automatiquement
+   */
+  static async completeQuestByMetricType(
+    userId: string,
+    metricType: QuestMetricType
+  ): Promise<QuestCompletionResult | null> {
+    try {
+      const { data, error } = await supabase.rpc('complete_quest_by_metric_type', {
+        p_user_id: userId,
+        p_metric_type: metricType,
+      });
+
+      if (error) throw error;
+
+      if (data?.already_completed) {
+        return null;
+      }
+
+      if (data?.completed) {
+        return {
+          quest_id: data.quest_id,
+          completed: true,
+          reward: data.reward,
+          message: data.quest_name,
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error('[QuestService] Error completing quest by metric type:', error);
+      return null;
     }
   }
 }

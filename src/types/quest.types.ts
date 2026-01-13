@@ -12,7 +12,8 @@ export type QuestMetricType =
   | 'perfect_days' // Jours avec toutes les tâches complétées (daily challenge)
   | 'comeback_after_pause' // Reprendre après une pause
   | 'best_streak' // Meilleur streak atteint
-  | 'weekly_completions'; // Complétions sur 7 jours glissants
+  | 'weekly_completions' // Complétions sur 7 jours glissants
+  | 'app_rated'; // A noté l'application
 
 export type RewardKind = 'XP' | 'BOOST' | 'TITLE';
 

@@ -40,6 +40,7 @@ import { LevelUpProvider } from './src/context/LevelUpContext';
 import { SubscriptionProvider } from './src/context/SubscriptionContext';
 import { QuestProvider } from './src/context/QuestContext';
 import { InventoryProvider } from './src/context/InventoryContext';
+import { QuestNotificationProvider } from './src/context/QuestNotificationContext';
 
 // Components
 import { CelebrationRenderer } from '@/components/celebrations/CelebrationRenderer';
@@ -502,18 +503,20 @@ export default function App() {
               <CelebrationQueueProvider>
                 <HabitProvider>
                   <AchievementProvider>
-                    <QuestProvider>
-                      <InventoryProvider>
-                        <LevelUpProvider>
-                          <GroupCelebrationProvider>
-                            <NavigationContainer linking={linking} fallback={<BeautifulLoader />}>
-                              <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
-                              <AppNavigator />
-                            </NavigationContainer>
-                          </GroupCelebrationProvider>
-                        </LevelUpProvider>
-                      </InventoryProvider>
-                    </QuestProvider>
+                    <QuestNotificationProvider>
+                      <QuestProvider>
+                        <InventoryProvider>
+                          <LevelUpProvider>
+                            <GroupCelebrationProvider>
+                              <NavigationContainer linking={linking} fallback={<BeautifulLoader />}>
+                                <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
+                                <AppNavigator />
+                              </NavigationContainer>
+                            </GroupCelebrationProvider>
+                          </LevelUpProvider>
+                        </InventoryProvider>
+                      </QuestProvider>
+                    </QuestNotificationProvider>
                   </AchievementProvider>
                 </HabitProvider>
               </CelebrationQueueProvider>

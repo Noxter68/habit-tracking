@@ -27,7 +27,7 @@ import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import { ChevronRight, Pencil, GraduationCap } from 'lucide-react-native';
+import { ChevronRight, Pencil, GraduationCap, Gift } from 'lucide-react-native';
 import tw from 'twrnc';
 
 import EditUsernameModal from '@/components/settings/EditUserModal';
@@ -36,6 +36,9 @@ import { RatingRewardModal } from '@/components/settings/RatingRewardModal';
 import { GroupTierUpModal } from '@/components/groups/GroupTierUpModal';
 import { GroupLevelUpModal } from '@/components/groups/GroupLevelUpModal';
 import { StreakSaverShopModal } from '@/components/streakSaver/StreakSaverShopModal';
+import { UpdateModal } from '@/components/updateModal';
+
+import { getUpdatesForVersion, getModalTexts } from '@/utils/updateContent';
 
 import { useAuth } from '@/context/AuthContext';
 import { useSubscription } from '@/context/SubscriptionContext';
@@ -400,6 +403,7 @@ const SettingsScreen: React.FC = () => {
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [hasRated, setHasRated] = useState(false);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
 
   // ============================================================================
   // HOOKS - useCallback
@@ -951,12 +955,28 @@ const SettingsScreen: React.FC = () => {
             <View style={tw`mt-6`}>
               <Text style={tw`text-sm font-bold text-zinc-500 uppercase tracking-wider mb-3 px-1`}>{t('settings.help')}</Text>
 
-              <Pressable onPress={handleReviewOnboarding} style={tw`bg-white/90 rounded-2xl px-4 py-4 flex-row items-center justify-between shadow-md`}>
+              <Pressable onPress={handleReviewOnboarding} style={tw`bg-white/90 rounded-2xl px-4 py-4 flex-row items-center justify-between shadow-md mb-3`}>
                 <View style={tw`flex-row items-center gap-3`}>
                   <View style={tw`w-10 h-10 rounded-xl bg-zinc-100 items-center justify-center`}>
                     <GraduationCap size={20} color="#52525B" strokeWidth={2.5} />
                   </View>
                   <Text style={tw`text-base font-semibold text-zinc-800`}>{t('settings.reviewTour')}</Text>
+                </View>
+                <ChevronRight size={20} color="#A1A1AA" />
+              </Pressable>
+
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setShowUpdateModal(true);
+                }}
+                style={tw`bg-white/90 rounded-2xl px-4 py-4 flex-row items-center justify-between shadow-md`}
+              >
+                <View style={tw`flex-row items-center gap-3`}>
+                  <View style={tw`w-10 h-10 rounded-xl bg-indigo-100 items-center justify-center`}>
+                    <Gift size={20} color="#6366F1" strokeWidth={2.5} />
+                  </View>
+                  <Text style={tw`text-base font-semibold text-zinc-800`}>{t('settings.whatsNew')}</Text>
                 </View>
                 <ChevronRight size={20} color="#A1A1AA" />
               </Pressable>
@@ -983,6 +1003,15 @@ const SettingsScreen: React.FC = () => {
               onSuccess={() => {
                 setHasRated(true);
               }}
+            />
+
+            {/* Modal What's New */}
+            <UpdateModal
+              visible={showUpdateModal}
+              onClose={() => setShowUpdateModal(false)}
+              version={Constants.expoConfig?.version || '1.0.0'}
+              updates={getUpdatesForVersion(Constants.expoConfig?.version || '1.0.0', i18n.language)}
+              texts={getModalTexts(i18n.language)}
             />
 
             {/* Bouton de déconnexion */}

@@ -26,6 +26,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useRef,
 } from 'react';
 
 // ============================================================================
@@ -40,13 +41,14 @@ import Logger from '@/utils/logger';
 import {
   QuestWithProgress,
   QuestCategory,
-  QuestCompletionResult,
 } from '@/types/quest.types';
 
 // ============================================================================
 // IMPORTS - Contextes
 // ============================================================================
 import { useAuth } from './AuthContext';
+import { useStats } from './StatsContext';
+import { useQuestNotification } from './QuestNotificationContext';
 
 // ============================================================================
 // TYPES ET INTERFACES
@@ -62,8 +64,8 @@ interface QuestContextType {
   pinnedQuests: QuestWithProgress[];
   /** Indicateur de chargement */
   loading: boolean;
-  /** Rafraîchit les quêtes */
-  refreshQuests: () => Promise<void>;
+  /** Rafraîchit les quêtes (silent = true pour refresh en arrière-plan sans loader) */
+  refreshQuests: (silent?: boolean) => Promise<void>;
   /** Épingle ou désépingle une quête */
   togglePin: (questId: string, isPinned: boolean) => Promise<boolean>;
   /** Récupère les quêtes par catégorie */
@@ -94,6 +96,8 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { user } = useAuth();
+  const { updateStatsOptimistically } = useStats();
+  const { showQuestCompletion } = useQuestNotification();
   const [quests, setQuests] = useState<QuestWithProgress[]>([]);
   const [pinnedQuests, setPinnedQuests] = useState<QuestWithProgress[]>([]);
   const [loading, setLoading] = useState(true);
@@ -104,10 +108,16 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({
     completionPercentage: 0,
   });
 
+  // Ref pour garder trace des quêtes précédentes et détecter les nouvelles complétions
+  const previousQuestsRef = useRef<QuestWithProgress[]>([]);
+  // Track if we have loaded data at least once (for cache behavior)
+  const hasLoadedOnce = useRef(false);
+
   /**
    * Rafraîchit les quêtes et leurs progressions
+   * @param silent - Si true, ne pas afficher le loader (refresh en arrière-plan)
    */
-  const refreshQuests = useCallback(async () => {
+  const refreshQuests = useCallback(async (silent: boolean = false) => {
     if (!user) {
       setQuests([]);
       setPinnedQuests([]);
@@ -116,11 +126,46 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     try {
-      setLoading(true);
+      // Only show loader on first load, not on subsequent refreshes (cache behavior)
+      if (!silent && !hasLoadedOnce.current) {
+        setLoading(true);
+      }
       Logger.info('[QuestContext] Fetching quests for user:', user.id);
 
       // Récupérer toutes les quêtes avec progression
       const questsData = await QuestService.getUserQuestsWithProgress(user.id);
+
+      // Détecter les quêtes nouvellement complétées
+      const previousQuests = previousQuestsRef.current;
+      if (previousQuests.length > 0) {
+        questsData.forEach((quest) => {
+          const previousQuest = previousQuests.find((q) => q.id === quest.id);
+          const wasNotCompleted = !previousQuest?.user_progress?.completed_at;
+          const isNowCompleted = !!quest.user_progress?.completed_at;
+
+          if (wasNotCompleted && isNowCompleted) {
+            Logger.info('[QuestContext] Quest newly completed:', quest.name_key);
+            // Transformer le reward pour le toast
+            const toastReward = quest.reward.kind === 'XP'
+              ? { kind: 'XP' as const, amount: quest.reward.amount }
+              : quest.reward.kind === 'BOOST'
+                ? { kind: 'BOOST' as const, boost: { percent: quest.reward.boost.percent, durationHours: quest.reward.boost.durationHours } }
+                : { kind: 'TITLE' as const, title: { key: quest.reward.title.key } };
+
+            showQuestCompletion(quest.name_key, toastReward);
+
+            // Mettre à jour les stats optimistiquement pour déclencher la détection de level up
+            if (quest.reward.kind === 'XP') {
+              Logger.info('[QuestContext] Updating stats optimistically with XP reward:', quest.reward.amount);
+              updateStatsOptimistically(quest.reward.amount);
+            }
+          }
+        });
+      }
+
+      // Mettre à jour la ref pour la prochaine comparaison
+      previousQuestsRef.current = questsData;
+
       setQuests(questsData);
 
       // Récupérer les quêtes épinglées
@@ -151,8 +196,9 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({
       Logger.error('[QuestContext] Error fetching quests:', error);
     } finally {
       setLoading(false);
+      hasLoadedOnce.current = true;
     }
-  }, [user]);
+  }, [user, showQuestCompletion, updateStatsOptimistically]);
 
   /**
    * Épingle ou désépingle une quête

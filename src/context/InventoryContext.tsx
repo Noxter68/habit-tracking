@@ -26,6 +26,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useRef,
 } from 'react';
 
 // ============================================================================
@@ -82,6 +83,8 @@ interface InventoryContextType {
     unlockedTitles: number;
     hasActiveBoost: boolean;
   };
+  /** DEBUG: Toggle mock active boost (dev only) */
+  toggleDebugBoost: () => void;
 }
 
 // ============================================================================
@@ -115,6 +118,12 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({
     hasActiveBoost: false,
   });
 
+  // Track if we have loaded data at least once (for cache behavior)
+  const hasLoadedOnce = useRef(false);
+
+  // DEBUG: Mock boost state for testing UI
+  const [debugBoostEnabled, setDebugBoostEnabled] = useState(false);
+
   /**
    * Rafraîchit l'inventaire complet
    */
@@ -131,7 +140,10 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     try {
-      setLoading(true);
+      // Only show loader on first load, not on subsequent refreshes (cache behavior)
+      if (!hasLoadedOnce.current) {
+        setLoading(true);
+      }
       Logger.info('[InventoryContext] Fetching inventory for user:', user.id);
 
       // Récupérer toutes les données en parallèle
@@ -182,6 +194,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({
       Logger.error('[InventoryContext] Error fetching inventory:', error);
     } finally {
       setLoading(false);
+      hasLoadedOnce.current = true;
     }
   }, [user]);
 
@@ -255,6 +268,27 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => clearInterval(interval);
   }, [activeBoost, refreshInventory]);
 
+  /**
+   * DEBUG: Toggle mock boost for UI testing
+   */
+  const toggleDebugBoost = useCallback(() => {
+    setDebugBoostEnabled((prev) => !prev);
+    Logger.info('[InventoryContext] Debug boost toggled:', !debugBoostEnabled);
+  }, [debugBoostEnabled]);
+
+  // DEBUG: Create mock active boost when debug mode is enabled
+  const effectiveActiveBoost = debugBoostEnabled
+    ? {
+        user_id: user?.id || 'debug',
+        inventory_item_id: 'debug-boost',
+        boost_type: 'HABIT_XP' as const,
+        boost_percent: 20 as const,
+        activated_at: new Date(),
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h from now
+        created_at: new Date(),
+      }
+    : activeBoost;
+
   // ============================================================================
   // VALEUR DU CONTEXTE
   // ============================================================================
@@ -264,13 +298,14 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({
     availableItems,
     availableBoosts,
     unlockedTitles,
-    activeBoost,
-    xpMultiplier,
+    activeBoost: effectiveActiveBoost,
+    xpMultiplier: debugBoostEnabled ? 1.2 : xpMultiplier,
     loading,
     refreshInventory,
     activateBoost,
     hasItems: availableItems.length > 0,
     stats,
+    toggleDebugBoost,
   };
 
   return (

@@ -225,8 +225,8 @@
   "achievements": {
     "level": "Niveau {{level}}",
     "tapToClose": "Touchez n'importe où pour fermer",
-    "screenTitle": "Succès",
-    "currentAchievement": "Succès Actuel",
+    "screenTitle": "Rangs",
+    "currentAchievement": "Rang Actuel",
     "unlocked": "Débloqués",
     "bestStreak": "Meilleure Série",
     "totalXP": "XP Total",
@@ -234,7 +234,7 @@
     "perfectDays": "Parfait",
     "habits": "Habitudes",
     "streak": "Série",
-    "achievementUnlocked": "Succès Débloqué !",
+    "achievementUnlocked": "Nouveau Rang Débloqué !",
     "progressStatus": "État de Progression",
     "unlockedAt": "Débloqué à {{count}} accomplissements",
     "requiresCompletions": "Nécessite {{count}} accomplissements au total",
@@ -356,6 +356,7 @@
     "reviewTour": "Revoir le tour d'introduction",
     "reviewTourPrompt": "Souhaitez-vous revoir le tour d'introduction ?",
     "reviewTourConfirm": "Oui, montrez-moi",
+    "whatsNew": "Quoi de neuf",
     "languageChangeInfo": "L'application se mettra à jour immédiatement lorsque vous sélectionnerez une nouvelle langue.",
     "languageChangeError": "Échec du changement de langue. Veuillez réessayer.",
     "dailyMotivation": "Motivation Quotidienne",
@@ -2558,23 +2559,37 @@
     }
   },
   "quests": {
-    "title": "Quêtes",
-    "loading": "Chargement des quêtes...",
-    "completed": "Complétées",
+    "title": "Accomplissements",
+    "loading": "Chargement des accomplissements...",
+    "completed": "Complétés",
     "total": "Total",
-    "pinned": "Suivie",
+    "pinned": "Suivi",
     "progress": "Progression",
-    "tracked": "Suivies",
-    "tracked_description": "Gardez un œil sur vos quêtes actives",
-    "all_quests": "Toutes les Quêtes",
-    "quests_available": "quêtes disponibles",
-    "no_quests_found": "Aucune quête trouvée",
+    "tracked": "Suivis",
+    "tracked_description": "Gardez un œil sur vos accomplissements actifs",
+    "all_quests": "Tous les Accomplissements",
+    "quests_available": "accomplissements disponibles",
+    "no_quests_found": "Aucun accomplissement trouvé",
+    "no_completed_quests": "Aucun accomplissement complété pour l'instant",
     "reward": "Récompense",
     "exclusive_title": "Titre Exclusif",
-    "quest_completed": "Quête Terminée !",
-    "pin": "Suivre la Quête",
+    "quest_completed": "Accomplissement Terminé !",
+    "pin": "Suivre",
     "unpin": "Ne plus suivre",
     "all": "Toutes",
+    "help": {
+      "title": "Comment ça marche ?",
+      "intro": "Les accomplissements vous permettent de gagner des récompenses en atteignant vos objectifs !",
+      "xp_title": "Gagnez de l'XP",
+      "xp_description": "Chaque accomplissement complété vous rapporte de l'XP pour progresser dans vos rangs.",
+      "titles_title": "Titres Exclusifs",
+      "titles_description": "Débloquez des titres uniques à afficher sur votre profil.",
+      "boosts_title": "Boosts d'XP",
+      "boosts_description": "Obtenez des boosts qui multiplient vos gains d'XP pendant une durée limitée.",
+      "inventory_title": "Inventaire",
+      "inventory_description": "Retrouvez toutes vos récompenses dans l'inventaire et activez vos boosts quand vous le souhaitez.",
+      "got_it": "J'ai compris !"
+    },
     "categories": {
       "all": "Toutes",
       "constance": "Constance",
@@ -2587,6 +2602,16 @@
       "name": "Sept Étincelles",
       "description_short": "Complétez au moins 1 habitude sur 7 jours distincts",
       "description_long": "Commencez votre voyage en complétant au moins une habitude sur 7 jours différents. Les petits pas mènent aux grands changements."
+    },
+    "task_master": {
+      "name": "Maître des Tâches Quotidiennes",
+      "description_short": "Complétez 50 tâches en 30 jours",
+      "description_long": "Devenez un véritable maître de la productivité en complétant 50 tâches sur une période de 30 jours."
+    },
+    "habit_builder": {
+      "name": "Architecte d'Habitudes Extraordinaires",
+      "description_short": "Créez et maintenez 5 habitudes simultanément",
+      "description_long": "Prouvez votre capacité à jongler avec plusieurs habitudes en maintenant 5 habitudes actives en même temps."
     },
     "two_weeks_gentle": {
       "name": "Deux Semaines Douces",
@@ -2642,6 +2667,146 @@
       "name": "Légende Inébranlable",
       "description_short": "Maintenez une streak de 100 jours sur une habitude",
       "description_long": "Cent jours consécutifs. Vous êtes une légende vivante de la persévérance. Cette habitude est gravée dans votre identité."
+    },
+    "test_quest": {
+      "name": "Premier Pas",
+      "description_short": "Complétez 1 habitude",
+      "description_long": "Complétez n'importe quelle habitude une fois pour débloquer cette quête"
+    },
+    "tasks_25": {
+      "name": "Apprenti des Tâches",
+      "description_short": "Complétez 25 tâches",
+      "description_long": "Vos 25 premières tâches complétées ! Chaque petite action s'additionne pour de grands résultats."
+    },
+    "tasks_50": {
+      "name": "Enthousiaste des Tâches",
+      "description_short": "Complétez 50 tâches",
+      "description_long": "Cinquante tâches accomplies ! Vous construisez votre élan et prouvez votre dévouement."
+    },
+    "tasks_100": {
+      "name": "Champion des Tâches",
+      "description_short": "Complétez 100 tâches",
+      "description_long": "Cent tâches conquises ! Vous êtes un vrai champion de la productivité."
+    },
+    "tasks_200": {
+      "name": "Maître des Tâches",
+      "description_short": "Complétez 200 tâches",
+      "description_long": "Deux cents tâches réalisées ! Votre constance est remarquable et inspirante."
+    },
+    "tasks_500": {
+      "name": "Légende des Tâches",
+      "description_short": "Complétez 500 tâches",
+      "description_long": "Cinq cents tâches complétées ! Vous avez atteint le statut légendaire de la complétion de tâches."
+    },
+    "rate_app": {
+      "name": "Soutien de la Communauté",
+      "description_short": "Notez l'application et laissez un avis",
+      "description_long": "Aidez les autres à découvrir l'application en la notant et en partageant votre expérience. Votre soutien compte énormément pour nous !"
+    },
+    "first_comeback": {
+      "name": "Premier Retour",
+      "description_short": "Revenez après une pause de 3+ jours",
+      "description_long": "La vie arrive, mais vous êtes revenu. Votre premier retour prouve que tomber n'est pas échouer—se relever est ce qui compte."
+    },
+    "phoenix": {
+      "name": "Phoenix",
+      "description_short": "Revenez 3 fois après des pauses",
+      "description_long": "Trois fois vous êtes remonté des cendres. Comme le phoenix, vous avez prouvé que chaque revers n'est qu'une préparation pour un retour."
+    },
+    "invincible": {
+      "name": "Esprit Invincible",
+      "description_short": "Revenez 10 fois après des pauses",
+      "description_long": "Dix retours. Vous êtes inarrêtable. Votre résilience est légendaire—rien ne peut vous garder à terre longtemps."
+    },
+    "double_focus": {
+      "name": "Double Focus",
+      "description_short": "Complétez 2 habitudes différentes",
+      "description_long": "L'équilibre commence avec deux. Vous avez commencé à construire une routine multifacette qui touche différents aspects de votre vie."
+    },
+    "quadra": {
+      "name": "Équilibre Quadra",
+      "description_short": "Complétez 4 habitudes différentes",
+      "description_long": "Quatre piliers de croissance personnelle. Vous construisez une routine équilibrée qui couvre plusieurs aspects du développement personnel."
+    },
+    "hexagon": {
+      "name": "Maître Hexagone",
+      "description_short": "Complétez 6 habitudes différentes",
+      "description_long": "Six habitudes distinctes conquises. Vous avez atteint un équilibre remarquable, nourrissant la croissance dans toutes les directions de votre vie."
+    },
+    "light_week": {
+      "name": "Semaine Légère",
+      "description_short": "Complétez 40% des habitudes possibles cette semaine",
+      "description_long": "Un début en douceur vers la constance hebdomadaire. Même un engagement léger construit les fondations de plus grandes réalisations."
+    },
+    "active_week": {
+      "name": "Semaine Active",
+      "description_short": "Complétez 60% des habitudes possibles cette semaine",
+      "description_long": "Plus de la moitié de votre potentiel hebdomadaire atteint ! Vous trouvez votre rythme et construisez un sérieux élan."
+    },
+    "intense_week": {
+      "name": "Semaine Intense",
+      "description_short": "Complétez 80% des habitudes possibles cette semaine",
+      "description_long": "Une semaine intense de dévouement ! Vous repoussez vos limites et montrez ce qu'est un vrai engagement."
+    },
+    "perfect_intensity_week": {
+      "name": "Intensité Hebdomadaire Parfaite",
+      "description_short": "Complétez 100% des habitudes possibles cette semaine",
+      "description_long": "Chaque habitude, chaque jour de cette semaine. Une perfection absolue dans le dévouement hebdomadaire—vous êtes extraordinaire !"
+    },
+    "habit_week": {
+      "name": "Une Semaine Solide",
+      "description_short": "Complétez au moins 1 habitude pendant 7 jours consécutifs",
+      "description_long": "Une semaine complète à vous montrer présent. Cette fondation prouve que vous pouvez maintenir la constance quand ça compte."
+    },
+    "double_routine": {
+      "name": "Double Routine",
+      "description_short": "Complétez au moins 2 habitudes pendant 14 jours",
+      "description_long": "Deux semaines de double dévouement. Vous avez prouvé que vous pouvez jongler avec plusieurs engagements sans en lâcher un."
+    },
+    "discipline_month": {
+      "name": "Mois de Discipline",
+      "description_short": "Complétez au moins 2 habitudes pendant 30 jours",
+      "description_long": "Un mois d'engagement double inébranlable. Votre discipline forge des habitudes qui dureront toute une vie."
+    },
+    "routine_master": {
+      "name": "Maître de la Routine",
+      "description_short": "Complétez au moins 3 habitudes pendant 60 jours",
+      "description_long": "Deux mois avec trois habitudes—vous avez atteint la maîtrise de votre routine. Votre dévouement est vraiment inspirant."
+    },
+    "centenarian": {
+      "name": "Centenaire",
+      "description_short": "Complétez des habitudes sur 100 jours distincts",
+      "description_long": "Cent jours à vous montrer présent. Un siècle d'engagement qui prouve que votre dévouement n'est pas passager."
+    },
+    "bicentenarian": {
+      "name": "Bicentenaire",
+      "description_short": "Complétez des habitudes sur 200 jours distincts",
+      "description_long": "Deux cents jours d'action constante. Vous avez fait de la construction d'habitudes une partie permanente de votre identité."
+    },
+    "full_year": {
+      "name": "Champion de l'Année",
+      "description_short": "Complétez des habitudes sur 365 jours distincts",
+      "description_long": "Une année entière de dévouement. Chaque saison, chaque mois, vous étiez présent. Vous êtes un vrai champion des habitudes."
+    },
+    "streak_150": {
+      "name": "Flamme de Cinq Mois",
+      "description_short": "Maintenez une streak de 150 jours sur une habitude",
+      "description_long": "Cent cinquante jours consécutifs. Cinq mois de dévouement inébranlable envers une seule habitude—vous brillez !"
+    },
+    "streak_365": {
+      "name": "Dévouement Annuel",
+      "description_short": "Maintenez une streak de 365 jours sur une habitude",
+      "description_long": "Une année complète sans manquer un seul jour. Ce niveau de dévouement est rare et remarquable. Vous êtes une légende vivante."
+    },
+    "tasks_1000": {
+      "name": "Accomplisseur Millénaire",
+      "description_short": "Complétez 1000 tâches",
+      "description_long": "Mille tâches complétées ! Un millénaire de micro-accomplissements qui vous ont transformé en puissance de productivité."
+    },
+    "tasks_2500": {
+      "name": "Titan des Tâches",
+      "description_short": "Complétez 2500 tâches",
+      "description_long": "Deux mille cinq cents tâches conquises ! Vous avez atteint le statut de titan—une véritable force de la nature en complétion de tâches."
     }
   },
   "inventory": {
@@ -2665,10 +2830,13 @@
     "boost_already_active": "Boost Déjà Actif",
     "boost_already_active_message": "Vous avez déjà un boost actif. Attendez qu'il expire avant d'en activer un autre.",
     "activation_failed": "Échec de l'activation du boost. Veuillez réessayer.",
-    "ok": "OK"
+    "ok": "OK",
+    "activate_boost_title": "Activer ce boost ?",
+    "boost_already_active_warning": "Un boost est déjà actif. Attendez qu'il expire avant d'en activer un autre."
   },
   "titles": {
     "marathon_legend": "Légende du Marathon",
-    "zen_voyager": "Voyageur Zen"
+    "zen_voyager": "Voyageur Zen",
+    "titan_of_tasks": "Titan des Tâches"
   }
 }

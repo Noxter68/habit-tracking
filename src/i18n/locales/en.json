@@ -280,6 +280,7 @@
     "reviewTour": "Review Introduction Tour",
     "reviewTourPrompt": "Would you like to see the introduction tour again?",
     "reviewTourConfirm": "Yes, Show Me",
+    "whatsNew": "What's New",
     "languageChangeInfo": "The app will update immediately when you select a new language.",
     "languageChangeError": "Failed to change language. Please try again.",
     "dailyMotivation": "Daily Motivation",
@@ -1474,8 +1475,8 @@
   "achievements": {
     "level": "Level {{level}}",
     "tapToClose": "Tap anywhere to close",
-    "screenTitle": "Achievements",
-    "currentAchievement": "Current Achievement",
+    "screenTitle": "Tier Ranks",
+    "currentAchievement": "Current Rank",
     "unlocked": "Unlocked",
     "bestStreak": "Best Streak",
     "totalXP": "Total XP",
@@ -1483,7 +1484,7 @@
     "perfectDays": "Perfect",
     "habits": "Habits",
     "streak": "Streak",
-    "achievementUnlocked": "Achievement Unlocked!",
+    "achievementUnlocked": "New Rank Unlocked!",
     "progressStatus": "Progress Status",
     "unlockedAt": "Unlocked at {{count}} completions",
     "requiresCompletions": "Requires {{count}} total completions",
@@ -2511,23 +2512,37 @@
     }
   },
   "quests": {
-    "title": "Quests",
-    "loading": "Loading quests...",
+    "title": "Achievements",
+    "loading": "Loading achievements...",
     "completed": "Completed",
     "total": "Total",
     "pinned": "Tracked",
     "progress": "Progress",
     "tracked": "Tracked",
-    "tracked_description": "Keep an eye on your active quests",
-    "all_quests": "All Quests",
-    "quests_available": "quests available",
-    "no_quests_found": "No quests found",
+    "tracked_description": "Keep an eye on your active achievements",
+    "all_quests": "All Achievements",
+    "quests_available": "achievements available",
+    "no_quests_found": "No achievements found",
+    "no_completed_quests": "No completed achievements yet",
     "reward": "Reward",
     "exclusive_title": "Exclusive Title",
-    "quest_completed": "Quest Completed!",
-    "pin": "Track Quest",
+    "quest_completed": "Achievement Unlocked!",
+    "pin": "Track",
     "unpin": "Untrack",
     "all": "All",
+    "help": {
+      "title": "How does it work?",
+      "intro": "Achievements let you earn rewards by reaching your goals!",
+      "xp_title": "Earn XP",
+      "xp_description": "Each completed achievement gives you XP to progress through your ranks.",
+      "titles_title": "Exclusive Titles",
+      "titles_description": "Unlock unique titles to display on your profile.",
+      "boosts_title": "XP Boosts",
+      "boosts_description": "Get boosts that multiply your XP earnings for a limited time.",
+      "inventory_title": "Inventory",
+      "inventory_description": "Find all your rewards in the inventory and activate your boosts whenever you want.",
+      "got_it": "Got it!"
+    },
     "categories": {
       "all": "All",
       "constance": "Constance",
@@ -2536,10 +2551,25 @@
       "exploration": "Exploration",
       "philosophie": "Philosophy"
     },
+    "test_quest": {
+      "name": "First Step",
+      "description_short": "Complete 1 habit",
+      "description_long": "Complete any habit once to unlock this quest"
+    },
     "seven_sparks": {
       "name": "Seven Sparks",
       "description_short": "Complete at least 1 habit on 7 distinct days",
       "description_long": "Start your journey by completing at least one habit on 7 different days. Small steps lead to big changes."
+    },
+    "task_master": {
+      "name": "Daily Task Master Professional",
+      "description_short": "Complete 50 tasks in 30 days",
+      "description_long": "Become a true productivity master by completing 50 tasks over a 30-day period."
+    },
+    "habit_builder": {
+      "name": "Extraordinary Habit Architect Builder",
+      "description_short": "Create and maintain 5 habits simultaneously",
+      "description_long": "Prove your ability to juggle multiple habits by maintaining 5 active habits at the same time."
     },
     "two_weeks_gentle": {
       "name": "Two Weeks Gentle",
@@ -2595,6 +2625,141 @@
       "name": "Unshakeable Legend",
       "description_short": "Maintain a 100-day streak on one habit",
       "description_long": "One hundred consecutive days. You are a living legend of perseverance. This habit is engraved in your identity."
+    },
+    "tasks_25": {
+      "name": "Task Beginner",
+      "description_short": "Complete 25 tasks",
+      "description_long": "Your first 25 tasks completed! Every small action adds up to big results."
+    },
+    "tasks_50": {
+      "name": "Task Enthusiast",
+      "description_short": "Complete 50 tasks",
+      "description_long": "Fifty tasks done! You're building momentum and proving your dedication."
+    },
+    "tasks_100": {
+      "name": "Task Champion",
+      "description_short": "Complete 100 tasks",
+      "description_long": "One hundred tasks conquered! You're a true champion of productivity."
+    },
+    "tasks_200": {
+      "name": "Task Master",
+      "description_short": "Complete 200 tasks",
+      "description_long": "Two hundred tasks achieved! Your consistency is remarkable and inspiring."
+    },
+    "tasks_500": {
+      "name": "Task Legend",
+      "description_short": "Complete 500 tasks",
+      "description_long": "Five hundred tasks completed! You've reached legendary status in task completion."
+    },
+    "rate_app": {
+      "name": "Community Supporter",
+      "description_short": "Rate the app and leave a review",
+      "description_long": "Help others discover the app by rating it and sharing your experience. Your support means the world to us!"
+    },
+    "first_comeback": {
+      "name": "First Comeback",
+      "description_short": "Return after a 3+ day break",
+      "description_long": "Life happens, but you came back. Your first comeback proves that falling off isn't failing—getting back up is what matters."
+    },
+    "phoenix": {
+      "name": "Phoenix",
+      "description_short": "Return 3 times after breaks",
+      "description_long": "Three times you've risen from the ashes. Like the phoenix, you've proven that every setback is just a setup for a comeback."
+    },
+    "invincible": {
+      "name": "Invincible Spirit",
+      "description_short": "Return 10 times after breaks",
+      "description_long": "Ten comebacks. You are unstoppable. Your resilience is legendary—nothing can keep you down for long."
+    },
+    "double_focus": {
+      "name": "Double Focus",
+      "description_short": "Complete 2 different habits",
+      "description_long": "Balance begins with two. You've started building a multi-faceted routine that touches different areas of your life."
+    },
+    "quadra": {
+      "name": "Quadra Balance",
+      "description_short": "Complete 4 different habits",
+      "description_long": "Four pillars of personal growth. You're building a well-rounded routine that covers multiple aspects of self-improvement."
+    },
+    "hexagon": {
+      "name": "Hexagon Master",
+      "description_short": "Complete 6 different habits",
+      "description_long": "Six distinct habits conquered. You've achieved remarkable balance, nurturing growth in every direction of your life."
+    },
+    "light_week": {
+      "name": "Light Week",
+      "description_short": "Complete 40% of possible habits this week",
+      "description_long": "A gentle start to weekly consistency. Even light engagement builds the foundation for greater achievements."
+    },
+    "active_week": {
+      "name": "Active Week",
+      "description_short": "Complete 60% of possible habits this week",
+      "description_long": "More than half your weekly potential reached! You're finding your rhythm and building serious momentum."
+    },
+    "intense_week": {
+      "name": "Intense Week",
+      "description_short": "Complete 80% of possible habits this week",
+      "description_long": "An intense week of dedication! You're pushing your limits and showing what true commitment looks like."
+    },
+    "perfect_intensity_week": {
+      "name": "Perfect Weekly Intensity",
+      "description_short": "Complete 100% of possible habits this week",
+      "description_long": "Every single habit, every single day this week. Absolute perfection in weekly dedication—you are extraordinary!"
+    },
+    "habit_week": {
+      "name": "One Week Strong",
+      "description_short": "Complete at least 1 habit for 7 consecutive days",
+      "description_long": "A full week of showing up. This foundation proves you can maintain consistency when it matters."
+    },
+    "double_routine": {
+      "name": "Double Routine",
+      "description_short": "Complete at least 2 habits for 14 days",
+      "description_long": "Two weeks of dual dedication. You've proven you can juggle multiple commitments without dropping the ball."
+    },
+    "discipline_month": {
+      "name": "Month of Discipline",
+      "description_short": "Complete at least 2 habits for 30 days",
+      "description_long": "A month of unwavering double commitment. Your discipline is forging habits that will last a lifetime."
+    },
+    "routine_master": {
+      "name": "Routine Master",
+      "description_short": "Complete at least 3 habits for 60 days",
+      "description_long": "Two months with three habits—you've achieved mastery over your routine. Your dedication is truly inspiring."
+    },
+    "centenarian": {
+      "name": "Centenarian",
+      "description_short": "Complete habits on 100 distinct days",
+      "description_long": "One hundred days of showing up. A century of commitment that proves your dedication is no passing phase."
+    },
+    "bicentenarian": {
+      "name": "Bicentenarian",
+      "description_short": "Complete habits on 200 distinct days",
+      "description_long": "Two hundred days of consistent action. You've made habit-building a permanent part of your identity."
+    },
+    "full_year": {
+      "name": "Full Year Champion",
+      "description_short": "Complete habits on 365 distinct days",
+      "description_long": "An entire year of dedication. Every season, every month, you showed up. You are a true habit champion."
+    },
+    "streak_150": {
+      "name": "Five Month Flame",
+      "description_short": "Maintain a 150-day streak on one habit",
+      "description_long": "One hundred fifty consecutive days. Five months of unwavering dedication to a single habit—you burn bright!"
+    },
+    "streak_365": {
+      "name": "Annual Dedication",
+      "description_short": "Maintain a 365-day streak on one habit",
+      "description_long": "A full year without missing a single day. This level of dedication is rare and remarkable. You are a living legend."
+    },
+    "tasks_1000": {
+      "name": "Millennial Achiever",
+      "description_short": "Complete 1000 tasks",
+      "description_long": "One thousand tasks completed! A millennium of micro-achievements that have transformed you into a productivity powerhouse."
+    },
+    "tasks_2500": {
+      "name": "Titan of Tasks",
+      "description_short": "Complete 2500 tasks",
+      "description_long": "Twenty-five hundred tasks conquered! You've achieved titan status—a true force of nature in task completion."
     }
   },
   "inventory": {
@@ -2618,10 +2783,13 @@
     "boost_already_active": "Boost Already Active",
     "boost_already_active_message": "You already have an active boost. Wait for it to expire before activating another.",
     "activation_failed": "Failed to activate boost. Please try again.",
-    "ok": "OK"
+    "ok": "OK",
+    "activate_boost_title": "Activate this boost?",
+    "boost_already_active_warning": "You already have an active boost. Wait for it to expire before activating another."
   },
   "titles": {
     "marathon_legend": "Marathon Legend",
-    "zen_voyager": "Zen Voyager"
+    "zen_voyager": "Zen Voyager",
+    "titan_of_tasks": "Titan of Tasks"
   }
 }

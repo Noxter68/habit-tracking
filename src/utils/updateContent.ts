@@ -23,35 +23,43 @@ const modalTexts_fr: UpdateModalTexts = {
   getStarted: 'Commencer',
 };
 
-// Version 1.1.5 - English
-const updates_1_1_5_en: UpdateItem[] = [
+// Version 1.2.0 - English
+const updates_1_2_0_en: UpdateItem[] = [
   {
-    title: 'Complete Tasks from Dashboard',
-    description: 'You can now check off your habit tasks directly from the home screen! No need to open each habit individually anymore.',
+    title: 'Achievements System',
+    description: 'Unlock achievements by completing challenges! Earn XP, exclusive titles, and XP boosts as rewards. Track your progress and collect them all.',
   },
   {
-    title: 'Refreshed Dashboard Design',
-    description: 'The dashboard header and habit cards have been redesigned for a cleaner, more intuitive experience.',
+    title: 'Inventory & Rewards',
+    description: 'Access your inventory to view unlocked titles and activate XP boosts. Boosts multiply your XP earnings for a limited time!',
   },
   {
-    title: 'Celebration Queue System',
-    description: 'Milestone and level up celebrations now display in order. No more missed celebrations when multiple achievements unlock at once!',
+    title: 'XP Boost Mode',
+    description: 'When a boost is active, enjoy a special visual experience with a purple progress bar and boosted XP notifications.',
+  },
+  {
+    title: 'Bug Fixes & Improvements',
+    description: 'Fixed minor bugs and improved various UI elements for a smoother experience.',
   },
 ];
 
-// Version 1.1.5 - French
-const updates_1_1_5_fr: UpdateItem[] = [
+// Version 1.2.0 - French
+const updates_1_2_0_fr: UpdateItem[] = [
   {
-    title: 'Validez vos tâches depuis le Dashboard',
-    description: 'Vous pouvez maintenant cocher vos tâches directement depuis l\'écran d\'accueil ! Plus besoin d\'ouvrir chaque habitude individuellement.',
+    title: 'Système d\'Accomplissements',
+    description: 'Débloquez des accomplissements en relevant des défis ! Gagnez de l\'XP, des titres exclusifs et des boosts d\'XP en récompense. Suivez votre progression et collectionnez-les tous.',
   },
   {
-    title: 'Nouveau design du Dashboard',
-    description: 'L\'en-tête et les cartes d\'habitudes ont été redessinés pour une expérience plus claire et intuitive.',
+    title: 'Inventaire & Récompenses',
+    description: 'Accédez à votre inventaire pour voir vos titres débloqués et activer vos boosts d\'XP. Les boosts multiplient vos gains d\'XP pendant une durée limitée !',
   },
   {
-    title: 'File de célébrations',
-    description: 'Les célébrations de milestones et de level up s\'affichent maintenant dans l\'ordre. Plus de célébrations manquées !',
+    title: 'Mode Boost XP',
+    description: 'Lorsqu\'un boost est actif, profitez d\'une expérience visuelle spéciale avec une barre de progression violette et des notifications d\'XP boostées.',
+  },
+  {
+    title: 'Corrections & Améliorations',
+    description: 'Correction de bugs mineurs et amélioration de certains éléments de design pour une expérience plus fluide.',
   },
 ];
 
@@ -69,8 +77,8 @@ export const getUpdatesForVersion = (version: string, locale: string = 'en'): Up
 
   // Map des versions disponibles
   const updatesMap: Record<string, UpdateItem[]> = {
-    updates_1_1_5_en: updates_1_1_5_en,
-    updates_1_1_5_fr: updates_1_1_5_fr,
+    updates_1_2_0_en: updates_1_2_0_en,
+    updates_1_2_0_fr: updates_1_2_0_fr,
   };
 
   return updatesMap[key] || updatesMap[`updates_${version.replace(/\./g, '_')}_en`] || [];

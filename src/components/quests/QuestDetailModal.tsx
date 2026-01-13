@@ -74,7 +74,12 @@ export const QuestDetailModal: React.FC<QuestDetailModalProps> = ({
       return (
         <View style={styles.rewardInfo}>
           <Text style={styles.rewardLabel}>{t('quests.reward')}</Text>
-          <View style={styles.rewardBadge}>
+          <View style={styles.rewardBadgeBoost}>
+            <Image
+              source={require('../../../assets/achievement-quests/achievement-boost-xp.png')}
+              style={styles.boostIconLarge}
+              resizeMode="contain"
+            />
             <Text style={styles.rewardText}>
               +{boost.percent}% XP · {boost.durationHours}h
             </Text>
@@ -86,9 +91,9 @@ export const QuestDetailModal: React.FC<QuestDetailModalProps> = ({
     if (quest.reward.kind === 'TITLE') {
       return (
         <View style={styles.rewardInfo}>
-          <Text style={styles.rewardLabel}>Récompense titre</Text>
+          <Text style={styles.rewardLabel}>{t('quests.reward')} titre</Text>
           <View style={styles.rewardBadge}>
-            <Text style={styles.rewardText}>{t(quest.reward.title.key)}</Text>
+            <Text style={styles.rewardText}>{t(`titles.${quest.reward.title.key}`)}</Text>
           </View>
         </View>
       );
@@ -238,12 +243,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#78350f',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
   },
   iconGrayed: {
     backgroundColor: 'transparent',
@@ -358,6 +357,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#fed7aa',
     borderWidth: 2,
     borderColor: '#fdba74',
+  },
+  rewardBadgeBoost: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    backgroundColor: '#fed7aa',
+    borderWidth: 2,
+    borderColor: '#fdba74',
+  },
+  boostIconLarge: {
+    width: 24,
+    height: 24,
   },
   rewardText: {
     fontSize: 14,

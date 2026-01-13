@@ -8,7 +8,8 @@
  *
  * Fonctionnalités principales:
  * - Affichage du boost actif avec timer
- * - Liste des boosts disponibles avec activation
+ * - Grille 3 colonnes des boosts disponibles
+ * - Modal de confirmation avant activation
  * - Liste des titres débloqués
  */
 
@@ -21,13 +22,14 @@ import {
   ActivityIndicator,
   RefreshControl,
   StyleSheet,
-  Alert,
   Image,
+  Modal,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, Zap, Crown } from 'lucide-react-native';
+import { ChevronLeft, Crown, X } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { useInventory } from '@/context/InventoryContext';
@@ -36,47 +38,35 @@ import { InventoryService } from '@/services/InventoryService';
 import { InventoryItem, BoostReward, TitleReward } from '@/types/quest.types';
 import Logger from '@/utils/logger';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const GRID_PADDING = 16;
+const GRID_GAP = 12;
+const ITEM_WIDTH = (SCREEN_WIDTH - GRID_PADDING * 2 - GRID_GAP * 2) / 3;
+
 // ============================================================================
 // COMPOSANTS
 // ============================================================================
 
-interface BoostCardProps {
+interface BoostGridItemProps {
   item: InventoryItem;
-  onActivate: () => void;
-  isActivating: boolean;
+  onPress: () => void;
 }
 
-const BoostCard: React.FC<BoostCardProps> = ({ item, onActivate, isActivating }) => {
-  const { t } = useTranslation();
+const BoostGridItem: React.FC<BoostGridItemProps> = ({ item, onPress }) => {
   const boost = item.item_data as BoostReward;
 
   return (
-    <View style={styles.boostCard}>
-      <View style={styles.boostIcon}>
-        <Zap size={24} color="#f59e0b" />
+    <Pressable style={styles.boostGridItem} onPress={onPress}>
+      <View style={styles.boostGridIconContainer}>
+        <Image
+          source={require('../../assets/achievement-quests/achievement-boost-xp.png')}
+          style={styles.boostGridIcon}
+          resizeMode="contain"
+        />
       </View>
-
-      <View style={styles.boostContent}>
-        <Text style={styles.boostTitle}>
-          {t('inventory.xp_boost')} +{boost.percent}%
-        </Text>
-        <Text style={styles.boostDuration}>
-          {t('inventory.duration')}: {boost.durationHours}h
-        </Text>
-      </View>
-
-      <Pressable
-        style={[styles.activateButton, isActivating && styles.activateButtonDisabled]}
-        onPress={onActivate}
-        disabled={isActivating}
-      >
-        {isActivating ? (
-          <ActivityIndicator size="small" color="#ffffff" />
-        ) : (
-          <Text style={styles.activateButtonText}>{t('inventory.activate')}</Text>
-        )}
-      </Pressable>
-    </View>
+      <Text style={styles.boostGridPercent}>+{boost.boost?.percent || boost.percent}%</Text>
+      <Text style={styles.boostGridDuration}>{boost.boost?.durationHours || boost.durationHours}h</Text>
+    </Pressable>
   );
 };
 
@@ -102,6 +92,105 @@ const TitleCard: React.FC<TitleCardProps> = ({ item }) => {
   );
 };
 
+interface ConfirmModalProps {
+  visible: boolean;
+  item: InventoryItem | null;
+  hasActiveBoost: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+  isActivating: boolean;
+}
+
+const ConfirmModal: React.FC<ConfirmModalProps> = ({
+  visible,
+  item,
+  hasActiveBoost,
+  onConfirm,
+  onCancel,
+  isActivating,
+}) => {
+  const { t } = useTranslation();
+
+  if (!item) return null;
+
+  const boost = item.item_data as BoostReward;
+  const percent = boost.boost?.percent || boost.percent;
+  const duration = boost.boost?.durationHours || boost.durationHours;
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onCancel}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          {/* Close button */}
+          <Pressable style={styles.modalCloseButton} onPress={onCancel}>
+            <X size={24} color="#92400e" />
+          </Pressable>
+
+          {/* Icon */}
+          <View style={styles.modalIconContainer}>
+            <Image
+              source={require('../../assets/achievement-quests/achievement-boost-xp.png')}
+              style={styles.modalIcon}
+              resizeMode="contain"
+            />
+          </View>
+
+          {/* Title */}
+          <Text style={styles.modalTitle}>
+            {t('inventory.activate_boost_title')}
+          </Text>
+
+          {/* Boost details */}
+          <View style={styles.modalBoostDetails}>
+            <Text style={styles.modalBoostPercent}>+{percent}% XP</Text>
+            <Text style={styles.modalBoostDuration}>
+              {t('inventory.duration')}: {duration}h
+            </Text>
+          </View>
+
+          {/* Warning if boost already active */}
+          {hasActiveBoost && (
+            <View style={styles.modalWarning}>
+              <Text style={styles.modalWarningText}>
+                {t('inventory.boost_already_active_warning')}
+              </Text>
+            </View>
+          )}
+
+          {/* Buttons */}
+          <View style={styles.modalButtons}>
+            <Pressable style={styles.modalCancelButton} onPress={onCancel}>
+              <Text style={styles.modalCancelButtonText}>{t('common.cancel')}</Text>
+            </Pressable>
+
+            <Pressable
+              style={[
+                styles.modalConfirmButton,
+                (hasActiveBoost || isActivating) && styles.modalConfirmButtonDisabled,
+              ]}
+              onPress={onConfirm}
+              disabled={hasActiveBoost || isActivating}
+            >
+              {isActivating ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <Text style={styles.modalConfirmButtonText}>
+                  {t('inventory.activate')}
+                </Text>
+              )}
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
 // ============================================================================
 // COMPOSANT PRINCIPAL
 // ============================================================================
@@ -117,7 +206,6 @@ export const InventoryScreen: React.FC = () => {
     loading,
     refreshInventory,
     activateBoost: activateBoostContext,
-    stats,
   } = useInventory();
 
   // ============================================================================
@@ -125,11 +213,25 @@ export const InventoryScreen: React.FC = () => {
   // ============================================================================
 
   const [refreshing, setRefreshing] = useState(false);
-  const [activatingItemId, setActivatingItemId] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isActivating, setIsActivating] = useState(false);
 
   // ============================================================================
   // HANDLERS
   // ============================================================================
+
+  // ============================================================================
+  // EFFECTS
+  // ============================================================================
+
+  // Refresh inventory when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      Logger.info('[InventoryScreen] Screen focused, refreshing inventory');
+      refreshInventory();
+    }, [refreshInventory])
+  );
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -142,46 +244,37 @@ export const InventoryScreen: React.FC = () => {
     }
   }, [refreshInventory]);
 
-  const handleActivateBoost = useCallback(
-    async (item: InventoryItem) => {
-      Logger.info('[InventoryScreen] Activating boost:', item.id);
-      setActivatingItemId(item.id);
+  const handleBoostPress = useCallback((item: InventoryItem) => {
+    setSelectedItem(item);
+    setIsModalVisible(true);
+  }, []);
 
-      try {
-        const result = await activateBoostContext(item.id);
+  const handleModalCancel = useCallback(() => {
+    setIsModalVisible(false);
+    setSelectedItem(null);
+  }, []);
 
-        if (result.success) {
-          Alert.alert(
-            t('inventory.boost_activated'),
-            t('inventory.boost_activated_message'),
-            [{ text: t('common.ok') }]
-          );
-        } else {
-          if (result.error === 'boost_already_active') {
-            Alert.alert(
-              t('inventory.boost_already_active'),
-              t('inventory.boost_already_active_message'),
-              [{ text: t('common.ok') }]
-            );
-          } else {
-            Alert.alert(
-              t('common.error'),
-              result.error || t('inventory.activation_failed'),
-              [{ text: t('common.ok') }]
-            );
-          }
-        }
-      } catch (error) {
-        Logger.error('[InventoryScreen] Error activating boost:', error);
-        Alert.alert(t('common.error'), t('inventory.activation_failed'), [
-          { text: t('common.ok') },
-        ]);
-      } finally {
-        setActivatingItemId(null);
+  const handleModalConfirm = useCallback(async () => {
+    if (!selectedItem || activeBoost) return;
+
+    Logger.info('[InventoryScreen] Activating boost:', selectedItem.id);
+    setIsActivating(true);
+
+    try {
+      const result = await activateBoostContext(selectedItem.id);
+
+      if (result.success) {
+        setIsModalVisible(false);
+        setSelectedItem(null);
+      } else {
+        Logger.error('[InventoryScreen] Failed to activate boost:', result.error);
       }
-    },
-    [activateBoostContext, t]
-  );
+    } catch (error) {
+      Logger.error('[InventoryScreen] Error activating boost:', error);
+    } finally {
+      setIsActivating(false);
+    }
+  }, [selectedItem, activeBoost, activateBoostContext]);
 
   // ============================================================================
   // RENDER
@@ -228,11 +321,15 @@ export const InventoryScreen: React.FC = () => {
               style={styles.activeBoostCard}
             >
               <View style={styles.activeBoostIcon}>
-                <Zap size={32} color="#ffffff" />
+                <Image
+                  source={require('../../assets/achievement-quests/achievement-boost-xp.png')}
+                  style={styles.activeBoostIconImage}
+                  resizeMode="contain"
+                />
               </View>
               <View style={styles.activeBoostContent}>
                 <Text style={styles.activeBoostTitle}>
-                  +{activeBoost.boost_percent}% {t('inventory.habit_xp')}
+                  +{activeBoost.boost_percent}% XP
                 </Text>
                 <Text style={styles.activeBoostTimer}>
                   {t('inventory.expires_in')}:{' '}
@@ -243,21 +340,22 @@ export const InventoryScreen: React.FC = () => {
           </View>
         )}
 
-        {/* Boosts disponibles */}
+        {/* Boosts disponibles - Grille 3 colonnes */}
         {availableBoosts.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('inventory.available_boosts')}</Text>
             <Text style={styles.sectionSubtitle}>
               {availableBoosts.length} {t('inventory.boosts_ready')}
             </Text>
-            {availableBoosts.map((item) => (
-              <BoostCard
-                key={item.id}
-                item={item}
-                onActivate={() => handleActivateBoost(item)}
-                isActivating={activatingItemId === item.id}
-              />
-            ))}
+            <View style={styles.boostGrid}>
+              {availableBoosts.map((item) => (
+                <BoostGridItem
+                  key={item.id}
+                  item={item}
+                  onPress={() => handleBoostPress(item)}
+                />
+              ))}
+            </View>
           </View>
         )}
 
@@ -290,6 +388,16 @@ export const InventoryScreen: React.FC = () => {
         {/* Spacer */}
         <View style={styles.bottomSpacer} />
       </ScrollView>
+
+      {/* Modal de confirmation */}
+      <ConfirmModal
+        visible={isModalVisible}
+        item={selectedItem}
+        hasActiveBoost={activeBoost !== null}
+        onConfirm={handleModalConfirm}
+        onCancel={handleModalCancel}
+        isActivating={isActivating}
+      />
     </SafeAreaView>
   );
 };
@@ -355,6 +463,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     marginBottom: 16,
   },
+  // Active boost card
   activeBoostCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -375,6 +484,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 16,
   },
+  activeBoostIconImage: {
+    width: 40,
+    height: 40,
+  },
   activeBoostContent: {
     flex: 1,
   },
@@ -388,53 +501,47 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255, 255, 255, 0.9)',
   },
-  boostCard: {
+  // Boost grid
+  boostGrid: {
     flexDirection: 'row',
-    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: GRID_GAP,
+  },
+  boostGridItem: {
+    width: ITEM_WIDTH,
     backgroundColor: '#fef3c7',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
+    borderRadius: 16,
+    padding: 12,
+    alignItems: 'center',
     borderWidth: 2,
     borderColor: '#fbbf24',
   },
-  boostIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  boostGridIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: '#fed7aa',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginBottom: 8,
   },
-  boostContent: {
-    flex: 1,
+  boostGridIcon: {
+    width: 40,
+    height: 40,
   },
-  boostTitle: {
+  boostGridPercent: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#92400e',
     marginBottom: 2,
   },
-  boostDuration: {
-    fontSize: 13,
+  boostGridDuration: {
+    fontSize: 12,
+    fontWeight: '600',
     color: '#92400e',
     opacity: 0.7,
   },
-  activateButton: {
-    backgroundColor: '#f59e0b',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-  },
-  activateButtonDisabled: {
-    opacity: 0.6,
-  },
-  activateButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#ffffff',
-  },
+  // Title card
   titleCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -468,6 +575,7 @@ const styles = StyleSheet.create({
     color: '#92400e',
     opacity: 0.7,
   },
+  // Empty state
   emptyState: {
     alignItems: 'center',
     paddingVertical: 80,
@@ -494,5 +602,120 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 40,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalContent: {
+    backgroundColor: '#fffbeb',
+    borderRadius: 24,
+    padding: 24,
+    width: '100%',
+    maxWidth: 340,
+    alignItems: 'center',
+  },
+  modalCloseButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#fed7aa',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    marginTop: 8,
+  },
+  modalIcon: {
+    width: 56,
+    height: 56,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#92400e',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  modalBoostDetails: {
+    backgroundColor: '#fef3c7',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 16,
+  },
+  modalBoostPercent: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#f59e0b',
+    marginBottom: 4,
+  },
+  modalBoostDuration: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#92400e',
+    opacity: 0.7,
+  },
+  modalWarning: {
+    backgroundColor: '#fef2f2',
+    borderRadius: 12,
+    padding: 12,
+    width: '100%',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  modalWarningText: {
+    fontSize: 13,
+    color: '#dc2626',
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  modalCancelButton: {
+    flex: 1,
+    backgroundColor: '#fef3c7',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fbbf24',
+  },
+  modalCancelButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#92400e',
+  },
+  modalConfirmButton: {
+    flex: 1,
+    backgroundColor: '#f59e0b',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  modalConfirmButtonDisabled: {
+    opacity: 0.5,
+  },
+  modalConfirmButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#ffffff',
   },
 });
