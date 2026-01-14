@@ -1,8 +1,8 @@
 /**
  * DashboardHabitCard.tsx
  *
- * Carte d'habitude pour le Dashboard avec tâches inline.
- * Permet de valider les tâches directement sans naviguer vers HabitDetail.
+ * Habit card for the Dashboard with inline tasks.
+ * Allows validating tasks directly without navigating to HabitDetail.
  */
 
 import React, { useMemo, memo, useCallback, useEffect } from 'react';
@@ -20,7 +20,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import tw from '@/lib/tailwind';
 
-import { Habit, HabitType, Task as TaskType } from '@/types';
+import { Habit, HabitType } from '@/types';
 import { tierThemes } from '@/utils/tierTheme';
 import { HabitProgressionService } from '@/services/habitProgressionService';
 import {
@@ -40,21 +40,20 @@ interface Task {
   duration?: string;
 }
 
-// Couleur dorée pour les milestones non réclamés (plus bright comme le fond du milestone)
+// Golden color for unclaimed milestones
 const MILESTONE_GLOW_COLOR = '#f59e0b';
 
 interface DashboardHabitCardProps {
   habit: Habit;
   onToggleTask: (habitId: string, date: string, taskId: string) => void;
   onNavigateToDetails: () => void;
-  index: number;
   pausedTasks?: Record<string, { pausedUntil: string; reason?: string }>;
   unlockedMilestonesCount?: number;
   hasUnclaimedMilestone?: boolean;
 }
 
 /**
- * Retourne le nom traduit de l'habitude
+ * Returns the translated habit name
  */
 const getTranslatedHabitName = (habit: Habit, t: (key: string) => string): string => {
   const translatedName = t(`habitHelpers.categories.${habit.type}.${habit.category}.habitName`);
@@ -68,7 +67,6 @@ const DashboardHabitCardComponent: React.FC<DashboardHabitCardProps> = ({
   habit,
   onToggleTask,
   onNavigateToDetails,
-  index,
   pausedTasks = {},
   unlockedMilestonesCount = 0,
   hasUnclaimedMilestone = false,
@@ -76,12 +74,12 @@ const DashboardHabitCardComponent: React.FC<DashboardHabitCardProps> = ({
   const { t } = useTranslation();
   const today = getTodayString();
 
-  // Animation "breathing" pour le glow shadow de la bordure
+  // Breathing animation for the glow shadow
   const glowOpacity = useSharedValue(0.7);
 
   useEffect(() => {
     if (hasUnclaimedMilestone) {
-      // Effet de respiration sur l'opacité du glow shadow - plus intense
+      // Breathing effect on glow shadow opacity
       glowOpacity.value = withRepeat(
         withSequence(
           withTiming(1, { duration: 1800, easing: Easing.inOut(Easing.ease) }),
@@ -99,7 +97,7 @@ const DashboardHabitCardComponent: React.FC<DashboardHabitCardProps> = ({
     shadowOpacity: glowOpacity.value,
   }));
 
-  // Calcul du tier
+  // Calculate tier
   const { tier } = useMemo(() => {
     return HabitProgressionService.calculateTierFromStreak(habit.currentStreak);
   }, [habit.currentStreak]);
@@ -109,12 +107,12 @@ const DashboardHabitCardComponent: React.FC<DashboardHabitCardProps> = ({
   const todayTasks = habit.dailyTasks?.[today] || { completedTasks: [], allCompleted: false };
   const isWeekly = habit.frequency === 'weekly';
 
-  // Tâches prédéfinies pour enrichir les traductions
+  // Predefined tasks for translation enrichment
   const predefinedTasks = useMemo(() => {
     return getTasksForCategory(habit.category, habit.type as HabitType);
   }, [habit.category, habit.type]);
 
-  // Enrichir une tâche avec les traductions - memoized
+  // Enrich task with translations - memoized
   const getEnrichedTask = useCallback((task: Task): Task => {
     if (task.id.startsWith('custom-task-') || task.id.startsWith('custom_')) {
       return task;
@@ -131,7 +129,7 @@ const DashboardHabitCardComponent: React.FC<DashboardHabitCardProps> = ({
     return task;
   }, [predefinedTasks]);
 
-  // Calcul des tâches complétées
+  // Calculate completed tasks
   const completedTasks = useMemo(() => {
     if (!isWeekly) {
       return todayTasks?.completedTasks?.length || 0;
@@ -139,12 +137,12 @@ const DashboardHabitCardComponent: React.FC<DashboardHabitCardProps> = ({
     return getWeeklyCompletedTasksCount(habit.dailyTasks, habit.createdAt);
   }, [habit, isWeekly, todayTasks]);
 
-  // Check si la semaine est complète pour les weekly habits
+  // Check if week is complete for weekly habits
   const isWeekCompleted = isWeekly
     ? isWeeklyHabitCompletedThisWeek(habit.dailyTasks, habit.createdAt)
     : false;
 
-  // Compte des tâches en pause
+  // Count paused tasks
   const pausedTaskCount = Object.keys(pausedTasks).filter((taskId) =>
     habit.tasks.some((t) => (typeof t === 'string' ? t : t.id) === taskId)
   ).length;
@@ -152,14 +150,14 @@ const DashboardHabitCardComponent: React.FC<DashboardHabitCardProps> = ({
   const activeTasks = totalTasks - pausedTaskCount;
   const taskProgress = activeTasks > 0 ? Math.round((completedTasks / activeTasks) * 100) : 0;
 
-  // Handler pour toggle une tâche
-  // Note: Ne pas memoizer pour éviter les closures stale avec les taskIds
+  // Handler for toggling a task
+  // Note: Don't memoize to avoid stale closures with taskIds
   const handleTaskToggle = (taskId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onToggleTask(habit.id, today, taskId);
   };
 
-  // Handler pour navigation - memoized
+  // Handler for navigation - memoized
   const handleNavigate = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onNavigateToDetails();
@@ -167,7 +165,7 @@ const DashboardHabitCardComponent: React.FC<DashboardHabitCardProps> = ({
 
   return (
     <View>
-      {/* Glow doré "breathing" pour unclaimed milestone - très intense pour fond blanc */}
+      {/* Golden breathing glow for unclaimed milestone */}
       {hasUnclaimedMilestone && (
         <Animated.View
           style={[
@@ -178,12 +176,12 @@ const DashboardHabitCardComponent: React.FC<DashboardHabitCardProps> = ({
               right: -6,
               bottom: -6,
               borderRadius: 22,
-              // Glow principal via shadow - très intense
+              // Main glow via shadow
               shadowColor: MILESTONE_GLOW_COLOR,
               shadowOffset: { width: 0, height: 0 },
               shadowRadius: 28,
               elevation: 16,
-              // Fond semi-transparent plus bright pour fond blanc
+              // Semi-transparent background
               backgroundColor: 'rgba(245, 158, 11, 0.18)',
             },
             animatedGlowStyle,
@@ -238,31 +236,26 @@ const DashboardHabitCardComponent: React.FC<DashboardHabitCardProps> = ({
                 onNavigate={handleNavigate}
               />
 
-              {/* Progress Bar with Texture */}
+              {/* Progress Bar */}
               <View style={tw`mb-3`}>
                 <View
-                  style={[
-                    tw`h-3 rounded-full overflow-hidden`,
-                    {
-                      backgroundColor: 'rgba(0, 0, 0, 0.25)',
-                      borderWidth: 1.5,
-                      borderColor: 'rgba(255, 255, 255, 0.15)',
-                    },
-                  ]}
+                  style={{
+                    height: 12,
+                    borderRadius: 6,
+                    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+                  }}
                 >
                   {taskProgress > 0 && (
                     <View
-                      style={[
-                        tw`h-full rounded-full`,
-                        {
-                          width: `${Math.max(taskProgress, 8)}%`,
-                          backgroundColor: taskProgress === 100 ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.85)',
-                          shadowColor: '#fff',
-                          shadowOffset: { width: 0, height: 0 },
-                          shadowOpacity: taskProgress === 100 ? 0.9 : 0.5,
-                          shadowRadius: 6,
-                        },
-                      ]}
+                      style={{
+                        height: '100%',
+                        width: `${Math.max(taskProgress, 10)}%`,
+                        borderRadius: 6,
+                        backgroundColor: '#ffffff',
+                        // Subtle border for depth effect
+                        borderBottomWidth: 2,
+                        borderBottomColor: 'rgba(0, 0, 0, 0.1)',
+                      }}
                     />
                   )}
                 </View>
@@ -295,9 +288,9 @@ const DashboardHabitCardComponent: React.FC<DashboardHabitCardProps> = ({
                       task={enrichedTask}
                       isCompleted={isCompleted}
                       isPaused={isPaused}
-                      pausedUntil={pausedTasks[taskId]?.pausedUntil}
                       onPress={() => handleTaskToggle(taskId)}
                       tierAccent={theme.accent}
+                      tierName={tier.name}
                       isWeekLocked={isWeekCompleted}
                     />
                   );
@@ -326,7 +319,7 @@ const DashboardHabitCardComponent: React.FC<DashboardHabitCardProps> = ({
   );
 };
 
-// Comparateur shallow pour pausedTasks (évite JSON.stringify coûteux)
+// Shallow comparator for pausedTasks (avoids expensive JSON.stringify)
 const arePausedTasksEqual = (
   prev: Record<string, { pausedUntil: string; reason?: string }>,
   next: Record<string, { pausedUntil: string; reason?: string }>
@@ -337,7 +330,7 @@ const arePausedTasksEqual = (
   return prevKeys.every(key => key in next);
 };
 
-// Comparateur pour completedTasks - compare les IDs, pas juste la longueur
+// Comparator for completedTasks - compares IDs, not just length
 const areCompletedTasksEqual = (
   prev: string[] | undefined,
   next: string[] | undefined
@@ -345,7 +338,7 @@ const areCompletedTasksEqual = (
   if (!prev && !next) return true;
   if (!prev || !next) return false;
   if (prev.length !== next.length) return false;
-  // Compare les IDs (l'ordre peut être différent donc on utilise Set)
+  // Compare IDs (order may differ so we use Set)
   const prevSet = new Set(prev);
   const nextSet = new Set(next);
   if (prevSet.size !== nextSet.size) return false;
@@ -355,13 +348,13 @@ const areCompletedTasksEqual = (
   return true;
 };
 
-// Memoize pour éviter les re-renders pendant le scroll
+// Memoize to avoid re-renders during scroll
 export const DashboardHabitCard = memo(DashboardHabitCardComponent, (prev, next) => {
-  // Re-render seulement si les données importantes changent
+  // Re-render only if important data changes
   const prevTodayTasks = prev.habit.dailyTasks?.[getTodayString()];
   const nextTodayTasks = next.habit.dailyTasks?.[getTodayString()];
 
-  // Comparer les tasks (IDs uniquement pour performance)
+  // Compare tasks (IDs only for performance)
   const prevTaskIds = prev.habit.tasks?.map((t) => (typeof t === 'string' ? t : t.id)).join(',') || '';
   const nextTaskIds = next.habit.tasks?.map((t) => (typeof t === 'string' ? t : t.id)).join(',') || '';
 

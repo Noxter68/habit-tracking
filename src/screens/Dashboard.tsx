@@ -141,6 +141,9 @@ const Dashboard: React.FC = () => {
   const [debugForceUnclaimedMilestones, setDebugForceUnclaimedMilestones] = useState(false);
   const [debugFirstHabitMilestone, setDebugFirstHabitMilestone] = useState(false);
 
+  // State: Scroll detection for pausing animations (only when scrolled past 80px)
+  const [isScrolledPastHeader, setIsScrolledPastHeader] = useState(false);
+
   // State: XP Popup
   const [xpPopup, setXpPopup] = useState<{
     visible: boolean;
@@ -489,6 +492,18 @@ const Dashboard: React.FC = () => {
     await refreshStats(true);
   }, [refreshStats]);
 
+  // Handle scroll events to pause animations when scrolled past header threshold
+  const handleScroll = useCallback((event: { nativeEvent: { contentOffset: { y: number } } }) => {
+    const scrollY = event.nativeEvent.contentOffset.y;
+    const threshold = 80;
+
+    // Only update state if it changed to avoid unnecessary re-renders
+    setIsScrolledPastHeader((prev) => {
+      const shouldPause = scrollY > threshold;
+      return prev !== shouldPause ? shouldPause : prev;
+    });
+  }, []);
+
   const realTimeTasksStats = useMemo(() => {
     const today = getTodayString();
     let completed = 0;
@@ -689,6 +704,8 @@ const Dashboard: React.FC = () => {
           refreshControl={<RefreshControl refreshing={false} onRefresh={handleManualRefresh} tintColor="#3b82f6" />}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={tw`pb-28`}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
         >
           {/* Debug: Level Up Test */}
           <DebugButton onPress={handleTestLevelUp} label={`Test Level ${testLevel} → ${testLevel + 1}`} icon={Zap} variant="secondary" />
@@ -750,6 +767,7 @@ const Dashboard: React.FC = () => {
             onStatsRefresh={handleStatsRefresh}
             totalXP={stats?.totalXP ?? 0}
             habits={activeHabits}
+            isScrolling={isScrolledPastHeader}
             onXPCollected={(amount, taskName) => {
               // Afficher la popup XP pour le daily challenge
               setXpPopup({

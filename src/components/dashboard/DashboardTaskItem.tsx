@@ -1,23 +1,29 @@
 /**
  * DashboardTaskItem.tsx
  *
- * Composant de tâche compact pour le Dashboard.
- * Réutilise les animations 3D style Duolingo de TaskCheckItem.
+ * Compact task component for the Dashboard.
+ * Duolingo-style design with 3D effect via shadow.
  */
 
-import React, { useRef, memo } from 'react';
+import React, { memo, useRef, useEffect } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import Animated, {
   useAnimatedStyle,
-  withSpring,
-  useSharedValue,
   withTiming,
+  useSharedValue,
+  interpolateColor,
+  useDerivedValue,
 } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import LottieView from 'lottie-react-native';
-import { Circle, PauseCircle, CheckCircle2 } from 'lucide-react-native';
+import { PauseCircle } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 import tw from '@/lib/tailwind';
+import { tierThemes } from '@/utils/tierTheme';
+import { HabitTier } from '@/services/habitProgressionService';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
 interface Task {
   id: string;
@@ -30,11 +36,12 @@ interface DashboardTaskItemProps {
   task: Task;
   isCompleted: boolean;
   isPaused?: boolean;
-  pausedUntil?: string;
   onPress: () => void;
   disabled?: boolean;
   tierAccent: string;
+  tierName?: HabitTier;
   isWeekLocked?: boolean;
+  allowUncheck?: boolean;
 }
 
 const DashboardTaskItemComponent: React.FC<DashboardTaskItemProps> = ({
@@ -44,152 +51,188 @@ const DashboardTaskItemComponent: React.FC<DashboardTaskItemProps> = ({
   onPress,
   disabled = false,
   tierAccent,
+  tierName = 'Crystal',
   isWeekLocked = false,
+  allowUncheck = false,
 }) => {
   const showAsCompleted = isCompleted || isWeekLocked;
+  const theme = tierThemes[tierName];
 
   // Press animation
-  const pressY = useSharedValue(0);
-  const scale = useSharedValue(1);
+  const translateY = useSharedValue(0);
 
-  // Checkmark animation
-  const checkScale = useSharedValue(showAsCompleted ? 1 : 0);
-  const lottieRef = useRef<LottieView>(null);
-  const prevCompleted = React.useRef(showAsCompleted);
-  const [showLottie, setShowLottie] = React.useState(false);
+  // Completion animation (0 = not completed, 1 = completed)
+  const completionProgress = useDerivedValue(() => {
+    return showAsCompleted ? 1 : 0;
+  }, [showAsCompleted]);
 
-  // Animate checkmark on completion change
-  React.useEffect(() => {
-    if (prevCompleted.current !== showAsCompleted) {
-      checkScale.value = withSpring(showAsCompleted ? 1 : 0, {
-        damping: 12,
-        stiffness: 400,
-      });
+  // Checkmark Lottie animation
+  const checkmarkRef = useRef<LottieView>(null);
+  const wasCompletedOnMount = useRef(showAsCompleted);
+  const prevCompleted = useRef(showAsCompleted);
 
-      if (showAsCompleted) {
-        setShowLottie(true);
-        lottieRef.current?.reset();
-        lottieRef.current?.play();
-      } else {
-        setShowLottie(false);
-      }
-
-      prevCompleted.current = showAsCompleted;
+  useEffect(() => {
+    if (prevCompleted.current !== showAsCompleted && showAsCompleted) {
+      // Play animation when transitioning from uncompleted to completed
+      checkmarkRef.current?.reset();
+      checkmarkRef.current?.play();
     }
+    prevCompleted.current = showAsCompleted;
   }, [showAsCompleted]);
 
   const handlePressIn = () => {
-    if (isPaused || isCompleted || disabled || isWeekLocked) return;
-    pressY.value = withSpring(2, { damping: 20, stiffness: 600, mass: 0.3 });
-    scale.value = withSpring(0.98, { damping: 20, stiffness: 600, mass: 0.3 });
+    if (isPaused || disabled) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    translateY.value = withTiming(4, { duration: 50 });
   };
 
   const handlePressOut = () => {
-    if (isPaused || isCompleted || disabled || isWeekLocked) return;
-    pressY.value = withSpring(0, { damping: 15, stiffness: 400, mass: 0.5 });
-    scale.value = withSpring(1, { damping: 15, stiffness: 400, mass: 0.5 });
+    if (isPaused || disabled) return;
+    translateY.value = withTiming(0, { duration: 80 });
   };
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: pressY.value }, { scale: scale.value }],
+  const animatedContainerStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+    shadowOffset: { width: 0, height: 4 - translateY.value },
   }));
 
-  const checkmarkStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: checkScale.value }],
-    opacity: checkScale.value,
+  // Animated text color
+  const animatedTextStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(
+      completionProgress.value,
+      [0, 1],
+      [tierAccent, '#ffffff']
+    ),
+  }));
+
+  // Animated background opacity (white fades out, gradient fades in)
+  const animatedWhiteBgStyle = useAnimatedStyle(() => ({
+    opacity: 1 - completionProgress.value,
+  }));
+
+  const animatedGradientStyle = useAnimatedStyle(() => ({
+    opacity: completionProgress.value,
   }));
 
   return (
-    <AnimatedPressable
-      onPress={onPress}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      disabled={showAsCompleted || isPaused || disabled}
-      style={[
-        tw`flex-row items-center px-3 py-2.5 rounded-xl mb-1.5`,
-        animatedStyle,
-        {
-          backgroundColor: showAsCompleted
-            ? 'rgba(255, 255, 255, 0.95)'
-            : isPaused
-              ? 'rgba(255, 255, 255, 0.6)'
-              : 'rgba(255, 255, 255, 0.85)',
-          borderBottomWidth: showAsCompleted || isPaused ? 2 : 3,
-          borderBottomColor: showAsCompleted
-            ? 'rgba(200, 200, 200, 0.4)'
-            : isPaused
-              ? 'rgba(168, 162, 158, 0.3)'
-              : tierAccent + '40',
-          borderLeftWidth: 1,
-          borderRightWidth: 1,
-          borderTopWidth: 1,
-          borderLeftColor: 'rgba(255, 255, 255, 0.4)',
-          borderRightColor: 'rgba(255, 255, 255, 0.4)',
-          borderTopColor: 'rgba(255, 255, 255, 0.4)',
-          shadowColor: showAsCompleted || isPaused ? '#000' : tierAccent,
-          shadowOffset: { width: 0, height: 3 },
-          shadowOpacity: 0.15,
-          shadowRadius: 6,
-          elevation: showAsCompleted || isPaused ? 1 : 3,
-        },
-      ]}
-    >
-      {/* Checkbox */}
-      <View style={tw`mr-2.5 w-5 h-5 items-center justify-center`}>
-        {showAsCompleted ? (
-          <>
-            {/* Animation Lottie temporaire lors du clic */}
-            {showLottie && (
-              <Animated.View style={[tw`absolute items-center justify-center`, checkmarkStyle]}>
-                <LottieView
-                  ref={lottieRef}
-                  source={require('../../../assets/animations/blue-checkmark.json')}
-                  autoPlay
-                  loop={false}
-                  speed={1.2}
-                  style={{ width: 36, height: 36 }}
-                  resizeMode="contain"
-                  colorFilters={[
-                    { keypath: 'Shape Layer 1.Ellipse 1.Fill 1', color: tierAccent },
-                    { keypath: 'trait.Shape Layer 1.Shape 1.Stroke 1', color: tierAccent },
-                  ]}
-                />
-              </Animated.View>
+    <View style={tw`mb-2.5`}>
+      <AnimatedPressable
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        disabled={isPaused || disabled || (showAsCompleted && !allowUncheck)}
+        style={[
+          tw`rounded-2xl`,
+          {
+            shadowColor: '#000',
+            shadowOpacity: 0.15,
+            shadowRadius: 0,
+            elevation: 4,
+          },
+          animatedContainerStyle,
+        ]}
+      >
+        <View style={tw`rounded-2xl overflow-hidden`}>
+          {/* White background (visible when uncompleted) */}
+          <Animated.View
+            style={[
+              {
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: isPaused ? '#f5f5f4' : '#ffffff',
+                borderRadius: 16,
+              },
+              animatedWhiteBgStyle,
+            ]}
+          />
+
+          {/* Gradient (visible when completed) */}
+          <AnimatedLinearGradient
+            colors={[theme.gradient[0], theme.gradient[1]]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={[
+              {
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                borderRadius: 16,
+              },
+              animatedGradientStyle,
+            ]}
+          />
+
+          {/* Content */}
+          <View style={tw`flex-row items-center justify-between px-4 py-3`}>
+            {/* Checkmark or Pause icon */}
+            {isPaused ? (
+              <View style={tw`mr-2.5`}>
+                <PauseCircle size={18} color="#a8a29e" strokeWidth={2} />
+              </View>
+            ) : (
+              <View
+                style={[
+                  tw`w-7 h-7 mr-3 items-center justify-center rounded-full`,
+                  {
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.15,
+                    shadowRadius: 2,
+                    elevation: 3,
+                  },
+                ]}
+              >
+                {showAsCompleted ? (
+                  <LottieView
+                    ref={checkmarkRef}
+                    source={require('../../../assets/animations/blue-checkmark.json')}
+                    autoPlay={!wasCompletedOnMount.current}
+                    loop={false}
+                    progress={wasCompletedOnMount.current ? 1 : 0}
+                    style={{ width: 34, height: 34 }}
+                    colorFilters={[
+                      { keypath: 'Shape Layer 1', color: tierAccent },
+                      { keypath: 'trait', color: tierAccent },
+                      { keypath: 'trait 2', color: tierAccent },
+                    ]}
+                  />
+                ) : (
+                  <View
+                    style={[
+                      tw`w-5 h-5 rounded-full`,
+                      { backgroundColor: '#ffffff', borderWidth: 2, borderColor: tierAccent },
+                    ]}
+                  />
+                )}
+              </View>
             )}
-            {/* Checkmark statique (toujours visible, même style pour daily et weekly) */}
-            <CheckCircle2 size={20} color={tierAccent} strokeWidth={2.5} fill={tierAccent + '30'} />
-          </>
-        ) : isPaused ? (
-          <PauseCircle size={20} color="#a8a29e" strokeWidth={2} />
-        ) : (
-          <Circle size={20} color={tierAccent + '80'} strokeWidth={2} />
-        )}
-      </View>
 
-      {/* Task Name */}
-      <View style={tw`flex-1 min-w-0`}>
-        <Text
-          style={[
-            tw`text-[13px] font-semibold`,
-            isPaused
-              ? tw`text-stone-400`
-              : showAsCompleted
-                ? { color: tierAccent }
-                : tw`text-stone-800`,
-          ]}
-          numberOfLines={1}
-        >
-          {task.name}
-        </Text>
-      </View>
+            <View style={tw`flex-1 min-w-0`}>
+              <Animated.Text
+                style={[
+                  tw`text-sm font-semibold`,
+                  isPaused ? tw`text-stone-400` : animatedTextStyle,
+                ]}
+                numberOfLines={1}
+              >
+                {task.name}
+              </Animated.Text>
+            </View>
 
-      {/* Duration Badge */}
-      {!isPaused && task.duration && !showAsCompleted && (
-        <View style={[tw`px-2 py-0.5 rounded-md ml-2`, { backgroundColor: tierAccent + '20' }]}>
-          <Text style={[tw`text-[10px] font-bold`, { color: tierAccent }]}>{task.duration}</Text>
+            {!isPaused && task.duration && !showAsCompleted && (
+              <View style={[tw`px-2.5 py-1 rounded-xl ml-3`, { backgroundColor: tierAccent + '18' }]}>
+                <Text style={[tw`text-xs font-bold`, { color: tierAccent }]}>{task.duration}</Text>
+              </View>
+            )}
+          </View>
         </View>
-      )}
-    </AnimatedPressable>
+      </AnimatedPressable>
+    </View>
   );
 };
 
@@ -199,7 +242,9 @@ export const DashboardTaskItem = memo(DashboardTaskItemComponent, (prev, next) =
     prev.isCompleted === next.isCompleted &&
     prev.isPaused === next.isPaused &&
     prev.tierAccent === next.tierAccent &&
-    prev.isWeekLocked === next.isWeekLocked
+    prev.tierName === next.tierName &&
+    prev.isWeekLocked === next.isWeekLocked &&
+    prev.allowUncheck === next.allowUncheck
   );
 });
 

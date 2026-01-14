@@ -45,23 +45,29 @@ interface BubbleProps {
   delay: number;
   startX: number;
   size: number;
+  isPaused?: boolean;
 }
 
-const AnimatedBubble: React.FC<BubbleProps> = ({ delay, startX, size }) => {
+const AnimatedBubble: React.FC<BubbleProps> = ({ delay, startX, size, isPaused = false }) => {
   const progress = useSharedValue(0);
 
   useEffect(() => {
-    // Single animation value controls both position and opacity
-    // Much more efficient than two separate animations
-    progress.value = withDelay(
-      delay,
-      withRepeat(
-        withTiming(1, { duration: 5000, easing: Easing.linear }),
-        -1,
-        false
-      )
-    );
-  }, [delay]);
+    if (isPaused) {
+      // Stop animation by setting progress to current value (freezes in place)
+      progress.value = progress.value;
+    } else {
+      // Restart animation from the beginning with initial delay
+      progress.value = 0;
+      progress.value = withDelay(
+        delay,
+        withRepeat(
+          withTiming(1, { duration: 5000, easing: Easing.linear }),
+          -1,
+          false
+        )
+      );
+    }
+  }, [isPaused, delay]);
 
   const animatedStyle = useAnimatedStyle(() => {
     'worklet';
@@ -106,7 +112,11 @@ const AnimatedBubble: React.FC<BubbleProps> = ({ delay, startX, size }) => {
 // Stats bar has paddingVertical: 8, so total height ~ 36-40px
 const BOOST_SIZE = 38;
 
-const BoostBadge: React.FC = () => {
+interface BoostBadgeProps {
+  isPaused?: boolean;
+}
+
+const BoostBadge: React.FC<BoostBadgeProps> = ({ isPaused = false }) => {
   return (
     <View style={boostStyles.container}>
       <LinearGradient
@@ -117,10 +127,10 @@ const BoostBadge: React.FC = () => {
       >
         {/* Bubbles */}
         <View style={boostStyles.bubblesContainer}>
-          <AnimatedBubble delay={0} startX={5} size={4} />
-          <AnimatedBubble delay={400} startX={15} size={3} />
-          <AnimatedBubble delay={800} startX={25} size={4} />
-          <AnimatedBubble delay={1200} startX={10} size={3} />
+          <AnimatedBubble delay={0} startX={5} size={4} isPaused={isPaused} />
+          <AnimatedBubble delay={400} startX={15} size={3} isPaused={isPaused} />
+          <AnimatedBubble delay={800} startX={25} size={4} isPaused={isPaused} />
+          <AnimatedBubble delay={1200} startX={10} size={3} isPaused={isPaused} />
         </View>
 
         {/* Icon only */}
@@ -179,12 +189,14 @@ interface BoostedProgressBarProps {
   progress: number;
   displayXP: number;
   xpForNextLevel: number;
+  isPaused?: boolean;
 }
 
 const BoostedProgressBar: React.FC<BoostedProgressBarProps> = ({
   progress,
   displayXP,
   xpForNextLevel,
+  isPaused = false,
 }) => {
   return (
     <View style={progressStyles.outerContainer}>
@@ -196,9 +208,9 @@ const BoostedProgressBar: React.FC<BoostedProgressBarProps> = ({
       >
         {/* Background bubbles for container - reduced for performance */}
         <View style={progressStyles.containerBubbles}>
-          <AnimatedBubble delay={0} startX={50} size={5} />
-          <AnimatedBubble delay={700} startX={150} size={4} />
-          <AnimatedBubble delay={1400} startX={250} size={5} />
+          <AnimatedBubble delay={0} startX={50} size={5} isPaused={isPaused} />
+          <AnimatedBubble delay={700} startX={150} size={4} isPaused={isPaused} />
+          <AnimatedBubble delay={1400} startX={250} size={5} isPaused={isPaused} />
         </View>
 
         {/* Progress bar track */}
@@ -318,6 +330,7 @@ interface DashboardHeaderProps {
   onStatsRefresh?: () => void;
   totalXP?: number;
   habits: Habit[];
+  isScrolling?: boolean;
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -331,6 +344,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onStatsRefresh,
   totalXP = 0,
   habits,
+  isScrolling = false,
 }) => {
   const navigation = useNavigation();
   const { user, username } = useAuth();
@@ -592,7 +606,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 </View>
 
                 {/* Boost Badge - Separate element with gradient */}
-                {hasActiveBoost && <BoostBadge />}
+                {hasActiveBoost && <BoostBadge isPaused={isScrolling} />}
               </View>
 
               {/* Row 2: Greeting + Title */}
@@ -659,6 +673,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 progress={displayProgress}
                 displayXP={displayXP}
                 xpForNextLevel={xpForNextLevel}
+                isPaused={isScrolling}
               />
             ) : (
               <View

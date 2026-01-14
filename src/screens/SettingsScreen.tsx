@@ -27,7 +27,7 @@ import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import { ChevronRight, Pencil, GraduationCap, Gift } from 'lucide-react-native';
+import { ChevronRight, Pencil, GraduationCap } from 'lucide-react-native';
 import tw from 'twrnc';
 
 import EditUsernameModal from '@/components/settings/EditUserModal';
@@ -91,7 +91,9 @@ type IconName =
   | 'bug'
   | 'diagnostic'
   | 'create-outline'
-  | 'star';
+  | 'star'
+  | 'shopping-bag'
+  | 'megaphone';
 
 interface SettingsSectionProps {
   title: string;
@@ -197,6 +199,19 @@ const Icon: React.FC<IconProps> = ({ name, size = 22, color = '#52525B' }) => {
     star: (
       <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
         <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" fill={`${color}20`} />
+      </Svg>
+    ),
+    'shopping-bag': (
+      <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <Path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        <Path d="M3 6h18" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        <Path d="M16 10a4 4 0 01-8 0" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      </Svg>
+    ),
+    megaphone: (
+      <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <Path d="M3 11l18-5v12L3 13v-2z" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        <Path d="M11.6 16.8a3 3 0 11-5.8-1.6" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
       </Svg>
     ),
   };
@@ -718,7 +733,7 @@ const SettingsScreen: React.FC = () => {
             {/* Section Abonnement */}
             <SettingsSection title={t('settings.subscription')} delay={200}>
               <SettingsItem
-                icon={isPremium ? 'credit-card' : 'sparkles'}
+                icon={isPremium ? 'credit-card' : 'shopping-bag'}
                 title={isPremium ? t('settings.managePremium') : t('settings.upgradePremium')}
                 subtitle={isPremium ? t('settings.managePremiumSubtitle') : t('settings.upgradePremiumSubtitle')}
                 onPress={handleManageSubscription}
@@ -745,7 +760,7 @@ const SettingsScreen: React.FC = () => {
                 />
               )}
               <SettingsItem
-                icon="sparkles"
+                icon="shopping-bag"
                 title={t('settings.buyStreakSavers')}
                 subtitle={t('settings.buyStreakSaversSubtitle')}
                 onPress={() => {
@@ -973,8 +988,8 @@ const SettingsScreen: React.FC = () => {
                 style={tw`bg-white/90 rounded-2xl px-4 py-4 flex-row items-center justify-between shadow-md`}
               >
                 <View style={tw`flex-row items-center gap-3`}>
-                  <View style={tw`w-10 h-10 rounded-xl bg-indigo-100 items-center justify-center`}>
-                    <Gift size={20} color="#6366F1" strokeWidth={2.5} />
+                  <View style={tw`w-10 h-10 rounded-xl bg-zinc-100 items-center justify-center`}>
+                    <Icon name="megaphone" size={20} color="#52525B" />
                   </View>
                   <Text style={tw`text-base font-semibold text-zinc-800`}>{t('settings.whatsNew')}</Text>
                 </View>
