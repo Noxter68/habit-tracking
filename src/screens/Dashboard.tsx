@@ -198,7 +198,8 @@ const Dashboard: React.FC = () => {
       }
 
       if (holiday.appliesToAll) {
-        setFrozenHabits(new Set(habits.map((h) => h.id)));
+        // Use ref to avoid recreating callback when habits change
+        setFrozenHabits(new Set(habitsRef.current.map((h) => h.id)));
         setFrozenTasksMap(new Map());
         return;
       }
@@ -238,7 +239,7 @@ const Dashboard: React.FC = () => {
       setIsInitialLoad(false);
       isFetchingHolidayRef.current = false;
     }
-  }, [user?.id, habits]);
+  }, [user?.id]);
 
   const handleEndHoliday = async () => {
     if (!activeHoliday || !user) return;
