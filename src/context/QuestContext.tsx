@@ -112,6 +112,8 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({
   const previousQuestsRef = useRef<QuestWithProgress[]>([]);
   // Track if we have loaded data at least once (for cache behavior)
   const hasLoadedOnce = useRef(false);
+  // Track the current user to detect user changes
+  const currentUserIdRef = useRef<string | null>(null);
 
   /**
    * Rafraîchit les quêtes et leurs progressions
@@ -240,8 +242,16 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({
 
   /**
    * Charge les quêtes au mount et quand l'utilisateur change
+   * Reset les refs quand l'utilisateur change pour éviter de montrer
+   * les toasts des quêtes déjà complétées
    */
   useEffect(() => {
+    // Detect user change and reset refs to avoid showing old completion toasts
+    if (user?.id !== currentUserIdRef.current) {
+      previousQuestsRef.current = [];
+      hasLoadedOnce.current = false;
+      currentUserIdRef.current = user?.id ?? null;
+    }
     refreshQuests();
   }, [user?.id]);
 

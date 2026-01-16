@@ -40,6 +40,7 @@ import Logger from '@/utils/logger';
 // ============================================================================
 import { useStats } from './StatsContext';
 import { useCelebrationQueue } from './CelebrationQueueContext';
+import { useAuth } from './AuthContext';
 
 // ============================================================================
 // TYPES ET INTERFACES
@@ -108,6 +109,8 @@ export const LevelUpProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const hasShownForLevel = useRef<Set<number>>(new Set());
   // Track if we've initialized the level (to avoid false positives on first load)
   const isInitialized = useRef(false);
+  // Track the current user to detect user changes
+  const currentUserIdRef = useRef<string | null>(null);
 
   // ==========================================================================
   // CONTEXT HOOKS
@@ -115,6 +118,7 @@ export const LevelUpProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const { stats } = useStats();
   const { queueLevelUp } = useCelebrationQueue();
+  const { user } = useAuth();
 
   // ==========================================================================
   // CALLBACKS
@@ -215,7 +219,21 @@ export const LevelUpProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [stats?.level, checkForLevelUp]);
 
   /**
-   * Reset les niveaux suivis quand l'utilisateur change
+   * Reset les refs quand l'utilisateur change pour éviter de montrer
+   * les toasts des level-ups déjà vus
+   */
+  useEffect(() => {
+    if (user?.id !== currentUserIdRef.current) {
+      previousLevelRef.current = null;
+      hasShownForLevel.current.clear();
+      isInitialized.current = false;
+      currentUserIdRef.current = user?.id ?? null;
+      Logger.debug('LevelUpContext: User changed, reset all refs');
+    }
+  }, [user?.id]);
+
+  /**
+   * Reset les niveaux suivis quand les stats sont nulles (logout)
    */
   useEffect(() => {
     if (!stats) {
