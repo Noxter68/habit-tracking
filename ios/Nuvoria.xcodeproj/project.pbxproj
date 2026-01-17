@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 70;
+	objectVersion = 56;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -71,7 +71,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		392731592F1B59280033C23B /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		392731592F1B59280033C23B /* Exceptions for "NuvoriaWidget" folder in "NuvoriaWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -81,7 +81,18 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		392731472F1B59270033C23B /* NuvoriaWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (392731592F1B59280033C23B /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = NuvoriaWidget; sourceTree = "<group>"; };
+		392731472F1B59270033C23B /* NuvoriaWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				392731592F1B59280033C23B /* Exceptions for "NuvoriaWidget" folder in "NuvoriaWidgetExtension" target */,
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = NuvoriaWidget;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -241,8 +252,6 @@
 				392731472F1B59270033C23B /* NuvoriaWidget */,
 			);
 			name = NuvoriaWidgetExtension;
-			packageProductDependencies = (
-			);
 			productName = NuvoriaWidgetExtension;
 			productReference = 392731422F1B59270033C23B /* NuvoriaWidgetExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -633,6 +642,7 @@
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = com.davidplanchon.nuvoria.NuvoriaWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -681,6 +691,7 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
 				MTL_FAST_MATH = YES;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = com.davidplanchon.nuvoria.NuvoriaWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
