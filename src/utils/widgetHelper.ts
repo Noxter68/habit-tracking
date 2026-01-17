@@ -1,19 +1,13 @@
-import { createMMKV } from 'react-native-mmkv';
 import { Platform } from 'react-native';
+import SharedGroupPreferences from 'react-native-shared-group-preferences';
 import { Habit } from '../types';
 import { getTodayString } from './dateHelpers';
 
 // ============================================================================
-// MMKV STORAGE - Shared avec le widget iOS via App Groups
+// CONFIGURATION
 // ============================================================================
 
-// Pour iOS, on utilise l'App Group pour partager les données avec le widget
-// Le path doit correspondre à l'App Group configuré dans Xcode
-export const widgetStorage = createMMKV({
-  id: 'widget-storage',
-  path: Platform.OS === 'ios' ? 'group.com.davidplanchon.nuvoria' : undefined,
-});
-
+const APP_GROUP_ID = 'group.com.davidplanchon.nuvoria';
 const WIDGET_DATA_KEY = 'widgetData';
 
 // ============================================================================
@@ -74,12 +68,6 @@ const isHabitScheduledForToday = (habit: Habit): boolean => {
 
 /**
  * Prépare les données du widget à partir de l'état actuel
- *
- * @param habits - Liste des habitudes de l'utilisateur
- * @param totalXP - XP total de l'utilisateur
- * @param userName - Nom de l'utilisateur
- * @param globalStreak - Streak global (optionnel, sera calculé si non fourni)
- * @returns Données formatées pour le widget
  */
 export const prepareWidgetData = (
   habits: Habit[],
@@ -128,21 +116,20 @@ export const prepareWidgetData = (
 // ============================================================================
 
 /**
- * Met à jour les données du widget iOS
- * Envoie les données via MMKV partagé avec App Groups
- *
- * @param data - Données à envoyer au widget
+ * Met à jour les données du widget iOS via UserDefaults partagé
  */
-export const updateWidgetData = (data: WidgetData): void => {
+export const updateWidgetData = async (data: WidgetData): Promise<void> => {
   if (Platform.OS !== 'ios') {
-    return; // Widget uniquement sur iOS pour l'instant
+    return;
   }
 
   try {
-    widgetStorage.set(WIDGET_DATA_KEY, JSON.stringify(data));
-
-    // Force le reload du widget
-    widgetStorage.set('forceReload', Date.now().toString());
+    await SharedGroupPreferences.setItem(
+      WIDGET_DATA_KEY,
+      JSON.stringify(data),
+      APP_GROUP_ID
+    );
+    console.log('[WidgetHelper] Widget data updated successfully');
   } catch (error) {
     console.error('[WidgetHelper] Erreur mise à jour widget:', error);
   }
@@ -150,34 +137,27 @@ export const updateWidgetData = (data: WidgetData): void => {
 
 /**
  * Fonction combinée pour préparer et envoyer les données au widget
- * C'est la fonction principale à appeler depuis les contextes
- *
- * @param habits - Liste des habitudes
- * @param totalXP - XP total
- * @param userName - Nom d'utilisateur
- * @param globalStreak - Streak global (optionnel)
  */
-export const syncWidgetData = (
+export const syncWidgetData = async (
   habits: Habit[],
   totalXP: number,
   userName: string,
   globalStreak?: number
-): void => {
+): Promise<void> => {
   const widgetData = prepareWidgetData(habits, totalXP, userName, globalStreak);
-  updateWidgetData(widgetData);
+  await updateWidgetData(widgetData);
 };
 
 /**
  * Efface les données du widget (utile lors de la déconnexion)
  */
-export const clearWidgetData = (): void => {
+export const clearWidgetData = async (): Promise<void> => {
   if (Platform.OS !== 'ios') {
     return;
   }
 
   try {
-    // On écrit un objet vide pour "effacer" les données
-    widgetStorage.set(WIDGET_DATA_KEY, JSON.stringify({
+    const emptyData: WidgetData = {
       habits: [],
       completedToday: 0,
       totalToday: 0,
@@ -185,8 +165,13 @@ export const clearWidgetData = (): void => {
       totalXP: 0,
       userName: '',
       lastUpdated: new Date().toISOString(),
-    }));
-    widgetStorage.set('forceReload', Date.now().toString());
+    };
+    await SharedGroupPreferences.setItem(
+      WIDGET_DATA_KEY,
+      JSON.stringify(emptyData),
+      APP_GROUP_ID
+    );
+    console.log('[WidgetHelper] Widget data cleared');
   } catch (error) {
     console.error('[WidgetHelper] Erreur suppression données widget:', error);
   }
