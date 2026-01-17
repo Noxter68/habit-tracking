@@ -3,113 +3,41 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		03F7C6C798FD6019BC776A49 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 4401312F035AEF594344117B /* PrivacyInfo.xcprivacy */; };
+		08967315590F00581FFEDA29 /* libPods-Nuvoria.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4091770754BBEC12094D90C9 /* libPods-Nuvoria.a */; };
+		0B67DC187C36C8F210296C39 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02B6250FF7D9F305CC21ECEA /* ExpoModulesProvider.swift */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		19A7188142FD3C4974C53E44 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAEC7845225F076599945740 /* ExpoModulesProvider.swift */; };
-		392731442F1B59270033C23B /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 392731432F1B59270033C23B /* WidgetKit.framework */; };
-		392731462F1B59270033C23B /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 392731452F1B59270033C23B /* SwiftUI.framework */; };
-		392731552F1B59280033C23B /* NuvoriaWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 392731422F1B59270033C23B /* NuvoriaWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
+		727E9D13EE184F533F7730E7 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B5BD0616CBB7E6DD3F1D4F29 /* PrivacyInfo.xcprivacy */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		CFBDB20D510CA7C648833119 /* libPods-Nuvoria.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 67796E64EEF3E4C6ACE7D6A7 /* libPods-Nuvoria.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		392731532F1B59280033C23B /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 392731412F1B59270033C23B;
-			remoteInfo = NuvoriaWidgetExtension;
-		};
-		3927315C2F1B682B0033C23B /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 392731412F1B59270033C23B;
-			remoteInfo = NuvoriaWidgetExtension;
-		};
-/* End PBXContainerItemProxy section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		392731562F1B59280033C23B /* Embed Foundation Extensions */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 13;
-			files = (
-				392731552F1B59280033C23B /* NuvoriaWidgetExtension.appex in Embed Foundation Extensions */,
-			);
-			name = "Embed Foundation Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
+		02B6250FF7D9F305CC21ECEA /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Nuvoria/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* Nuvoria.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Nuvoria.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Nuvoria/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Nuvoria/Info.plist; sourceTree = "<group>"; };
-		392731422F1B59270033C23B /* NuvoriaWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NuvoriaWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		392731432F1B59270033C23B /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
-		392731452F1B59270033C23B /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
-		3927315B2F1B5A900033C23B /* NuvoriaWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NuvoriaWidgetExtension.entitlements; sourceTree = "<group>"; };
-		4401312F035AEF594344117B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = Nuvoria/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		5EE4DFADB0F6BA0FC2D05B40 /* Pods-Nuvoria.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Nuvoria.debug.xcconfig"; path = "Target Support Files/Pods-Nuvoria/Pods-Nuvoria.debug.xcconfig"; sourceTree = "<group>"; };
-		67796E64EEF3E4C6ACE7D6A7 /* libPods-Nuvoria.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Nuvoria.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2BBF668D3394CDC5B70267B0 /* Pods-Nuvoria.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Nuvoria.debug.xcconfig"; path = "Target Support Files/Pods-Nuvoria/Pods-Nuvoria.debug.xcconfig"; sourceTree = "<group>"; };
+		4091770754BBEC12094D90C9 /* libPods-Nuvoria.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Nuvoria.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		989A0D44D8147907503692AE /* Pods-Nuvoria.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Nuvoria.release.xcconfig"; path = "Target Support Files/Pods-Nuvoria/Pods-Nuvoria.release.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Nuvoria/SplashScreen.storyboard; sourceTree = "<group>"; };
+		B5BD0616CBB7E6DD3F1D4F29 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Nuvoria/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		DAEC7845225F076599945740 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Nuvoria/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Nuvoria/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* Nuvoria-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Nuvoria-Bridging-Header.h"; path = "Nuvoria/Nuvoria-Bridging-Header.h"; sourceTree = "<group>"; };
-		FC740C95380DD08B2AB6A757 /* Pods-Nuvoria.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Nuvoria.release.xcconfig"; path = "Target Support Files/Pods-Nuvoria/Pods-Nuvoria.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		392731592F1B59280033C23B /* Exceptions for "NuvoriaWidget" folder in "NuvoriaWidgetExtension" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 392731412F1B59270033C23B /* NuvoriaWidgetExtension */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		392731472F1B59270033C23B /* NuvoriaWidget */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				392731592F1B59280033C23B /* Exceptions for "NuvoriaWidget" folder in "NuvoriaWidgetExtension" target */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = NuvoriaWidget;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		13B07F8C1A680F5B00A75B9A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CFBDB20D510CA7C648833119 /* libPods-Nuvoria.a in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		3927313F2F1B59270033C23B /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				392731462F1B59270033C23B /* SwiftUI.framework in Frameworks */,
-				392731442F1B59270033C23B /* WidgetKit.framework in Frameworks */,
+				08967315590F00581FFEDA29 /* libPods-Nuvoria.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -125,7 +53,7 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				4401312F035AEF594344117B /* PrivacyInfo.xcprivacy */,
+				B5BD0616CBB7E6DD3F1D4F29 /* PrivacyInfo.xcprivacy */,
 			);
 			name = Nuvoria;
 			sourceTree = "<group>";
@@ -134,9 +62,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				67796E64EEF3E4C6ACE7D6A7 /* libPods-Nuvoria.a */,
-				392731432F1B59270033C23B /* WidgetKit.framework */,
-				392731452F1B59270033C23B /* SwiftUI.framework */,
+				4091770754BBEC12094D90C9 /* libPods-Nuvoria.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -151,14 +77,12 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
-				3927315B2F1B5A900033C23B /* NuvoriaWidgetExtension.entitlements */,
 				13B07FAE1A68108700A75B9A /* Nuvoria */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
-				392731472F1B59270033C23B /* NuvoriaWidget */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				CED626A151CF96F5175D6141 /* Pods */,
-				F1AC6B2C11654812A38566CF /* ExpoModulesProviders */,
+				F54818A06BB7AE97B645B82C /* Pods */,
+				CC4150BF01A0075A79293624 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -169,7 +93,6 @@
 			isa = PBXGroup;
 			children = (
 				13B07F961A680F5B00A75B9A /* Nuvoria.app */,
-				392731422F1B59270033C23B /* NuvoriaWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -183,29 +106,30 @@
 			path = Nuvoria/Supporting;
 			sourceTree = "<group>";
 		};
-		CED626A151CF96F5175D6141 /* Pods */ = {
+		BEBE30228B9F517E2E7E0D47 /* Nuvoria */ = {
 			isa = PBXGroup;
 			children = (
-				5EE4DFADB0F6BA0FC2D05B40 /* Pods-Nuvoria.debug.xcconfig */,
-				FC740C95380DD08B2AB6A757 /* Pods-Nuvoria.release.xcconfig */,
+				02B6250FF7D9F305CC21ECEA /* ExpoModulesProvider.swift */,
 			);
-			path = Pods;
+			name = Nuvoria;
 			sourceTree = "<group>";
 		};
-		F1AC6B2C11654812A38566CF /* ExpoModulesProviders */ = {
+		CC4150BF01A0075A79293624 /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				F834EE143670AF7F5D020C4F /* Nuvoria */,
+				BEBE30228B9F517E2E7E0D47 /* Nuvoria */,
 			);
 			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
-		F834EE143670AF7F5D020C4F /* Nuvoria */ = {
+		F54818A06BB7AE97B645B82C /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				DAEC7845225F076599945740 /* ExpoModulesProvider.swift */,
+				2BBF668D3394CDC5B70267B0 /* Pods-Nuvoria.debug.xcconfig */,
+				989A0D44D8147907503692AE /* Pods-Nuvoria.release.xcconfig */,
 			);
-			name = Nuvoria;
+			name = Pods;
+			path = Pods;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -216,45 +140,22 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Nuvoria" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				A0E3A43FF4FBBD44E0E9BF25 /* [Expo] Configure project */,
+				AAB40ABAB166BDA962C57C58 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				9233A3D9417EEAC778BD3BF6 /* [CP] Embed Pods Frameworks */,
-				392731562F1B59280033C23B /* Embed Foundation Extensions */,
+				6DDD01395F20E97826F72CE2 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				392731542F1B59280033C23B /* PBXTargetDependency */,
-				3927315D2F1B682B0033C23B /* PBXTargetDependency */,
 			);
 			name = Nuvoria;
 			productName = Nuvoria;
 			productReference = 13B07F961A680F5B00A75B9A /* Nuvoria.app */;
 			productType = "com.apple.product-type.application";
-		};
-		392731412F1B59270033C23B /* NuvoriaWidgetExtension */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 3927315A2F1B59280033C23B /* Build configuration list for PBXNativeTarget "NuvoriaWidgetExtension" */;
-			buildPhases = (
-				3927313E2F1B59270033C23B /* Sources */,
-				3927313F2F1B59270033C23B /* Frameworks */,
-				392731402F1B59270033C23B /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				392731472F1B59270033C23B /* NuvoriaWidget */,
-			);
-			name = NuvoriaWidgetExtension;
-			productName = NuvoriaWidgetExtension;
-			productReference = 392731422F1B59270033C23B /* NuvoriaWidgetExtension.appex */;
-			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -262,14 +163,10 @@
 		83CBB9F71A601CBA00E9B192 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 2620;
 				LastUpgradeCheck = 1130;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
 						LastSwiftMigration = 1250;
-					};
-					392731412F1B59270033C23B = {
-						CreatedOnToolsVersion = 26.2;
 					};
 				};
 			};
@@ -287,7 +184,6 @@
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* Nuvoria */,
-				392731412F1B59270033C23B /* NuvoriaWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -300,14 +196,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				03F7C6C798FD6019BC776A49 /* PrivacyInfo.xcprivacy in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		392731402F1B59270033C23B /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
+				727E9D13EE184F533F7730E7 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -351,6 +240,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		6DDD01395F20E97826F72CE2 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Nuvoria/Pods-Nuvoria-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Nuvoria/Pods-Nuvoria-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
@@ -459,29 +370,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Nuvoria/Pods-Nuvoria-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		9233A3D9417EEAC778BD3BF6 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Nuvoria/Pods-Nuvoria-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Nuvoria/Pods-Nuvoria-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		A0E3A43FF4FBBD44E0E9BF25 /* [Expo] Configure project */ = {
+		AAB40ABAB166BDA962C57C58 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -513,42 +402,21 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				19A7188142FD3C4974C53E44 /* ExpoModulesProvider.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		3927313E2F1B59270033C23B /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
+				0B67DC187C36C8F210296C39 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin PBXTargetDependency section */
-		392731542F1B59280033C23B /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 392731412F1B59270033C23B /* NuvoriaWidgetExtension */;
-			targetProxy = 392731532F1B59280033C23B /* PBXContainerItemProxy */;
-		};
-		3927315D2F1B682B0033C23B /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 392731412F1B59270033C23B /* NuvoriaWidgetExtension */;
-			targetProxy = 3927315C2F1B682B0033C23B /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5EE4DFADB0F6BA0FC2D05B40 /* Pods-Nuvoria.debug.xcconfig */;
+			baseConfigurationReference = 2BBF668D3394CDC5B70267B0 /* Pods-Nuvoria.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Nuvoria/Nuvoria.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = XTNS27CALG;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -579,13 +447,12 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = FC740C95380DD08B2AB6A757 /* Pods-Nuvoria.release.xcconfig */;
+			baseConfigurationReference = 989A0D44D8147907503692AE /* Pods-Nuvoria.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Nuvoria/Nuvoria.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = XTNS27CALG;
 				INFOPLIST_FILE = Nuvoria/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -605,103 +472,6 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 				VERSIONING_SYSTEM = "apple-generic";
-			};
-			name = Release;
-		};
-		392731572F1B59280033C23B /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CODE_SIGN_ENTITLEMENTS = NuvoriaWidgetExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = XTNS27CALG;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = NuvoriaWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = NuvoriaWidget;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 1.0;
-				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
-				MTL_FAST_MATH = YES;
-				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = com.davidplanchon.nuvoria.NuvoriaWidget;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		392731582F1B59280033C23B /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CODE_SIGN_ENTITLEMENTS = NuvoriaWidgetExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = XTNS27CALG;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = NuvoriaWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = NuvoriaWidget;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 1.0;
-				MTL_FAST_MATH = YES;
-				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = com.davidplanchon.nuvoria.NuvoriaWidget;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -831,15 +601,6 @@
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
 				13B07F951A680F5B00A75B9A /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		3927315A2F1B59280033C23B /* Build configuration list for PBXNativeTarget "NuvoriaWidgetExtension" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				392731572F1B59280033C23B /* Debug */,
-				392731582F1B59280033C23B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
