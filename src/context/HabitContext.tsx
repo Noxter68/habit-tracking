@@ -50,6 +50,7 @@ import { supabase } from '@/lib/supabase';
 // IMPORTS - Utils
 // ============================================================================
 import Logger from '@/utils/logger';
+import { syncWidgetData } from '@/utils/widgetHelper';
 
 // ============================================================================
 // IMPORTS - Types et Contextes
@@ -191,6 +192,32 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       subscription.unsubscribe();
     };
   }, [user?.id]);
+
+  /**
+   * Synchronise les données du widget iOS quand les habitudes changent
+   */
+  useEffect(() => {
+    if (!user || habits.length === 0) return;
+
+    // Récupère les stats pour avoir le totalXP et le globalStreak
+    const syncWidget = async () => {
+      try {
+        const [xpStats, globalStreak] = await Promise.all([
+          HabitService.getAggregatedStats(user.id),
+          HabitService.getGlobalStreak(user.id),
+        ]);
+
+        const userName = user.user_metadata?.username || user.email?.split('@')[0] || 'User';
+        const totalXP = xpStats?.total_xp || 0;
+
+        syncWidgetData(habits, totalXP, userName, globalStreak || 0);
+      } catch (error) {
+        Logger.error('[HabitContext] Error syncing widget data:', error);
+      }
+    };
+
+    syncWidget();
+  }, [habits, user]);
 
   // ==========================================================================
   // CALLBACKS - OPERATIONS CRUD

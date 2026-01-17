@@ -51,6 +51,7 @@ import { LanguageDetectionService } from '@/services/languageDetectionService';
 // IMPORTS - Utils
 // ============================================================================
 import Logger from '@/utils/logger';
+import { clearWidgetData } from '@/utils/widgetHelper';
 
 // ============================================================================
 // TYPES ET INTERFACES
@@ -651,6 +652,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (user?.id) {
         PushTokenService.unregisterDevice(user.id).catch(() => {});
       }
+
+      // Efface les données du widget iOS
+      clearWidgetData();
 
       setHasCompletedOnboarding(false);
 
