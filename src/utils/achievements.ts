@@ -91,6 +91,13 @@ const baseAchievementData: BaseAchievementData[] = [
   { level: 33, tierKey: 'celestialAscension', color: '#3f7eea', image: require('../../assets/achievements/level-33.png') },
   { level: 34, tierKey: 'celestialAscension', color: '#3f7eea', image: require('../../assets/achievements/level-34.png') },
   { level: 35, tierKey: 'celestialAscension', color: '#3f7eea', image: require('../../assets/achievements/level-35.png') },
+
+  // Infernal Dominion (36-40)
+  { level: 36, tierKey: 'infernalDominion', color: '#ff4500', image: require('../../assets/achievements/level-36.png') },
+  { level: 37, tierKey: 'infernalDominion', color: '#ff4500', image: require('../../assets/achievements/level-37.png') },
+  { level: 38, tierKey: 'infernalDominion', color: '#ff4500', image: require('../../assets/achievements/level-38.png') },
+  { level: 39, tierKey: 'infernalDominion', color: '#ff4500', image: require('../../assets/achievements/level-39.png') },
+  { level: 40, tierKey: 'infernalDominion', color: '#ff4500', image: require('../../assets/achievements/level-40.png') },
 ];
 
 // =============================================================================

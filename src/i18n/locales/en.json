@@ -1508,7 +1508,8 @@
       "legendaryAscent": "Legendary Ascent",
       "epicMastery": "Epic Mastery",
       "mythicGlory": "Mythic Glory",
-      "celestialAscension": "Celestial Ascension"
+      "celestialAscension": "Celestial Ascension",
+      "infernalDominion": "Infernal Dominion"
     },
     "titles": {
       "level1": "The First Stepper",
@@ -1545,7 +1546,12 @@
       "level32": "Starborne Champion",
       "level33": "Cosmic Sentinel",
       "level34": "Ethereal Sovereign",
-      "level35": "Transcendent Master"
+      "level35": "Transcendent Master",
+      "level36": "Lord of Ashes",
+      "level37": "Infernal Forgemaster",
+      "level38": "Emperor of Flames",
+      "level39": "Titan of the Blaze",
+      "level40": "God of the Inferno"
     }
   },
   "calendar": {

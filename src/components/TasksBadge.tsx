@@ -1,6 +1,6 @@
 // src/components/dashboard/TaskBadge.tsx
 import React, { useMemo } from 'react';
-import { View, Text, ImageBackground, Image } from 'react-native';
+import { View, Text, ImageBackground } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import tw from '@/lib/tailwind';
@@ -9,19 +9,19 @@ interface TaskBadgeProps {
   completed: number;
   total: number;
   username?: string;
+  userLevel?: number;
 }
 
 interface ThemeConfig {
   titleKey: string;
   subtitleKey: string;
   messageKey: string;
-  gemImage: any;
   texture: any;
   gradient: string[];
   textColor: string;
 }
 
-export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total, username }) => {
+export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total, username, userLevel = 1 }) => {
   const { t } = useTranslation();
   const displayName = username || t('common.friend');
 
@@ -30,13 +30,35 @@ export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total, username
   }, [completed, total]);
 
   const theme = useMemo((): ThemeConfig => {
-    // 100% - Obsidian (Mythique)
+    // 100% - Thème basé sur le niveau utilisateur
     if (completionRate === 100) {
+      // Niveau 36+ - Inferno (Infernal Dominion) avec le phoenix (level-39)
+      if (userLevel >= 36) {
+        return {
+          titleKey: 'dashboard.taskBadge.legendary.title',
+          subtitleKey: 'dashboard.taskBadge.legendary.subtitle',
+          messageKey: 'dashboard.taskBadge.legendary.message',
+          texture: require('../../assets/interface/texture-fire.png'),
+          gradient: ['#ff6b35', '#ff4500', '#8b0000'],
+          textColor: '#FFFFFF',
+        };
+      }
+      // Niveau 31-35 - Celeste (Celestial Ascension)
+      if (userLevel >= 31) {
+        return {
+          titleKey: 'dashboard.taskBadge.legendary.title',
+          subtitleKey: 'dashboard.taskBadge.legendary.subtitle',
+          messageKey: 'dashboard.taskBadge.legendary.message',
+          texture: require('../../assets/interface/progressBar/celeste-texture.png'),
+          gradient: ['#60a5fa', '#3f7eea', '#1e40af'],
+          textColor: '#FFFFFF',
+        };
+      }
+      // Niveau < 31 - Obsidian (Mythique)
       return {
         titleKey: 'dashboard.taskBadge.legendary.title',
         subtitleKey: 'dashboard.taskBadge.legendary.subtitle',
         messageKey: 'dashboard.taskBadge.legendary.message',
-        gemImage: require('../../assets/interface/gems/obsidian-gem.png'),
         texture: require('../../assets/interface/progressBar/obsidian-texture.png'),
         gradient: ['#1a1625', '#2d1b3d', '#4c1d95'],
         textColor: '#FFFFFF',
@@ -49,7 +71,6 @@ export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total, username
         titleKey: 'dashboard.taskBadge.almostPerfect.title',
         subtitleKey: 'dashboard.taskBadge.almostPerfect.subtitle',
         messageKey: 'dashboard.taskBadge.almostPerfect.message',
-        gemImage: require('../../assets/interface/gems/topaz-gem.png'),
         texture: require('../../assets/interface/progressBar/topaz-texture.png'),
         gradient: ['#fbbf24', '#f59e0b', '#d97706'],
         textColor: '#FFFFFF',
@@ -62,7 +83,6 @@ export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total, username
         titleKey: 'dashboard.taskBadge.greatMomentum.title',
         subtitleKey: 'dashboard.taskBadge.greatMomentum.subtitle',
         messageKey: 'dashboard.taskBadge.greatMomentum.message',
-        gemImage: require('../../assets/interface/gems/jade-gem.png'),
         texture: require('../../assets/interface/progressBar/jade-texture.png'),
         gradient: ['#10b981', '#059669', '#047857'],
         textColor: '#FFFFFF',
@@ -75,7 +95,6 @@ export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total, username
         titleKey: 'dashboard.taskBadge.halfwayThere.title',
         subtitleKey: 'dashboard.taskBadge.halfwayThere.subtitle',
         messageKey: 'dashboard.taskBadge.halfwayThere.message',
-        gemImage: require('../../assets/interface/gems/amethyst-gem.png'),
         texture: require('../../assets/interface/progressBar/amethyst-texture.png'),
         gradient: ['#8b5cf6', '#7c3aed', '#6d28d9'],
         textColor: '#FFFFFF',
@@ -88,7 +107,6 @@ export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total, username
         titleKey: 'dashboard.taskBadge.gettingStarted.title',
         subtitleKey: 'dashboard.taskBadge.gettingStarted.subtitle',
         messageKey: 'dashboard.taskBadge.gettingStarted.message',
-        gemImage: require('../../assets/interface/gems/ruby-gem.png'),
         texture: require('../../assets/interface/progressBar/ruby-texture.png'),
         gradient: ['#ef4444', '#dc2626', '#b91c1c'],
         textColor: '#FFFFFF',
@@ -100,12 +118,11 @@ export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total, username
       titleKey: 'dashboard.taskBadge.readyToShine.title',
       subtitleKey: 'dashboard.taskBadge.readyToShine.subtitle',
       messageKey: 'dashboard.taskBadge.readyToShine.message',
-      gemImage: require('../../assets/interface/gems/crystal-gem.png'),
       texture: require('../../assets/interface/progressBar/crystal.png'),
       gradient: ['#60a5fa', '#3b82f6', '#2563eb'],
       textColor: '#FFFFFF',
     };
-  }, [completionRate, total, completed]);
+  }, [completionRate, total, completed, userLevel]);
 
   // Get the translated message with username and count
   const getMessage = () => {
@@ -164,44 +181,32 @@ export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total, username
                 </Text>
               </View>
 
-              {/* Stats compacts */}
-              <View style={tw`flex-row items-center gap-3`}>
-                <View style={tw`flex-row items-baseline gap-1`}>
-                  <Text
-                    style={[
-                      tw`text-2xl font-black`,
-                      {
-                        color: theme.textColor,
-                        textShadowColor: 'rgba(0, 0, 0, 0.2)',
-                        textShadowOffset: { width: 0, height: 1 },
-                        textShadowRadius: 3,
-                      },
-                    ]}
-                  >
-                    {completed}
-                  </Text>
-                  <Text
-                    style={[
-                      tw`text-base font-semibold`,
-                      {
-                        color: theme.textColor,
-                        opacity: 0.7,
-                      },
-                    ]}
-                  >
-                    /{total}
-                  </Text>
-                </View>
-
-                <Image
-                  source={theme.gemImage}
-                  style={{
-                    width: 50,
-                    height: 50,
-                    transform: [{ rotate: '-15deg' }],
-                  }}
-                  resizeMode="contain"
-                />
+              {/* Stats compacts - plus grand, sans icône */}
+              <View style={tw`flex-row items-baseline`}>
+                <Text
+                  style={[
+                    tw`text-4xl font-black`,
+                    {
+                      color: theme.textColor,
+                      textShadowColor: 'rgba(0, 0, 0, 0.3)',
+                      textShadowOffset: { width: 0, height: 2 },
+                      textShadowRadius: 4,
+                    },
+                  ]}
+                >
+                  {completed}
+                </Text>
+                <Text
+                  style={[
+                    tw`text-2xl font-bold`,
+                    {
+                      color: theme.textColor,
+                      opacity: 0.8,
+                    },
+                  ]}
+                >
+                  /{total}
+                </Text>
               </View>
             </View>
           </View>

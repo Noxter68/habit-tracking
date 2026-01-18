@@ -341,6 +341,7 @@ const Dashboard: React.FC = () => {
     return getAchievementTierTheme(currentTitle.tierKey);
   }, [stats?.level]);
 
+
   // ============================================================================
   // Event Handlers
   // ============================================================================
@@ -711,6 +712,27 @@ const Dashboard: React.FC = () => {
           {/* Debug: Level Up Test */}
           <DebugButton onPress={handleTestLevelUp} label={`Test Level ${testLevel} → ${testLevel + 1}`} icon={Zap} variant="secondary" />
 
+          {/* Debug: Epic Level Up Modal Test */}
+          {Config.debug.enabled && (
+            <DebugButton
+              onPress={() => {
+                HapticFeedback.light();
+                const achievement = getAchievementByLevel(testLevel);
+                triggerLevelUp(testLevel, testLevel - 1, achievement);
+                // Passer au premier niveau du tier suivant (1, 6, 11, 16, 21, 26, 31, 36)
+                setTestLevel((prev) => {
+                  const tierStarts = [1, 6, 11, 16, 21, 26, 31, 36];
+                  const currentIndex = tierStarts.findIndex((start) => prev < start + 5 && prev >= start);
+                  const nextIndex = (currentIndex + 1) % tierStarts.length;
+                  return tierStarts[nextIndex];
+                });
+              }}
+              label={`Test Epic Modal Lvl ${testLevel}`}
+              icon={Zap}
+              variant="primary"
+            />
+          )}
+
           {/* Debug: Quest Completion Test */}
           {Config.debug.enabled && (
             <View style={tw`gap-2 mb-4`}>
@@ -841,7 +863,7 @@ const Dashboard: React.FC = () => {
             {/* Section Header */}
             {!showFullHolidayMode && activeHabits.length > 0 ? (
               <View style={tw`mt-4`}>
-                <TaskBadge completed={realTimeTasksStats.completed} total={realTimeTasksStats.total} username={username || user?.email?.split('@')[0]} />
+                <TaskBadge completed={realTimeTasksStats.completed} total={realTimeTasksStats.total} username={username || user?.email?.split('@')[0]} userLevel={stats?.level ?? 1} />
 
                 {/* Daily Motivation Button - below TaskBadge (DEBUG ONLY) */}
                 {Config.debug.enabled && (

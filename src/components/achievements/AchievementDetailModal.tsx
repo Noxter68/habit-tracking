@@ -73,8 +73,13 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
   const tierGradient = tierTheme.gradient;
   const tierTexture = tierTheme.texture;
 
-  // Détermine si c'est un tier sombre (comme Mythic Glory)
-  const isDarkTier = achievement.tierKey === 'mythicGlory';
+  // Détermine si c'est un tier sombre (comme Mythic Glory ou Infernal Dominion)
+  const isDarkTier = achievement.tierKey === 'mythicGlory' || achievement.tierKey === 'infernalDominion';
+
+  // Augmenter la taille pour les niveaux 36-40 (Infernal Dominion)
+  const isInfernalLevel = achievement.level >= 36 && achievement.level <= 40;
+  const imageWidth = isInfernalLevel ? 320 : 250;
+  const imageHeight = isInfernalLevel ? 230 : 180;
 
   /**
    * Détermine les couleurs de texte selon le type de gemme
@@ -154,9 +159,9 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
                         <Image
                           source={achievement.image}
                           style={{
-                            width: 250,
-                            height: 180,
-                            opacity: isUnlocked ? 1 : isDarkTier ? 0.7 : 0.5,
+                            width: imageWidth,
+                            height: imageHeight,
+                            opacity: isUnlocked ? 1 : 0.5,
                           }}
                           resizeMode="contain"
                         />

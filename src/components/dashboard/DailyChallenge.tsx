@@ -53,6 +53,8 @@ const DailyChallenge: React.FC<DailyChallengeProps> = ({ habits, onCollect, user
         return require('../../../assets/interface/challenge/topaz-challenge.png');
       case 'obsidian':
         return require('../../../assets/interface/challenge/obsidien-challenge.png');
+      case 'inferno':
+        return require('../../../assets/interface/challenge/fire-challenge.png');
       default:
         return require('../../../assets/interface/challenge/amethyst-challenge.png');
     }

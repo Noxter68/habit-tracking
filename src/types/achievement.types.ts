@@ -1,11 +1,11 @@
 // src/types/achievement.types.ts
 
 // Tier names for display
-export const TIER_NAMES = ['Novice', 'Rising Hero', 'Mastery Awakens', 'Legendary Ascent', 'Epic Mastery', 'Mythic Glory', 'Celestial Ascension'] as const;
+export const TIER_NAMES = ['Novice', 'Rising Hero', 'Mastery Awakens', 'Legendary Ascent', 'Epic Mastery', 'Mythic Glory', 'Celestial Ascension', 'Infernal Dominion'] as const;
 export type TierName = (typeof TIER_NAMES)[number];
 
 // Tier keys for i18n (camelCase)
-export const TIER_KEYS = ['novice', 'risingHero', 'masteryAwakens', 'legendaryAscent', 'epicMastery', 'mythicGlory', 'celestialAscension'] as const;
+export const TIER_KEYS = ['novice', 'risingHero', 'masteryAwakens', 'legendaryAscent', 'epicMastery', 'mythicGlory', 'celestialAscension', 'infernalDominion'] as const;
 export type TierKey = (typeof TIER_KEYS)[number];
 
 // ✅ Achievement interface with both tier (translated) and tierKey (i18n key)

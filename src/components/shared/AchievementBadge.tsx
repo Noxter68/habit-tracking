@@ -95,6 +95,9 @@ export const AchievementBadge: React.FC<AchievementBadgeProps> = ({ achievement,
   // Déterminer l'image à afficher
   const imageSource = isUnlocked ? achievement.image : require('../../../assets/achievements/locked.png');
 
+  // Pas d'ajustement de taille ici - géré uniquement dans les modals
+  const adjustedSize = size;
+
   // Composant interne pour le contenu
   const content = (
     <View style={tw`relative`}>
@@ -127,8 +130,8 @@ export const AchievementBadge: React.FC<AchievementBadgeProps> = ({ achievement,
       <Image
         source={imageSource}
         style={{
-          width: size,
-          height: size,
+          width: adjustedSize,
+          height: adjustedSize,
           opacity: isUnlocked ? 1 : 0.6,
           zIndex: showGlow ? 10 : 1,
         }}

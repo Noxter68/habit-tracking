@@ -34,8 +34,13 @@ export const getXPForNextLevel = (currentLevel: number): number => {
   }
 
   // Levels 31-35: Celestial Ascension (legendary achievement)
-  else {
+  else if (currentLevel <= 35) {
     return 3860 + (currentLevel - 30) * 400; // 4260, 4660, 5060, 5460, 5860
+  }
+
+  // Levels 36-40: Infernal Dominion (ultimate mastery)
+  else {
+    return 5860 + (currentLevel - 35) * 500; // 6360, 6860, 7360, 7860, 8360
   }
 };
 

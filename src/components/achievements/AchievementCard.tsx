@@ -82,6 +82,10 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({
 
   const lockedGradient = ['rgba(250, 250, 250, 1)', 'rgba(245, 245, 245, 1)', 'rgba(238, 238, 238, 1)'];
 
+  // Taille du badge (légèrement plus grand pour les niveaux 36-40)
+  const isInfernalLevel = achievement.level >= 36 && achievement.level <= 40;
+  const badgeSize = isInfernalLevel ? 70 : 60;
+
   // Couleurs de bordure et d'accent (style DashboardHeader avec bordure blanche)
   const borderColor = isUnlocked
     ? 'rgba(255, 255, 255, 0.9)' // Bordure blanche opaque pour les débloqués
@@ -150,12 +154,12 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({
               paddingHorizontal: 12,
             }}
           >
-            {/* Badge - taille fixe 60x60 avec opacité pour l'état verrouillé */}
+            {/* Badge avec opacité pour l'état verrouillé */}
             <View
               style={{
                 opacity: isUnlocked ? 1 : 0.3,
-                height: 60,
-                width: 60,
+                height: badgeSize,
+                width: badgeSize,
                 alignItems: 'center',
                 justifyContent: 'center',
                 overflow: 'hidden',
@@ -165,7 +169,7 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({
                 level={achievement.level}
                 achievement={achievement}
                 isUnlocked={true}
-                size={60}
+                size={badgeSize}
               />
             </View>
 

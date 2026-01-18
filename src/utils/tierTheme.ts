@@ -147,6 +147,15 @@ export const achievementTierThemes: Record<TierKey, AchievementTierTheme> = {
     questImage: require('../../assets/interface/gems/celeste-gem.png'),
     backgroundGradient: ['#e0f2ff', '#bae6fd', '#7dd3fc'],
   },
+  infernalDominion: {
+    gradient: ['#ff6b35', '#ff4500', '#8b0000'],
+    accent: '#ff4500',
+    gemName: 'Inferno',
+    texture: require('../../assets/interface/texture-fire.png'),
+    streakImage: require('../../assets/achievements/level-36.png'),
+    questImage: require('../../assets/achievements/level-36.png'),
+    backgroundGradient: ['#1a0000', '#2d0a0a', '#4a1010'],
+  },
 };
 
 // =============================================================================

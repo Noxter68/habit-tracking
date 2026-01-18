@@ -258,7 +258,8 @@
       "legendaryAscent": "Ascension Légendaire",
       "epicMastery": "Maîtrise Épique",
       "mythicGlory": "Gloire Mythique",
-      "celestialAscension": "Ascension Céleste"
+      "celestialAscension": "Ascension Céleste",
+      "infernalDominion": "Domination Infernale"
     },
     "titles": {
       "level1": "Le Premier Pas",
@@ -295,7 +296,12 @@
       "level32": "Champion Stellaire",
       "level33": "Sentinelle Cosmique",
       "level34": "Souverain Éthéré",
-      "level35": "Maître Transcendant"
+      "level35": "Maître Transcendant",
+      "level36": "Seigneur des Cendres",
+      "level37": "Forgeron Infernal",
+      "level38": "Empereur des Flammes",
+      "level39": "Titan du Brasier",
+      "level40": "Dieu de l'Inferno"
     }
   },
   "settings": {

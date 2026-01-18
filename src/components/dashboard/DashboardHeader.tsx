@@ -667,7 +667,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           </View>
 
           {/* Row 3: Progress Bar - Boosted version when active, normal otherwise */}
-          {userLevel < 35 && (
+          {userLevel < 40 && (
             hasActiveBoost ? (
               <BoostedProgressBar
                 progress={displayProgress}
