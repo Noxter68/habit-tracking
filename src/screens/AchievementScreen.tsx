@@ -37,7 +37,6 @@ const AchievementsScreen: React.FC = () => {
   const { stats, refreshStats, loading: statsLoading } = useStats();
   const {
     achievements,
-    totalCompletions,
     streak,
     perfectDays,
     totalHabits,
@@ -260,35 +259,6 @@ const AchievementsScreen: React.FC = () => {
               </View>
             </View>
 
-            {/* Best streak */}
-            <View style={{ flex: 1, position: 'relative' }}>
-              <View
-                style={{
-                  position: 'absolute',
-                  top: 2,
-                  left: 0,
-                  right: 0,
-                  bottom: -2,
-                  backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                  borderRadius: 16,
-                }}
-              />
-              <View
-                style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                  borderRadius: 16,
-                  padding: 12,
-                  borderWidth: 1,
-                  borderColor: 'rgba(255, 255, 255, 0.2)',
-                }}
-              >
-                <Text style={tw`text-xs font-semibold text-white/70 mb-1`}>
-                  {t('achievements.bestStreak')}
-                </Text>
-                <Text style={tw`text-2xl font-bold text-white`}>{streak}</Text>
-              </View>
-            </View>
-
             {/* Total XP */}
             <View style={{ flex: 1, position: 'relative' }}>
               <View
@@ -396,7 +366,6 @@ const AchievementsScreen: React.FC = () => {
         onClose={handleModalClose}
         achievement={selectedAchievement}
         currentLevel={currentLevel}
-        totalCompletions={totalCompletions}
       />
 
       {/* Badge zoom modal */}

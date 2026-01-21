@@ -10,6 +10,7 @@ interface TaskBadgeProps {
   total: number;
   username?: string;
   userLevel?: number;
+  compact?: boolean;
 }
 
 interface ThemeConfig {
@@ -21,7 +22,7 @@ interface ThemeConfig {
   textColor: string;
 }
 
-export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total, username, userLevel = 1 }) => {
+export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total, username, userLevel = 1, compact = false }) => {
   const { t } = useTranslation();
   const displayName = username || t('common.friend');
 
@@ -133,6 +134,85 @@ export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total, username
     return t(theme.messageKey, { name: displayName });
   };
 
+  // Compact mode: vertical layout with number on top, message on bottom
+  if (compact) {
+    return (
+      <Animated.View entering={FadeIn.duration(600)} style={{ flex: 1 }}>
+        <View style={{ position: 'relative', flex: 1 }}>
+          {/* Shadow layer for depth effect */}
+          <View
+            style={{
+              position: 'absolute',
+              top: 3,
+              left: 0,
+              right: 0,
+              bottom: -3,
+              backgroundColor: `${theme.gradient[2]}`,
+              borderRadius: 16,
+            }}
+          />
+          <View
+            style={[
+              tw`rounded-2xl overflow-hidden flex-1`,
+              {
+                borderRadius: 16,
+              },
+            ]}
+          >
+            <ImageBackground source={theme.texture} style={tw`flex-1`} imageStyle={{ opacity: 1 }} resizeMode="cover">
+              <View style={[tw`px-3 py-2 flex-1 justify-center items-center`, { backgroundColor: `${theme.gradient[1]}80` }]}>
+                {/* Number on top - significantly larger */}
+                <View style={tw`flex-row items-baseline`}>
+                  <Text
+                    style={[
+                      tw`text-4xl font-black`,
+                      {
+                        color: theme.textColor,
+                        textShadowColor: 'rgba(0, 0, 0, 0.3)',
+                        textShadowOffset: { width: 0, height: 2 },
+                        textShadowRadius: 4,
+                      },
+                    ]}
+                  >
+                    {completed}
+                  </Text>
+                  <Text
+                    style={[
+                      tw`text-2xl font-bold`,
+                      {
+                        color: theme.textColor,
+                        opacity: 0.8,
+                      },
+                    ]}
+                  >
+                    /{total}
+                  </Text>
+                </View>
+                {/* Message on bottom */}
+                <Text
+                  style={[
+                    tw`text-xs font-semibold text-center mt-1`,
+                    {
+                      color: theme.textColor,
+                      opacity: 0.9,
+                      textShadowColor: 'rgba(0, 0, 0, 0.2)',
+                      textShadowOffset: { width: 0, height: 1 },
+                      textShadowRadius: 2,
+                    },
+                  ]}
+                  numberOfLines={2}
+                >
+                  {getMessage()}
+                </Text>
+              </View>
+            </ImageBackground>
+          </View>
+        </View>
+      </Animated.View>
+    );
+  }
+
+  // Normal mode: horizontal layout
   return (
     <Animated.View entering={FadeIn.duration(600)}>
       <View style={{ position: 'relative' }}>

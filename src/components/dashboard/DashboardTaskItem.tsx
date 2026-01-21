@@ -42,6 +42,7 @@ interface DashboardTaskItemProps {
   tierName?: HabitTier;
   isWeekLocked?: boolean;
   allowUncheck?: boolean;
+  compact?: boolean;
 }
 
 const DashboardTaskItemComponent: React.FC<DashboardTaskItemProps> = ({
@@ -54,6 +55,7 @@ const DashboardTaskItemComponent: React.FC<DashboardTaskItemProps> = ({
   tierName = 'Crystal',
   isWeekLocked = false,
   allowUncheck = false,
+  compact = false,
 }) => {
   const showAsCompleted = isCompleted || isWeekLocked;
   const theme = tierThemes[tierName];
@@ -115,14 +117,14 @@ const DashboardTaskItemComponent: React.FC<DashboardTaskItemProps> = ({
   }));
 
   return (
-    <View style={tw`mb-2.5`}>
+    <View style={compact ? tw`mb-1.5` : tw`mb-2.5`}>
       <AnimatedPressable
         onPress={onPress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         disabled={isPaused || disabled || (showAsCompleted && !allowUncheck)}
         style={[
-          tw`rounded-2xl`,
+          compact ? tw`rounded-xl` : tw`rounded-2xl`,
           {
             shadowColor: '#000',
             shadowOpacity: 0.15,
@@ -132,7 +134,7 @@ const DashboardTaskItemComponent: React.FC<DashboardTaskItemProps> = ({
           animatedContainerStyle,
         ]}
       >
-        <View style={tw`rounded-2xl overflow-hidden`}>
+        <View style={compact ? tw`rounded-xl overflow-hidden` : tw`rounded-2xl overflow-hidden`}>
           {/* White background (visible when uncompleted) */}
           <Animated.View
             style={[
@@ -143,7 +145,7 @@ const DashboardTaskItemComponent: React.FC<DashboardTaskItemProps> = ({
                 right: 0,
                 bottom: 0,
                 backgroundColor: isPaused ? '#f5f5f4' : '#ffffff',
-                borderRadius: 16,
+                borderRadius: compact ? 12 : 16,
               },
               animatedWhiteBgStyle,
             ]}
@@ -161,23 +163,23 @@ const DashboardTaskItemComponent: React.FC<DashboardTaskItemProps> = ({
                 left: 0,
                 right: 0,
                 bottom: 0,
-                borderRadius: 16,
+                borderRadius: compact ? 12 : 16,
               },
               animatedGradientStyle,
             ]}
           />
 
           {/* Content */}
-          <View style={tw`flex-row items-center justify-between px-4 py-3`}>
+          <View style={compact ? tw`flex-row items-center justify-between px-3 py-2` : tw`flex-row items-center justify-between px-4 py-3`}>
             {/* Checkmark or Pause icon */}
             {isPaused ? (
-              <View style={tw`mr-2.5`}>
-                <PauseCircle size={18} color="#a8a29e" strokeWidth={2} />
+              <View style={compact ? tw`mr-2` : tw`mr-2.5`}>
+                <PauseCircle size={compact ? 16 : 18} color="#a8a29e" strokeWidth={2} />
               </View>
             ) : (
               <View
                 style={[
-                  tw`w-7 h-7 mr-3 items-center justify-center rounded-full`,
+                  compact ? tw`w-5 h-5 mr-2 items-center justify-center rounded-full` : tw`w-7 h-7 mr-3 items-center justify-center rounded-full`,
                   {
                     shadowColor: '#000',
                     shadowOffset: { width: 0, height: 2 },
@@ -194,7 +196,7 @@ const DashboardTaskItemComponent: React.FC<DashboardTaskItemProps> = ({
                     autoPlay={!wasCompletedOnMount.current}
                     loop={false}
                     progress={wasCompletedOnMount.current ? 1 : 0}
-                    style={{ width: 34, height: 34 }}
+                    style={compact ? { width: 26, height: 26 } : { width: 34, height: 34 }}
                     colorFilters={[
                       { keypath: 'Shape Layer 1', color: tierAccent },
                       { keypath: 'trait', color: tierAccent },
@@ -204,7 +206,7 @@ const DashboardTaskItemComponent: React.FC<DashboardTaskItemProps> = ({
                 ) : (
                   <View
                     style={[
-                      tw`w-5 h-5 rounded-full`,
+                      compact ? tw`w-4 h-4 rounded-full` : tw`w-5 h-5 rounded-full`,
                       { backgroundColor: '#ffffff', borderWidth: 2, borderColor: tierAccent },
                     ]}
                   />
@@ -215,7 +217,7 @@ const DashboardTaskItemComponent: React.FC<DashboardTaskItemProps> = ({
             <View style={tw`flex-1 min-w-0`}>
               <Animated.Text
                 style={[
-                  tw`text-sm font-semibold`,
+                  compact ? tw`text-xs font-semibold` : tw`text-sm font-semibold`,
                   isPaused ? tw`text-stone-400` : animatedTextStyle,
                 ]}
                 numberOfLines={1}
@@ -224,7 +226,7 @@ const DashboardTaskItemComponent: React.FC<DashboardTaskItemProps> = ({
               </Animated.Text>
             </View>
 
-            {!isPaused && task.duration && !showAsCompleted && (
+            {!compact && !isPaused && task.duration && !showAsCompleted && (
               <View style={[tw`px-2.5 py-1 rounded-xl ml-3`, { backgroundColor: tierAccent + '18' }]}>
                 <Text style={[tw`text-xs font-bold`, { color: tierAccent }]}>{task.duration}</Text>
               </View>
@@ -244,7 +246,8 @@ export const DashboardTaskItem = memo(DashboardTaskItemComponent, (prev, next) =
     prev.tierAccent === next.tierAccent &&
     prev.tierName === next.tierName &&
     prev.isWeekLocked === next.isWeekLocked &&
-    prev.allowUncheck === next.allowUncheck
+    prev.allowUncheck === next.allowUncheck &&
+    prev.compact === next.compact
   );
 });
 

@@ -28,6 +28,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { ChevronRight, Pencil, GraduationCap } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import tw from 'twrnc';
 
 import EditUsernameModal from '@/components/settings/EditUserModal';
@@ -93,7 +94,9 @@ type IconName =
   | 'create-outline'
   | 'star'
   | 'shopping-bag'
-  | 'megaphone';
+  | 'megaphone'
+  | 'layout-compact'
+  | 'list-compact';
 
 interface SettingsSectionProps {
   title: string;
@@ -108,6 +111,7 @@ interface SettingsItemProps {
   trailing?: React.ReactNode;
   onPress?: () => void;
   isLast?: boolean;
+  showNewBadge?: boolean;
 }
 
 // ============================================================================
@@ -212,6 +216,20 @@ const Icon: React.FC<IconProps> = ({ name, size = 22, color = '#52525B' }) => {
       <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
         <Path d="M3 11l18-5v12L3 13v-2z" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
         <Path d="M11.6 16.8a3 3 0 11-5.8-1.6" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      </Svg>
+    ),
+    'layout-compact': (
+      <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <Rect x="3" y="3" width="18" height="8" rx="2" stroke={color} strokeWidth={2} />
+        <Rect x="3" y="14" width="8" height="7" rx="2" stroke={color} strokeWidth={2} />
+        <Rect x="13" y="14" width="8" height="7" rx="2" stroke={color} strokeWidth={2} />
+      </Svg>
+    ),
+    'list-compact': (
+      <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <Rect x="3" y="4" width="18" height="4" rx="1" stroke={color} strokeWidth={2} />
+        <Rect x="3" y="10" width="18" height="4" rx="1" stroke={color} strokeWidth={2} />
+        <Rect x="3" y="16" width="18" height="4" rx="1" stroke={color} strokeWidth={2} />
       </Svg>
     ),
   };
@@ -361,12 +379,44 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({ title, children, dela
 /**
  * Élément individuel dans une section de paramètres
  */
-const SettingsItem: React.FC<SettingsItemProps> = ({ icon, title, subtitle, trailing, onPress, isLast = false }) => {
+const SettingsItem: React.FC<SettingsItemProps> = ({ icon, title, subtitle, trailing, onPress, isLast = false, showNewBadge = false }) => {
+  const { t } = useTranslation();
+
   const content = (
     <View style={[tw`flex-row items-center py-4 px-4`, !isLast && tw`border-b border-zinc-100`]}>
-      {/* Icône */}
-      <View style={tw`w-10 h-10 rounded-xl items-center justify-center mr-3.5 bg-zinc-100`}>
-        <Icon name={icon} size={22} color="#52525B" />
+      {/* Icône avec badge New */}
+      <View style={{ position: 'relative' }}>
+        <View style={tw`w-10 h-10 rounded-xl items-center justify-center mr-3.5 bg-zinc-100`}>
+          <Icon name={icon} size={22} color="#52525B" />
+        </View>
+        {showNewBadge && (
+          <View
+            style={{
+              position: 'absolute',
+              top: -6,
+              right: 6,
+              backgroundColor: '#8b5cf6',
+              borderWidth: 1.5,
+              borderColor: '#6d28d9',
+              borderRadius: 6,
+              paddingHorizontal: 4,
+              paddingVertical: 1,
+              minWidth: 24,
+              alignItems: 'center',
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 7,
+                fontWeight: '800',
+                color: '#FFFFFF',
+                textTransform: 'uppercase',
+              }}
+            >
+              {t('common.new')}
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Texte */}
@@ -420,6 +470,14 @@ const SettingsScreen: React.FC = () => {
   const [hasRated, setHasRated] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
 
+  // Compact view preferences
+  const [isHeaderCompact, setIsHeaderCompact] = useState(false);
+  const [isHabitsCompact, setIsHabitsCompact] = useState(false);
+
+  // Track if user has interacted with compact toggles (to hide "New" badge)
+  const [hasSeenHeaderCompact, setHasSeenHeaderCompact] = useState(true); // Default true to avoid flash
+  const [hasSeenHabitsCompact, setHasSeenHabitsCompact] = useState(true);
+
   // ============================================================================
   // HOOKS - useCallback
   // ============================================================================
@@ -470,6 +528,72 @@ const SettingsScreen: React.FC = () => {
     }
   }, [user?.id]);
 
+  /**
+   * Charge les préférences de vue compacte et l'état "seen" des badges
+   */
+  const loadCompactPreferences = useCallback(async () => {
+    try {
+      const [headerCompact, habitsCompact, headerSeen, habitsSeen] = await Promise.all([
+        AsyncStorage.getItem('dashboard_header_compact'),
+        AsyncStorage.getItem('dashboard_habits_compact'),
+        AsyncStorage.getItem('compact_header_seen'),
+        AsyncStorage.getItem('compact_habits_seen'),
+      ]);
+      if (headerCompact !== null) setIsHeaderCompact(headerCompact === 'true');
+      if (habitsCompact !== null) setIsHabitsCompact(habitsCompact === 'true');
+      setHasSeenHeaderCompact(headerSeen === 'true');
+      setHasSeenHabitsCompact(habitsSeen === 'true');
+    } catch (error) {
+      Logger.error('Error loading compact preferences:', error);
+    }
+  }, []);
+
+  /**
+   * Toggle le mode compact de l'en-tête
+   */
+  const handleToggleHeaderCompact = async (value: boolean) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setIsHeaderCompact(value);
+
+    // Mark as seen (hide "New" badge) when user interacts
+    if (!hasSeenHeaderCompact) {
+      setHasSeenHeaderCompact(true);
+      AsyncStorage.setItem('compact_header_seen', 'true').catch(() => {});
+    }
+
+    try {
+      await AsyncStorage.setItem('dashboard_header_compact', String(value));
+      if (value) {
+        Alert.alert('', t('settings.compactHeaderToast'));
+      }
+    } catch (error) {
+      Logger.error('Error saving header compact preference:', error);
+    }
+  };
+
+  /**
+   * Toggle le mode compact des habitudes
+   */
+  const handleToggleHabitsCompact = async (value: boolean) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setIsHabitsCompact(value);
+
+    // Mark as seen (hide "New" badge) when user interacts
+    if (!hasSeenHabitsCompact) {
+      setHasSeenHabitsCompact(true);
+      AsyncStorage.setItem('compact_habits_seen', 'true').catch(() => {});
+    }
+
+    try {
+      await AsyncStorage.setItem('dashboard_habits_compact', String(value));
+      if (value) {
+        Alert.alert('', t('settings.compactHabitsToast'));
+      }
+    } catch (error) {
+      Logger.error('Error saving habits compact preference:', error);
+    }
+  };
+
   // ============================================================================
   // HOOKS - useEffect
   // ============================================================================
@@ -486,6 +610,7 @@ const SettingsScreen: React.FC = () => {
           loadHolidayStatus(),
           loadUsername(),
           loadRatingStatus(),
+          loadCompactPreferences(),
         ]);
       } finally {
         setLoading(false);
@@ -855,6 +980,40 @@ const SettingsScreen: React.FC = () => {
                     }}
                     trackColor={{ false: '#E4E4E7', true: '#A1A1AA' }}
                     thumbColor={dailyMotivationEnabled ? '#52525B' : '#FFFFFF'}
+                    ios_backgroundColor="#E4E4E7"
+                  />
+                }
+              />
+
+              {/* Compact Header Mode */}
+              <SettingsItem
+                icon="layout-compact"
+                title={t('settings.compactHeader')}
+                subtitle={isHeaderCompact ? t('settings.compactHeaderEnabled') : t('settings.compactHeaderDisabled')}
+                showNewBadge={!hasSeenHeaderCompact}
+                trailing={
+                  <Switch
+                    value={isHeaderCompact}
+                    onValueChange={handleToggleHeaderCompact}
+                    trackColor={{ false: '#E4E4E7', true: '#A1A1AA' }}
+                    thumbColor={isHeaderCompact ? '#52525B' : '#FFFFFF'}
+                    ios_backgroundColor="#E4E4E7"
+                  />
+                }
+              />
+
+              {/* Compact Habits Mode */}
+              <SettingsItem
+                icon="list-compact"
+                title={t('settings.compactHabits')}
+                subtitle={isHabitsCompact ? t('settings.compactHabitsEnabled') : t('settings.compactHabitsDisabled')}
+                showNewBadge={!hasSeenHabitsCompact}
+                trailing={
+                  <Switch
+                    value={isHabitsCompact}
+                    onValueChange={handleToggleHabitsCompact}
+                    trackColor={{ false: '#E4E4E7', true: '#A1A1AA' }}
+                    thumbColor={isHabitsCompact ? '#52525B' : '#FFFFFF'}
                     ios_backgroundColor="#E4E4E7"
                   />
                 }

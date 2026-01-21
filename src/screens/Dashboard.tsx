@@ -9,7 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Lock, Plus, Zap, PauseCircle } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { getLocales } from 'expo-localization';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import tw from '../lib/tailwind';
 
 // Components
@@ -20,14 +20,15 @@ import { SwipeableDashboardCard } from '../components/dashboard/SwipeableDashboa
 import { HolidayModeDisplay } from '../components/dashboard/HolidayModeDisplay';
 import { XPPopup } from '../components/dashboard/XPPopup';
 import { DebugButton } from '@/components/debug/DebugButton';
-import { StreakSaverBadge } from '@/components/streakSaver/StreakSaverBadge';
 import { StreakSaverShopModal } from '@/components/streakSaver/StreakSaverShopModal';
 import { StreakSaverSelectionModal } from '@/components/streakSaver/StreakSaverSelectionModal';
 import { StreakSaverModal } from '@/components/streakSaver/StreakSaverModal';
 import TaskBadge from '@/components/TasksBadge';
 import { UpdateModal } from '@/components/updateModal';
 import { HabitsSectionHeader } from '@/components/dashboard/HabitsSectionHeader';
+import DailyChallenge from '@/components/dashboard/DailyChallenge';
 import { HabitCategoryBadge } from '@/components/dashboard/HabitCategoryBadge';
+import { AddHabitBar } from '@/components/dashboard/AddHabitBar';
 import { DailyMotivationModal } from '@/components/motivation/DailyMotivationModal';
 
 // Contexts
@@ -43,6 +44,7 @@ import { useInventory } from '@/context/InventoryContext';
 // Services
 import { HolidayModeService } from '@/services/holidayModeService';
 import { StreakSaverService } from '@/services/StreakSaverService';
+import { supabase } from '@/lib/supabase';
 
 // Utils
 import { getAchievementByLevel, getAchievementTitle, achievementTitles } from '@/utils/achievements';
@@ -67,7 +69,7 @@ import { useDailyMotivation } from '@/hooks/useDailyMotivation';
 // ============================================================================
 
 const Dashboard: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigation = useNavigation();
   const { user, username } = useAuth();
   const { habits, loading: habitsLoading, toggleTask, deleteHabit, refreshHabits } = useHabits();
@@ -84,6 +86,56 @@ const Dashboard: React.FC = () => {
   // State: Loading & UI
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [showShop, setShowShop] = useState(false);
+
+  // State: Separate compact view modes (header and habits are independent)
+  const [isHeaderCompact, setIsHeaderCompact] = useState(false);
+  const [isHabitsCompact, setIsHabitsCompact] = useState(false);
+
+  // Load compact view preferences from AsyncStorage - reload on focus to catch Settings changes
+  const loadCompactPreferences = useCallback(async () => {
+    try {
+      const [headerCompact, habitsCompact] = await Promise.all([
+        AsyncStorage.getItem('dashboard_header_compact'),
+        AsyncStorage.getItem('dashboard_habits_compact'),
+      ]);
+      if (headerCompact !== null) setIsHeaderCompact(headerCompact === 'true');
+      if (habitsCompact !== null) setIsHabitsCompact(habitsCompact === 'true');
+    } catch (error) {
+      Logger.error('Error loading compact preferences:', error);
+    }
+  }, []);
+
+  // Check if daily challenge was already collected today
+  const checkDailyChallengeStatus = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const today = getTodayString();
+      const { data, error } = await supabase
+        .from('daily_challenges')
+        .select('xp_collected')
+        .eq('user_id', user.id)
+        .eq('date', today)
+        .single();
+
+      if (!error && data) {
+        setIsDailyChallengeCollected(data.xp_collected || false);
+      } else {
+        setIsDailyChallengeCollected(false);
+      }
+    } catch (error) {
+      Logger.error('Error checking daily challenge status:', error);
+      setIsDailyChallengeCollected(false);
+    }
+  }, [user?.id]);
+
+  // Reload compact preferences and daily challenge status when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadCompactPreferences();
+      checkDailyChallengeStatus();
+    }, [loadCompactPreferences, checkDailyChallengeStatus])
+  );
+
   const [showStreakSaverSelection, setShowStreakSaverSelection] = useState(false);
   const [saveableHabits, setSaveableHabits] = useState<Array<{
     habitId: string;
@@ -111,6 +163,7 @@ const Dashboard: React.FC = () => {
   const [frozenHabits, setFrozenHabits] = useState<Set<string>>(new Set());
   const [frozenTasksMap, setFrozenTasksMap] = useState<Map<string, Record<string, { pausedUntil: string }>>>(new Map());
   const [streakSaverRefreshTrigger, setStreakSaverRefreshTrigger] = useState(0);
+  const [streaksToSaveCount, setStreaksToSaveCount] = useState(0);
   const { showModal, isChecking, handleClose } = useVersionCheck();
 
   // Daily Motivation Modal
@@ -121,7 +174,8 @@ const Dashboard: React.FC = () => {
     isTestMode: isMotivationTestMode,
   } = useDailyMotivation();
 
-  const locale = getLocales()[0]?.languageCode ?? 'en';
+  // Use i18n.language to respect user's language preference (from settings or device)
+  const locale = i18n.language?.substring(0, 2) ?? 'en';
   const currentVersion = versionManager.getCurrentVersion();
 
   const updates = useMemo(() => getUpdatesForVersion(currentVersion, locale), [currentVersion, locale]);
@@ -155,6 +209,10 @@ const Dashboard: React.FC = () => {
     isBoosted: boolean;
   }>({ visible: false, taskName: '', xpAmount: 0, accentColor: '#3b82f6', isBoosted: false });
 
+  // State: Track if daily challenge was collected today (for compact mode display)
+  const [isDailyChallengeCollected, setIsDailyChallengeCollected] = useState(true); // Default true to avoid flash
+  const [dailyChallengeKey, setDailyChallengeKey] = useState(0); // Key to force remount on debug reset
+
   // Refs
   const isFetchingHolidayRef = useRef(false);
   const lastLoadTime = useRef<number>(0);
@@ -168,14 +226,17 @@ const Dashboard: React.FC = () => {
   // ============================================================================
 
   const hasMinimumData = useMemo(() => {
-    return !habitsLoading && !statsLoading && !holidayLoading && stats !== null && habits !== undefined;
+    // Wait for all data to be loaded AND stats to be fully populated
+    // This prevents the flash of empty state before habits are rendered
+    return !habitsLoading && !statsLoading && !holidayLoading && stats !== null && habits !== undefined && stats?.level !== undefined;
   }, [habitsLoading, statsLoading, holidayLoading, stats, habits]);
 
   useEffect(() => {
     if (hasMinimumData && isInitialLoad) {
+      // Add a small delay to ensure UI is fully rendered before hiding loader
       setTimeout(() => {
         setIsInitialLoad(false);
-      }, 100);
+      }, 150);
     }
   }, [hasMinimumData, isInitialLoad]);
 
@@ -543,6 +604,27 @@ const Dashboard: React.FC = () => {
     return { completed, total };
   }, [habits]);
 
+  // Check if Daily Challenge can be claimed (same logic as in DailyChallenge component)
+  const canClaimDailyChallenge = useMemo(() => {
+    const today = getTodayString();
+    let dailyTasksTotal = 0;
+    let dailyTasksCompleted = 0;
+
+    habits.forEach((habit) => {
+      const taskCount = habit.tasks?.length || 0;
+      const todayData = habit.dailyTasks?.[today];
+      const completedCount = todayData?.completedTasks?.length || 0;
+
+      // Only count daily and custom frequency habits (not weekly)
+      if (habit.frequency === 'daily' || habit.frequency === 'custom') {
+        dailyTasksTotal += taskCount;
+        dailyTasksCompleted += completedCount;
+      }
+    });
+
+    return dailyTasksCompleted >= dailyTasksTotal && dailyTasksTotal > 0;
+  }, [habits]);
+
   const handleStreakSaverPress = async () => {
     if (!user) return;
 
@@ -678,6 +760,20 @@ const Dashboard: React.FC = () => {
     }, [])
   );
 
+  // Load streaks to save count for StatsBar alert
+  useEffect(() => {
+    const loadStreaksToSave = async () => {
+      if (!user?.id) return;
+      try {
+        const saveableHabits = await StreakSaverService.getSaveableHabits(user.id);
+        setStreaksToSaveCount(saveableHabits.length);
+      } catch (error) {
+        Logger.error('Error loading streaks to save count:', error);
+      }
+    };
+    loadStreaksToSave();
+  }, [user?.id, streakSaverRefreshTrigger]);
+
   // ============================================================================
   // Render: Loading State
   // ============================================================================
@@ -701,7 +797,13 @@ const Dashboard: React.FC = () => {
       <SafeAreaView style={tw`flex-1 bg-transparent`} edges={['top']}>
         {/* Fixed Stats Bar at top */}
         <View style={tw`px-5 pt-1 pb-2`}>
-          <StatsBar userLevel={stats?.level ?? 1} totalStreak={stats?.totalStreak ?? 0} />
+          <StatsBar
+            userLevel={stats?.level ?? 1}
+            totalStreak={stats?.totalStreak ?? 0}
+            streaksToSaveCount={streaksToSaveCount}
+            onStreakAlertPress={handleStreakSaverPress}
+            showAchievementBadge={isHeaderCompact}
+          />
         </View>
 
         <ScrollView
@@ -781,28 +883,121 @@ const Dashboard: React.FC = () => {
             </View>
           )}
 
-          {/* Header with title & progress */}
-          <DashboardHeader
-            userTitle={stats?.currentAchievement ? getAchievementTitle(stats.level) : t('achievements.tiers.novice')}
-            userLevel={stats?.level ?? 1}
-            currentAchievement={stats?.currentAchievement}
-            currentLevelXP={stats?.currentLevelXP ?? 0}
-            xpForNextLevel={stats?.xpForNextLevel ?? 100}
-            onStatsRefresh={handleStatsRefresh}
-            totalXP={stats?.totalXP ?? 0}
-            habits={activeHabits}
-            isScrolling={isScrolledPastHeader}
-            onXPCollected={(amount, taskName) => {
-              // Show XP popup for the daily challenge
-              setXpPopup({
-                visible: true,
-                taskName: taskName || t('dashboard.dailyChallenge.title'),
-                xpAmount: amount,
-                accentColor: userTierTheme?.accent || '#9333EA',
-                isBoosted: !!hasActiveBoost,
-              });
-            }}
-          />
+          {/* Header with title & progress - Side by side with TaskBadge when header is compact */}
+          {isHeaderCompact && activeHabits.length > 0 ? (
+            <View>
+              <View style={tw`flex-row gap-2`}>
+                {/* DashboardHeader - 50% width with fixed height */}
+                <View style={{ flex: 1, minHeight: 95 }}>
+                  <DashboardHeader
+                    userTitle={stats?.currentAchievement ? getAchievementTitle(stats.level) : t('achievements.tiers.novice')}
+                    userLevel={stats?.level ?? 1}
+                    currentAchievement={stats?.currentAchievement}
+                    currentLevelXP={stats?.currentLevelXP ?? 0}
+                    xpForNextLevel={stats?.xpForNextLevel ?? 100}
+                    onStatsRefresh={handleStatsRefresh}
+                    totalXP={stats?.totalXP ?? 0}
+                    habits={activeHabits}
+                    isScrolling={isScrolledPastHeader}
+                    isCompact={isHeaderCompact}
+                    onXPCollected={(amount, taskName) => {
+                      setXpPopup({
+                        visible: true,
+                        taskName: taskName || t('dashboard.dailyChallenge.title'),
+                        xpAmount: amount,
+                        accentColor: userTierTheme?.accent || '#9333EA',
+                        isBoosted: !!hasActiveBoost,
+                      });
+                    }}
+                  />
+                </View>
+                {/* TaskBadge - 50% width with fixed height */}
+                <View style={{ flex: 1, minHeight: 95 }}>
+                  <TaskBadge
+                    completed={realTimeTasksStats.completed}
+                    total={realTimeTasksStats.total}
+                    username={username || user?.email?.split('@')[0]}
+                    userLevel={stats?.level ?? 1}
+                    compact
+                  />
+                </View>
+              </View>
+              {/* DailyChallenge - Show below compact cards when claimable and not yet collected */}
+              {canClaimDailyChallenge && !isDailyChallengeCollected && user?.id && (
+                <View style={tw`mt-3`}>
+                  <DailyChallenge
+                    key={dailyChallengeKey}
+                    habits={activeHabits}
+                    onCollect={async (amount) => {
+                      setIsDailyChallengeCollected(true); // Hide immediately after collection
+                      setXpPopup({
+                        visible: true,
+                        taskName: t('dashboard.dailyChallenge.title'),
+                        xpAmount: amount,
+                        accentColor: userTierTheme?.accent || '#9333EA',
+                        isBoosted: !!hasActiveBoost,
+                      });
+                      await refreshStats(true);
+                    }}
+                    userId={user.id}
+                    userLevel={stats?.level ?? 1}
+                    currentLevelXP={stats?.currentLevelXP ?? 0}
+                    xpForNextLevel={stats?.xpForNextLevel ?? 100}
+                    onLevelUp={async () => {
+                      await refreshStats(true);
+                    }}
+                    tierTheme={userTierTheme || undefined}
+                    compact
+                  />
+                </View>
+              )}
+            </View>
+          ) : (
+            <DashboardHeader
+              userTitle={stats?.currentAchievement ? getAchievementTitle(stats.level) : t('achievements.tiers.novice')}
+              userLevel={stats?.level ?? 1}
+              currentAchievement={stats?.currentAchievement}
+              currentLevelXP={stats?.currentLevelXP ?? 0}
+              xpForNextLevel={stats?.xpForNextLevel ?? 100}
+              onStatsRefresh={handleStatsRefresh}
+              totalXP={stats?.totalXP ?? 0}
+              habits={activeHabits}
+              isScrolling={isScrolledPastHeader}
+              isCompact={isHeaderCompact}
+              onXPCollected={(amount, taskName) => {
+                setXpPopup({
+                  visible: true,
+                  taskName: taskName || t('dashboard.dailyChallenge.title'),
+                  xpAmount: amount,
+                  accentColor: userTierTheme?.accent || '#9333EA',
+                  isBoosted: !!hasActiveBoost,
+                });
+              }}
+            />
+          )}
+
+          {/* Debug button to reset daily challenge - always visible in debug mode */}
+          {Config.debug.showTestButtons && (
+            <Pressable
+              onPress={async () => {
+                if (!user?.id) return;
+                const today = getTodayString();
+                await supabase
+                  .from('daily_challenges')
+                  .update({ xp_collected: false, collected_at: null })
+                  .eq('user_id', user.id)
+                  .eq('date', today);
+                setIsDailyChallengeCollected(false);
+                setDailyChallengeKey((prev) => prev + 1); // Force remount to reload state from DB
+                Logger.debug('✅ Debug: Daily challenge reset');
+              }}
+              style={tw`mt-3 bg-red-600 rounded-xl p-2`}
+            >
+              <Text style={tw`text-white text-xs text-center font-bold`}>
+                {t('dashboard.dailyChallenge.debugReset')}
+              </Text>
+            </Pressable>
+          )}
 
           {Config.debug.enabled && (
             <>
@@ -863,8 +1058,11 @@ const Dashboard: React.FC = () => {
           <View>
             {/* Section Header */}
             {!showFullHolidayMode && activeHabits.length > 0 ? (
-              <View style={tw`mt-4`}>
-                <TaskBadge completed={realTimeTasksStats.completed} total={realTimeTasksStats.total} username={username || user?.email?.split('@')[0]} userLevel={stats?.level ?? 1} />
+              <View style={tw`mt-2`}>
+                {/* TaskBadge - Only show in normal mode (in header compact mode it's next to header) */}
+                {!isHeaderCompact && (
+                  <TaskBadge completed={realTimeTasksStats.completed} total={realTimeTasksStats.total} username={username || user?.email?.split('@')[0]} userLevel={stats?.level ?? 1} />
+                )}
 
                 {/* Daily Motivation Button - below TaskBadge (DEBUG ONLY) */}
                 {Config.debug.enabled && (
@@ -915,21 +1113,11 @@ const Dashboard: React.FC = () => {
                   </View>
                 )}
 
-                {/* Streak Saver Badge - below habit limit indicator */}
-                {!showPartialPauseMode && !hasTasksPaused && (
-                  <View style={tw`mt-3`}>
-                    <StreakSaverBadge
-                      onPress={handleStreakSaverPress}
-                      onShopPress={() => {
-                        HapticFeedback.light();
-                        setShowShop(true);
-                      }}
-                      refreshTrigger={streakSaverRefreshTrigger}
-                    />
-                  </View>
-                )}
-
-                <HabitsSectionHeader onAddPress={handleCreateHabit} habitCount={activeHabits.length} />
+                {/* Habits section header with Add button on the right */}
+                <View style={tw`flex-row items-center justify-between mt-3`}>
+                  <HabitsSectionHeader habitCount={activeHabits.length} />
+                  <AddHabitBar onPress={handleCreateHabit} compact />
+                </View>
               </View>
             ) : showFullHolidayMode ? (
               <View style={tw`flex-row items-center justify-between mb-4`}>
@@ -982,6 +1170,7 @@ const Dashboard: React.FC = () => {
                           pausedTasks={frozenTasksMap.get(habit.id) || {}}
                           unlockedMilestonesCount={milestoneCounts[habit.id] || 0}
                           hasUnclaimedMilestone={unclaimedMilestones[habit.id] || false}
+                          compactView={isHabitsCompact}
                         />
                       ))}
                     </View>
@@ -1004,6 +1193,7 @@ const Dashboard: React.FC = () => {
                           pausedTasks={frozenTasksMap.get(habit.id) || {}}
                           unlockedMilestonesCount={milestoneCounts[habit.id] || 0}
                           hasUnclaimedMilestone={unclaimedMilestones[habit.id] || false}
+                          compactView={isHabitsCompact}
                         />
                       ))}
                     </View>

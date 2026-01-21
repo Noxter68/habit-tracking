@@ -24,7 +24,6 @@ interface AchievementDetailModalProps {
   onClose: () => void;
   achievement: Achievement | null;
   currentLevel: number;
-  totalCompletions: number;
 }
 
 export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
@@ -32,7 +31,6 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
   onClose,
   achievement,
   currentLevel,
-  totalCompletions,
 }) => {
   const { t } = useTranslation();
   const buttonPressed = useSharedValue(0);
@@ -49,8 +47,6 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
 
   const isUnlocked = achievement.level <= currentLevel;
   const requiredCompletions = (achievement.level - 1) * 10;
-  const remaining = requiredCompletions - totalCompletions;
-  const progress = Math.min((totalCompletions / requiredCompletions) * 100, 100);
 
   const tierTheme = getAchievementTierTheme(achievement.tierKey);
   const tierGradient = tierTheme.gradient;
@@ -297,19 +293,6 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
                                 count: requiredCompletions,
                               })}
                         </Text>
-
-                        {!isUnlocked && (
-                          <View
-                            style={tw`mt-3 bg-white/50 rounded-full h-2.5 overflow-hidden`}
-                          >
-                            <LinearGradient
-                              colors={tierGradient as any}
-                              start={{ x: 0, y: 0 }}
-                              end={{ x: 1, y: 0 }}
-                              style={[tw`h-full rounded-full`, { width: `${progress}%` }]}
-                            />
-                          </View>
-                        )}
                       </LinearGradient>
                     </ImageBackground>
                   </View>

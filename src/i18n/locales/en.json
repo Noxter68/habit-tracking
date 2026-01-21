@@ -68,7 +68,7 @@
       "title": "My Habits",
       "daily": "Daily",
       "weekly": "Weekly",
-      "addHabit": "Add"
+      "addHabit": "New Habit"
     },
     "greeting": {
       "morning": "Good morning",
@@ -138,7 +138,8 @@
         "title": "New Day!",
         "subtitle": "{{name}}, it's your time!",
         "message": "Come on {{name}}, show what you've got!"
-      }
+      },
+      "tasks": "Tasks"
     },
     "progressStatus": {
       "perfectDay": {
@@ -287,6 +288,14 @@
     "dailyMotivation": "Daily Motivation",
     "dailyMotivationEnabled": "Every app launch",
     "dailyMotivationDisabled": "Once per day",
+    "compactHeader": "Compact Dashboard Header",
+    "compactHeaderEnabled": "Compact view active",
+    "compactHeaderDisabled": "Full view",
+    "compactHeaderToast": "Dashboard header compact mode applied",
+    "compactHabits": "Compact Habits View",
+    "compactHabitsEnabled": "Grid view active",
+    "compactHabitsDisabled": "List view",
+    "compactHabitsToast": "Habits compact mode applied",
     "rating": {
       "sectionTitle": "Support Us",
       "title": "Rate the App",

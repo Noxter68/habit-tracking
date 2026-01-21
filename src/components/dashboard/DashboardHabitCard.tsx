@@ -6,8 +6,9 @@
  */
 
 import React, { useMemo, memo, useCallback, useEffect } from 'react';
-import { View, Text, ImageBackground } from 'react-native';
+import { View, Text, ImageBackground, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { ChevronRight } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import * as Haptics from 'expo-haptics';
 import Animated, {
@@ -17,6 +18,9 @@ import Animated, {
   withSequence,
   withTiming,
   Easing,
+  FadeIn,
+  FadeOut,
+  LinearTransition,
 } from 'react-native-reanimated';
 import tw from '@/lib/tailwind';
 
@@ -50,6 +54,7 @@ interface DashboardHabitCardProps {
   pausedTasks?: Record<string, { pausedUntil: string; reason?: string }>;
   unlockedMilestonesCount?: number;
   hasUnclaimedMilestone?: boolean;
+  compactView?: boolean;
 }
 
 /**
@@ -70,6 +75,7 @@ const DashboardHabitCardComponent: React.FC<DashboardHabitCardProps> = ({
   pausedTasks = {},
   unlockedMilestonesCount = 0,
   hasUnclaimedMilestone = false,
+  compactView = false,
 }) => {
   const { t } = useTranslation();
   const today = getTodayString();
@@ -214,7 +220,7 @@ const DashboardHabitCardComponent: React.FC<DashboardHabitCardProps> = ({
               colors={[theme.gradient[0] + 'e8', theme.gradient[1] + 'e0', theme.gradient[2] + 'd8']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={tw`p-4`}
+              style={compactView ? tw`p-3` : tw`p-4`}
             >
               {/* Decorative gradient overlay */}
               <View style={tw`absolute inset-0 opacity-15`}>
@@ -226,49 +232,85 @@ const DashboardHabitCardComponent: React.FC<DashboardHabitCardProps> = ({
                 />
               </View>
 
-              {/* Header: Gem, Name, Streak, Chevron */}
-              <DashboardCardHeader
-                habitName={getTranslatedHabitName(habit, t)}
-                tierName={tier.name}
-                currentStreak={habit.currentStreak}
-                frequency={habit.frequency}
-                unlockedMilestonesCount={unlockedMilestonesCount}
-                hasUnclaimedMilestone={hasUnclaimedMilestone}
-                onNavigate={handleNavigate}
-              />
-
-              {/* Progress Bar */}
-              <View style={tw`mb-3`}>
-                <View
-                  style={{
-                    height: 12,
-                    borderRadius: 6,
-                    backgroundColor: 'rgba(0, 0, 0, 0.25)',
-                  }}
+              {/* Header: Gem, Name, Streak, Chevron - Hidden in compact view */}
+              {!compactView && (
+                <Animated.View
+                  entering={FadeIn.duration(250)}
+                  exiting={FadeOut.duration(150)}
+                  layout={LinearTransition.duration(250)}
                 >
-                  {taskProgress > 0 && (
-                    <View
-                      style={{
-                        height: '100%',
-                        width: `${Math.max(taskProgress, 10)}%`,
-                        borderRadius: 6,
-                        backgroundColor: '#ffffff',
-                        // Subtle border for depth effect
-                        borderBottomWidth: 2,
-                        borderBottomColor: 'rgba(0, 0, 0, 0.1)',
-                      }}
-                    />
-                  )}
-                </View>
-                <View style={tw`flex-row items-center justify-between mt-1.5`}>
-                  <Text style={tw`text-[10px] font-semibold text-white/70`}>
-                    {isWeekly ? t('habits.weeklyTasks') : t('habits.todaysTasks')}
-                  </Text>
-                  <Text style={tw`text-[11px] font-bold text-white`}>
-                    {completedTasks}/{activeTasks}
-                  </Text>
-                </View>
-              </View>
+                  <DashboardCardHeader
+                    habitName={getTranslatedHabitName(habit, t)}
+                    tierName={tier.name}
+                    currentStreak={habit.currentStreak}
+                    frequency={habit.frequency}
+                    unlockedMilestonesCount={unlockedMilestonesCount}
+                    hasUnclaimedMilestone={hasUnclaimedMilestone}
+                    onNavigate={handleNavigate}
+                  />
+                </Animated.View>
+              )}
+
+              {/* Progress Bar - Hidden in compact view */}
+              {!compactView && (
+                <Animated.View
+                  entering={FadeIn.duration(250).delay(50)}
+                  exiting={FadeOut.duration(150)}
+                  layout={LinearTransition.duration(250)}
+                  style={tw`mb-3`}
+                >
+                  <View
+                    style={{
+                      height: 12,
+                      borderRadius: 6,
+                      backgroundColor: 'rgba(0, 0, 0, 0.25)',
+                    }}
+                  >
+                    {taskProgress > 0 && (
+                      <View
+                        style={{
+                          height: '100%',
+                          width: `${Math.max(taskProgress, 10)}%`,
+                          borderRadius: 6,
+                          backgroundColor: '#ffffff',
+                          // Subtle border for depth effect
+                          borderBottomWidth: 2,
+                          borderBottomColor: 'rgba(0, 0, 0, 0.1)',
+                        }}
+                      />
+                    )}
+                  </View>
+                  <View style={tw`flex-row items-center justify-between mt-1.5`}>
+                    <Text style={tw`text-[10px] font-semibold text-white/70`}>
+                      {isWeekly ? t('habits.weeklyTasks') : t('habits.todaysTasks')}
+                    </Text>
+                    <Text style={tw`text-[11px] font-bold text-white`}>
+                      {completedTasks}/{activeTasks}
+                    </Text>
+                  </View>
+                </Animated.View>
+              )}
+
+              {/* Compact header with habit name and navigation */}
+              {compactView && (
+                <Animated.View
+                  entering={FadeIn.duration(250)}
+                  exiting={FadeOut.duration(150)}
+                  layout={LinearTransition.duration(250)}
+                >
+                  <Pressable onPress={handleNavigate} style={tw`flex-row items-center justify-between mb-2`}>
+                    <Text style={tw`text-sm font-bold text-white flex-1`} numberOfLines={1}>
+                      {getTranslatedHabitName(habit, t)}
+                    </Text>
+                    <View style={tw`flex-row items-center gap-1`}>
+                      <Text style={tw`text-xs font-semibold text-white/70`}>
+                        {completedTasks}/{activeTasks}
+                      </Text>
+                      <ChevronRight size={16} color="rgba(255,255,255,0.7)" strokeWidth={2.5} />
+                    </View>
+                  </Pressable>
+                </Animated.View>
+              )}
 
               {/* Task List */}
               <View>
@@ -293,13 +335,14 @@ const DashboardHabitCardComponent: React.FC<DashboardHabitCardProps> = ({
                       tierAccent={theme.accent}
                       tierName={tier.name}
                       isWeekLocked={isWeekCompleted}
+                      compact={compactView}
                     />
                   );
                 })}
               </View>
 
-              {/* Paused tasks notification */}
-              {pausedTaskCount > 0 && (
+              {/* Paused tasks notification - Hidden in compact view */}
+              {!compactView && pausedTaskCount > 0 && (
                 <View
                   style={[
                     tw`mt-2 pt-2 flex-row items-center gap-2`,
@@ -364,6 +407,7 @@ export const DashboardHabitCard = memo(DashboardHabitCardComponent, (prev, next)
     prev.habit.currentStreak === next.habit.currentStreak &&
     prev.unlockedMilestonesCount === next.unlockedMilestonesCount &&
     prev.hasUnclaimedMilestone === next.hasUnclaimedMilestone &&
+    prev.compactView === next.compactView &&
     prevTaskIds === nextTaskIds &&
     areCompletedTasksEqual(prevTodayTasks?.completedTasks, nextTodayTasks?.completedTasks) &&
     arePausedTasksEqual(prev.pausedTasks || {}, next.pausedTasks || {})

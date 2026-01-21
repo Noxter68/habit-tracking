@@ -28,6 +28,7 @@ interface SwipeableDashboardCardProps {
   pausedTasks?: Record<string, { pausedUntil: string; reason?: string }>;
   unlockedMilestonesCount?: number;
   hasUnclaimedMilestone?: boolean;
+  compactView?: boolean;
 }
 
 /**
@@ -50,6 +51,7 @@ export const SwipeableDashboardCard: React.FC<SwipeableDashboardCardProps> = ({
   pausedTasks = {},
   unlockedMilestonesCount = 0,
   hasUnclaimedMilestone = false,
+  compactView = false,
 }) => {
   const { t } = useTranslation();
   const translateX = useRef(new RNAnimated.Value(0)).current;
@@ -161,10 +163,10 @@ export const SwipeableDashboardCard: React.FC<SwipeableDashboardCardProps> = ({
             habit={habit}
             onToggleTask={onToggleTask}
             onNavigateToDetails={onNavigateToDetails}
-            index={index}
             pausedTasks={pausedTasks}
             unlockedMilestonesCount={unlockedMilestonesCount}
             hasUnclaimedMilestone={hasUnclaimedMilestone}
+            compactView={compactView}
           />
         </RNAnimated.View>
       </PanGestureHandler>

@@ -3,7 +3,7 @@
     "name": "Nuvoria",
     "slug": "Nuvoria",
     "scheme": "nuvoria",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "orientation": "portrait",
     "icon": "./icons/icon/nuvoria_icon.png",
     "userInterfaceStyle": "light",

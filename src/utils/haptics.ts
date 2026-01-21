@@ -1,7 +1,7 @@
 /**
  * @file haptics.ts
- * @description Utilitaires centralisés pour le retour haptique.
- * Basé sur les guidelines Apple Human Interface pour une UX cohérente.
+ * @description Centralized utilities for haptic feedback.
+ * Based on Apple Human Interface guidelines for consistent UX.
  */
 
 import * as Haptics from 'expo-haptics';
@@ -11,109 +11,127 @@ import * as Haptics from 'expo-haptics';
 // =============================================================================
 
 /**
- * Types de feedback haptique disponibles.
+ * Available haptic feedback types.
  */
 type HapticFeedbackType = 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error' | 'selection';
 
 // =============================================================================
-// CONSTANTES - FEEDBACK HAPTIQUE
+// CONSTANTS - HAPTIC FEEDBACK
 // =============================================================================
 
 /**
- * Utilitaires de retour haptique pour différents types d'interactions.
- * Chaque méthode correspond à un cas d'usage spécifique selon les guidelines Apple.
+ * Haptic feedback utilities for different types of interactions.
+ * Each method corresponds to a specific use case according to Apple guidelines.
  */
 export const HapticFeedback = {
   /**
-   * Impact léger - Utilisé pour :
-   * - Boutons standards
-   * - Sélections dans les listes
+   * Light impact - Used for:
+   * - Standard buttons
+   * - List selections
    * - Switches/toggles
-   * - Interactions mineures
+   * - Minor interactions
    */
   light: (): void => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   },
 
   /**
-   * Impact moyen - Utilisé pour :
-   * - Actions importantes (Déconnexion, Suppression)
-   * - Transitions de navigation
-   * - Ouverture/fermeture de modales
-   * - Changements d'état significatifs
+   * Medium impact - Used for:
+   * - Important actions (Logout, Delete)
+   * - Navigation transitions
+   * - Opening/closing modals
+   * - Significant state changes
    */
   medium: (): void => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   },
 
   /**
-   * Impact fort - Utilisé pour :
-   * - Actions critiques
-   * - Complétion de tâches majeures
+   * Heavy impact - Used for:
+   * - Critical actions
+   * - Major task completions
    * - Level up
-   * - Déblocage d'achievements
+   * - Achievement unlocks
    */
   heavy: (): void => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
   },
 
   /**
-   * Notification de succès - Utilisé pour :
-   * - Complétions réussies
-   * - Tâches d'habitude complétées
-   * - Collection d'XP
-   * - Jalons de streak
+   * Success notification - Used for:
+   * - Successful completions
+   * - Habit tasks completed
+   * - XP collection
+   * - Streak milestones
    */
   success: (): void => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   },
 
   /**
-   * Notification d'avertissement - Utilisé pour :
-   * - Messages de précaution
-   * - Avertissements de streak
-   * - Limites premium atteintes
+   * Warning notification - Used for:
+   * - Caution messages
+   * - Streak warnings
+   * - Premium limits reached
    */
   warning: (): void => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
   },
 
   /**
-   * Notification d'erreur - Utilisé pour :
-   * - Actions échouées
-   * - Erreurs de validation
-   * - Erreurs critiques
+   * Error notification - Used for:
+   * - Failed actions
+   * - Validation errors
+   * - Critical errors
    */
   error: (): void => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
   },
 
   /**
-   * Changement de sélection - Utilisé pour :
-   * - Changements de valeur dans les pickers
-   * - Changements de contrôle segmenté
-   * - Changements d'onglets
+   * Selection change - Used for:
+   * - Picker value changes
+   * - Segmented control changes
+   * - Tab changes
    */
   selection: (): void => {
     Haptics.selectionAsync();
   },
+
+  /**
+   * Celebration bell - Used for:
+   * - Daily challenge collection
+   * - Special rewards
+   * - Celebration events
+   * Duolingo-style sequence: intense burst at start then decreasing
+   */
+  celebrationBell: (): void => {
+    // Initial intense burst (3x rapid heavy) then decreasing
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 50);
+    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 100);
+    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 170);
+    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 240);
+    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), 320);
+    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), 400);
+  },
 };
 
 // =============================================================================
-// FONCTIONS - WRAPPERS HAPTIQUES
+// FUNCTIONS - HAPTIC WRAPPERS
 // =============================================================================
 
 /**
- * Enveloppe un callback avec un feedback haptique.
- * Utile pour ajouter du feedback haptique à n'importe quel composant pressable.
+ * Wraps a callback with haptic feedback.
+ * Useful for adding haptic feedback to any pressable component.
  *
- * @param callback - La fonction à exécuter après le feedback
- * @param feedbackType - Type de feedback haptique (défaut: 'light')
- * @returns Une fonction avec feedback haptique intégré
+ * @param callback - The function to execute after feedback
+ * @param feedbackType - Type of haptic feedback (default: 'light')
+ * @returns A function with integrated haptic feedback
  *
  * @example
  * <TouchableOpacity onPress={withHaptic(handlePress, 'light')}>
- *   <Text>Appuyer</Text>
+ *   <Text>Press</Text>
  * </TouchableOpacity>
  */
 export const withHaptic = (
@@ -127,15 +145,15 @@ export const withHaptic = (
 };
 
 /**
- * Version asynchrone de withHaptic pour les callbacks async.
+ * Async version of withHaptic for async callbacks.
  *
- * @param callback - La fonction async à exécuter après le feedback
- * @param feedbackType - Type de feedback haptique (défaut: 'light')
- * @returns Une fonction async avec feedback haptique intégré
+ * @param callback - The async function to execute after feedback
+ * @param feedbackType - Type of haptic feedback (default: 'light')
+ * @returns An async function with integrated haptic feedback
  *
  * @example
  * <TouchableOpacity onPress={withHapticAsync(handleAsyncPress, 'success')}>
- *   <Text>Sauvegarder</Text>
+ *   <Text>Save</Text>
  * </TouchableOpacity>
  */
 export const withHapticAsync = (

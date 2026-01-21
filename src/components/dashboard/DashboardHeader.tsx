@@ -9,12 +9,14 @@ import React, { useMemo, useCallback, useEffect } from 'react';
 import { View, Text, ImageBackground, Pressable, Image, StyleSheet } from 'react-native';
 import Animated, {
   FadeIn,
+  FadeOut,
   useSharedValue,
   useAnimatedStyle,
   withRepeat,
   withTiming,
   withDelay,
   Easing,
+  LinearTransition,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -323,6 +325,7 @@ interface DashboardHeaderProps {
   totalXP?: number;
   habits: Habit[];
   isScrolling?: boolean;
+  isCompact?: boolean;
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -336,6 +339,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   totalXP = 0,
   habits,
   isScrolling = false,
+  isCompact = false,
 }) => {
   const navigation = useNavigation();
   const { user, username } = useAuth();
@@ -419,27 +423,45 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     }
   }, [refreshStats, onStatsRefresh]);
 
+  // Get shadow color from tier theme (darker version of gradient)
+  const shadowColor = useMemo(() => {
+    const gradientColors = tierTheme.gradient as string[];
+    // Use the darkest color from the gradient (last one) and darken it further
+    return gradientColors[gradientColors.length - 1] || '#1e3a5f';
+  }, [tierTheme.gradient]);
+
   const GradientContainer = useMemo(() => {
     return ({ children }: { children: React.ReactNode }) => {
       const textureSource = tierTheme.texture;
       return (
-        <LinearGradient
-          colors={tierTheme.gradient as [string, string, ...string[]]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{
-            borderRadius: 20,
-            overflow: 'hidden',
-            borderWidth: isObsidian ? 2 : 1.5,
-            borderColor: isObsidian ? 'rgba(139, 92, 246, 0.4)' : 'rgba(255, 255, 255, 0.2)',
-            shadowColor: isObsidian ? '#8b5cf6' : '#000',
-            shadowOffset: { width: 0, height: isObsidian ? 12 : 8 },
-            shadowOpacity: isObsidian ? 0.6 : 0.3,
-            shadowRadius: isObsidian ? 24 : 20,
-          }}
-        >
+        <View style={{ position: 'relative', flex: isCompact ? 1 : undefined }}>
+          {/* Shadow layer for depth effect */}
+          <View
+            style={{
+              position: 'absolute',
+              top: 3,
+              left: 0,
+              right: 0,
+              bottom: -3,
+              backgroundColor: shadowColor,
+              borderRadius: 16,
+              opacity: 0.6,
+            }}
+          />
+          <LinearGradient
+            colors={tierTheme.gradient as [string, string, ...string[]]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              borderRadius: 16,
+              overflow: 'hidden',
+              borderWidth: isObsidian ? 2 : 1.5,
+              borderColor: isObsidian ? 'rgba(139, 92, 246, 0.4)' : 'rgba(255, 255, 255, 0.2)',
+              flex: isCompact ? 1 : undefined,
+            }}
+          >
           {textureSource ? (
-            <ImageBackground source={textureSource} resizeMode="cover" imageStyle={{ opacity: 0.2 }}>
+            <ImageBackground source={textureSource} resizeMode="cover" imageStyle={{ opacity: 0.2 }} style={{ flex: isCompact ? 1 : undefined }}>
               {isObsidian && (
                 <View
                   style={{
@@ -465,7 +487,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               {children}
             </ImageBackground>
           ) : (
-            <View>
+            <View style={{ flex: isCompact ? 1 : undefined }}>
               <View
                 style={{
                   position: 'absolute',
@@ -480,38 +502,39 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             </View>
           )}
         </LinearGradient>
+        </View>
       );
     };
-  }, [tierTheme.gradient, tierTheme.texture, isObsidian]);
+  }, [tierTheme.gradient, tierTheme.texture, isObsidian, shadowColor, isCompact]);
 
   // Check if boost is valid
   const hasActiveBoost = activeBoost && new Date(activeBoost.expires_at) > new Date();
 
   return (
-    <Animated.View entering={FadeIn} style={{ position: 'relative', marginBottom: 4 }}>
+    <Animated.View entering={FadeIn} style={{ position: 'relative', marginBottom: 0, flex: isCompact ? 1 : undefined }}>
       <GradientContainer>
-        <View style={{ padding: 16 }}>
-          {/* Top section: Greeting/Title + Achievement badge */}
+        <View style={{ padding: isCompact ? 14 : 16, flex: isCompact ? 1 : undefined, justifyContent: isCompact ? 'center' : undefined }}>
+            {/* Top section: Greeting/Title + Achievement badge */}
           <View
             style={{
               flexDirection: 'row',
               justifyContent: 'space-between',
               alignItems: 'center',
-              marginBottom: 12,
+              marginBottom: isCompact ? 0 : 12,
             }}
           >
             {/* Left content: Greeting + Title */}
             <View style={{ flex: 1, marginRight: 12 }}>
               <Text
                 style={{
-                  fontSize: 12,
+                  fontSize: isCompact ? 10 : 12,
                   fontWeight: '700',
                   color: '#FFFFFF',
                   letterSpacing: 2,
                   textShadowColor: isObsidian ? 'rgba(139, 92, 246, 0.8)' : 'rgba(0, 0, 0, 0.5)',
                   textShadowOffset: { width: 0, height: 1 },
                   textShadowRadius: isObsidian ? 8 : 4,
-                  marginBottom: 4,
+                  marginBottom: isCompact ? 2 : 4,
                 }}
               >
                 {greeting.toUpperCase()}
@@ -519,10 +542,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               </Text>
               <Text
                 style={{
-                  fontSize: 28,
+                  fontSize: isCompact ? 20 : 28,
                   fontWeight: '900',
                   color: '#FFFFFF',
-                  lineHeight: 32,
+                  lineHeight: isCompact ? 24 : 32,
                   textShadowColor: isObsidian ? 'rgba(139, 92, 246, 0.9)' : 'rgba(0, 0, 0, 0.6)',
                   textShadowOffset: { width: 0, height: 2 },
                   textShadowRadius: isObsidian ? 12 : 8,
@@ -532,54 +555,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               </Text>
             </View>
 
-            {/* Achievement Badge */}
-            <View style={{ position: 'relative' }}>
-              {/* Shadow layer for depth effect */}
-              <View
-                style={{
-                  position: 'absolute',
-                  top: 2,
-                  left: 0,
-                  right: 0,
-                  bottom: -2,
-                  backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                  borderRadius: 16,
-                }}
-              />
-              <Pressable
-                onPress={handleAchievementPress}
-                style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                  borderRadius: 16,
-                  borderWidth: 1,
-                  borderColor: 'rgba(255, 255, 255, 0.2)',
-                  height: 76,
-                  width: 76,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <AchievementBadge
-                  achievement={currentAchievement}
-                  onPress={handleAchievementPress}
-                  tierTheme={tierTheme}
-                  size={64}
-                />
-              </Pressable>
-            </View>
-          </View>
-
-          {/* Row 3: Progress Bar - Boosted version when active, normal otherwise */}
-          {userLevel < 40 && (
-            hasActiveBoost ? (
-              <BoostedProgressBar
-                progress={displayProgress}
-                displayXP={displayXP}
-                xpForNextLevel={xpForNextLevel}
-                isPaused={isScrolling}
-              />
-            ) : (
-              <View style={{ position: 'relative', marginBottom: 12 }}>
+            {/* Achievement Badge - Hidden in compact mode */}
+            {!isCompact && (
+              <View style={{ position: 'relative' }}>
                 {/* Shadow layer for depth effect */}
                 <View
                   style={{
@@ -589,99 +567,159 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                     right: 0,
                     bottom: -2,
                     backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                    borderRadius: 14,
+                    borderRadius: 16,
                   }}
                 />
-                <View
+                <Pressable
+                  onPress={handleAchievementPress}
                   style={{
                     backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                    borderRadius: 14,
-                    padding: 12,
+                    borderRadius: 16,
                     borderWidth: 1,
                     borderColor: 'rgba(255, 255, 255, 0.2)',
+                    height: 76,
+                    width: 76,
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
-                  {/* Progress bar */}
+                  <AchievementBadge
+                    achievement={currentAchievement}
+                    onPress={handleAchievementPress}
+                    tierTheme={tierTheme}
+                    size={64}
+                  />
+                </Pressable>
+              </View>
+            )}
+          </View>
+
+          {/* Row 3: Progress Bar - Boosted version when active, normal otherwise */}
+          {!isCompact && userLevel < 40 && (
+            <Animated.View
+              entering={FadeIn.duration(300)}
+              exiting={FadeOut.duration(200)}
+              layout={LinearTransition.duration(300)}
+            >
+              {hasActiveBoost ? (
+                <BoostedProgressBar
+                  progress={displayProgress}
+                  displayXP={displayXP}
+                  xpForNextLevel={xpForNextLevel}
+                  isPaused={isScrolling}
+                />
+              ) : (
+                <View style={{ position: 'relative', marginBottom: 12 }}>
+                  {/* Shadow layer for depth effect */}
                   <View
                     style={{
-                      height: 10,
-                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                      borderRadius: 5,
-                      overflow: 'hidden',
-                      marginBottom: 8,
+                      position: 'absolute',
+                      top: 2,
+                      left: 0,
+                      right: 0,
+                      bottom: -2,
+                      backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                      borderRadius: 14,
+                    }}
+                  />
+                  <View
+                    style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                      borderRadius: 14,
+                      padding: 12,
+                      borderWidth: 1,
+                      borderColor: 'rgba(255, 255, 255, 0.2)',
                     }}
                   >
+                    {/* Progress bar */}
                     <View
                       style={{
-                        width: `${displayProgress}%`,
-                        height: '100%',
-                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        height: 10,
+                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
                         borderRadius: 5,
-                        shadowColor: '#FFFFFF',
-                        shadowOffset: { width: 0, height: 0 },
-                        shadowOpacity: 0.5,
-                        shadowRadius: 4,
-                      }}
-                    />
-                  </View>
-
-                  {/* XP info */}
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 12,
-                        fontWeight: '700',
-                        color: '#FFFFFF',
-                        textShadowColor: 'rgba(0, 0, 0, 0.2)',
-                        textShadowOffset: { width: 0, height: 1 },
-                        textShadowRadius: 2,
+                        overflow: 'hidden',
+                        marginBottom: 8,
                       }}
                     >
-                      {displayXP.toLocaleString()} / {xpForNextLevel.toLocaleString()} XP
-                    </Text>
+                      <View
+                        style={{
+                          width: `${displayProgress}%`,
+                          height: '100%',
+                          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                          borderRadius: 5,
+                          shadowColor: '#FFFFFF',
+                          shadowOffset: { width: 0, height: 0 },
+                          shadowOpacity: 0.5,
+                          shadowRadius: 4,
+                        }}
+                      />
+                    </View>
+
+                    {/* XP info */}
                     <View
                       style={{
-                        backgroundColor: 'rgba(255, 255, 255, 0.25)',
-                        paddingHorizontal: 10,
-                        paddingVertical: 4,
-                        borderRadius: 10,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
                       }}
                     >
                       <Text
                         style={{
-                          fontSize: 11,
-                          fontWeight: '800',
+                          fontSize: 12,
+                          fontWeight: '700',
                           color: '#FFFFFF',
+                          textShadowColor: 'rgba(0, 0, 0, 0.2)',
+                          textShadowOffset: { width: 0, height: 1 },
+                          textShadowRadius: 2,
                         }}
                       >
-                        {Math.round(displayProgress)}%
+                        {displayXP.toLocaleString()} / {xpForNextLevel.toLocaleString()} XP
                       </Text>
+                      <View
+                        style={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                          paddingHorizontal: 10,
+                          paddingVertical: 4,
+                          borderRadius: 10,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            fontWeight: '800',
+                            color: '#FFFFFF',
+                          }}
+                        >
+                          {Math.round(displayProgress)}%
+                        </Text>
+                      </View>
                     </View>
                   </View>
                 </View>
-              </View>
-            )
+              )}
+            </Animated.View>
           )}
 
-          {/* Row 4: Daily Challenge */}
-          {user?.id && (
-            <DailyChallenge
-              habits={habits}
-              onCollect={handleXPCollect}
-              userId={user.id}
-              userLevel={userLevel}
-              currentLevelXP={optimisticXP}
-              xpForNextLevel={xpForNextLevel}
-              onLevelUp={handleLevelUp}
-              tierTheme={tierTheme}
-            />
+          {/* Row 4: Daily Challenge - Hidden in compact mode */}
+          {!isCompact && user?.id && (
+            <Animated.View
+              entering={FadeIn.duration(300).delay(100)}
+              exiting={FadeOut.duration(200)}
+              layout={LinearTransition.duration(300)}
+            >
+              <DailyChallenge
+                habits={habits}
+                onCollect={handleXPCollect}
+                userId={user.id}
+                userLevel={userLevel}
+                currentLevelXP={optimisticXP}
+                xpForNextLevel={xpForNextLevel}
+                onLevelUp={handleLevelUp}
+                tierTheme={tierTheme}
+              />
+            </Animated.View>
           )}
+
         </View>
       </GradientContainer>
     </Animated.View>

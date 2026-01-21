@@ -69,7 +69,7 @@
       "title": "Mes Habitudes",
       "daily": "Quotidien",
       "weekly": "Hebdo",
-      "addHabit": "Ajouter"
+      "addHabit": "Nouvelle Habitude"
     },
     "greeting": {
       "morning": "Bonjour",
@@ -139,7 +139,8 @@
         "title": "Nouvelle Journée !",
         "subtitle": "{{name}}, c'est ton moment !",
         "message": "Allez {{name}}, montre ce que tu sais faire !"
-      }
+      },
+      "tasks": "Tâches"
     },
     "progressStatus": {
       "perfectDay": {
@@ -369,6 +370,14 @@
     "dailyMotivation": "Motivation Quotidienne",
     "dailyMotivationEnabled": "À chaque ouverture",
     "dailyMotivationDisabled": "Une fois par jour",
+    "compactHeader": "En-tête Dashboard Compact",
+    "compactHeaderEnabled": "Vue compacte active",
+    "compactHeaderDisabled": "Vue complète",
+    "compactHeaderToast": "L'en-tête compact du dashboard a été appliqué",
+    "compactHabits": "Vue Habitudes Compacte",
+    "compactHabitsEnabled": "Vue grille active",
+    "compactHabitsDisabled": "Vue liste",
+    "compactHabitsToast": "La vue compacte des habitudes a été appliquée",
     "rating": {
       "sectionTitle": "Nous soutenir",
       "title": "Noter l'application",
