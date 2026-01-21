@@ -1,37 +1,25 @@
 /**
  * AchievementCard.tsx
  *
- * Carte d'affichage d'un achievement individuel.
- * Gère les états verrouillé/déverrouillé avec gradient selon le tier.
- *
- * @author HabitTracker Team
+ * Achievement card with Duolingo 3D depth style.
  */
 
-// =============================================================================
-// IMPORTS
-// =============================================================================
 
-// React et React Native
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
-
-// Bibliothèques externes
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeIn } from 'react-native-reanimated';
-
-// Composants internes
+import Animated, {
+  FadeIn,
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
 import { AchievementBadge } from '../shared/AchievementBadge';
-
-// Utilitaires
 import tw from '../../lib/tailwind';
 import { getAchievementTierTheme } from '../../utils/tierTheme';
-
-// Types
 import { Achievement, TierKey } from '../../types/achievement.types';
 
-// =============================================================================
-// TYPES ET INTERFACES
-// =============================================================================
+// TYPES
 
 interface AchievementCardProps {
   achievement: Achievement;
@@ -42,9 +30,7 @@ interface AchievementCardProps {
   tierName?: string;
 }
 
-// =============================================================================
-// COMPOSANT PRINCIPAL
-// =============================================================================
+// COMPONENT
 
 export const AchievementCard: React.FC<AchievementCardProps> = ({
   achievement,
@@ -54,126 +40,105 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({
   onPress,
   tierName,
 }) => {
-  // ---------------------------------------------------------------------------
-  // Valeurs calculées
-  // ---------------------------------------------------------------------------
+  const pressed = useSharedValue(0);
 
-  // Récupère le thème du tier pour les couleurs du gradient
   const tierTheme = tierName ? getAchievementTierTheme(tierName as TierKey) : null;
+  const cardBgColor = isUnlocked ? '#FFFFFF' : '#F5F5F5';
+  const shadowColor = isUnlocked ? '#d4d4d8' : '#D4D4D4';
 
-  /**
-   * Crée une version plus claire du gradient pour l'état déverrouillé
-   * Style similaire au DashboardHeader avec fond blanc opaque
-   * @param tierGradient - Couleurs du gradient du tier
-   * @returns Gradient avec opacité réduite
-   */
-  const getLightGradient = (tierGradient: string[]): string[] => {
-    return [
-      'rgba(255, 255, 255, 0.95)',
-      'rgba(255, 255, 255, 0.90)',
-      'rgba(255, 255, 255, 0.95)',
-    ];
-  };
 
-  // Couleurs du gradient selon l'état
-  const unlockedGradient = tierTheme
-    ? getLightGradient(tierTheme.gradient)
-    : ['rgba(255, 255, 255, 0.95)', 'rgba(255, 255, 255, 0.90)', 'rgba(255, 255, 255, 0.95)'];
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: pressed.value * 4 }],
+  }));
 
-  const lockedGradient = ['rgba(250, 250, 250, 1)', 'rgba(245, 245, 245, 1)', 'rgba(238, 238, 238, 1)'];
+  const shadowStyle = useAnimatedStyle(() => ({
+    opacity: 1 - pressed.value * 0.5,
+  }));
 
-  // Taille du badge (légèrement plus grand pour les niveaux 36-40)
-  const isInfernalLevel = achievement.level >= 36 && achievement.level <= 40;
-  const badgeSize = isInfernalLevel ? 70 : 60;
-
-  // Couleurs de bordure et d'accent (style DashboardHeader avec bordure blanche)
-  const borderColor = isUnlocked
-    ? 'rgba(255, 255, 255, 0.9)' // Bordure blanche opaque pour les débloqués
-    : 'rgba(224, 224, 224, 1)'; // Bordure grise pour les verrouillés
-
-  const accentColor = tierTheme ? tierTheme.gradient[1] : '#6B7280';
-
-  // ---------------------------------------------------------------------------
-  // Rendu
-  // ---------------------------------------------------------------------------
   return (
     <Animated.View entering={FadeIn.delay(index * 50)} style={tw`mb-3`}>
       <Pressable
         onPress={() => onPress(achievement)}
-        style={({ pressed }) => [pressed && tw`scale-[0.98]`, tw`relative`]}
+        onPressIn={() => {
+          pressed.value = withTiming(1, { duration: 100 });
+        }}
+        onPressOut={() => {
+          pressed.value = withTiming(0, { duration: 100 });
+        }}
+        style={{ position: 'relative' }}
       >
-        {/* Effet de lueur externe pour les achievements déverrouillés */}
-        {isUnlocked && tierTheme && (
-          <View
-            style={[
-              tw`absolute inset-0 rounded-2xl`,
-              {
-                backgroundColor: tierTheme.gradient[1] + '15',
-                transform: [{ scale: 1.02 }],
-                opacity: 0.5,
-              },
-            ]}
-          />
-        )}
-
-        <LinearGradient
-          colors={isUnlocked ? unlockedGradient : lockedGradient}
+        {/* Shadow/depth layer - Duolingo 3D style */}
+        <Animated.View
           style={[
-            tw`rounded-2xl relative`,
+            {
+              position: 'absolute',
+              top: 4,
+              left: 0,
+              right: 0,
+              bottom: -4,
+              backgroundColor: shadowColor,
+              borderRadius: 20,
+            },
+            shadowStyle,
+          ]}
+        />
+
+        {/* Main card */}
+        <Animated.View
+          style={[
             {
               height: 170,
-              width: '100%',
+              backgroundColor: cardBgColor,
+              borderRadius: 20,
               borderWidth: 2,
-              borderColor: borderColor,
-              backgroundColor: isUnlocked
-                ? 'rgba(255, 255, 255, 0.95)'
-                : 'rgba(245, 245, 245, 1)',
-              shadowColor: isUnlocked ? accentColor : '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: isUnlocked ? 0.2 : 0.08,
-              shadowRadius: isUnlocked ? 8 : 4,
-              elevation: isUnlocked ? 6 : 2,
+              borderColor: '#e4e4e7',
+              overflow: 'hidden',
             },
+            animatedStyle,
           ]}
         >
-          {/* Effet de brillance en haut pour l'état déverrouillé */}
-          {isUnlocked && tierTheme && (
+          {/* Shine effect for unlocked */}
+          {isUnlocked && (
             <LinearGradient
-              colors={['rgba(255, 255, 255, 0.6)', 'rgba(255, 255, 255, 0)']}
-              style={[tw`absolute top-0 left-0 right-0 rounded-t-2xl`, { height: '40%' }]}
+              colors={['rgba(255, 255, 255, 0.8)', 'rgba(255, 255, 255, 0)'] as any}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '35%',
+              }}
             />
           )}
 
-          {/* Conteneur du contenu - flexbox pour espacement cohérent */}
+          {/* Content */}
           <View
             style={{
               flex: 1,
               alignItems: 'center',
               justifyContent: 'space-between',
-              paddingVertical: 20,
+              paddingVertical: 18,
               paddingHorizontal: 12,
             }}
           >
-            {/* Badge avec opacité pour l'état verrouillé */}
+            {/* Badge */}
             <View
               style={{
-                opacity: isUnlocked ? 1 : 0.3,
-                height: badgeSize,
-                width: badgeSize,
+                opacity: isUnlocked ? 1 : 0.35,
+                height: 60,
+                width: 60,
                 alignItems: 'center',
                 justifyContent: 'center',
-                overflow: 'hidden',
               }}
             >
               <AchievementBadge
-                level={achievement.level}
                 achievement={achievement}
                 isUnlocked={true}
-                size={badgeSize}
+                size={60}
               />
             </View>
 
-            {/* Titre - hauteur fixe 32px */}
+            {/* Title */}
             <View
               style={{
                 height: 32,
@@ -186,8 +151,8 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({
                   color: isUnlocked ? '#1F2937' : '#9CA3AF',
                   letterSpacing: 0.3,
                   textTransform: 'uppercase',
-                  fontSize: 10,
-                  lineHeight: 12,
+                  fontSize: 12,
+                  lineHeight: 15,
                   fontWeight: '700',
                   textAlign: 'center',
                   paddingHorizontal: 4,
@@ -198,59 +163,65 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({
               </Text>
             </View>
 
-            {/* Badge de niveau */}
-            <LinearGradient
-              colors={
-                isUnlocked && tierTheme
-                  ? [tierTheme.gradient[0], tierTheme.gradient[1]]
-                  : ['#D1D5DB', '#9CA3AF']
-              }
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={{
-                borderRadius: 8,
-                paddingHorizontal: 10,
-                paddingVertical: 4,
-                shadowColor: isUnlocked ? accentColor : '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: isUnlocked ? 0.3 : 0.1,
-                shadowRadius: 4,
-                elevation: 3,
-              }}
-            >
-              <Text
+            {/* Level badge - Duolingo pill style with 3D depth */}
+            <View style={{ position: 'relative' }}>
+              {/* Shadow for pill */}
+              <View
                 style={{
-                  color: '#fff',
-                  fontSize: 11,
-                  letterSpacing: 0.5,
-                  fontWeight: '900',
+                  position: 'absolute',
+                  top: 2,
+                  left: 0,
+                  right: 0,
+                  bottom: -2,
+                  backgroundColor: isUnlocked ? (tierTheme?.gradient[2] || '#6B7280') : '#9CA3AF',
+                  borderRadius: 10,
+                }}
+              />
+              <LinearGradient
+                colors={
+                  isUnlocked && tierTheme
+                    ? [tierTheme.gradient[0], tierTheme.gradient[1]] as any
+                    : ['#D1D5DB', '#9CA3AF'] as any
+                }
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{
+                  borderRadius: 10,
+                  paddingHorizontal: 12,
+                  paddingVertical: 5,
                 }}
               >
-                LEVEL {achievement.level}
-              </Text>
-            </LinearGradient>
+                <Text
+                  style={{
+                    color: '#fff',
+                    fontSize: 11,
+                    letterSpacing: 0.5,
+                    fontWeight: '800',
+                  }}
+                >
+                  LEVEL {achievement.level}
+                </Text>
+              </LinearGradient>
+            </View>
           </View>
 
-          {/* Indicateur de synchronisation backend */}
+          {/* Backend sync indicator */}
           {isFromBackend && (
             <View
               style={{
                 position: 'absolute',
-                top: 8,
-                right: 8,
+                top: 10,
+                right: 10,
                 width: 10,
                 height: 10,
                 borderRadius: 5,
-                backgroundColor: 'rgba(20, 184, 166, 0.9)',
-                shadowColor: '#14B8A6',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.5,
-                shadowRadius: 4,
-                elevation: 4,
+                backgroundColor: '#14B8A6',
+                borderWidth: 2,
+                borderColor: '#FFFFFF',
               }}
             />
           )}
-        </LinearGradient>
+        </Animated.View>
       </Pressable>
     </Animated.View>
   );

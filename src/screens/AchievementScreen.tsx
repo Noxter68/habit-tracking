@@ -1,18 +1,7 @@
 /**
- * ============================================================================
  * AchievementScreen.tsx
- * ============================================================================
  *
- * Ecran des accomplissements affichant les badges, niveaux et récompenses
- * de l'utilisateur. Organisé par tiers avec filtrage et détails interactifs.
- *
- * Fonctionnalités principales:
- * - Affichage du niveau actuel et progression
- * - Grille des accomplissements par tier
- * - Filtrage (tous, débloqués, verrouillés)
- * - Modal de détails pour chaque accomplissement
- * - Modal de zoom sur le badge actuel
- * - Statistiques globales (XP, séries, jours parfaits)
+ * Achievement screen with badges, levels and user rewards.
  */
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
@@ -41,10 +30,6 @@ import Logger from '@/utils/logger';
 
 import { Achievement, FilterType, TIER_KEYS, TierKey } from '../types/achievement.types';
 
-// ============================================================================
-// COMPOSANT PRINCIPAL
-// ============================================================================
-
 const AchievementsScreen: React.FC = () => {
   const { t } = useTranslation();
   const navigation = useNavigation();
@@ -60,10 +45,6 @@ const AchievementsScreen: React.FC = () => {
     refreshAchievements
   } = useAchievements();
 
-  // ============================================================================
-  // HOOKS - State
-  // ============================================================================
-
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showZoomModal, setShowZoomModal] = useState(false);
@@ -71,53 +52,29 @@ const AchievementsScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [expandedTier, setExpandedTier] = useState<TierKey | null>(null);
 
-  // ============================================================================
-  // HOOKS - Refs
-  // ============================================================================
-
   const scrollViewRef = useRef<ScrollView>(null);
   const tierRefs = useRef<{ [key: string]: View | null }>({});
-
-  // ============================================================================
-  // HOOKS - useMemo
-  // ============================================================================
 
   const currentLevel = stats?.level || 1;
   const totalXP = stats?.totalXP || 0;
   const levelProgress = stats?.levelProgress || 0;
 
-  /**
-   * Récupère le titre de l'accomplissement actuel traduit
-   */
   const currentTitle = useMemo(
     () => getAchievementByLevel(currentLevel),
     [currentLevel]
   );
 
-  /**
-   * Récupère le titre du prochain accomplissement
-   */
   const nextTitle = useMemo(
     () => getAchievementByLevel(currentLevel + 1),
     [currentLevel]
   );
 
-  /**
-   * Récupère le thème du tier actuel
-   */
   const currentTierTheme = currentTitle
     ? getAchievementTierTheme(currentTitle.tierKey)
     : getAchievementTierTheme('novice');
 
   const requiredXpForNextLevel = getXPForNextLevel(currentLevel);
 
-  // ============================================================================
-  // FONCTIONS UTILITAIRES
-  // ============================================================================
-
-  /**
-   * Détermine les couleurs de texte en fonction du type de gemme
-   */
   const getTextColors = (gemName: string) => {
     if (['Crystal', 'Topaz'].includes(gemName)) {
       return {
@@ -135,9 +92,6 @@ const AchievementsScreen: React.FC = () => {
 
   const textColors = getTextColors(currentTierTheme.gemName);
 
-  /**
-   * Vérifie si un accomplissement est débloqué
-   */
   const isAchievementUnlocked = (achievement: Achievement): boolean => {
     if (achievement.level <= currentLevel) return true;
     return achievements.some(
@@ -145,9 +99,6 @@ const AchievementsScreen: React.FC = () => {
     );
   };
 
-  /**
-   * Filtre les accomplissements selon le filtre actif
-   */
   const filteredAchievements = achievementTitles.filter((achievement) => {
     const isUnlocked = isAchievementUnlocked(achievement);
     if (filter === 'unlocked') return isUnlocked;
@@ -158,22 +109,11 @@ const AchievementsScreen: React.FC = () => {
   const unlockedCount = achievementTitles.filter((a) => isAchievementUnlocked(a)).length;
   const totalCount = achievementTitles.length;
 
-  // ============================================================================
-  // HOOKS - useEffect
-  // ============================================================================
-
   useEffect(() => {
     if (!stats) refreshStats(true);
     if (!achievements || achievements.length === 0) refreshAchievements();
   }, []);
 
-  // ============================================================================
-  // GESTIONNAIRES D'EVENEMENTS
-  // ============================================================================
-
-  /**
-   * Rafraîchit les données des statistiques et accomplissements
-   */
   const handleRefresh = async () => {
     HapticFeedback.light();
     setRefreshing(true);
@@ -186,58 +126,37 @@ const AchievementsScreen: React.FC = () => {
     }
   };
 
-  /**
-   * Retourne à l'écran précédent
-   */
   const handleGoBack = () => {
     HapticFeedback.light();
     navigation.goBack();
   };
 
-  /**
-   * Ouvre le modal de zoom sur le badge actuel
-   */
   const handleZoomModalOpen = () => {
     HapticFeedback.light();
     setShowZoomModal(true);
   };
 
-  /**
-   * Ferme le modal de zoom
-   */
   const handleZoomModalClose = () => {
     HapticFeedback.light();
     setShowZoomModal(false);
   };
 
-  /**
-   * Ouvre le modal de détails d'un accomplissement
-   */
   const handleAchievementPress = (achievement: Achievement) => {
     HapticFeedback.light();
     setSelectedAchievement(achievement);
     setShowModal(true);
   };
 
-  /**
-   * Ferme le modal de détails
-   */
   const handleModalClose = () => {
     HapticFeedback.light();
     setShowModal(false);
   };
 
-  /**
-   * Change le filtre actif
-   */
   const handleFilterChange = (newFilter: FilterType) => {
     HapticFeedback.selection();
     setFilter(newFilter);
   };
 
-  /**
-   * Gère l'expansion/réduction d'une section de tier
-   */
   const handleTierToggle = (tierKey: TierKey) => {
     HapticFeedback.light();
     const newExpandedState = expandedTier === tierKey ? null : tierKey;
@@ -260,10 +179,6 @@ const AchievementsScreen: React.FC = () => {
     }
   };
 
-  // ============================================================================
-  // RENDU - État de chargement
-  // ============================================================================
-
   const isLoading = statsLoading || achievementsLoading;
 
   if (isLoading && !stats && !achievements) {
@@ -275,13 +190,9 @@ const AchievementsScreen: React.FC = () => {
     );
   }
 
-  // ============================================================================
-  // RENDU PRINCIPAL
-  // ============================================================================
-
   return (
     <SafeAreaView style={tw`flex-1 bg-sand-50`}>
-      {/* En-tête avec dégradé du tier */}
+      {/* Header with tier gradient */}
       <LinearGradient
         colors={[
           currentTierTheme.gradient[0],
@@ -315,35 +226,98 @@ const AchievementsScreen: React.FC = () => {
             <View style={tw`w-10`} />
           </View>
 
-          {/* Grille de statistiques */}
+          {/* Stats grid */}
           <View style={tw`flex-row gap-3`}>
-            {/* Débloqués */}
-            <View style={[tw`flex-1 rounded-xl p-3`, { backgroundColor: 'rgba(255, 255, 255, 0.12)' }]}>
-              <Text style={tw`text-xs font-semibold text-white/60 mb-1`}>
-                {t('achievements.unlocked')}
-              </Text>
-              <View style={tw`flex-row items-baseline gap-1`}>
-                <Text style={tw`text-2xl font-bold text-white`}>{unlockedCount}</Text>
-                <Text style={tw`text-sm font-semibold text-white/50`}>/{totalCount}</Text>
+            {/* Unlocked */}
+            <View style={{ flex: 1, position: 'relative' }}>
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 2,
+                  left: 0,
+                  right: 0,
+                  bottom: -2,
+                  backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                  borderRadius: 16,
+                }}
+              />
+              <View
+                style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                  borderRadius: 16,
+                  padding: 12,
+                  borderWidth: 1,
+                  borderColor: 'rgba(255, 255, 255, 0.2)',
+                }}
+              >
+                <Text style={tw`text-xs font-semibold text-white/70 mb-1`}>
+                  {t('achievements.unlocked')}
+                </Text>
+                <View style={tw`flex-row items-baseline gap-1`}>
+                  <Text style={tw`text-2xl font-bold text-white`}>{unlockedCount}</Text>
+                  <Text style={tw`text-sm font-semibold text-white/50`}>/{totalCount}</Text>
+                </View>
               </View>
             </View>
 
-            {/* Meilleure série */}
-            <View style={[tw`flex-1 rounded-xl p-3`, { backgroundColor: 'rgba(255, 255, 255, 0.12)' }]}>
-              <Text style={tw`text-xs font-semibold text-white/60 mb-1`}>
-                {t('achievements.bestStreak')}
-              </Text>
-              <Text style={tw`text-2xl font-bold text-white`}>{streak}</Text>
+            {/* Best streak */}
+            <View style={{ flex: 1, position: 'relative' }}>
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 2,
+                  left: 0,
+                  right: 0,
+                  bottom: -2,
+                  backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                  borderRadius: 16,
+                }}
+              />
+              <View
+                style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                  borderRadius: 16,
+                  padding: 12,
+                  borderWidth: 1,
+                  borderColor: 'rgba(255, 255, 255, 0.2)',
+                }}
+              >
+                <Text style={tw`text-xs font-semibold text-white/70 mb-1`}>
+                  {t('achievements.bestStreak')}
+                </Text>
+                <Text style={tw`text-2xl font-bold text-white`}>{streak}</Text>
+              </View>
             </View>
 
-            {/* XP total */}
-            <View style={[tw`flex-1 rounded-xl p-3`, { backgroundColor: 'rgba(255, 255, 255, 0.12)' }]}>
-              <Text style={tw`text-xs font-semibold text-white/60 mb-1`}>
-                {t('achievements.totalXP')}
-              </Text>
-              <Text style={tw`text-2xl font-bold text-white`} adjustsFontSizeToFit numberOfLines={1}>
-                {totalXP > 999 ? `${(totalXP / 1000).toFixed(1)}k` : totalXP}
-              </Text>
+            {/* Total XP */}
+            <View style={{ flex: 1, position: 'relative' }}>
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 2,
+                  left: 0,
+                  right: 0,
+                  bottom: -2,
+                  backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                  borderRadius: 16,
+                }}
+              />
+              <View
+                style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                  borderRadius: 16,
+                  padding: 12,
+                  borderWidth: 1,
+                  borderColor: 'rgba(255, 255, 255, 0.2)',
+                }}
+              >
+                <Text style={tw`text-xs font-semibold text-white/70 mb-1`}>
+                  {t('achievements.totalXP')}
+                </Text>
+                <Text style={tw`text-2xl font-bold text-white`} adjustsFontSizeToFit numberOfLines={1}>
+                  {totalXP > 999 ? `${(totalXP / 1000).toFixed(1)}k` : totalXP}
+                </Text>
+              </View>
             </View>
           </View>
         </View>
@@ -362,7 +336,7 @@ const AchievementsScreen: React.FC = () => {
           />
         }
       >
-        {/* Héros du niveau actuel */}
+        {/* Current level hero */}
         <View style={tw`px-4 pt-4 mb-4`}>
           <CurrentLevelHero
             currentLevel={currentLevel}
@@ -377,7 +351,7 @@ const AchievementsScreen: React.FC = () => {
           />
         </View>
 
-        {/* Onglets de filtrage */}
+        {/* Filter tabs */}
         <FilterTabs
           filter={filter}
           setFilter={handleFilterChange}
@@ -385,7 +359,7 @@ const AchievementsScreen: React.FC = () => {
           totalCount={totalCount}
         />
 
-        {/* Sections par tier */}
+        {/* Tier sections */}
         <View style={tw`px-2.5`}>
           {TIER_KEYS.map((tierKey, tierIndex) => {
             const tierAchievements = filteredAchievements.filter((a) => a.tierKey === tierKey);
@@ -416,7 +390,7 @@ const AchievementsScreen: React.FC = () => {
         </View>
       </ScrollView>
 
-      {/* Modal de détails d'accomplissement */}
+      {/* Achievement detail modal */}
       <AchievementDetailModal
         visible={showModal}
         onClose={handleModalClose}
@@ -425,7 +399,7 @@ const AchievementsScreen: React.FC = () => {
         totalCompletions={totalCompletions}
       />
 
-      {/* Modal de zoom sur le badge */}
+      {/* Badge zoom modal */}
       <ZoomModal
         visible={showZoomModal}
         onClose={handleZoomModalClose}

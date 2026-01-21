@@ -1,35 +1,23 @@
 /**
  * AchievementDetailModal.tsx
  *
- * Modal affichant les détails d'un achievement.
- * Montre la progression et l'état verrouillé/déverrouillé.
- *
- * @author HabitTracker Team
+ * Achievement detail modal with Duolingo 3D depth style.
  */
 
-// =============================================================================
-// IMPORTS
-// =============================================================================
-
-// React et React Native
 import React from 'react';
 import { Modal, View, Text, Pressable, Image, ImageBackground } from 'react-native';
-
-// Bibliothèques externes
-import Animated, { SlideInDown, FadeInDown } from 'react-native-reanimated';
+import Animated, {
+  SlideInDown,
+  FadeInDown,
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
-
-// Utilitaires
 import tw, { quartzGradients } from '../../lib/tailwind';
 import { getAchievementTierTheme } from '../../utils/tierTheme';
-
-// Types
 import { Achievement } from '../../utils/achievements';
-
-// =============================================================================
-// TYPES ET INTERFACES
-// =============================================================================
 
 interface AchievementDetailModalProps {
   visible: boolean;
@@ -39,10 +27,6 @@ interface AchievementDetailModalProps {
   totalCompletions: number;
 }
 
-// =============================================================================
-// COMPOSANT PRINCIPAL
-// =============================================================================
-
 export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
   visible,
   onClose,
@@ -50,44 +34,35 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
   currentLevel,
   totalCompletions,
 }) => {
-  // ---------------------------------------------------------------------------
-  // Hooks
-  // ---------------------------------------------------------------------------
   const { t } = useTranslation();
+  const buttonPressed = useSharedValue(0);
 
-  // ---------------------------------------------------------------------------
-  // Rendu conditionnel
-  // ---------------------------------------------------------------------------
+  const buttonAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: buttonPressed.value * 4 }],
+  }));
+
+  const buttonShadowStyle = useAnimatedStyle(() => ({
+    opacity: 1 - buttonPressed.value * 0.5,
+  }));
+
   if (!achievement) return null;
 
-  // ---------------------------------------------------------------------------
-  // Valeurs calculées
-  // ---------------------------------------------------------------------------
   const isUnlocked = achievement.level <= currentLevel;
   const requiredCompletions = (achievement.level - 1) * 10;
   const remaining = requiredCompletions - totalCompletions;
   const progress = Math.min((totalCompletions / requiredCompletions) * 100, 100);
 
-  // Thème et couleurs du tier
   const tierTheme = getAchievementTierTheme(achievement.tierKey);
   const tierGradient = tierTheme.gradient;
   const tierTexture = tierTheme.texture;
 
-  // Détermine si c'est un tier sombre (comme Mythic Glory ou Infernal Dominion)
   const isDarkTier = achievement.tierKey === 'mythicGlory' || achievement.tierKey === 'infernalDominion';
 
-  // Augmenter la taille pour les niveaux 36-40 (Infernal Dominion)
   const isInfernalLevel = achievement.level >= 36 && achievement.level <= 40;
   const imageWidth = isInfernalLevel ? 320 : 250;
   const imageHeight = isInfernalLevel ? 230 : 180;
 
-  /**
-   * Détermine les couleurs de texte selon le type de gemme
-   * @param gemName - Nom de la gemme du tier
-   * @returns Couleurs primaire et secondaire
-   */
   const getTextColors = (gemName: string) => {
-    // Tous les tiers utilisent du texte blanc pour une meilleure lisibilité
     return {
       primary: '#ffffff',
       secondary: 'rgba(255, 255, 255, 0.9)',
@@ -96,7 +71,6 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
 
   const textColors = getTextColors(tierTheme.gemName);
 
-  // Gradients pour l'état verrouillé - plus opaques pour les tiers sombres
   const lockedGradient = isDarkTier
     ? [tierGradient[0] + 'ee', tierGradient[1] + 'ee', tierGradient[2] + 'dd']
     : [tierGradient[0] + '70', tierGradient[1] + '65', tierGradient[2] + '60'];
@@ -105,9 +79,9 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
     : [tierGradient[0] + '85', tierGradient[1] + '75'];
   const lockedButtonGradient = [tierGradient[0] + 'B0', tierGradient[1] + 'B0'];
 
-  // ---------------------------------------------------------------------------
-  // Rendu
-  // ---------------------------------------------------------------------------
+  // Shadow color for depth effect (darker version of tier color)
+  const depthShadowColor = tierGradient[2] || tierGradient[1];
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable
@@ -119,20 +93,20 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
           style={tw`w-full max-w-sm`}
         >
           <Pressable onPress={(e) => e.stopPropagation()}>
-            {/* Bordure avec gradient du tier */}
+            {/* Border with tier gradient */}
             <LinearGradient
-              colors={tierGradient}
+              colors={tierGradient as any}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={tw`rounded-3xl p-1`}
             >
               <View style={tw`bg-sand-50 rounded-3xl overflow-hidden relative`}>
-                {/* Fond avec gradient - s'étend sur toute la hauteur */}
+                {/* Background gradient */}
                 <View style={tw`absolute inset-0 z-0`}>
-                  <LinearGradient colors={quartzGradients.overlay} style={tw`flex-1`} />
+                  <LinearGradient colors={quartzGradients.overlay as any} style={tw`flex-1`} />
                 </View>
 
-                {/* En-tête avec texture et gradient du tier */}
+                {/* Header with tier texture and gradient */}
                 <View style={tw`relative z-10`}>
                   <ImageBackground
                     source={tierTexture}
@@ -142,19 +116,19 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
                   >
                     <LinearGradient
                       colors={
-                        isUnlocked
+                        (isUnlocked
                           ? [
                               tierGradient[0] + 'dd',
                               tierGradient[1] + 'dd',
                               tierGradient[2] + 'cc',
                             ]
-                          : lockedGradient
+                          : lockedGradient) as any
                       }
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                       style={tw`px-6 pt-8 pb-16 items-center`}
                     >
-                      {/* Badge de l'achievement */}
+                      {/* Achievement badge */}
                       <Animated.View entering={FadeInDown.delay(200).springify()}>
                         <Image
                           source={achievement.image}
@@ -170,135 +144,216 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
                   </ImageBackground>
                 </View>
 
-                {/* Section contenu - chevauche l'en-tête */}
+                {/* Content section */}
                 <View style={tw`px-6 pb-6 -mt-10 relative z-20`}>
-                  {/* Carte titre */}
-                  <View
-                    style={tw`bg-white rounded-2xl shadow-sm p-4 mb-4 border border-sand-200`}
-                  >
-                    <Text style={tw`text-xl font-bold text-stone-800 text-center mb-3`}>
-                      {achievement.title}
-                    </Text>
+                  {/* Title card with 3D depth */}
+                  <View style={{ position: 'relative', marginBottom: 16 }}>
+                    {/* Shadow layer for 3D depth */}
+                    <View
+                      style={{
+                        position: 'absolute',
+                        top: 4,
+                        left: 0,
+                        right: 0,
+                        bottom: -4,
+                        backgroundColor: '#d4d4d8',
+                        borderRadius: 16,
+                      }}
+                    />
+                    <View
+                      style={{
+                        backgroundColor: '#FFFFFF',
+                        borderRadius: 16,
+                        padding: 16,
+                        borderWidth: 2,
+                        borderColor: '#e4e4e7',
+                      }}
+                    >
+                      <Text style={tw`text-xl font-bold text-stone-800 text-center mb-3`}>
+                        {achievement.title}
+                      </Text>
 
-                    <View style={tw`flex-row gap-2 justify-center`}>
-                      {/* Badge niveau avec gradient du tier */}
-                      <LinearGradient
-                        colors={isUnlocked ? tierGradient : lockedButtonGradient}
-                        style={tw`rounded-full px-3.5 py-1.5`}
-                      >
-                        <Text style={tw`text-sm font-bold text-white`}>
-                          {t('achievements.level', { level: achievement.level })}
-                        </Text>
-                      </LinearGradient>
+                      <View style={tw`flex-row gap-2 justify-center`}>
+                        {/* Level badge with 3D depth */}
+                        <View style={{ position: 'relative' }}>
+                          <View
+                            style={{
+                              position: 'absolute',
+                              top: 2,
+                              left: 0,
+                              right: 0,
+                              bottom: -2,
+                              backgroundColor: isUnlocked ? depthShadowColor : '#9CA3AF',
+                              borderRadius: 20,
+                            }}
+                          />
+                          <LinearGradient
+                            colors={(isUnlocked ? [tierGradient[0], tierGradient[1]] : lockedButtonGradient) as any}
+                            style={{
+                              borderRadius: 20,
+                              paddingHorizontal: 14,
+                              paddingVertical: 6,
+                            }}
+                          >
+                            <Text style={tw`text-sm font-bold text-white`}>
+                              {t('achievements.level', { level: achievement.level })}
+                            </Text>
+                          </LinearGradient>
+                        </View>
 
-                      {/* Badge tier - affiche le nom de la gemme */}
-                      <View
-                        style={[
-                          tw`rounded-full px-3.5 py-1.5 border`,
-                          {
-                            backgroundColor: isUnlocked
-                              ? `${tierTheme.accent}15`
-                              : '#F5F5F4',
-                            borderColor: isUnlocked ? `${tierTheme.accent}40` : '#D6D3D1',
-                          },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            tw`text-sm font-semibold`,
-                            { color: isUnlocked ? tierTheme.accent : '#78716C' },
-                          ]}
-                        >
-                          {tierTheme.gemName}
-                        </Text>
+                        {/* Tier badge with 3D depth */}
+                        <View style={{ position: 'relative' }}>
+                          <View
+                            style={{
+                              position: 'absolute',
+                              top: 2,
+                              left: 0,
+                              right: 0,
+                              bottom: -2,
+                              backgroundColor: isUnlocked ? `${tierTheme.accent}40` : '#D6D3D1',
+                              borderRadius: 20,
+                            }}
+                          />
+                          <View
+                            style={{
+                              borderRadius: 20,
+                              paddingHorizontal: 14,
+                              paddingVertical: 6,
+                              backgroundColor: isUnlocked ? `${tierTheme.accent}15` : '#F5F5F4',
+                              borderWidth: 2,
+                              borderColor: isUnlocked ? `${tierTheme.accent}40` : '#e4e4e7',
+                            }}
+                          >
+                            <Text
+                              style={[
+                                tw`text-sm font-semibold`,
+                                { color: isUnlocked ? tierTheme.accent : '#78716C' },
+                              ]}
+                            >
+                              {tierTheme.gemName}
+                            </Text>
+                          </View>
+                        </View>
                       </View>
                     </View>
                   </View>
 
-                  {/* Carte progression avec texture et gradient du tier */}
-                  <ImageBackground
-                    source={tierTexture}
-                    style={{
-                      overflow: 'hidden',
-                      borderRadius: 16,
-                      marginBottom: 16,
-                    }}
-                    imageStyle={{
-                      opacity: isUnlocked ? 0.7 : 0.4,
-                      borderRadius: 16,
-                    }}
-                    resizeMode="cover"
-                  >
-                    <LinearGradient
-                      colors={
-                        isUnlocked
-                          ? [tierGradient[0] + 'dd', tierGradient[1] + 'dd']
-                          : lockedProgressGradient
-                      }
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={tw`rounded-2xl p-4`}
+                  {/* Progress card with 3D depth */}
+                  <View style={{ position: 'relative', marginBottom: 16 }}>
+                    {/* Shadow layer for 3D depth */}
+                    <View
+                      style={{
+                        position: 'absolute',
+                        top: 4,
+                        left: 0,
+                        right: 0,
+                        bottom: -4,
+                        backgroundColor: depthShadowColor,
+                        borderRadius: 16,
+                      }}
+                    />
+                    <ImageBackground
+                      source={tierTexture}
+                      style={{
+                        overflow: 'hidden',
+                        borderRadius: 16,
+                      }}
+                      imageStyle={{
+                        opacity: isUnlocked ? 0.7 : 0.4,
+                        borderRadius: 16,
+                      }}
+                      resizeMode="cover"
                     >
-                      <Text
-                        style={[
-                          tw`text-sm font-semibold text-center mb-2`,
-                          { color: textColors.primary },
-                        ]}
+                      <LinearGradient
+                        colors={
+                          (isUnlocked
+                            ? [tierGradient[0] + 'dd', tierGradient[1] + 'dd']
+                            : lockedProgressGradient) as any
+                        }
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={tw`rounded-2xl p-4`}
                       >
-                        {isUnlocked
-                          ? t('achievements.achievementUnlocked')
-                          : t('achievements.progressStatus')}
-                      </Text>
-
-                      <Text
-                        style={[
-                          tw`text-sm text-center leading-5 font-medium`,
-                          { color: textColors.secondary },
-                        ]}
-                      >
-                        {isUnlocked
-                          ? t('achievements.unlockedAt', { count: requiredCompletions })
-                          : t('achievements.requiresCompletions', {
-                              count: requiredCompletions,
-                            })}
-                      </Text>
-
-                      {!isUnlocked && (
-                        /* Barre de progression avec gradient du tier */
-                        <View
-                          style={tw`mt-3 bg-white/50 rounded-full h-2.5 overflow-hidden`}
+                        <Text
+                          style={[
+                            tw`text-sm font-semibold text-center mb-2`,
+                            { color: textColors.primary },
+                          ]}
                         >
-                          <LinearGradient
-                            colors={tierGradient}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={[tw`h-full rounded-full`, { width: `${progress}%` }]}
-                          />
-                        </View>
-                      )}
-                    </LinearGradient>
-                  </ImageBackground>
+                          {isUnlocked
+                            ? t('achievements.achievementUnlocked')
+                            : t('achievements.progressStatus')}
+                        </Text>
 
-                  {/* Bouton d'action avec gradient du tier */}
+                        <Text
+                          style={[
+                            tw`text-sm text-center leading-5 font-medium`,
+                            { color: textColors.secondary },
+                          ]}
+                        >
+                          {isUnlocked
+                            ? t('achievements.unlockedAt', { count: requiredCompletions })
+                            : t('achievements.requiresCompletions', {
+                                count: requiredCompletions,
+                              })}
+                        </Text>
+
+                        {!isUnlocked && (
+                          <View
+                            style={tw`mt-3 bg-white/50 rounded-full h-2.5 overflow-hidden`}
+                          >
+                            <LinearGradient
+                              colors={tierGradient as any}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 0 }}
+                              style={[tw`h-full rounded-full`, { width: `${progress}%` }]}
+                            />
+                          </View>
+                        )}
+                      </LinearGradient>
+                    </ImageBackground>
+                  </View>
+
+                  {/* Action button with 3D depth */}
                   <Pressable
                     onPress={onClose}
-                    style={({ pressed }) => [
-                      tw`overflow-hidden rounded-2xl`,
-                      pressed && tw`scale-95`,
-                    ]}
+                    onPressIn={() => {
+                      buttonPressed.value = withTiming(1, { duration: 100 });
+                    }}
+                    onPressOut={() => {
+                      buttonPressed.value = withTiming(0, { duration: 100 });
+                    }}
+                    style={{ position: 'relative' }}
                   >
-                    <LinearGradient
-                      colors={isUnlocked ? tierGradient : lockedButtonGradient}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={tw`py-3.5`}
-                    >
-                      <Text style={tw`font-bold text-center text-base text-white`}>
-                        {isUnlocked
-                          ? t('achievements.awesome')
-                          : t('achievements.keepGoing')}
-                      </Text>
-                    </LinearGradient>
+                    {/* Shadow layer for 3D depth */}
+                    <Animated.View
+                      style={[
+                        {
+                          position: 'absolute',
+                          top: 4,
+                          left: 0,
+                          right: 0,
+                          bottom: -4,
+                          backgroundColor: isUnlocked ? depthShadowColor : '#9CA3AF',
+                          borderRadius: 16,
+                        },
+                        buttonShadowStyle,
+                      ]}
+                    />
+                    <Animated.View style={[{ borderRadius: 16, overflow: 'hidden' }, buttonAnimatedStyle]}>
+                      <LinearGradient
+                        colors={(isUnlocked ? [tierGradient[0], tierGradient[1]] : lockedButtonGradient) as any}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={tw`py-3.5`}
+                      >
+                        <Text style={tw`font-bold text-center text-base text-white`}>
+                          {isUnlocked
+                            ? t('achievements.awesome')
+                            : t('achievements.keepGoing')}
+                        </Text>
+                      </LinearGradient>
+                    </Animated.View>
                   </Pressable>
                 </View>
               </View>

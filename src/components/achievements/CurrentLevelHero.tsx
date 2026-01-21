@@ -1,6 +1,13 @@
+/**
+ * CurrentLevelHero.tsx
+ *
+ * Current level hero section with Duolingo 3D depth style.
+ */
+
 import React from 'react';
 import { View, Text, Pressable, ImageBackground } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import tw from '../../lib/tailwind';
 import { Achievement } from '../../types/achievement.types';
@@ -19,48 +26,85 @@ interface CurrentLevelHeroProps {
   onPress: () => void;
 }
 
-export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel, currentTitle, nextTitle, levelProgress, requiredXp, currentStreak, perfectDays, totalHabits, onPress }) => {
+export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({
+  currentLevel,
+  currentTitle,
+  nextTitle,
+  levelProgress,
+  requiredXp,
+  currentStreak,
+  perfectDays,
+  totalHabits,
+  onPress,
+}) => {
   const { t } = useTranslation();
+  const pressed = useSharedValue(0);
   const percent = Math.min(100, Math.round((levelProgress / requiredXp) * 100));
 
-  // Get the tier theme directly from utils using tierKey
   const tierTheme = getAchievementTierTheme(currentTitle?.tierKey || 'novice');
-
-  // Special styling for Obsidian tier
   const isObsidian = tierTheme.gemName === 'Obsidian';
 
-  // Text colors for gradient background with texture (like DashboardHeader)
-  const textColors = {
-    primary: 'text-white',
-    secondary: 'text-white/80',
-    badge: 'text-white',
-    badgeBg: 'rgba(255, 255, 255, 0.3)',
-    badgeBorder: 'rgba(255, 255, 255, 0.4)',
-    separatorColor: 'rgba(255, 255, 255, 0.15)',
-    progressBg: 'rgba(255, 255, 255, 0.2)',
-    progressFill: '#FFFFFF',
-  };
+  // Darker shade for 3D depth
+  const shadowColor = tierTheme.gradient[2] || tierTheme.gradient[1];
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: pressed.value * 4 }],
+  }));
+
+  const shadowStyle = useAnimatedStyle(() => ({
+    opacity: 1 - pressed.value * 0.5,
+  }));
 
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [pressed && tw`opacity-95`]}>
-      <View
+    <Pressable
+      onPress={onPress}
+      onPressIn={() => {
+        pressed.value = withTiming(1, { duration: 100 });
+      }}
+      onPressOut={() => {
+        pressed.value = withTiming(0, { duration: 100 });
+      }}
+      style={{ position: 'relative' }}
+    >
+      {/* Shadow/depth layer - Duolingo 3D style */}
+      <Animated.View
         style={[
-          tw`rounded-2xl overflow-hidden mb-4`,
           {
-            borderWidth: isObsidian ? 2 : 1.5,
-            borderColor: isObsidian ? 'rgba(139, 92, 246, 0.4)' : 'rgba(255, 255, 255, 0.2)',
-            shadowColor: isObsidian ? '#8b5cf6' : '#000',
-            shadowOffset: { width: 0, height: isObsidian ? 12 : 8 },
-            shadowOpacity: isObsidian ? 0.6 : 0.3,
-            shadowRadius: isObsidian ? 24 : 20,
+            position: 'absolute',
+            top: 5,
+            left: 0,
+            right: 0,
+            bottom: -5,
+            backgroundColor: shadowColor,
+            borderRadius: 24,
           },
+          shadowStyle,
+        ]}
+      />
+
+      {/* Main card */}
+      <Animated.View
+        style={[
+          {
+            borderRadius: 24,
+            overflow: 'hidden',
+            borderWidth: isObsidian ? 2 : 2,
+            borderColor: isObsidian ? 'rgba(139, 92, 246, 0.5)' : tierTheme.gradient[0],
+          },
+          animatedStyle,
         ]}
       >
-        {/* Gradient background with tier colors */}
-        <LinearGradient colors={tierTheme.gradient as any} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={tw`rounded-2xl`}>
-          {/* Texture overlay */}
-          <ImageBackground source={tierTheme.texture} resizeMode="cover" imageStyle={{ opacity: 0.2 }}>
-            {/* Obsidian glow overlay */}
+        <LinearGradient
+          colors={tierTheme.gradient as any}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <ImageBackground
+            source={tierTheme.texture}
+            resizeMode="cover"
+            imageStyle={{ opacity: 0.15 }}
+          >
+            {/* Obsidian special glow */}
             {isObsidian && (
               <View
                 style={{
@@ -69,33 +113,22 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  backgroundColor: 'rgba(139, 92, 246, 0.08)',
+                  backgroundColor: 'rgba(139, 92, 246, 0.1)',
                 }}
               />
             )}
-            {/* Dark overlay for better text readability */}
-            <View
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: isObsidian ? 'rgba(0, 0, 0, 0.15)' : 'rgba(0, 0, 0, 0.05)',
-              }}
-            />
+
             <View style={tw`p-5`}>
-              {/* Top Section: Title & Badge - Simplified */}
+              {/* Top Section: Title & Badge */}
               <View style={tw`flex-row items-start justify-between mb-5`}>
-                <View style={tw`flex-1 pr-16`}>
+                <View style={tw`flex-1 pr-20`}>
                   <Text
                     style={[
-                      tw`text-xs font-semibold uppercase tracking-wide mb-1.5`,
-                      tw`${textColors.secondary}`,
+                      tw`text-xs font-semibold uppercase tracking-wide mb-1.5 text-white/70`,
                       {
-                        textShadowColor: isObsidian ? 'rgba(139, 92, 246, 0.8)' : 'rgba(0, 0, 0, 0.5)',
+                        textShadowColor: 'rgba(0, 0, 0, 0.5)',
                         textShadowOffset: { width: 0, height: 1 },
-                        textShadowRadius: isObsidian ? 8 : 4,
+                        textShadowRadius: 4,
                       },
                     ]}
                   >
@@ -104,110 +137,216 @@ export const CurrentLevelHero: React.FC<CurrentLevelHeroProps> = ({ currentLevel
 
                   <Text
                     style={[
-                      tw`text-xl font-bold leading-tight mb-3`,
-                      tw`${textColors.primary}`,
+                      tw`text-xl font-bold leading-tight mb-3 text-white`,
                       {
-                        textShadowColor: isObsidian ? 'rgba(139, 92, 246, 0.9)' : 'rgba(0, 0, 0, 0.6)',
+                        textShadowColor: 'rgba(0, 0, 0, 0.6)',
                         textShadowOffset: { width: 0, height: 2 },
-                        textShadowRadius: isObsidian ? 12 : 8,
+                        textShadowRadius: 8,
                       },
                     ]}
                   >
                     {currentTitle?.title || t('achievements.tiers.novice')}
                   </Text>
 
-                  {/* Level badge only - simplified */}
+                  {/* Level & Tier badges */}
                   <View style={tw`flex-row items-center gap-2`}>
-                    <View
-                      style={[
-                        tw`rounded-lg px-3 py-1`,
-                        {
-                          backgroundColor: textColors.badgeBg,
+                    {/* Level badge with 3D effect */}
+                    <View style={{ position: 'relative' }}>
+                      <View
+                        style={{
+                          position: 'absolute',
+                          top: 2,
+                          left: 0,
+                          right: 0,
+                          bottom: -2,
+                          backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                          borderRadius: 10,
+                        }}
+                      />
+                      <View
+                        style={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                          paddingHorizontal: 12,
+                          paddingVertical: 6,
+                          borderRadius: 10,
                           borderWidth: 1,
-                          borderColor: textColors.badgeBorder,
-                        },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          tw`text-xs font-semibold`,
-                          tw`${textColors.badge}`,
-                          {
-                            textShadowColor: 'rgba(0, 0, 0, 0.3)',
-                            textShadowOffset: { width: 0, height: 1 },
-                            textShadowRadius: 3,
-                          },
-                        ]}
+                          borderColor: 'rgba(255, 255, 255, 0.4)',
+                        }}
                       >
-                        {t('achievements.level', { level: currentLevel })}
-                      </Text>
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            fontWeight: '700',
+                            color: '#FFFFFF',
+                          }}
+                        >
+                          {t('achievements.level', { level: currentLevel })}
+                        </Text>
+                      </View>
                     </View>
 
-                    <View style={[tw`h-1 w-1 rounded-full`, { backgroundColor: textColors.separatorColor }]} />
+                    <View style={tw`h-1 w-1 rounded-full bg-white/30`} />
 
-                    <Text style={[tw`text-xs font-medium`, tw`${textColors.secondary}`]}>{tierTheme.gemName}</Text>
+                    <Text style={tw`text-xs font-medium text-white/80`}>
+                      {tierTheme.gemName}
+                    </Text>
                   </View>
                 </View>
 
-                {/* Achievement Badge - Slightly smaller */}
+                {/* Achievement Badge */}
                 <View style={tw`absolute right-0 top-0`}>
-                  <AchievementBadge level={currentLevel} achievement={currentTitle} isUnlocked={true} size={90} showLock={false} />
+                  <AchievementBadge
+                    achievement={currentTitle}
+                    isUnlocked={true}
+                    size={90}
+                  />
                 </View>
               </View>
 
-              {/* Progress to next level - Cleaner design */}
+              {/* Progress to next level */}
               {nextTitle && (
                 <View style={tw`mb-5`}>
                   <View style={tw`flex-row justify-between items-center mb-2`}>
-                    <Text style={[tw`text-xs font-medium`, tw`${textColors.secondary}`]}>{t('achievements.next', { title: nextTitle.title })}</Text>
-                    <Text style={[tw`font-semibold text-xs`, tw`${textColors.primary}`]}>{percent}%</Text>
+                    <Text style={tw`text-xs font-medium text-white/80`}>
+                      {t('achievements.next', { title: nextTitle.title })}
+                    </Text>
+                    <Text style={tw`font-bold text-sm text-white`}>{percent}%</Text>
                   </View>
 
-                  {/* Minimalist progress bar */}
-                  <View style={[tw`h-2 rounded-full overflow-hidden`, { backgroundColor: textColors.progressBg }]}>
-                    {percent > 0 && <View style={[tw`h-full rounded-full`, { width: `${percent}%`, backgroundColor: textColors.progressFill }]} />}
+                  {/* Progress bar with 3D depth */}
+                  <View style={{ position: 'relative' }}>
+                    <View
+                      style={{
+                        position: 'absolute',
+                        top: 2,
+                        left: 0,
+                        right: 0,
+                        height: 10,
+                        backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                        borderRadius: 5,
+                      }}
+                    />
+                    <View
+                      style={{
+                        height: 10,
+                        backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                        borderRadius: 5,
+                        overflow: 'hidden',
+                        borderWidth: 1,
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                      }}
+                    >
+                      {percent > 0 && (
+                        <View
+                          style={{
+                            height: '100%',
+                            backgroundColor: '#FFFFFF',
+                            borderRadius: 4,
+                            width: `${percent}%`,
+                          }}
+                        />
+                      )}
+                    </View>
                   </View>
                 </View>
               )}
 
-              {/* Stats Section - More spacious and minimal */}
-              <View
-                style={[
-                  tw`flex-row justify-between pt-4`,
-                  {
-                    borderTopWidth: 1,
-                    borderTopColor: textColors.separatorColor,
-                  },
-                ]}
-              >
+              {/* Stats Section - 3D cards */}
+              <View style={tw`flex-row gap-3`}>
                 {/* Streak */}
-                <View style={tw`items-center flex-1`}>
-                  <Text style={[tw`text-md font-medium mb-2`, tw`${textColors.secondary}`]}>{t('achievements.streak')}</Text>
-                  <Text style={[tw`font-bold text-2xl`, tw`${textColors.primary}`]}>{currentStreak}</Text>
+                <View style={{ flex: 1, position: 'relative' }}>
+                  <View
+                    style={{
+                      position: 'absolute',
+                      top: 2,
+                      left: 0,
+                      right: 0,
+                      bottom: -2,
+                      backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                      borderRadius: 14,
+                    }}
+                  />
+                  <View
+                    style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                      borderRadius: 14,
+                      padding: 12,
+                      alignItems: 'center',
+                      borderWidth: 1,
+                      borderColor: 'rgba(255, 255, 255, 0.2)',
+                    }}
+                  >
+                    <Text style={tw`text-2xl font-bold text-white`}>{currentStreak}</Text>
+                    <Text style={tw`text-xs font-medium text-white/70`}>
+                      {t('achievements.streak')}
+                    </Text>
+                  </View>
                 </View>
-
-                {/* Vertical separator */}
-                <View style={[tw`w-px mx-2`, { backgroundColor: textColors.separatorColor }]} />
 
                 {/* Perfect Days */}
-                <View style={tw`items-center flex-1`}>
-                  <Text style={[tw`text-md font-medium mb-2`, tw`${textColors.secondary}`]}>{t('achievements.perfectDays')}</Text>
-                  <Text style={[tw`font-bold text-2xl`, tw`${textColors.primary}`]}>{perfectDays}</Text>
+                <View style={{ flex: 1, position: 'relative' }}>
+                  <View
+                    style={{
+                      position: 'absolute',
+                      top: 2,
+                      left: 0,
+                      right: 0,
+                      bottom: -2,
+                      backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                      borderRadius: 14,
+                    }}
+                  />
+                  <View
+                    style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                      borderRadius: 14,
+                      padding: 12,
+                      alignItems: 'center',
+                      borderWidth: 1,
+                      borderColor: 'rgba(255, 255, 255, 0.2)',
+                    }}
+                  >
+                    <Text style={tw`text-2xl font-bold text-white`}>{perfectDays}</Text>
+                    <Text style={tw`text-xs font-medium text-white/70`}>
+                      {t('achievements.perfectDays')}
+                    </Text>
+                  </View>
                 </View>
 
-                {/* Vertical separator */}
-                <View style={[tw`w-px mx-2`, { backgroundColor: textColors.separatorColor }]} />
-
-                {/* Active Habits */}
-                <View style={tw`items-center flex-1`}>
-                  <Text style={[tw`text-md font-medium mb-2`, tw`${textColors.secondary}`]}>{t('achievements.habits')}</Text>
-                  <Text style={[tw`font-bold text-2xl`, tw`${textColors.primary}`]}>{totalHabits}</Text>
+                {/* Habits */}
+                <View style={{ flex: 1, position: 'relative' }}>
+                  <View
+                    style={{
+                      position: 'absolute',
+                      top: 2,
+                      left: 0,
+                      right: 0,
+                      bottom: -2,
+                      backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                      borderRadius: 14,
+                    }}
+                  />
+                  <View
+                    style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                      borderRadius: 14,
+                      padding: 12,
+                      alignItems: 'center',
+                      borderWidth: 1,
+                      borderColor: 'rgba(255, 255, 255, 0.2)',
+                    }}
+                  >
+                    <Text style={tw`text-2xl font-bold text-white`}>{totalHabits}</Text>
+                    <Text style={tw`text-xs font-medium text-white/70`}>
+                      {t('achievements.habits')}
+                    </Text>
+                  </View>
                 </View>
               </View>
             </View>
           </ImageBackground>
         </LinearGradient>
-      </View>
+      </Animated.View>
     </Pressable>
   );
 };
