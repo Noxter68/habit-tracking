@@ -2798,5 +2798,11 @@
     "marathon_legend": "Marathon Legend",
     "zen_voyager": "Zen Voyager",
     "titan_of_tasks": "Titan of Tasks"
+  },
+  "loader": {
+    "loading_dashboard": "Loading dashboard...",
+    "preparing_gems": "Preparing gems...",
+    "syncing_habits": "Syncing habits...",
+    "calculating_progress": "Calculating your progress..."
   }
 }

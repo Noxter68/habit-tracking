@@ -44,7 +44,7 @@ import { QuestNotificationProvider } from './src/context/QuestNotificationContex
 
 // Components
 import { CelebrationRenderer } from '@/components/celebrations/CelebrationRenderer';
-import BeautifulLoader from '@/components/BeautifulLoader';
+import DashboardLoader from '@/components/DashboardLoader';
 import CustomTabBar from '@/components/CustomTabBar';
 import { ConnectionToast } from '@/components/ConnectionToast';
 
@@ -263,7 +263,7 @@ function AppNavigator() {
   if (!canShowUI) {
     return (
       <>
-        <BeautifulLoader />
+        <DashboardLoader />
         <ConnectionToast visible={showConnectionError} />
       </>
     );
@@ -508,7 +508,7 @@ export default function App() {
                         <InventoryProvider>
                           <LevelUpProvider>
                             <GroupCelebrationProvider>
-                              <NavigationContainer linking={linking} fallback={<BeautifulLoader />}>
+                              <NavigationContainer linking={linking} fallback={<DashboardLoader />}>
                                 <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
                                 <AppNavigator />
                               </NavigationContainer>

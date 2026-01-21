@@ -14,6 +14,7 @@ import tw from '../lib/tailwind';
 
 // Components
 import DashboardHeader from '../components/dashboard/DashboardHeader';
+import DashboardLoader, { DashboardLoaderDebugButton } from '../components/DashboardLoader';
 import { SwipeableDashboardCard } from '../components/dashboard/SwipeableDashboardCard';
 import { HolidayModeDisplay } from '../components/dashboard/HolidayModeDisplay';
 import { XPPopup } from '../components/dashboard/XPPopup';
@@ -682,13 +683,10 @@ const Dashboard: React.FC = () => {
 
   if (isInitialLoad && (habitsLoading || statsLoading || holidayLoading)) {
     return (
-      <ImageBackground source={require('../../assets/interface/textures/texture-white.png')} style={tw`flex-1`} imageStyle={{ opacity: 0.15 }}>
-        <SafeAreaView style={tw`flex-1 bg-transparent`}>
-          <View style={tw`flex-1 items-center justify-center`}>
-            <ActivityIndicator size="large" color="#3b82f6" />
-          </View>
-        </SafeAreaView>
-      </ImageBackground>
+      <>
+        <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+        <DashboardLoader />
+      </>
     );
   }
 
@@ -709,6 +707,9 @@ const Dashboard: React.FC = () => {
           onScroll={handleScroll}
           scrollEventThrottle={16}
         >
+          {/* Debug: Dashboard Loader Preview */}
+          <DashboardLoaderDebugButton />
+
           {/* Debug: Level Up Test */}
           <DebugButton onPress={handleTestLevelUp} label={`Test Level ${testLevel} → ${testLevel + 1}`} icon={Zap} variant="secondary" />
 

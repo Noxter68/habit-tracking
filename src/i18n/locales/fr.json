@@ -2845,5 +2845,11 @@
     "marathon_legend": "Légende du Marathon",
     "zen_voyager": "Voyageur Zen",
     "titan_of_tasks": "Titan des Tâches"
+  },
+  "loader": {
+    "loading_dashboard": "Chargement du dashboard...",
+    "preparing_gems": "Préparation des gemmes...",
+    "syncing_habits": "Synchronisation des habitudes...",
+    "calculating_progress": "Calcul de ta progression..."
   }
 }
