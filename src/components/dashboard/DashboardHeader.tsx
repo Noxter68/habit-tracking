@@ -19,14 +19,12 @@ import Animated, {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { Flame } from 'lucide-react-native';
 
 import AchievementBadge from '../shared/AchievementBadge';
 import DailyChallenge from './DailyChallenge';
 
 import { useAuth } from '../../context/AuthContext';
 import { useStats } from '@/context/StatsContext';
-import { useSubscription } from '@/context/SubscriptionContext';
 import { useInventory } from '@/context/InventoryContext';
 
 import { getGreeting } from '../../utils/progressStatus';
@@ -317,16 +315,10 @@ const progressStyles = StyleSheet.create({
 interface DashboardHeaderProps {
   userTitle: string;
   userLevel: number;
-  totalStreak: number;
-  activeHabits: number;
-  completedTasksToday?: number;
-  totalTasksToday?: number;
   onXPCollected?: (amount: number, taskName?: string) => void;
-  refreshTrigger?: number;
   currentAchievement?: any;
   currentLevelXP?: number;
   xpForNextLevel?: number;
-  levelProgress?: number;
   onStatsRefresh?: () => void;
   totalXP?: number;
   habits: Habit[];
@@ -336,7 +328,6 @@ interface DashboardHeaderProps {
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   userTitle,
   userLevel,
-  totalStreak,
   onXPCollected,
   currentAchievement,
   currentLevelXP = 0,
@@ -349,7 +340,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const navigation = useNavigation();
   const { user, username } = useAuth();
   const { refreshStats } = useStats();
-  const { streakSavers } = useSubscription();
   const { activeBoost } = useInventory();
   const { t, i18n } = useTranslation();
 
@@ -501,169 +491,82 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     <Animated.View entering={FadeIn} style={{ position: 'relative', marginBottom: 4 }}>
       <GradientContainer>
         <View style={{ padding: 16 }}>
-          {/* Top section: Left content (stats + greeting) + Right achievement badge */}
+          {/* Top section: Greeting/Title + Achievement badge */}
           <View
             style={{
               flexDirection: 'row',
               justifyContent: 'space-between',
+              alignItems: 'center',
               marginBottom: 12,
             }}
           >
-            {/* Left content */}
+            {/* Left content: Greeting + Title */}
             <View style={{ flex: 1, marginRight: 12 }}>
-              {/* Row 1: Stats badges */}
-              <View
+              <Text
                 style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  alignSelf: 'flex-start',
-                  marginBottom: 10,
+                  fontSize: 12,
+                  fontWeight: '700',
+                  color: '#FFFFFF',
+                  letterSpacing: 2,
+                  textShadowColor: isObsidian ? 'rgba(139, 92, 246, 0.8)' : 'rgba(0, 0, 0, 0.5)',
+                  textShadowOffset: { width: 0, height: 1 },
+                  textShadowRadius: isObsidian ? 8 : 4,
+                  marginBottom: 4,
                 }}
               >
-                {/* Main stats container - more compact when boost is active */}
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                    borderRadius: 14,
-                    paddingVertical: 8,
-                    paddingHorizontal: hasActiveBoost ? 10 : 14,
-                    borderWidth: 1,
-                    borderColor: 'rgba(255, 255, 255, 0.2)',
-                  }}
-                >
-                  {/* Level Badge */}
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text
-                      style={{
-                        fontSize: hasActiveBoost ? 10 : 11,
-                        fontWeight: '800',
-                        color: 'rgba(255, 255, 255, 0.7)',
-                        marginRight: hasActiveBoost ? 2 : 4,
-                        letterSpacing: 0.5,
-                      }}
-                    >
-                      LVL
-                    </Text>
-                    <Text
-                      style={{
-                        fontSize: hasActiveBoost ? 14 : 16,
-                        fontWeight: '900',
-                        color: '#FFFFFF',
-                        textShadowColor: 'rgba(0, 0, 0, 0.3)',
-                        textShadowOffset: { width: 0, height: 1 },
-                        textShadowRadius: 2,
-                      }}
-                    >
-                      {userLevel}
-                    </Text>
-                  </View>
-
-                  {/* Separator */}
-                  <View style={{ width: 1, height: 20, backgroundColor: 'rgba(255, 255, 255, 0.3)', marginHorizontal: hasActiveBoost ? 8 : 12 }} />
-
-                  {/* Streak Badge - Using Flame icon like HabitCards */}
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Flame size={hasActiveBoost ? 18 : 20} color="#FFFFFF" strokeWidth={2} fill="rgba(255, 255, 255, 0.4)" style={{ marginRight: hasActiveBoost ? 2 : 4 }} />
-                    <Text
-                      style={{
-                        fontSize: hasActiveBoost ? 14 : 16,
-                        fontWeight: '900',
-                        color: '#FFFFFF',
-                        textShadowColor: 'rgba(0, 0, 0, 0.3)',
-                        textShadowOffset: { width: 0, height: 1 },
-                        textShadowRadius: 2,
-                      }}
-                    >
-                      {totalStreak}
-                    </Text>
-                  </View>
-
-                  {/* Separator */}
-                  <View style={{ width: 1, height: 20, backgroundColor: 'rgba(255, 255, 255, 0.3)', marginHorizontal: hasActiveBoost ? 8 : 12 }} />
-
-                  {/* Streak Savers Badge */}
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Image
-                      source={require('../../../assets/interface/streak-saver.png')}
-                      style={{ width: hasActiveBoost ? 18 : 20, height: hasActiveBoost ? 18 : 20, marginRight: hasActiveBoost ? 2 : 4 }}
-                      resizeMode="contain"
-                    />
-                    <Text
-                      style={{
-                        fontSize: hasActiveBoost ? 14 : 16,
-                        fontWeight: '900',
-                        color: '#FFFFFF',
-                        textShadowColor: 'rgba(0, 0, 0, 0.3)',
-                        textShadowOffset: { width: 0, height: 1 },
-                        textShadowRadius: 2,
-                      }}
-                    >
-                      {streakSavers}
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Boost Badge - Separate element with gradient */}
-                {hasActiveBoost && <BoostBadge isPaused={isScrolling} />}
-              </View>
-
-              {/* Row 2: Greeting + Title */}
-              <View>
-                <Text
-                  style={{
-                    fontSize: 11,
-                    fontWeight: '700',
-                    color: '#FFFFFF',
-                    letterSpacing: 2,
-                    textShadowColor: isObsidian ? 'rgba(139, 92, 246, 0.8)' : 'rgba(0, 0, 0, 0.5)',
-                    textShadowOffset: { width: 0, height: 1 },
-                    textShadowRadius: isObsidian ? 8 : 4,
-                    marginBottom: 2,
-                  }}
-                >
-                  {greeting.toUpperCase()}
-                  {username && `, ${username.toUpperCase()}`}
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 24,
-                    fontWeight: '900',
-                    color: '#FFFFFF',
-                    lineHeight: 28,
-                    textShadowColor: isObsidian ? 'rgba(139, 92, 246, 0.9)' : 'rgba(0, 0, 0, 0.6)',
-                    textShadowOffset: { width: 0, height: 2 },
-                    textShadowRadius: isObsidian ? 12 : 8,
-                  }}
-                >
-                  {userTitle}
-                </Text>
-              </View>
+                {greeting.toUpperCase()}
+                {username && `, ${username.toUpperCase()}`}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 28,
+                  fontWeight: '900',
+                  color: '#FFFFFF',
+                  lineHeight: 32,
+                  textShadowColor: isObsidian ? 'rgba(139, 92, 246, 0.9)' : 'rgba(0, 0, 0, 0.6)',
+                  textShadowOffset: { width: 0, height: 2 },
+                  textShadowRadius: isObsidian ? 12 : 8,
+                }}
+              >
+                {userTitle}
+              </Text>
             </View>
 
-            {/* Achievement Badge - aligned to top, smaller when boost active */}
-            <Pressable
-              onPress={handleAchievementPress}
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                borderRadius: hasActiveBoost ? 14 : 16,
-                borderWidth: 1,
-                borderColor: 'rgba(255, 255, 255, 0.2)',
-                height: hasActiveBoost ? 66 : 76,
-                width: hasActiveBoost ? 66 : 76,
-                alignItems: 'center',
-                justifyContent: 'center',
-                alignSelf: 'flex-start',
-              }}
-            >
-              <AchievementBadge
-                achievement={currentAchievement}
-                onPress={handleAchievementPress}
-                tierTheme={tierTheme}
-                size={hasActiveBoost ? 54 : 64}
+            {/* Achievement Badge */}
+            <View style={{ position: 'relative' }}>
+              {/* Shadow layer for depth effect */}
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 2,
+                  left: 0,
+                  right: 0,
+                  bottom: -2,
+                  backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                  borderRadius: 16,
+                }}
               />
-            </Pressable>
+              <Pressable
+                onPress={handleAchievementPress}
+                style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                  borderRadius: 16,
+                  borderWidth: 1,
+                  borderColor: 'rgba(255, 255, 255, 0.2)',
+                  height: 76,
+                  width: 76,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <AchievementBadge
+                  achievement={currentAchievement}
+                  onPress={handleAchievementPress}
+                  tierTheme={tierTheme}
+                  size={64}
+                />
+              </Pressable>
+            </View>
           </View>
 
           {/* Row 3: Progress Bar - Boosted version when active, normal otherwise */}
@@ -676,77 +579,90 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 isPaused={isScrolling}
               />
             ) : (
-              <View
-                style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                  borderRadius: 14,
-                  padding: 12,
-                  borderWidth: 1,
-                  borderColor: 'rgba(255, 255, 255, 0.2)',
-                  marginBottom: 12,
-                }}
-              >
-                {/* Progress bar */}
+              <View style={{ position: 'relative', marginBottom: 12 }}>
+                {/* Shadow layer for depth effect */}
                 <View
                   style={{
-                    height: 10,
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                    borderRadius: 5,
-                    overflow: 'hidden',
-                    marginBottom: 8,
+                    position: 'absolute',
+                    top: 2,
+                    left: 0,
+                    right: 0,
+                    bottom: -2,
+                    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                    borderRadius: 14,
+                  }}
+                />
+                <View
+                  style={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                    borderRadius: 14,
+                    padding: 12,
+                    borderWidth: 1,
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
                   }}
                 >
+                  {/* Progress bar */}
                   <View
                     style={{
-                      width: `${displayProgress}%`,
-                      height: '100%',
-                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      height: 10,
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
                       borderRadius: 5,
-                      shadowColor: '#FFFFFF',
-                      shadowOffset: { width: 0, height: 0 },
-                      shadowOpacity: 0.5,
-                      shadowRadius: 4,
-                    }}
-                  />
-                </View>
-
-                {/* XP info */}
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      fontWeight: '700',
-                      color: '#FFFFFF',
-                      textShadowColor: 'rgba(0, 0, 0, 0.2)',
-                      textShadowOffset: { width: 0, height: 1 },
-                      textShadowRadius: 2,
+                      overflow: 'hidden',
+                      marginBottom: 8,
                     }}
                   >
-                    {displayXP.toLocaleString()} / {xpForNextLevel.toLocaleString()} XP
-                  </Text>
+                    <View
+                      style={{
+                        width: `${displayProgress}%`,
+                        height: '100%',
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        borderRadius: 5,
+                        shadowColor: '#FFFFFF',
+                        shadowOffset: { width: 0, height: 0 },
+                        shadowOpacity: 0.5,
+                        shadowRadius: 4,
+                      }}
+                    />
+                  </View>
+
+                  {/* XP info */}
                   <View
                     style={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.25)',
-                      paddingHorizontal: 10,
-                      paddingVertical: 4,
-                      borderRadius: 10,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
                     }}
                   >
                     <Text
                       style={{
-                        fontSize: 11,
-                        fontWeight: '800',
+                        fontSize: 12,
+                        fontWeight: '700',
                         color: '#FFFFFF',
+                        textShadowColor: 'rgba(0, 0, 0, 0.2)',
+                        textShadowOffset: { width: 0, height: 1 },
+                        textShadowRadius: 2,
                       }}
                     >
-                      {Math.round(displayProgress)}%
+                      {displayXP.toLocaleString()} / {xpForNextLevel.toLocaleString()} XP
                     </Text>
+                    <View
+                      style={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                        borderRadius: 10,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 11,
+                          fontWeight: '800',
+                          color: '#FFFFFF',
+                        }}
+                      >
+                        {Math.round(displayProgress)}%
+                      </Text>
+                    </View>
                   </View>
                 </View>
               </View>

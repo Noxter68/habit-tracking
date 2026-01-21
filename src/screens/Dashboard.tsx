@@ -14,6 +14,7 @@ import tw from '../lib/tailwind';
 
 // Components
 import DashboardHeader from '../components/dashboard/DashboardHeader';
+import StatsBar from '../components/dashboard/StatsBar';
 import DashboardLoader, { DashboardLoaderDebugButton } from '../components/DashboardLoader';
 import { SwipeableDashboardCard } from '../components/dashboard/SwipeableDashboardCard';
 import { HolidayModeDisplay } from '../components/dashboard/HolidayModeDisplay';
@@ -698,12 +699,16 @@ const Dashboard: React.FC = () => {
     <ImageBackground source={require('../../assets/interface/textures/texture-white.png')} style={tw`flex-1 bg-white`} imageStyle={{ opacity: 0.2 }} resizeMode="repeat">
       <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
       <SafeAreaView style={tw`flex-1 bg-transparent`} edges={['top']}>
+        {/* Fixed Stats Bar at top */}
+        <View style={tw`px-5 pt-1 pb-2`}>
+          <StatsBar userLevel={stats?.level ?? 1} totalStreak={stats?.totalStreak ?? 0} />
+        </View>
 
         <ScrollView
-          style={tw`flex-1 px-5`}
+          style={tw`flex-1`}
           refreshControl={<RefreshControl refreshing={false} onRefresh={handleManualRefresh} tintColor="#3b82f6" />}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={tw`pb-28`}
+          contentContainerStyle={tw`pb-28 px-5`}
           onScroll={handleScroll}
           scrollEventThrottle={16}
         >
@@ -776,24 +781,19 @@ const Dashboard: React.FC = () => {
             </View>
           )}
 
-          {/* Header with stats & progress */}
+          {/* Header with title & progress */}
           <DashboardHeader
             userTitle={stats?.currentAchievement ? getAchievementTitle(stats.level) : t('achievements.tiers.novice')}
             userLevel={stats?.level ?? 1}
-            totalStreak={stats?.totalStreak ?? 0}
-            activeHabits={stats?.activeHabits ?? 0}
-            completedTasksToday={stats?.completedTasksToday ?? 0}
-            totalTasksToday={stats?.totalTasksToday ?? 0}
             currentAchievement={stats?.currentAchievement}
             currentLevelXP={stats?.currentLevelXP ?? 0}
             xpForNextLevel={stats?.xpForNextLevel ?? 100}
-            levelProgress={stats?.levelProgress ?? 0}
             onStatsRefresh={handleStatsRefresh}
             totalXP={stats?.totalXP ?? 0}
             habits={activeHabits}
             isScrolling={isScrolledPastHeader}
             onXPCollected={(amount, taskName) => {
-              // Afficher la popup XP pour le daily challenge
+              // Show XP popup for the daily challenge
               setXpPopup({
                 visible: true,
                 taskName: taskName || t('dashboard.dailyChallenge.title'),

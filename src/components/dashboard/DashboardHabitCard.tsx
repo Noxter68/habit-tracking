@@ -190,18 +190,19 @@ const DashboardHabitCardComponent: React.FC<DashboardHabitCardProps> = ({
       )}
 
       {/* Card container with shadow */}
-      <View
-        style={[
-          tw`rounded-2xl`,
-          {
-            shadowColor: hasUnclaimedMilestone ? MILESTONE_GLOW_COLOR : theme.gradient[1],
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: hasUnclaimedMilestone ? 0.7 : 0.2,
-            shadowRadius: hasUnclaimedMilestone ? 16 : 8,
-            elevation: hasUnclaimedMilestone ? 12 : 4,
-          },
-        ]}
-      >
+      <View style={{ position: 'relative' }}>
+        {/* Shadow layer for depth effect */}
+        <View
+          style={{
+            position: 'absolute',
+            top: 3,
+            left: 0,
+            right: 0,
+            bottom: -3,
+            backgroundColor: theme.gradient[2],
+            borderRadius: 16,
+          }}
+        />
         <View style={tw`rounded-2xl overflow-hidden`}>
           <ImageBackground
             source={theme.texture}

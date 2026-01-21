@@ -135,21 +135,29 @@ export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total, username
 
   return (
     <Animated.View entering={FadeIn.duration(600)}>
-      <View
-        style={[
-          tw`rounded-2xl overflow-hidden`,
-          {
-            shadowColor: theme.gradient[1],
-            shadowOffset: { width: 0, height: 6 },
-            shadowOpacity: 0.25,
-            shadowRadius: 12,
+      <View style={{ position: 'relative' }}>
+        {/* Shadow layer for depth effect */}
+        <View
+          style={{
+            position: 'absolute',
+            top: 3,
+            left: 0,
+            right: 0,
+            bottom: -3,
+            backgroundColor: `${theme.gradient[2]}`,
             borderRadius: 16,
-            elevation: 6,
-          },
-        ]}
-      >
-        <ImageBackground source={theme.texture} style={tw`w-full`} imageStyle={{ opacity: 1 }} resizeMode="cover">
-          <View style={[tw`px-4 py-3`, { backgroundColor: `${theme.gradient[1]}80` }]}>
+          }}
+        />
+        <View
+          style={[
+            tw`rounded-2xl overflow-hidden`,
+            {
+              borderRadius: 16,
+            },
+          ]}
+        >
+          <ImageBackground source={theme.texture} style={tw`w-full`} imageStyle={{ opacity: 1 }} resizeMode="cover">
+            <View style={[tw`px-4 py-3`, { backgroundColor: `${theme.gradient[1]}80` }]}>
             <View style={tw`flex-row items-center justify-between`}>
               <View style={tw`flex-1 mr-3`}>
                 <Text
@@ -210,7 +218,8 @@ export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total, username
               </View>
             </View>
           </View>
-        </ImageBackground>
+          </ImageBackground>
+        </View>
       </View>
     </Animated.View>
   );
