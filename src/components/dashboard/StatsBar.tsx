@@ -130,6 +130,9 @@ const BoostBadge: React.FC = () => {
 interface StatsBarProps {
   userLevel: number;
   totalStreak: number;
+  levelProgress?: number;
+  currentLevelXP?: number;
+  xpForNextLevel?: number;
   streaksToSaveCount?: number;
   onStreakAlertPress?: () => void;
   showAchievementBadge?: boolean;
@@ -138,6 +141,9 @@ interface StatsBarProps {
 const StatsBar: React.FC<StatsBarProps> = ({
   userLevel,
   totalStreak,
+  levelProgress = 0,
+  currentLevelXP = 0,
+  xpForNextLevel = 100,
   streaksToSaveCount = 0,
   onStreakAlertPress,
   showAchievementBadge = false,
@@ -257,6 +263,32 @@ const StatsBar: React.FC<StatsBarProps> = ({
                 </Pressable>
               )}
             </View>
+
+            {/* Progress bar with XP text inside - Duolingo cartoony style */}
+            <View style={styles.progressContainer}>
+              {/* Outer wrapper for depth effect */}
+              <View style={styles.progressTrackOuter}>
+                {/* Inner track */}
+                <View style={styles.progressTrack}>
+                  {/* Fill bar */}
+                  {levelProgress > 0 && (
+                    <View
+                      style={[
+                        styles.progressFill,
+                        { width: `${Math.min(Math.round(levelProgress), 100)}%` },
+                      ]}
+                    >
+                      {/* Subtle thin shine line at top */}
+                      <View style={styles.progressShine} />
+                    </View>
+                  )}
+                  {/* XP text centered */}
+                  <Text style={[styles.progressXpText, { color: levelProgress >= 50 ? '#FFFFFF' : '#6d28d9' }]}>
+                    {currentLevelXP} / {xpForNextLevel} XP
+                  </Text>
+                </View>
+              </View>
+            </View>
           </LinearGradient>
         </ImageBackground>
       </View>
@@ -293,7 +325,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 24,
   },
   statItem: {
@@ -390,6 +422,52 @@ const styles = StyleSheet.create({
   achievementBadgeIcon: {
     width: 22,
     height: 22,
+  },
+  progressContainer: {
+    paddingHorizontal: 24,
+    paddingBottom: 12,
+    marginTop: -2,
+  },
+  progressTrackOuter: {
+    backgroundColor: '#5b21b6', // Dark violet for depth shadow
+    borderRadius: 14,
+    padding: 2,
+    paddingBottom: 4, // More padding at bottom for 3D depth effect
+  },
+  progressTrack: {
+    position: 'relative',
+    height: 14,
+    backgroundColor: '#ddd6fe', // Pastel lavender background
+    borderRadius: 12,
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  progressFill: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: '#7c3aed', // Violet fill
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  progressShine: {
+    position: 'absolute',
+    left: 2,
+    top: 2,
+    right: 2,
+    height: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.35)', // Subtle thin white line at top
+    borderRadius: 2,
+  },
+  progressXpText: {
+    position: 'absolute',
+    alignSelf: 'center',
+    fontSize: 10,
+    fontWeight: '900',
+    textShadowColor: 'rgba(0, 0, 0, 0.15)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 });
 

@@ -156,6 +156,8 @@ export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total, username
               tw`rounded-2xl overflow-hidden flex-1`,
               {
                 borderRadius: 16,
+                borderWidth: 1.5,
+                borderColor: 'rgba(255, 255, 255, 0.2)',
               },
             ]}
           >
@@ -233,6 +235,8 @@ export const TaskBadge: React.FC<TaskBadgeProps> = ({ completed, total, username
             tw`rounded-2xl overflow-hidden`,
             {
               borderRadius: 16,
+              borderWidth: 1.5,
+              borderColor: 'rgba(255, 255, 255, 0.2)',
             },
           ]}
         >

@@ -27,7 +27,6 @@ import DailyChallenge from './DailyChallenge';
 
 import { useAuth } from '../../context/AuthContext';
 import { useStats } from '@/context/StatsContext';
-import { useInventory } from '@/context/InventoryContext';
 
 import { getGreeting } from '../../utils/progressStatus';
 import { achievementTitles } from '../../utils/achievements';
@@ -182,135 +181,6 @@ const boostStyles = StyleSheet.create({
 });
 
 // ============================================================================
-// BOOSTED PROGRESS BAR COMPONENT - With violet gradient and bubbles
-// ============================================================================
-
-interface BoostedProgressBarProps {
-  progress: number;
-  displayXP: number;
-  xpForNextLevel: number;
-  isPaused?: boolean;
-}
-
-const BoostedProgressBar: React.FC<BoostedProgressBarProps> = ({
-  progress,
-  displayXP,
-  xpForNextLevel,
-  isPaused = false,
-}) => {
-  return (
-    <View style={progressStyles.outerContainer}>
-      <LinearGradient
-        colors={['#8b5cf6', '#7c3aed', '#6d28d9']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={progressStyles.containerGradient}
-      >
-        {/* Background bubbles for container - reduced for performance */}
-        <View style={progressStyles.containerBubbles}>
-          <AnimatedBubble delay={0} startX={50} size={5} isPaused={isPaused} />
-          <AnimatedBubble delay={700} startX={150} size={4} isPaused={isPaused} />
-          <AnimatedBubble delay={1400} startX={250} size={5} isPaused={isPaused} />
-        </View>
-
-        {/* Progress bar track */}
-        <View style={progressStyles.track}>
-          {/* Fill with lighter gradient and bubbles */}
-          <View style={[progressStyles.fillContainer, { width: `${Math.max(progress, 8)}%` }]}>
-            <LinearGradient
-              colors={['#c4b5fd', '#a78bfa', '#8b5cf6']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={progressStyles.fillGradient}
-            />
-          </View>
-        </View>
-
-        {/* XP info */}
-        <View style={progressStyles.infoRow}>
-          <Text style={progressStyles.xpText}>
-            {displayXP.toLocaleString()} / {xpForNextLevel.toLocaleString()} XP
-          </Text>
-          <View style={progressStyles.percentBadge}>
-            <Text style={progressStyles.percentText}>
-              {Math.round(progress)}%
-            </Text>
-          </View>
-        </View>
-      </LinearGradient>
-    </View>
-  );
-};
-
-const progressStyles = StyleSheet.create({
-  outerContainer: {
-    borderRadius: 14,
-    overflow: 'hidden',
-    marginBottom: 12,
-    shadowColor: '#8b5cf6',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  containerGradient: {
-    borderRadius: 14,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  containerBubbles: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    overflow: 'hidden',
-    borderRadius: 14,
-  },
-  track: {
-    height: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    borderRadius: 6,
-    overflow: 'hidden',
-    marginBottom: 8,
-  },
-  fillContainer: {
-    height: '100%',
-    borderRadius: 6,
-    overflow: 'hidden',
-  },
-  fillGradient: {
-    flex: 1,
-    borderRadius: 6,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  xpText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  percentBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
-  },
-  percentText: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-});
-
-// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
@@ -324,7 +194,6 @@ interface DashboardHeaderProps {
   onStatsRefresh?: () => void;
   totalXP?: number;
   habits: Habit[];
-  isScrolling?: boolean;
   isCompact?: boolean;
 }
 
@@ -338,13 +207,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onStatsRefresh,
   totalXP = 0,
   habits,
-  isScrolling = false,
   isCompact = false,
 }) => {
   const navigation = useNavigation();
   const { user, username } = useAuth();
   const { refreshStats } = useStats();
-  const { activeBoost } = useInventory();
   const { t, i18n } = useTranslation();
 
   const [optimisticXP, setOptimisticXP] = React.useState(currentLevelXP);
@@ -377,19 +244,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const tierTheme = useMemo(() => getAchievementTierTheme(currentTierKey), [currentTierKey]);
   const isObsidian = useMemo(() => tierTheme.gemName === 'Obsidian', [tierTheme.gemName]);
 
-  const { displayXP, displayProgress } = useMemo(() => {
-    let xpToShow = optimisticXP;
-    if (optimisticXP > xpForNextLevel && isOptimisticUpdate.current) {
-      xpToShow = optimisticXP % xpForNextLevel;
-    } else {
-      xpToShow = Math.max(0, Math.min(optimisticXP, xpForNextLevel));
-    }
-    const progressPercent = xpForNextLevel > 0 ? (xpToShow / xpForNextLevel) * 100 : 0;
-    return {
-      displayXP: Math.max(0, xpToShow),
-      displayProgress: Math.max(0, Math.min(progressPercent, 100)),
-    };
-  }, [optimisticXP, xpForNextLevel]);
 
   const handleAchievementPress = useCallback(() => {
     HapticFeedback.light();
@@ -507,9 +361,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     };
   }, [tierTheme.gradient, tierTheme.texture, isObsidian, shadowColor, isCompact]);
 
-  // Check if boost is valid
-  const hasActiveBoost = activeBoost && new Date(activeBoost.expires_at) > new Date();
-
   return (
     <Animated.View entering={FadeIn} style={{ position: 'relative', marginBottom: 0, flex: isCompact ? 1 : undefined }}>
       <GradientContainer>
@@ -573,10 +424,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 <Pressable
                   onPress={handleAchievementPress}
                   style={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
                     borderRadius: 16,
                     borderWidth: 1,
-                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    borderColor: 'rgba(255, 255, 255, 0.4)',
                     height: 76,
                     width: 76,
                     alignItems: 'center',
@@ -594,113 +445,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             )}
           </View>
 
-          {/* Row 3: Progress Bar - Boosted version when active, normal otherwise */}
-          {!isCompact && userLevel < 40 && (
-            <Animated.View
-              entering={FadeIn.duration(300)}
-              exiting={FadeOut.duration(200)}
-              layout={LinearTransition.duration(300)}
-            >
-              {hasActiveBoost ? (
-                <BoostedProgressBar
-                  progress={displayProgress}
-                  displayXP={displayXP}
-                  xpForNextLevel={xpForNextLevel}
-                  isPaused={isScrolling}
-                />
-              ) : (
-                <View style={{ position: 'relative', marginBottom: 12 }}>
-                  {/* Shadow layer for depth effect */}
-                  <View
-                    style={{
-                      position: 'absolute',
-                      top: 2,
-                      left: 0,
-                      right: 0,
-                      bottom: -2,
-                      backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                      borderRadius: 14,
-                    }}
-                  />
-                  <View
-                    style={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                      borderRadius: 14,
-                      padding: 12,
-                      borderWidth: 1,
-                      borderColor: 'rgba(255, 255, 255, 0.2)',
-                    }}
-                  >
-                    {/* Progress bar */}
-                    <View
-                      style={{
-                        height: 10,
-                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                        borderRadius: 5,
-                        overflow: 'hidden',
-                        marginBottom: 8,
-                      }}
-                    >
-                      <View
-                        style={{
-                          width: `${displayProgress}%`,
-                          height: '100%',
-                          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                          borderRadius: 5,
-                          shadowColor: '#FFFFFF',
-                          shadowOffset: { width: 0, height: 0 },
-                          shadowOpacity: 0.5,
-                          shadowRadius: 4,
-                        }}
-                      />
-                    </View>
-
-                    {/* XP info */}
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontSize: 12,
-                          fontWeight: '700',
-                          color: '#FFFFFF',
-                          textShadowColor: 'rgba(0, 0, 0, 0.2)',
-                          textShadowOffset: { width: 0, height: 1 },
-                          textShadowRadius: 2,
-                        }}
-                      >
-                        {displayXP.toLocaleString()} / {xpForNextLevel.toLocaleString()} XP
-                      </Text>
-                      <View
-                        style={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.25)',
-                          paddingHorizontal: 10,
-                          paddingVertical: 4,
-                          borderRadius: 10,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            fontSize: 11,
-                            fontWeight: '800',
-                            color: '#FFFFFF',
-                          }}
-                        >
-                          {Math.round(displayProgress)}%
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                </View>
-              )}
-            </Animated.View>
-          )}
-
-          {/* Row 4: Daily Challenge - Hidden in compact mode */}
+          {/* Daily Challenge - Hidden in compact mode */}
           {!isCompact && user?.id && (
             <Animated.View
               entering={FadeIn.duration(300).delay(100)}

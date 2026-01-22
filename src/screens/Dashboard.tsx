@@ -86,6 +86,7 @@ const Dashboard: React.FC = () => {
   // State: Loading & UI
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [showShop, setShowShop] = useState(false);
+  const [preferencesLoaded, setPreferencesLoaded] = useState(false);
 
   // State: Separate compact view modes (header and habits are independent)
   const [isHeaderCompact, setIsHeaderCompact] = useState(false);
@@ -102,6 +103,8 @@ const Dashboard: React.FC = () => {
       if (habitsCompact !== null) setIsHabitsCompact(habitsCompact === 'true');
     } catch (error) {
       Logger.error('Error loading compact preferences:', error);
+    } finally {
+      setPreferencesLoaded(true);
     }
   }, []);
 
@@ -226,10 +229,10 @@ const Dashboard: React.FC = () => {
   // ============================================================================
 
   const hasMinimumData = useMemo(() => {
-    // Wait for all data to be loaded AND stats to be fully populated
+    // Wait for all data to be loaded AND stats to be fully populated AND preferences loaded
     // This prevents the flash of empty state before habits are rendered
-    return !habitsLoading && !statsLoading && !holidayLoading && stats !== null && habits !== undefined && stats?.level !== undefined;
-  }, [habitsLoading, statsLoading, holidayLoading, stats, habits]);
+    return !habitsLoading && !statsLoading && !holidayLoading && stats !== null && habits !== undefined && stats?.level !== undefined && preferencesLoaded;
+  }, [habitsLoading, statsLoading, holidayLoading, stats, habits, preferencesLoaded]);
 
   useEffect(() => {
     if (hasMinimumData && isInitialLoad) {
@@ -778,7 +781,7 @@ const Dashboard: React.FC = () => {
   // Render: Loading State
   // ============================================================================
 
-  if (isInitialLoad && (habitsLoading || statsLoading || holidayLoading)) {
+  if (isInitialLoad) {
     return (
       <>
         <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
@@ -800,6 +803,9 @@ const Dashboard: React.FC = () => {
           <StatsBar
             userLevel={stats?.level ?? 1}
             totalStreak={stats?.totalStreak ?? 0}
+            levelProgress={stats?.levelProgress ?? 0}
+            currentLevelXP={stats?.currentLevelXP ?? 0}
+            xpForNextLevel={stats?.xpForNextLevel ?? 100}
             streaksToSaveCount={streaksToSaveCount}
             onStreakAlertPress={handleStreakSaverPress}
             showAchievementBadge={isHeaderCompact}
