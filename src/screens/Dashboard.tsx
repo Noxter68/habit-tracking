@@ -229,6 +229,8 @@ const Dashboard: React.FC = () => {
   // Ref to access habits without causing re-renders
   const habitsRef = useRef(habits);
   habitsRef.current = habits;
+  // Ref to track tasks currently being toggled (prevents rapid double-clicks)
+  const togglingTasksRef = useRef<Set<string>>(new Set());
 
   // ============================================================================
   // LOADING STATE MANAGEMENT
@@ -451,6 +453,17 @@ const Dashboard: React.FC = () => {
   };
 
   const handleTaskToggle = useCallback(async (habitId: string, date: string, taskId: string) => {
+    // Create unique key for this specific task toggle
+    const toggleKey = `${habitId}-${date}-${taskId}`;
+
+    // Check if this task is already being toggled (prevents rapid double-clicks)
+    if (togglingTasksRef.current.has(toggleKey)) {
+      return;
+    }
+
+    // Lock this task
+    togglingTasksRef.current.add(toggleKey);
+
     HapticFeedback.success();
 
     // Utiliser la ref pour éviter de recréer ce callback à chaque changement de habits
@@ -504,12 +517,17 @@ const Dashboard: React.FC = () => {
       // Note: pas de popup XP quand on décoche une tâche
     }
 
-    await toggleTask(habitId, date, taskId);
-    // Refresh quests silently to detect newly completed quests
-    // Small delay to ensure Supabase has processed the quest update
-    setTimeout(() => {
-      refreshQuests(true);
-    }, 500);
+    try {
+      await toggleTask(habitId, date, taskId);
+      // Refresh quests silently to detect newly completed quests
+      // Small delay to ensure Supabase has processed the quest update
+      setTimeout(() => {
+        refreshQuests(true);
+      }, 500);
+    } finally {
+      // Unlock the task after toggle completes (success or error)
+      togglingTasksRef.current.delete(toggleKey);
+    }
   }, [toggleTask, refreshQuests, hasActiveBoost, activeBoost]);
 
   const handleTestLevelUp = () => {
