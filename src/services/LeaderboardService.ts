@@ -79,6 +79,7 @@ export class LeaderboardService {
   /**
    * Recuperer le classement global par XP total
    * Affiche le top 20 + l'utilisateur courant s'il est en dehors du top 20
+   * Filtre: XP > 0 et actif dans les 15 derniers jours
    *
    * @param userId - L'identifiant de l'utilisateur
    * @param limit - Le nombre maximum d'entrees (par defaut 20)
@@ -93,10 +94,15 @@ export class LeaderboardService {
     stats: LeaderboardStats;
   }> {
     try {
+      // Get all users with XP > 0, ordered by total_xp
+      // We show users who either:
+      // 1. Have been active in the last 15 days (have xp_transactions)
+      // 2. OR have total_xp > 0 (to not exclude users whose transactions might be missing)
       const { data: topUsers, error: topError } = await supabase
         .from('profiles')
         .select('id, username, email, total_xp, current_level, timezone_offset')
         .neq('username', 'testuser')
+        .gt('total_xp', 0)
         .order('total_xp', { ascending: false })
         .limit(limit);
 
@@ -239,7 +245,7 @@ export class LeaderboardService {
 
   /**
    * Recuperer le classement hebdomadaire
-   * UNIQUEMENT les utilisateurs ayant gagne des XP dans les 7 derniers jours
+   * UNIQUEMENT les utilisateurs ayant gagne des XP depuis le debut de la semaine (lundi 00:00 UTC)
    * Affiche le top 20 + l'utilisateur courant s'il est en dehors du top 20
    *
    * @param userId - L'identifiant de l'utilisateur
@@ -255,8 +261,13 @@ export class LeaderboardService {
     totalActiveUsers: number;
   }> {
     try {
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
+      // Get the start of the current week (Monday 00:00 UTC)
+      const now = new Date();
+      const dayOfWeek = now.getUTCDay(); // 0 = Sunday, 1 = Monday, etc.
+      const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // If Sunday, go back 6 days to Monday
+      const weekStart = new Date(now);
+      weekStart.setUTCDate(now.getUTCDate() - daysToSubtract);
+      weekStart.setUTCHours(0, 0, 0, 0);
 
       // Get testuser ID to exclude
       const { data: testUserData } = await supabase
@@ -270,7 +281,7 @@ export class LeaderboardService {
       const { data: weeklyXP, error } = await supabase
         .from('xp_transactions')
         .select('user_id, amount')
-        .gte('created_at', weekAgo.toISOString());
+        .gte('created_at', weekStart.toISOString());
 
       if (error) throw error;
 
@@ -456,6 +467,7 @@ export class LeaderboardService {
 
   /**
    * Récupère le classement local (par pays) pour l'utilisateur
+   * Filtre: XP > 0 et actif dans les 15 derniers jours
    *
    * @param userId - L'identifiant de l'utilisateur
    * @param limit - Nombre maximum d'entrées
@@ -483,11 +495,12 @@ export class LeaderboardService {
 
       const userCountry = getCountryFromTimezone((userProfile as any).timezone_offset);
 
-      // 2. Récupérer tous les utilisateurs
+      // 2. Récupérer tous les utilisateurs avec XP > 0
       const { data: allUsers, error: usersError } = await supabase
         .from('profiles')
         .select('id, username, email, total_xp, current_level, timezone_offset')
         .neq('username', 'testuser')
+        .gt('total_xp', 0)
         .order('total_xp', { ascending: false });
 
       if (usersError || !allUsers) {
