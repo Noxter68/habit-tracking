@@ -7,10 +7,12 @@
  * - Streak Savers
  * - XP Boost indicator (when active)
  * - Streak Alert icon (when habits need saving)
+ *
+ * Uses dynamic tier theme based on user level.
  */
 
 import React, { useMemo, useEffect } from 'react';
-import { View, Text, Image, ImageBackground, StyleSheet, Pressable } from 'react-native';
+import { View, Text, Image, ImageBackground, Pressable, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Flame, AlertTriangle } from 'lucide-react-native';
 import Animated, {
@@ -27,11 +29,9 @@ import { useNavigation } from '@react-navigation/native';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { useInventory } from '@/context/InventoryContext';
 import { HapticFeedback } from '@/utils/haptics';
-import { getAchievementByLevel } from '@/utils/achievements';
-
-// Amethyst theme colors
-const AMETHYST_GRADIENT: [string, string, string] = ['#8b5cf6', '#7c3aed', '#6d28d9'];
-const AMETHYST_SHADOW = '#5b21b6';
+import { getAchievementByLevel, achievementTitles } from '@/utils/achievements';
+import { getAchievementTierTheme } from '@/utils/tierTheme';
+import { TierKey } from '@/types/achievement.types';
 
 // ============================================================================
 // ANIMATED BUBBLE COMPONENT
@@ -95,11 +95,16 @@ const AnimatedBubble: React.FC<BubbleProps> = ({ delay, startX, size }) => {
 // BOOST BADGE WITH BUBBLES
 // ============================================================================
 
-const BoostBadge: React.FC = () => {
+interface BoostBadgeProps {
+  accentColor: string;
+  gradient: string[];
+}
+
+const BoostBadge: React.FC<BoostBadgeProps> = ({ accentColor, gradient }) => {
   return (
-    <View style={styles.boostBadgeContainer}>
+    <View style={[styles.boostBadgeContainer, { shadowColor: accentColor }]}>
       <LinearGradient
-        colors={AMETHYST_GRADIENT}
+        colors={gradient as [string, string, ...string[]]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.boostBadgeGradient}
@@ -121,6 +126,25 @@ const BoostBadge: React.FC = () => {
       </LinearGradient>
     </View>
   );
+};
+
+// ============================================================================
+// HELPER: Get pastel background color from accent
+// ============================================================================
+
+const getPastelBackground = (accent: string): string => {
+  // Map accent colors to their pastel equivalents for the progress bar background
+  const pastelMap: Record<string, string> = {
+    '#3b82f6': '#dbeafe', // Blue -> Light blue
+    '#dc2626': '#fecaca', // Red -> Light red
+    '#7c3aed': '#ddd6fe', // Purple -> Light purple
+    '#059669': '#d1fae5', // Green -> Light green
+    '#f59e0b': '#fef3c7', // Amber -> Light amber
+    '#8b5cf6': '#e9d5ff', // Violet -> Light violet
+    '#3f7eea': '#dbeafe', // Celeste -> Light blue
+    '#ff4500': '#fed7aa', // Inferno -> Light orange
+  };
+  return pastelMap[accent] || '#e2e8f0';
 };
 
 // ============================================================================
@@ -152,6 +176,22 @@ const StatsBar: React.FC<StatsBarProps> = ({
   const { streakSavers } = useSubscription();
   const { activeBoost } = useInventory();
 
+  // Get current tier theme based on level
+  const currentTierKey = useMemo((): TierKey => {
+    const title = achievementTitles.find(
+      (t) => userLevel >= t.level && userLevel < (achievementTitles.find((next) => next.level > t.level)?.level || Infinity)
+    );
+    return (title?.tierKey as TierKey) || 'novice';
+  }, [userLevel]);
+
+  const tierTheme = useMemo(() => getAchievementTierTheme(currentTierKey), [currentTierKey]);
+
+  // Derived colors from tier theme
+  const gradientColors = tierTheme.gradient as string[];
+  const accentColor = tierTheme.accent;
+  const shadowColor = gradientColors[gradientColors.length - 1] || '#1e3a5f';
+  const pastelBackground = getPastelBackground(accentColor);
+
   // Get current achievement badge image based on level
   const currentAchievement = useMemo(() => getAchievementByLevel(userLevel), [userLevel]);
 
@@ -166,7 +206,7 @@ const StatsBar: React.FC<StatsBarProps> = ({
   // Pulsing animation for streak alert
   const alertScale = useSharedValue(1);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (streaksToSaveCount > 0) {
       alertScale.value = withRepeat(
         withSequence(
@@ -193,18 +233,22 @@ const StatsBar: React.FC<StatsBarProps> = ({
   return (
     <View style={styles.container}>
       {/* Shadow layer for depth effect */}
-      <View style={styles.shadowLayer} />
+      <View style={[styles.shadowLayer, { backgroundColor: shadowColor }]} />
 
       {/* Main bar with gradient and texture */}
       <View style={styles.barContainer}>
         <ImageBackground
-          source={require('../../../assets/interface/progressBar/amethyst-texture.png')}
+          source={tierTheme.texture}
           style={styles.textureBackground}
           imageStyle={styles.textureImage}
           resizeMode="cover"
         >
           <LinearGradient
-            colors={[AMETHYST_GRADIENT[0] + 'cc', AMETHYST_GRADIENT[1] + 'cc', AMETHYST_GRADIENT[2] + 'cc']}
+            colors={[
+              gradientColors[0] + 'cc',
+              gradientColors[1] + 'cc',
+              (gradientColors[2] || gradientColors[1]) + 'cc',
+            ]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.gradient}
@@ -240,17 +284,17 @@ const StatsBar: React.FC<StatsBarProps> = ({
               {/* Streak Alert - when habits need saving */}
               {streaksToSaveCount > 0 && onStreakAlertPress && (
                 <Pressable onPress={handleAlertPress}>
-                  <Animated.View style={[styles.alertBadge, animatedAlertStyle]}>
+                  <Animated.View style={[styles.alertBadge, { backgroundColor: accentColor, shadowColor: accentColor }, animatedAlertStyle]}>
                     <AlertTriangle size={16} color="#FFFFFF" strokeWidth={2.5} fill="rgba(255, 255, 255, 0.3)" />
                     <View style={styles.alertCount}>
-                      <Text style={styles.alertCountText}>{streaksToSaveCount}</Text>
+                      <Text style={[styles.alertCountText, { color: accentColor }]}>{streaksToSaveCount}</Text>
                     </View>
                   </Animated.View>
                 </Pressable>
               )}
 
               {/* Boost indicator with bubble animation */}
-              {hasActiveBoost && <BoostBadge />}
+              {hasActiveBoost && <BoostBadge accentColor={accentColor} gradient={gradientColors} />}
 
               {/* Achievement Badge - Only shown in compact mode */}
               {showAchievementBadge && (
@@ -267,23 +311,26 @@ const StatsBar: React.FC<StatsBarProps> = ({
             {/* Progress bar with XP text inside - Duolingo cartoony style */}
             <View style={styles.progressContainer}>
               {/* Outer wrapper for depth effect */}
-              <View style={styles.progressTrackOuter}>
+              <View style={[styles.progressTrackOuter, { backgroundColor: shadowColor }]}>
                 {/* Inner track */}
-                <View style={styles.progressTrack}>
+                <View style={[styles.progressTrack, { backgroundColor: pastelBackground }]}>
                   {/* Fill bar */}
                   {levelProgress > 0 && (
                     <View
                       style={[
                         styles.progressFill,
-                        { width: `${Math.min(Math.round(levelProgress), 100)}%` },
+                        {
+                          width: `${Math.min(Math.round(levelProgress), 100)}%`,
+                          backgroundColor: accentColor,
+                        },
                       ]}
                     >
                       {/* Subtle thin shine line at top */}
                       <View style={styles.progressShine} />
                     </View>
                   )}
-                  {/* XP text centered */}
-                  <Text style={[styles.progressXpText, { color: levelProgress >= 50 ? '#FFFFFF' : '#6d28d9' }]}>
+                  {/* XP text centered - always white with shadow for visibility */}
+                  <Text style={styles.progressXpText}>
                     {currentLevelXP} / {xpForNextLevel} XP
                   </Text>
                 </View>
@@ -306,7 +353,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: -3,
-    backgroundColor: AMETHYST_SHADOW,
     borderRadius: 16,
   },
   barContainer: {
@@ -352,11 +398,9 @@ const styles = StyleSheet.create({
     height: 22,
   },
   alertBadge: {
-    backgroundColor: '#8b5cf6',
     borderRadius: 10,
     padding: 8,
     position: 'relative',
-    shadowColor: '#8b5cf6',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.5,
     shadowRadius: 4,
@@ -377,14 +421,12 @@ const styles = StyleSheet.create({
   alertCountText: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#7c3aed',
   },
   boostBadgeContainer: {
     width: 32,
     height: 32,
     borderRadius: 10,
     overflow: 'hidden',
-    shadowColor: '#8b5cf6',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.5,
     shadowRadius: 4,
@@ -429,15 +471,13 @@ const styles = StyleSheet.create({
     marginTop: -2,
   },
   progressTrackOuter: {
-    backgroundColor: '#5b21b6', // Dark violet for depth shadow
     borderRadius: 14,
     padding: 2,
-    paddingBottom: 4, // More padding at bottom for 3D depth effect
+    paddingBottom: 4,
   },
   progressTrack: {
     position: 'relative',
     height: 14,
-    backgroundColor: '#ddd6fe', // Pastel lavender background
     borderRadius: 12,
     justifyContent: 'center',
     overflow: 'hidden',
@@ -447,7 +487,6 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     bottom: 0,
-    backgroundColor: '#7c3aed', // Violet fill
     borderRadius: 12,
     overflow: 'hidden',
   },
@@ -457,7 +496,7 @@ const styles = StyleSheet.create({
     top: 2,
     right: 2,
     height: 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.35)', // Subtle thin white line at top
+    backgroundColor: 'rgba(255, 255, 255, 0.35)',
     borderRadius: 2,
   },
   progressXpText: {
@@ -465,9 +504,10 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     fontSize: 10,
     fontWeight: '900',
-    textShadowColor: 'rgba(0, 0, 0, 0.15)',
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0, 0, 0, 0.4)',
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadowRadius: 3,
   },
 });
 
