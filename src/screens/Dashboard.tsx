@@ -84,7 +84,13 @@ const Dashboard: React.FC = () => {
   const hasActiveBoost = activeBoost && new Date(activeBoost.expires_at) > new Date();
 
   // State: Loading & UI
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  // Initialize isInitialLoad based on whether data is already available
+  // This prevents showing a second loader if App.tsx already waited for data
+  const [isInitialLoad, setIsInitialLoad] = useState(() => {
+    // If habits and stats are already loaded, skip the initial load state
+    const dataAlreadyReady = !habitsLoading && !statsLoading && stats !== null && habits !== undefined && stats?.level !== undefined;
+    return !dataAlreadyReady;
+  });
   const [showShop, setShowShop] = useState(false);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
 
@@ -162,7 +168,7 @@ const Dashboard: React.FC = () => {
 
   // State: Holiday Mode
   const [activeHoliday, setActiveHoliday] = useState<HolidayPeriod | null>(null);
-  const [holidayLoading, setHolidayLoading] = useState(true);
+  const [holidayLoading, setHolidayLoading] = useState(false);
   const [frozenHabits, setFrozenHabits] = useState<Set<string>>(new Set());
   const [frozenTasksMap, setFrozenTasksMap] = useState<Map<string, Record<string, { pausedUntil: string }>>>(new Map());
   const [streakSaverRefreshTrigger, setStreakSaverRefreshTrigger] = useState(0);
@@ -302,7 +308,6 @@ const Dashboard: React.FC = () => {
       setFrozenTasksMap(new Map());
     } finally {
       setHolidayLoading(false);
-      setIsInitialLoad(false);
       isFetchingHolidayRef.current = false;
     }
   }, [user?.id]);

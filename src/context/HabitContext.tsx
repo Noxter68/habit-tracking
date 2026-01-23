@@ -142,6 +142,7 @@ export const HabitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const loadHabits = async () => {
     if (!user) return;
 
+    setLoading(true);
     try {
       const fetchedHabits = await HabitService.fetchHabits(user.id);
       setHabits(fetchedHabits);
