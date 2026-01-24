@@ -19,6 +19,12 @@ import { getLocales } from 'expo-localization';
 import { supabase } from '@/lib/supabase';
 import Logger from '@/utils/logger';
 import i18n from '@/i18n';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// =============================================================================
+// CONSTANTES - Storage
+// =============================================================================
+const LANGUAGE_STORAGE_KEY = 'user-language';
 
 // =============================================================================
 // CONSTANTES
@@ -159,7 +165,7 @@ export class LanguageDetectionService {
 
   /**
    * Mettre a jour la langue de l'utilisateur
-   * Sauvegarde dans la base de donnees et met a jour i18n
+   * Sauvegarde dans la base de donnees, AsyncStorage et met a jour i18n
    *
    * @param userId - L'identifiant de l'utilisateur
    * @param language - La nouvelle langue
@@ -178,6 +184,9 @@ export class LanguageDetectionService {
         Logger.error('Failed to update language preference:', error);
         throw error;
       }
+
+      // Sauvegarder dans AsyncStorage pour persistence locale immédiate
+      await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, language);
 
       await i18n.changeLanguage(language);
 
