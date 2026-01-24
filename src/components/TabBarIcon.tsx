@@ -8,7 +8,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import Animated, { useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
 import Svg, { Path, Circle, Rect, G } from 'react-native-svg';
-import { Trophy, SquareUserRound } from 'lucide-react-native';
+import { Trophy } from 'lucide-react-native';
 import tw from '../lib/tailwind';
 
 // =============================================================================
@@ -201,20 +201,65 @@ export const TabBarIcon: React.FC<TabBarIconProps> = ({ name, color, focused, si
 
       case 'leaderboard':
       case 'trophy':
-        // Trophy icon from lucide-react-native
-        return <Trophy size={size} color={activeColor} strokeWidth={strokeWidth} fill={focused ? activeColor : 'none'} fillOpacity={focused ? 0.1 : 0} />;
+        // Podium icon for leaderboard/ranking
+        return (
+          <Svg width={size + 2} height={size + 2} viewBox="0 0 24 24" fill="none">
+            {/* 2nd place - left podium */}
+            <Rect
+              x="2"
+              y="12"
+              width="6"
+              height="9"
+              rx="1"
+              stroke={activeColor}
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill={focused ? activeColor : 'none'}
+              fillOpacity={focused ? 0.08 : 0}
+            />
+            {/* 1st place - center podium (tallest) */}
+            <Rect
+              x="9"
+              y="6"
+              width="6"
+              height="15"
+              rx="1"
+              stroke={activeColor}
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill={focused ? activeColor : 'none'}
+              fillOpacity={focused ? 0.15 : 0}
+            />
+            {/* 3rd place - right podium */}
+            <Rect
+              x="16"
+              y="14"
+              width="6"
+              height="7"
+              rx="1"
+              stroke={activeColor}
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill={focused ? activeColor : 'none'}
+              fillOpacity={focused ? 0.08 : 0}
+            />
+            {/* Rank numbers */}
+            {focused && (
+              <G>
+                <Circle cx="5" cy="15" r="1.2" fill={activeColor} opacity="0.5" />
+                <Circle cx="12" cy="9" r="1.5" fill={activeColor} opacity="0.7" />
+                <Circle cx="19" cy="16.5" r="1" fill={activeColor} opacity="0.4" />
+              </G>
+            )}
+          </Svg>
+        );
 
       case 'quest-panel':
-        // Quest panel icon from lucide-react-native
-        return (
-          <SquareUserRound
-            size={size}
-            color={activeColor}
-            strokeWidth={strokeWidth}
-            fill={focused ? activeColor : 'none'}
-            fillOpacity={focused ? 0.1 : 0}
-          />
-        );
+        // Trophy icon for achievements
+        return <Trophy size={size} color={activeColor} strokeWidth={strokeWidth} fill={focused ? activeColor : 'none'} fillOpacity={focused ? 0.1 : 0} />;
 
       default:
         return null;
