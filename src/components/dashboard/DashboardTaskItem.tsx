@@ -5,7 +5,7 @@
  * Duolingo-style design with 3D effect via shadow.
  */
 
-import React, { memo, useRef, useEffect } from 'react';
+import React, { memo } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -15,8 +15,7 @@ import Animated, {
   useDerivedValue,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import LottieView from 'lottie-react-native';
-import { PauseCircle } from 'lucide-react-native';
+import { PauseCircle, Check } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import tw from '@/lib/tailwind';
 import { tierThemes } from '@/utils/tierTheme';
@@ -68,19 +67,6 @@ const DashboardTaskItemComponent: React.FC<DashboardTaskItemProps> = ({
     return showAsCompleted ? 1 : 0;
   }, [showAsCompleted]);
 
-  // Checkmark Lottie animation
-  const checkmarkRef = useRef<LottieView>(null);
-  const wasCompletedOnMount = useRef(showAsCompleted);
-  const prevCompleted = useRef(showAsCompleted);
-
-  useEffect(() => {
-    if (prevCompleted.current !== showAsCompleted && showAsCompleted) {
-      // Play animation when transitioning from uncompleted to completed
-      checkmarkRef.current?.reset();
-      checkmarkRef.current?.play();
-    }
-    prevCompleted.current = showAsCompleted;
-  }, [showAsCompleted]);
 
   const handlePressIn = () => {
     if (isPaused || disabled) return;
@@ -190,19 +176,14 @@ const DashboardTaskItemComponent: React.FC<DashboardTaskItemProps> = ({
                 ]}
               >
                 {showAsCompleted ? (
-                  <LottieView
-                    ref={checkmarkRef}
-                    source={require('../../../assets/animations/blue-checkmark.json')}
-                    autoPlay={!wasCompletedOnMount.current}
-                    loop={false}
-                    progress={wasCompletedOnMount.current ? 1 : 0}
-                    style={compact ? { width: 26, height: 26 } : { width: 34, height: 34 }}
-                    colorFilters={[
-                      { keypath: 'Shape Layer 1', color: tierAccent },
-                      { keypath: 'trait', color: tierAccent },
-                      { keypath: 'trait 2', color: tierAccent },
+                  <View
+                    style={[
+                      compact ? tw`w-5 h-5 rounded-full items-center justify-center` : tw`w-6 h-6 rounded-full items-center justify-center`,
+                      { backgroundColor: tierAccent },
                     ]}
-                  />
+                  >
+                    <Check size={compact ? 12 : 14} color="#ffffff" strokeWidth={3} />
+                  </View>
                 ) : (
                   <View
                     style={[

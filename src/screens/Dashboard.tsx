@@ -840,8 +840,8 @@ const Dashboard: React.FC = () => {
           refreshControl={<RefreshControl refreshing={false} onRefresh={handleManualRefresh} tintColor="#3b82f6" />}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={tw`pb-28 px-5`}
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
+          onScroll={hasActiveBoost ? handleScroll : undefined}
+          scrollEventThrottle={150}
         >
           {/* Debug: Dashboard Loader Preview */}
           <DashboardLoaderDebugButton />
