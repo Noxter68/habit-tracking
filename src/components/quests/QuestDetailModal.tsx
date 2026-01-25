@@ -4,7 +4,7 @@
  * Modal affichant les détails d'une quête avec possibilité d'épingler/désépingler.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -34,11 +34,16 @@ export const QuestDetailModal: React.FC<QuestDetailModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const [isTogglingPin, setIsTogglingPin] = useState(false);
+  const [isPinned, setIsPinned] = useState(quest?.user_progress?.is_pinned || false);
+
+  // Sync local state when quest changes
+  useEffect(() => {
+    setIsPinned(quest?.user_progress?.is_pinned || false);
+  }, [quest?.id, quest?.user_progress?.is_pinned]);
 
   if (!quest) return null;
 
   const isCompleted = quest.user_progress?.is_completed || false;
-  const isPinned = quest.user_progress?.is_pinned || false;
   const rawProgressValue = quest.user_progress?.progress_value || 0;
   const targetValue = quest.adjusted_target || quest.target_value;
   // Cap progress at target value for display
@@ -50,7 +55,7 @@ export const QuestDetailModal: React.FC<QuestDetailModalProps> = ({
     try {
       const success = await onTogglePin(quest.id, !isPinned);
       if (success) {
-        // Le contexte rafraîchira automatiquement les données
+        setIsPinned(!isPinned);
       }
     } finally {
       setIsTogglingPin(false);
@@ -168,7 +173,7 @@ export const QuestDetailModal: React.FC<QuestDetailModalProps> = ({
 
               {/* Actions */}
               <View style={styles.actions}>
-                {!isCompleted && (
+                {(isPinned || !isCompleted) && (
                   <Pressable
                     style={[
                       styles.pinButton,
