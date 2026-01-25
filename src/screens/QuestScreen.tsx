@@ -19,6 +19,7 @@ import { QuestCard } from '@/components/quests/QuestCard';
 import { QuestDetailModal } from '@/components/quests/QuestDetailModal';
 
 import { useQuests } from '@/context/QuestContext';
+import { useInventory } from '@/context/InventoryContext';
 
 import { QuestWithProgress } from '@/types/quest.types';
 import Logger from '@/utils/logger';
@@ -32,6 +33,7 @@ export const QuestScreen: React.FC = () => {
   const navigation = useNavigation();
 
   const { quests, pinnedQuests, loading: questsLoading, refreshQuests, togglePin, stats } = useQuests();
+  const { availableItems } = useInventory();
 
   // ============================================================================
   // STATE
@@ -147,6 +149,11 @@ export const QuestScreen: React.FC = () => {
               <View style={styles.inventoryButton}>
                 <Image source={require('../../assets/achievement-quests/achievement-inventaire.png')} style={styles.inventoryIcon} resizeMode="contain" />
               </View>
+              {availableItems.length > 0 && (
+                <View style={styles.inventoryBadge}>
+                  <Text style={styles.inventoryBadgeText}>{availableItems.length}</Text>
+                </View>
+              )}
             </Pressable>
           </View>
 
@@ -338,6 +345,30 @@ const styles = StyleSheet.create({
   inventoryIcon: {
     width: 80,
     height: 80,
+  },
+  inventoryBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#ef4444',
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+    borderWidth: 2,
+    borderColor: '#fef3c7',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+  inventoryBadgeText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#ffffff',
   },
   statsRow: {
     flexDirection: 'row',
