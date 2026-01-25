@@ -392,6 +392,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 {username && `, ${username.toUpperCase()}`}
               </Text>
               <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.6}
                 style={{
                   fontSize: isCompact ? 20 : 28,
                   fontWeight: '900',
