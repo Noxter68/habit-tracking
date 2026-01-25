@@ -11,8 +11,6 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   useSharedValue,
-  interpolateColor,
-  useDerivedValue,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { PauseCircle, Check } from 'lucide-react-native';
@@ -22,7 +20,6 @@ import { tierThemes } from '@/utils/tierTheme';
 import { HabitTier } from '@/services/habitProgressionService';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
 interface Task {
   id: string;
@@ -62,12 +59,6 @@ const DashboardTaskItemComponent: React.FC<DashboardTaskItemProps> = ({
   // Press animation
   const translateY = useSharedValue(0);
 
-  // Completion animation (0 = not completed, 1 = completed)
-  const completionProgress = useDerivedValue(() => {
-    return showAsCompleted ? 1 : 0;
-  }, [showAsCompleted]);
-
-
   const handlePressIn = () => {
     if (isPaused || disabled) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -84,23 +75,8 @@ const DashboardTaskItemComponent: React.FC<DashboardTaskItemProps> = ({
     shadowOffset: { width: 0, height: 4 - translateY.value },
   }));
 
-  // Animated text color
-  const animatedTextStyle = useAnimatedStyle(() => ({
-    color: interpolateColor(
-      completionProgress.value,
-      [0, 1],
-      [tierAccent, '#ffffff']
-    ),
-  }));
-
-  // Animated background opacity (white fades out, gradient fades in)
-  const animatedWhiteBgStyle = useAnimatedStyle(() => ({
-    opacity: 1 - completionProgress.value,
-  }));
-
-  const animatedGradientStyle = useAnimatedStyle(() => ({
-    opacity: completionProgress.value,
-  }));
+  // Text color based on completion state (no animation needed)
+  const textColor = showAsCompleted ? '#ffffff' : tierAccent;
 
   return (
     <View style={compact ? tw`mb-1.5` : tw`mb-2.5`}>
@@ -121,10 +97,24 @@ const DashboardTaskItemComponent: React.FC<DashboardTaskItemProps> = ({
         ]}
       >
         <View style={compact ? tw`rounded-xl overflow-hidden` : tw`rounded-2xl overflow-hidden`}>
-          {/* White background (visible when uncompleted) */}
-          <Animated.View
-            style={[
-              {
+          {/* Background: white when uncompleted, gradient when completed */}
+          {showAsCompleted ? (
+            <LinearGradient
+              colors={[theme.gradient[0], theme.gradient[1]]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                borderRadius: compact ? 12 : 16,
+              }}
+            />
+          ) : (
+            <View
+              style={{
                 position: 'absolute',
                 top: 0,
                 left: 0,
@@ -132,28 +122,9 @@ const DashboardTaskItemComponent: React.FC<DashboardTaskItemProps> = ({
                 bottom: 0,
                 backgroundColor: isPaused ? '#f5f5f4' : '#ffffff',
                 borderRadius: compact ? 12 : 16,
-              },
-              animatedWhiteBgStyle,
-            ]}
-          />
-
-          {/* Gradient (visible when completed) */}
-          <AnimatedLinearGradient
-            colors={[theme.gradient[0], theme.gradient[1]]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={[
-              {
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                borderRadius: compact ? 12 : 16,
-              },
-              animatedGradientStyle,
-            ]}
-          />
+              }}
+            />
+          )}
 
           {/* Content */}
           <View style={compact ? tw`flex-row items-center justify-between px-3 py-2` : tw`flex-row items-center justify-between px-4 py-3`}>
@@ -196,15 +167,15 @@ const DashboardTaskItemComponent: React.FC<DashboardTaskItemProps> = ({
             )}
 
             <View style={tw`flex-1 min-w-0`}>
-              <Animated.Text
+              <Text
                 style={[
                   compact ? tw`text-xs font-semibold` : tw`text-sm font-semibold`,
-                  isPaused ? tw`text-stone-400` : animatedTextStyle,
+                  { color: isPaused ? '#a8a29e' : textColor },
                 ]}
                 numberOfLines={1}
               >
                 {task.name}
-              </Animated.Text>
+              </Text>
             </View>
 
             {!compact && !isPaused && task.duration && !showAsCompleted && (

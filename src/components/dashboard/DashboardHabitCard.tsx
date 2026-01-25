@@ -143,10 +143,11 @@ const DashboardHabitCardComponent: React.FC<DashboardHabitCardProps> = ({
     return getWeeklyCompletedTasksCount(habit.dailyTasks, habit.createdAt);
   }, [habit, isWeekly, todayTasks]);
 
-  // Check if week is complete for weekly habits
-  const isWeekCompleted = isWeekly
-    ? isWeeklyHabitCompletedThisWeek(habit.dailyTasks, habit.createdAt)
-    : false;
+  // Check if week is complete for weekly habits (memoized - expensive Date operations)
+  const isWeekCompleted = useMemo(() => {
+    if (!isWeekly) return false;
+    return isWeeklyHabitCompletedThisWeek(habit.dailyTasks, habit.createdAt);
+  }, [isWeekly, habit.dailyTasks, habit.createdAt]);
 
   // Count paused tasks
   const pausedTaskCount = Object.keys(pausedTasks).filter((taskId) =>
@@ -392,11 +393,26 @@ const areCompletedTasksEqual = (
   return true;
 };
 
+// Cache today string to avoid creating Date objects in every comparison
+let cachedTodayString = getTodayString();
+let cachedTodayTimestamp = Date.now();
+
+const getCachedTodayString = (): string => {
+  // Refresh cache every 60 seconds (avoids stale date after midnight)
+  const now = Date.now();
+  if (now - cachedTodayTimestamp > 60000) {
+    cachedTodayString = getTodayString();
+    cachedTodayTimestamp = now;
+  }
+  return cachedTodayString;
+};
+
 // Memoize to avoid re-renders during scroll
 export const DashboardHabitCard = memo(DashboardHabitCardComponent, (prev, next) => {
   // Re-render only if important data changes
-  const prevTodayTasks = prev.habit.dailyTasks?.[getTodayString()];
-  const nextTodayTasks = next.habit.dailyTasks?.[getTodayString()];
+  const today = getCachedTodayString();
+  const prevTodayTasks = prev.habit.dailyTasks?.[today];
+  const nextTodayTasks = next.habit.dailyTasks?.[today];
 
   // Compare tasks (IDs only for performance)
   const prevTaskIds = prev.habit.tasks?.map((t) => (typeof t === 'string' ? t : t.id)).join(',') || '';
