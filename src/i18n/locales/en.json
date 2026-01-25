@@ -48,27 +48,27 @@
     "createFirst": "Create your first habit",
     "habitLimitReached": "Limit reached • Upgrade to premium for unlimited",
     "habitCount": "{{count}} of {{max}} free habits",
-    "onHoliday": "On Holiday",
+    "onHoliday": "On holiday",
     "allHabitsPaused": "All habits paused",
-    "allHabitsPausedTitle": "All Habits Paused",
+    "allHabitsPausedTitle": "All habits paused",
     "allHabitsPausedMessage": "All your habits are currently paused. They will automatically resume when their pause periods end.",
-    "removeHabit": "⚠️ Remove Habit",
+    "removeHabit": "⚠️ Remove habit",
     "removeHabitConfirm": "Are you sure you want to stop tracking \"{{name}}\"?\n\nYou will lose:\n• {{streak}} day streak\n• All progress data\n• Task history",
-    "holidayModeActive": "Holiday Mode Active",
+    "holidayModeActive": "Holiday mode active",
     "habitsPaused": "{{count}} habit paused | {{count}} habits paused",
     "tasksPaused": "{{count}} habit has paused tasks | {{count}} habits have paused tasks",
     "holidayEndError": "Failed to end holiday mode",
-    "getStarted": "Get Started",
+    "getStarted": "Get started",
     "startBuilding": "Start building your first habit",
     "createFirstHabit": "Create your first habit",
     "startJourney": "Begin your journey to building better habits and earning achievements!",
     "tapToBegin": "Tap to begin →",
     "createNewHabit": "Create new habit",
     "habitsSection": {
-      "title": "My Habits",
+      "title": "My habits",
       "daily": "Daily",
       "weekly": "Weekly",
-      "addHabit": "New Habit"
+      "addHabit": "New habit"
     },
     "greeting": {
       "morning": "Good morning",
@@ -88,23 +88,23 @@
       "xpTotal": "XP"
     },
     "levelProgress": {
-      "title": "Level Progress",
+      "title": "Level progress",
       "nextLevel": "Level {{current}} → {{next}}",
       "xpRemaining": "{{amount}} XP to go",
       "currentProgress": "{{current}} / {{required}} XP"
     },
     "dailyChallenge": {
-      "title": "Daily Challenge",
+      "title": "Daily challenge",
       "collected": "Collected!",
-      "readyToClaim": "Ready to Claim!",
+      "readyToClaim": "Ready to claim!",
       "tasksRemaining_one": "{{count}} daily task to go",
       "tasksRemaining_other": "{{count}} daily tasks to go",
-      "dailyTask_one": "{{count}} Daily Task",
-      "dailyTask_other": "{{count}} Daily Tasks",
-      "weeklyTask_one": "{{count}} Weekly Task",
-      "weeklyTask_other": "{{count}} Weekly Tasks",
+      "dailyTask_one": "{{count}} daily task",
+      "dailyTask_other": "{{count}} daily tasks",
+      "weeklyTask_one": "{{count}} weekly task",
+      "weeklyTask_other": "{{count}} weekly tasks",
       "weeklyInfo": "Weekly habits can be completed anytime this week",
-      "debugReset": "🔄 Reset Challenge (Debug)",
+      "debugReset": "🔄 Reset challenge (debug)",
       "xpReward": "+{{amount}} XP"
     },
     "taskBadge": {
@@ -114,18 +114,18 @@
         "message": "Amazing {{name}}! Perfect day, you're unstoppable!"
       },
       "almostPerfect": {
-        "title": "Almost Perfect!",
+        "title": "Almost perfect!",
         "subtitle": "{{name}}, victory is near!",
         "message_one": "Just {{count}} task left {{name}}, you're so close!",
         "message_other": "Just {{count}} tasks left {{name}}, you're so close!"
       },
       "greatMomentum": {
-        "title": "On Fire!",
+        "title": "On fire!",
         "subtitle": "{{name}}, what a pace!",
         "message": "Keep it up {{name}}, you're killing it!"
       },
       "halfwayThere": {
-        "title": "Halfway There!",
+        "title": "Halfway there!",
         "subtitle": "{{name}}, great progress!",
         "message": "You're doing great {{name}}! Halfway done!"
       },
@@ -135,7 +135,7 @@
         "message": "Nice start {{name}}! Keep the momentum going!"
       },
       "readyToShine": {
-        "title": "New Day!",
+        "title": "New day!",
         "subtitle": "{{name}}, it's your time!",
         "message": "Come on {{name}}, show what you've got!"
       },
@@ -143,22 +143,22 @@
     },
     "progressStatus": {
       "perfectDay": {
-        "title": "Perfect Day!",
+        "title": "Perfect day!",
         "subtitle": "All habits completed",
         "message": "Outstanding work! Keep this momentum going!"
       },
       "almostThere": {
-        "title": "Almost There!",
+        "title": "Almost there!",
         "subtitle": "{{completed}} of {{total}} done",
         "message": "Great progress! Just a little more to go!"
       },
       "goodProgress": {
-        "title": "Good Progress",
+        "title": "Good progress",
         "subtitle": "{{completed}} of {{total}} done",
         "message": "You're halfway there! Keep pushing!"
       },
       "gettingStarted": {
-        "title": "Getting Started",
+        "title": "Getting started",
         "subtitle": "{{completed}} of {{total}} done",
         "message": "Every step counts! Keep going!"
       },
@@ -171,10 +171,10 @@
   },
   "habits": {
     "title": "Habits",
-    "addHabit": "Add Habit",
-    "editHabit": "Edit Habit",
-    "habitName": "Habit Name",
-    "habitType": "Habit Type",
+    "addHabit": "Add habit",
+    "editHabit": "Edit habit",
+    "habitName": "Habit name",
+    "habitType": "Habit type",
     "category": "Category",
     "frequency": "Frequency",
     "daily": "Daily",
@@ -185,22 +185,22 @@
     "tier": "Tier",
     "streak": "Streak",
     "since": "Since",
-    "buildGoodHabit": "Build a Good Habit",
-    "quitBadHabit": "Quit a Bad Habit",
+    "buildGoodHabit": "Build a good habit",
+    "quitBadHabit": "Quit a bad habit",
     "startPositive": "Start something positive and transformative",
     "breakFree": "Break free from what holds you back",
-    "selectCategory": "Select Category",
-    "customHabit": "Custom Habit",
+    "selectCategory": "Select category",
+    "customHabit": "Custom habit",
     "createCustom": "Create your own",
-    "habitDetails": "Habit Details",
+    "habitDetails": "Habit details",
     "tasks": "Tasks",
-    "addTask": "Add Task",
+    "addTask": "Add task",
     "goal": "Goal",
     "notifications": "Notifications",
-    "notificationTime": "Notification Time",
-    "createHabit": "Create Habit",
+    "notificationTime": "Notification time",
+    "createHabit": "Create habit",
     "creating": "Creating...",
-    "keepHabit": "Keep Habit",
+    "keepHabit": "Keep habit",
     "building": "Building",
     "quitting": "Quitting",
     "resetsIn": "Resets in {{count}}{{unit}}",
@@ -210,8 +210,8 @@
     "hoursLeft_other": "{{count}}h left",
     "unitDay": "d",
     "unitHour": "h",
-    "weeklyTasks": "Weekly Tasks",
-    "todaysTasks": "Today's Tasks",
+    "weeklyTasks": "Weekly tasks",
+    "todaysTasks": "Today's tasks",
     "tasksPaused_one": "{{count}} task paused",
     "tasksPaused_other": "{{count}} tasks paused",
     "dayStreak_one": "Day",
@@ -241,96 +241,96 @@
     "deleteAccountError": "An error occurred while deleting your account",
     "typeDelete": "DELETE",
     "notificationsDisabled": "Enable habit reminders",
-    "manageNotifications": "Manage Habit Notifications",
+    "manageNotifications": "Manage habit notifications",
     "manageNotificationsSubtitle": "Customize reminders for each habit",
     "subscription": "Subscription",
-    "premium": "Premium Features",
-    "premiumActive": "Premium Active",
-    "freePlan": "Free Plan",
-    "managePremium": "Manage Subscription",
+    "premium": "Premium features",
+    "premiumActive": "Premium active",
+    "freePlan": "Free plan",
+    "managePremium": "Manage subscription",
     "managePremiumSubtitle": "Cancel or change your plan",
     "upgradePremium": "Upgrade to Premium",
     "upgradePremiumSubtitle": "Unlock unlimited habits & features",
     "upgrade": "Upgrade",
-    "holidayMode": "Holiday Mode",
-    "breakMode": "Break Mode",
+    "holidayMode": "Holiday mode",
+    "breakMode": "Break mode",
     "holidayUnlimited": "Unlimited holiday periods available",
     "holidayLimited": "Max 14 days per period • {{periods}} period left",
     "holidayDaysRemaining": "Ends on {{date}} • {{count}} days remaining",
     "active": "Active",
-    "streakSavers": "Streak Savers",
-    "buyStreakSavers": "Buy Streak Savers",
+    "streakSavers": "Streak savers",
+    "buyStreakSavers": "Buy streak savers",
     "buyStreakSaversSubtitle": "Protect your streaks from missed days",
-    "viewPaywall": "View Premium Plans",
+    "viewPaywall": "View premium plans",
     "viewPaywallSubtitle": "See all premium features and pricing",
     "support": "Support",
     "help": "Help",
     "version": "Version",
-    "signOut": "Sign Out",
-    "darkMode": "Dark Mode",
+    "signOut": "Sign out",
+    "darkMode": "Dark mode",
     "about": "About",
-    "termsOfService": "Terms of Service",
-    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of service",
+    "privacyPolicy": "Privacy policy",
     "general": "General",
-    "developerTools": "Developer Tools",
+    "developerTools": "Developer tools",
     "debug": {
-      "title": "Debug Tools",
-      "systemDiagnostics": "System Diagnostics",
+      "title": "Debug tools",
+      "systemDiagnostics": "System diagnostics",
       "checkHealth": "Check app health & XP system",
       "dailyChallenge": "Daily challenge utilities"
     },
-    "reviewTour": "Review Introduction Tour",
+    "reviewTour": "Review introduction tour",
     "reviewTourPrompt": "Would you like to see the introduction tour again?",
-    "reviewTourConfirm": "Yes, Show Me",
-    "whatsNew": "What's New",
+    "reviewTourConfirm": "Yes, show me",
+    "whatsNew": "What's new",
     "languageChangeInfo": "The app will update immediately when you select a new language.",
     "languageChangeError": "Failed to change language. Please try again.",
-    "dailyMotivation": "Daily Motivation",
+    "dailyMotivation": "Daily motivation",
     "dailyMotivationEnabled": "Every app launch",
     "dailyMotivationDisabled": "Once per day",
-    "compactHeader": "Compact Dashboard Header",
+    "compactHeader": "Compact dashboard header",
     "compactHeaderEnabled": "Compact view active",
     "compactHeaderDisabled": "Full view",
     "compactHeaderToast": "Dashboard header compact mode applied",
-    "compactHabits": "Compact Habits View",
+    "compactHabits": "Compact habits view",
     "compactHabitsEnabled": "Grid view active",
     "compactHabitsDisabled": "List view",
     "compactHabitsToast": "Habits compact mode applied",
     "rating": {
-      "sectionTitle": "Support Us",
-      "title": "Rate the App",
+      "sectionTitle": "Support us",
+      "title": "Rate the app",
       "subtitle": "Your feedback matters to us!",
       "settingsSubtitle": "Earn 500 XP by leaving us a review",
       "reward": "Reward",
-      "rewardDescription": "For your App Store review",
+      "rewardDescription": "For your app store review",
       "howTo": "How to do it?",
       "step1": "Open the App Store and search for \"Nuvoria\"",
       "step2": "Leave us a review and rating",
       "step3": "Come back here to claim your 500 XP!",
       "claimReward": "I rated, claim my XP",
-      "later": "Maybe Later",
-      "thankYou": "Thank You!",
+      "later": "Maybe later",
+      "thankYou": "Thank you!",
       "rewardReceived": "Your reward has been added to your account."
     }
   },
   "paywall": {
-    "title": "Upgrade to Premium",
+    "title": "Upgrade to premium",
     "subtitle": "Unlock unlimited potential and\nachieve more every day",
     "features": {
       "unlimitedHabits": {
-        "title": "Unlimited Habits",
+        "title": "Unlimited habits",
         "description": "Track as many habits as you need"
       },
       "unlimitedHoliday": {
-        "title": "Unlimited Holiday Mode",
+        "title": "Unlimited holiday mode",
         "description": "Pause habits without losing progress"
       },
       "monthlyStreakSavers": {
-        "title": "3 Streak Savers/Month",
+        "title": "3 streak savers/month",
         "description": "Restore missed days automatically"
       },
       "yearlyStreakSavers": {
-        "title": "50 Streak Savers",
+        "title": "50 streak savers",
         "description": "Added to your inventory instantly"
       }
     },
@@ -339,58 +339,58 @@
       "yearly": "Yearly",
       "month": "month",
       "year": "year",
-      "mostPopular": "Most Popular",
+      "mostPopular": "Most popular",
       "savePercent": "Save {{percent}}%",
       "perMonth": "${{price}} per month",
-      "includesBonus": "Includes 50 Streak Savers bonus"
+      "includesBonus": "Includes 50 streak savers bonus"
     },
     "includedIn": "INCLUDED IN {{plan}}",
     "loadingPlans": "Loading plans...",
-    "cta": "Start Premium",
-    "restore": "Restore Purchases",
-    "termsOfUse": "Terms of Use",
-    "privacyPolicy": "Privacy Policy",
+    "cta": "Start premium",
+    "restore": "Restore purchases",
+    "termsOfUse": "Terms of use",
+    "privacyPolicy": "Privacy policy",
     "terms": "Cancel anytime • Secure payment",
     "loading": "Loading...",
     "error": "Failed to load subscription options",
     "alerts": {
       "noPlans": "No subscription plans available. Please try again later.",
       "selectPlan": "Please select a subscription plan",
-      "welcomeTitle": "Welcome to Premium",
+      "welcomeTitle": "Welcome to premium",
       "welcomeMessage": "You now have unlimited access to all features.",
-      "getStarted": "Get Started",
-      "purchaseFailedTitle": "Purchase Failed",
+      "getStarted": "Get started",
+      "purchaseFailedTitle": "Purchase failed",
       "purchaseFailedMessage": "Unable to complete purchase. Please try again.",
       "genericError": "Something went wrong. Please try again.",
       "restoreSuccess": "Your purchases have been restored.",
-      "noPurchasesTitle": "No Purchases Found",
+      "noPurchasesTitle": "No purchases found",
       "noPurchasesMessage": "We couldn't find any previous purchases to restore.",
       "restoreError": "Failed to restore purchases. Please try again."
     }
   },
   "diagnostic": {
-    "title": "System Diagnostics",
+    "title": "System diagnostics",
     "subtitle": "Complete health check",
-    "runDiagnostics": "Run Diagnostics",
+    "runDiagnostics": "Run diagnostics",
     "running": "Running diagnostics...",
-    "testResult": "Test Result",
+    "testResult": "Test result",
     "success": "Success",
     "failed": "Failed",
     "details": "Details",
-    "userInfo": "User Info",
+    "userInfo": "User info",
     "notLoggedIn": "⚠️ Not logged in",
     "pleaseLogin": "Please log in to run diagnostics"
   },
   "debug": {
-    "title": "Debug Tools",
-    "warning": "⚠️ Debug Mode Active",
+    "title": "Debug tools",
+    "warning": "⚠️ Debug mode active",
     "warningMessage": "Set IS_DEBUG_MODE to false before production.",
-    "systemDiagnostics": "🏥 Run System Diagnostics",
+    "systemDiagnostics": "🏥 Run system diagnostics",
     "diagnosticsDescription": "Complete health check of XP system & database",
     "onboarding": "Onboarding",
-    "resetOnboarding": "🔄 Reset Onboarding Flag",
-    "dailyChallenge": "Daily Challenge Tools",
-    "currentUser": "Current User"
+    "resetOnboarding": "🔄 Reset onboarding flag",
+    "dailyChallenge": "Daily challenge tools",
+    "currentUser": "Current user"
   },
   "errors": {
     "generic": "Something went wrong",
@@ -446,73 +446,73 @@
     "tips": {
       "habitType": [
         {
-          "title": "Starting Strong",
+          "title": "Starting strong",
           "content": "Research shows that building positive habits is 2.5x more effective than breaking bad ones. Start with one habit and master it."
         },
         {
-          "title": "The Science",
+          "title": "The science",
           "content": "Your brain forms new neural pathways with each repetition. Building good habits creates positive pathways faster than breaking old ones."
         }
       ],
       "category": [
         {
-          "title": "Focus Matters",
+          "title": "Focus matters",
           "content": "Studies show that people who focus on one category at a time are 67% more likely to succeed in building lasting habits."
         },
         {
-          "title": "Compound Effect",
+          "title": "Compound effect",
           "content": "Small, category-specific improvements compound over time. A 1% daily improvement leads to 37x better results in a year."
         }
       ],
       "tasks": [
         {
-          "title": "Keep It Simple",
+          "title": "Keep it simple",
           "content": "Habits with 1-3 specific actions have an 80% higher success rate than vague goals. Clarity creates commitment."
         },
         {
-          "title": "Stack Your Habits",
+          "title": "Stack your habits",
           "content": "Link new habits to existing routines. This 'habit stacking' technique increases adherence by 58%."
         }
       ],
       "goal": [
         {
-          "title": "The 66-Day Truth",
+          "title": "The 66-day truth",
           "content": "Research from University College London found it takes an average of 66 days to form a habit. Give yourself time."
         },
         {
-          "title": "Realistic Timelines",
+          "title": "Realistic timelines",
           "content": "Short-term goals (21-30 days) work for simple habits. Complex behavior changes need 60-90 days to become automatic."
         }
       ],
       "frequency": [
         {
-          "title": "Daily Wins",
+          "title": "Daily wins",
           "content": "Daily habits are 2.5x more likely to stick than weekly ones. Consistency beats intensity every time."
         },
         {
-          "title": "Recovery Matters",
+          "title": "Recovery matters",
           "content": "For physical habits, strategic rest days prevent burnout. Listen to your body while maintaining consistency."
         }
       ],
       "notification": [
         {
-          "title": "Environmental Cues",
+          "title": "Environmental cues",
           "content": "Notifications act as environmental triggers. Studies show they increase habit completion rates by 40%."
         },
         {
-          "title": "Optimal Timing",
+          "title": "Optimal timing",
           "content": "Morning reminders have 65% completion rates vs 42% for evening. Choose times when your willpower is strongest."
         }
       ]
     },
     "habitTypes": {
       "good": {
-        "title": "Build a Good Habit",
+        "title": "Build a good habit",
         "subtitle": "Start something positive and transformative",
         "description": "Create new positive behaviors that align with your best self"
       },
       "bad": {
-        "title": "Quit a Bad Habit",
+        "title": "Quit a bad habit",
         "subtitle": "Break free from what holds you back",
         "description": "Replace unwanted patterns with healthier alternatives"
       }
@@ -522,7 +522,7 @@
         "fitness": {
           "label": "Fitness & Exercise",
           "description": "Build strength and endurance",
-          "habitName": "Fitness Journey"
+          "habitName": "Fitness journey"
         },
         "health": {
           "label": "Health & Wellness",
@@ -532,74 +532,74 @@
         "nutrition": {
           "label": "Nutrition",
           "description": "Healthy eating habits",
-          "habitName": "Healthy Eating"
+          "habitName": "Healthy eating"
         },
         "learning": {
           "label": "Learning & Growth",
           "description": "Expand your knowledge",
-          "habitName": "Daily Learning"
+          "habitName": "Daily learning"
         },
         "productivity": {
           "label": "Productivity",
           "description": "Maximize your efficiency",
-          "habitName": "Productivity Boost"
+          "habitName": "Productivity boost"
         },
         "mindfulness": {
           "label": "Mindfulness",
           "description": "Mental clarity and focus",
-          "habitName": "Mindful Living"
+          "habitName": "Mindful living"
         },
         "sleep": {
-          "label": "Sleep Quality",
+          "label": "Sleep quality",
           "description": "Better rest and recovery",
-          "habitName": "Better Sleep"
+          "habitName": "Better sleep"
         },
         "hydration": {
           "label": "Hydration",
           "description": "Stay properly hydrated",
-          "habitName": "Stay Hydrated"
+          "habitName": "Stay hydrated"
         }
       },
       "bad": {
         "smoking": {
           "label": "Smoking",
           "description": "Quit tobacco products",
-          "habitName": "Quit Smoking"
+          "habitName": "Quit smoking"
         },
         "junk-food": {
-          "label": "Unhealthy Eating",
+          "label": "Unhealthy eating",
           "description": "Reduce junk food intake",
-          "habitName": "Stop Junk Food"
+          "habitName": "Stop junk food"
         },
         "shopping": {
-          "label": "Impulse Shopping",
+          "label": "Impulse shopping",
           "description": "Control spending habits",
-          "habitName": "Control Shopping"
+          "habitName": "Control shopping"
         },
         "screen-time": {
-          "label": "Excessive Screen Time",
+          "label": "Excessive screen time",
           "description": "Reduce device usage",
-          "habitName": "Reduce Screen Time"
+          "habitName": "Reduce screen time"
         },
         "procrastination": {
           "label": "Procrastination",
           "description": "Stop delaying tasks",
-          "habitName": "Stop Procrastinating"
+          "habitName": "Stop procrastinating"
         },
         "negative-thinking": {
-          "label": "Negative Thinking",
+          "label": "Negative thinking",
           "description": "Cultivate positivity",
-          "habitName": "Stop Negative Thoughts"
+          "habitName": "Stop negative thoughts"
         },
         "alcohol": {
           "label": "Alcohol",
           "description": "Reduce alcohol consumption",
-          "habitName": "Quit Drinking"
+          "habitName": "Quit drinking"
         },
         "oversleeping": {
           "label": "Oversleeping",
           "description": "Wake up earlier",
-          "habitName": "Stop Oversleeping"
+          "habitName": "Stop oversleeping"
         }
       }
     },
@@ -607,17 +607,17 @@
       "fitness": {
         "good": {
           "morning-run": {
-            "name": "Morning Run",
+            "name": "Morning run",
             "description": "Go for a run or jog",
             "duration": "30 min"
           },
           "gym-workout": {
-            "name": "Gym Workout",
+            "name": "Gym workout",
             "description": "Complete gym session",
             "duration": "45 min"
           },
           "yoga-session": {
-            "name": "Yoga Practice",
+            "name": "Yoga practice",
             "description": "Complete yoga routine",
             "duration": "20 min"
           },
@@ -639,17 +639,17 @@
         },
         "bad": {
           "no-elevator": {
-            "name": "Skip Elevator",
+            "name": "Skip elevator",
             "description": "Take stairs instead",
             "duration": "All day"
           },
           "no-couch": {
-            "name": "No Couch Potato",
+            "name": "No couch potato",
             "description": "Limit sitting time",
             "duration": "All day"
           },
           "active-breaks": {
-            "name": "Active Breaks",
+            "name": "Active breaks",
             "description": "Move every hour",
             "duration": "5 min/hour"
           }
@@ -663,44 +663,44 @@
             "duration": "15 min"
           },
           "deep-breathing": {
-            "name": "Deep Breathing",
+            "name": "Deep breathing",
             "description": "5 minutes of breathing exercises",
             "duration": "5 min"
           },
           "cold-shower": {
-            "name": "Cold Shower",
+            "name": "Cold shower",
             "description": "Take a cold shower",
             "duration": "5 min"
           },
           "vitamins": {
-            "name": "Take Vitamins",
+            "name": "Take vitamins",
             "description": "Daily vitamin supplements",
             "duration": "1 min"
           },
           "skincare": {
-            "name": "Skincare Routine",
+            "name": "Skincare routine",
             "description": "Morning/evening skincare",
             "duration": "10 min"
           },
           "health-checkup": {
-            "name": "Health Check",
+            "name": "Health check",
             "description": "Monitor vital signs",
             "duration": "5 min"
           }
         },
         "bad": {
           "no-stress": {
-            "name": "Stress Management",
+            "name": "Stress management",
             "description": "Avoid stressful situations",
             "duration": "All day"
           },
           "no-late-nights": {
-            "name": "No Late Nights",
+            "name": "No late nights",
             "description": "Sleep before midnight",
             "duration": "Evening"
           },
           "no-overwork": {
-            "name": "Avoid Overworking",
+            "name": "Avoid overworking",
             "description": "Take regular breaks",
             "duration": "All day"
           }
@@ -709,49 +709,49 @@
       "nutrition": {
         "good": {
           "healthy-breakfast": {
-            "name": "Healthy Breakfast",
+            "name": "Healthy breakfast",
             "description": "Nutritious morning meal",
             "duration": "20 min"
           },
           "fruit-serving": {
-            "name": "Eat Fruits",
+            "name": "Eat fruits",
             "description": "2-3 servings of fruit",
             "duration": "5 min"
           },
           "vegetables": {
-            "name": "Eat Vegetables",
+            "name": "Eat vegetables",
             "description": "5 servings of vegetables",
             "duration": "Meals"
           },
           "meal-prep": {
-            "name": "Meal Prep",
+            "name": "Meal prep",
             "description": "Prepare healthy meals",
             "duration": "30 min"
           },
           "protein-intake": {
-            "name": "Protein Goals",
+            "name": "Protein goals",
             "description": "Meet protein targets",
             "duration": "Meals"
           },
           "whole-grains": {
-            "name": "Whole Grains",
+            "name": "Whole grains",
             "description": "Choose whole grains",
             "duration": "Meals"
           }
         },
         "bad": {
           "no-fast-food": {
-            "name": "No Fast Food",
+            "name": "No fast food",
             "description": "Avoid fast food",
             "duration": "All day"
           },
           "no-sugar": {
-            "name": "Limit Sugar",
+            "name": "Limit sugar",
             "description": "Reduce sugar intake",
             "duration": "All day"
           },
           "no-late-snacks": {
-            "name": "No Late Snacking",
+            "name": "No late snacking",
             "description": "No eating after 8pm",
             "duration": "Evening"
           }
@@ -760,49 +760,49 @@
       "learning": {
         "good": {
           "read-book": {
-            "name": "Read Book",
+            "name": "Read book",
             "description": "Read for knowledge",
             "duration": "30 min"
           },
           "online-course": {
-            "name": "Online Course",
+            "name": "Online course",
             "description": "Complete course module",
             "duration": "45 min"
           },
           "practice-skill": {
-            "name": "Practice Skill",
+            "name": "Practice skill",
             "description": "Skill development",
             "duration": "30 min"
           },
           "language-study": {
-            "name": "Language Study",
+            "name": "Language study",
             "description": "Learn new language",
             "duration": "20 min"
           },
           "write-journal": {
-            "name": "Journal Writing",
+            "name": "Journal writing",
             "description": "Reflect and write",
             "duration": "15 min"
           },
           "watch-tutorial": {
-            "name": "Watch Tutorial",
+            "name": "Watch tutorial",
             "description": "Educational videos",
             "duration": "20 min"
           }
         },
         "bad": {
           "no-distractions": {
-            "name": "Avoid Distractions",
+            "name": "Avoid distractions",
             "description": "Focus on learning",
             "duration": "Study time"
           },
           "no-multitask": {
-            "name": "No Multitasking",
+            "name": "No multitasking",
             "description": "One task at a time",
             "duration": "Study time"
           },
           "no-cramming": {
-            "name": "No Cramming",
+            "name": "No cramming",
             "description": "Regular study schedule",
             "duration": "Daily"
           }
@@ -811,7 +811,7 @@
       "productivity": {
         "good": {
           "morning-routine": {
-            "name": "Morning Routine",
+            "name": "Morning routine",
             "description": "Start day right",
             "duration": "30 min"
           },
@@ -821,49 +821,49 @@
             "duration": "15 min"
           },
           "pomodoro": {
-            "name": "Pomodoro Session",
+            "name": "Pomodoro session",
             "description": "25min focused work",
             "duration": "25 min"
           },
           "daily-review": {
-            "name": "Daily Review",
+            "name": "Daily review",
             "description": "Review progress",
             "duration": "10 min"
           },
           "priority-tasks": {
-            "name": "Top 3 Tasks",
+            "name": "Top 3 tasks",
             "description": "Complete priorities",
             "duration": "Variable"
           },
           "inbox-zero": {
-            "name": "Inbox Zero",
+            "name": "Inbox zero",
             "description": "Clear all emails",
             "duration": "20 min"
           },
           "plan-day": {
-            "name": "Plan Your Day",
+            "name": "Plan your day",
             "description": "Set daily goals",
             "duration": "10 min"
           },
           "weekly-review": {
-            "name": "Weekly Review",
+            "name": "Weekly review",
             "description": "Review weekly progress",
             "duration": "30 min"
           },
           "track-goals": {
-            "name": "Track Goals",
+            "name": "Track goals",
             "description": "Monitor goal progress",
             "duration": "15 min"
           }
         },
         "bad": {
           "no-social-media": {
-            "name": "No Social Media",
+            "name": "No social media",
             "description": "During work hours",
             "duration": "Work hours"
           },
           "no-procrastination": {
-            "name": "Start Tasks",
+            "name": "Start tasks",
             "description": "Don't delay tasks",
             "duration": "All day"
           },
@@ -882,22 +882,22 @@
             "duration": "15 min"
           },
           "gratitude": {
-            "name": "Gratitude Practice",
+            "name": "Gratitude practice",
             "description": "List 3 things",
             "duration": "5 min"
           },
           "breathing": {
-            "name": "Breathing Exercise",
+            "name": "Breathing exercise",
             "description": "Deep breathing",
             "duration": "5 min"
           },
           "nature-walk": {
-            "name": "Nature Walk",
+            "name": "Nature walk",
             "description": "Mindful walking",
             "duration": "20 min"
           },
           "body-scan": {
-            "name": "Body Scan",
+            "name": "Body scan",
             "description": "Body awareness",
             "duration": "10 min"
           },
@@ -909,17 +909,17 @@
         },
         "bad": {
           "no-rushing": {
-            "name": "Slow Down",
+            "name": "Slow down",
             "description": "Don't rush tasks",
             "duration": "All day"
           },
           "no-negativity": {
-            "name": "Positive Thinking",
+            "name": "Positive thinking",
             "description": "Avoid negative thoughts",
             "duration": "All day"
           },
           "no-overthinking": {
-            "name": "Stop Overthinking",
+            "name": "Stop overthinking",
             "description": "Be present",
             "duration": "All day"
           }
@@ -928,39 +928,39 @@
       "sleep": {
         "good": {
           "bedtime-routine": {
-            "name": "Bedtime Routine",
+            "name": "Bedtime routine",
             "description": "Wind down ritual",
             "duration": "30 min"
           },
           "sleep-8hrs": {
-            "name": "8 Hours Sleep",
+            "name": "8 hours sleep",
             "description": "Get full rest",
             "duration": "8 hours"
           },
           "wake-same-time": {
-            "name": "Consistent Wake Time",
+            "name": "Consistent wake time",
             "description": "Wake at same time",
             "duration": "Morning"
           },
           "bedroom-prep": {
-            "name": "Prepare Bedroom",
+            "name": "Prepare bedroom",
             "description": "Cool, dark, quiet room",
             "duration": "10 min"
           }
         },
         "bad": {
           "no-caffeine-pm": {
-            "name": "No Late Caffeine",
+            "name": "No late caffeine",
             "description": "Avoid caffeine after 2pm",
             "duration": "Afternoon"
           },
           "no-naps": {
-            "name": "No Long Naps",
+            "name": "No long naps",
             "description": "Avoid daytime sleeping",
             "duration": "Daytime"
           },
           "no-snooze": {
-            "name": "No Snooze Button",
+            "name": "No snooze button",
             "description": "Get up immediately",
             "duration": "Morning"
           }
@@ -969,44 +969,44 @@
       "hydration": {
         "good": {
           "water-morning": {
-            "name": "Morning Water",
+            "name": "Morning water",
             "description": "Glass of water upon waking",
             "duration": "1 min"
           },
           "water-8-glasses": {
-            "name": "8 Glasses Water",
+            "name": "8 glasses water",
             "description": "Drink 8 glasses daily",
             "duration": "All day"
           },
           "herbal-tea": {
-            "name": "Herbal Tea",
+            "name": "Herbal tea",
             "description": "Drink herbal tea",
             "duration": "10 min"
           },
           "water-bottle": {
-            "name": "Carry Water Bottle",
+            "name": "Carry water bottle",
             "description": "Keep water accessible",
             "duration": "All day"
           },
           "infused-water": {
-            "name": "Infused Water",
+            "name": "Infused water",
             "description": "Add fruits to water",
             "duration": "5 min"
           }
         },
         "bad": {
           "no-soda": {
-            "name": "No Soda",
+            "name": "No soda",
             "description": "Avoid sugary drinks",
             "duration": "All day"
           },
           "no-alcohol": {
-            "name": "Limit Alcohol",
+            "name": "Limit alcohol",
             "description": "Reduce alcohol intake",
             "duration": "All day"
           },
           "no-energy-drinks": {
-            "name": "No Energy Drinks",
+            "name": "No energy drinks",
             "description": "Avoid energy drinks",
             "duration": "All day"
           }
@@ -1015,34 +1015,34 @@
       "smoking": {
         "good": {
           "breathing-exercises": {
-            "name": "Breathing Exercises",
+            "name": "Breathing exercises",
             "description": "Deep breathing when cravings hit",
             "duration": "5 min"
           },
           "chew-gum": {
-            "name": "Chew Gum",
+            "name": "Chew gum",
             "description": "Sugar-free gum as alternative",
             "duration": "As needed"
           },
           "stay-hydrated": {
-            "name": "Drink Water",
+            "name": "Drink water",
             "description": "Flush out toxins",
             "duration": "All day"
           }
         },
         "bad": {
           "no-smoking": {
-            "name": "No Cigarettes",
+            "name": "No cigarettes",
             "description": "Track smoke-free days",
             "duration": "All day"
           },
           "avoid-triggers": {
-            "name": "Avoid Triggers",
+            "name": "Avoid triggers",
             "description": "Skip smoking areas",
             "duration": "All day"
           },
           "no-smoke-breaks": {
-            "name": "No Smoke Breaks",
+            "name": "No smoke breaks",
             "description": "Take walks instead",
             "duration": "Breaks"
           }
@@ -1051,54 +1051,54 @@
       "junk-food": {
         "good": {
           "healthy-snacks": {
-            "name": "Healthy Snacks",
+            "name": "Healthy snacks",
             "description": "Prepare nutritious alternatives",
             "duration": "10 min"
           },
           "meal-planning": {
-            "name": "Plan Meals",
+            "name": "Plan meals",
             "description": "Prep healthy options",
             "duration": "30 min"
           },
           "grocery-smart": {
-            "name": "Smart Shopping",
+            "name": "Smart shopping",
             "description": "Buy whole foods only",
             "duration": "Weekly"
           }
         },
         "bad": {
           "no-junk-food": {
-            "name": "No Junk Food",
+            "name": "No junk food",
             "description": "Avoid processed foods",
             "duration": "All day"
           },
           "no-drive-thru": {
-            "name": "No Drive-Thrus",
+            "name": "No drive-thrus",
             "description": "Skip fast food restaurants",
             "duration": "All day"
           },
           "no-vending-machine": {
-            "name": "No Vending Machines",
+            "name": "No vending machines",
             "description": "Avoid unhealthy snacks",
             "duration": "All day"
           },
           "no-fast-food": {
-            "name": "No Fast Food",
+            "name": "No fast food",
             "description": "Avoid fast food restaurants",
             "duration": "All day"
           },
           "cook-home": {
-            "name": "Cook at Home",
+            "name": "Cook at home",
             "description": "Prepare your own meals",
             "duration": "Meals"
           },
           "grocery-list": {
-            "name": "Grocery List",
+            "name": "Grocery list",
             "description": "Plan your food shopping",
             "duration": "Weekly"
           },
           "read-labels": {
-            "name": "Read Labels",
+            "name": "Read labels",
             "description": "Check ingredients",
             "duration": "Shopping"
           }
@@ -1107,34 +1107,34 @@
       "shopping": {
         "good": {
           "budget-tracking": {
-            "name": "Track Budget",
+            "name": "Track budget",
             "description": "Monitor spending daily",
             "duration": "10 min"
           },
           "shopping-list": {
-            "name": "Use Shopping List",
+            "name": "Use shopping list",
             "description": "Only buy what you need",
             "duration": "Before shopping"
           },
           "savings-goal": {
-            "name": "Save Money",
+            "name": "Save money",
             "description": "Put aside savings",
             "duration": "Daily"
           }
         },
         "bad": {
           "no-impulse-buy": {
-            "name": "No Impulse Buying",
+            "name": "No impulse buying",
             "description": "Wait 24 hours before purchasing",
             "duration": "Shopping"
           },
           "unsubscribe-emails": {
-            "name": "Unsubscribe Deals",
+            "name": "Unsubscribe deals",
             "description": "Remove shopping temptations",
             "duration": "One-time"
           },
           "no-browsing": {
-            "name": "No Window Shopping",
+            "name": "No window shopping",
             "description": "Avoid online stores",
             "duration": "All day"
           }
@@ -1143,34 +1143,34 @@
       "screen-time": {
         "good": {
           "read-physical-book": {
-            "name": "Read Physical Books",
+            "name": "Read physical books",
             "description": "Replace screen time with reading",
             "duration": "30 min"
           },
           "outdoor-activity": {
-            "name": "Go Outside",
+            "name": "Go outside",
             "description": "Spend time in nature",
             "duration": "30 min"
           },
           "face-to-face": {
-            "name": "In-Person Time",
+            "name": "In-person time",
             "description": "Meet people offline",
             "duration": "Daily"
           }
         },
         "bad": {
           "no-phone-bed": {
-            "name": "No Phone in Bed",
+            "name": "No phone in bed",
             "description": "Keep devices out of bedroom",
             "duration": "Bedtime"
           },
           "limit-social-media": {
-            "name": "Limit Social Media",
+            "name": "Limit social media",
             "description": "Set app time limits",
             "duration": "30 min max"
           },
           "no-binge-watching": {
-            "name": "No Binge Watching",
+            "name": "No binge watching",
             "description": "Limit streaming time",
             "duration": "All day"
           }
@@ -1179,34 +1179,34 @@
       "procrastination": {
         "good": {
           "start-immediately": {
-            "name": "Start Immediately",
+            "name": "Start immediately",
             "description": "2-minute rule for tasks",
             "duration": "2 min"
           },
           "break-tasks-down": {
-            "name": "Break Down Tasks",
+            "name": "Break down tasks",
             "description": "Make tasks manageable",
             "duration": "10 min"
           },
           "time-block": {
-            "name": "Time Blocking",
+            "name": "Time blocking",
             "description": "Schedule specific work times",
             "duration": "Daily"
           }
         },
         "bad": {
           "no-delay": {
-            "name": "No Delaying",
+            "name": "No delaying",
             "description": "Do it now, not later",
             "duration": "All day"
           },
           "no-excuses": {
-            "name": "No Excuses",
+            "name": "No excuses",
             "description": "Take action regardless",
             "duration": "All day"
           },
           "no-distractions": {
-            "name": "Eliminate Distractions",
+            "name": "Eliminate distractions",
             "description": "Focus on one task",
             "duration": "Work time"
           }
@@ -1215,34 +1215,34 @@
       "negative-thinking": {
         "good": {
           "positive-affirmations": {
-            "name": "Positive Affirmations",
+            "name": "Positive affirmations",
             "description": "Practice daily affirmations",
             "duration": "5 min"
           },
           "gratitude-journal": {
-            "name": "Gratitude Journal",
+            "name": "Gratitude journal",
             "description": "Write 3 grateful things",
             "duration": "10 min"
           },
           "reframe-thoughts": {
-            "name": "Reframe Thoughts",
+            "name": "Reframe thoughts",
             "description": "Find positive perspectives",
             "duration": "As needed"
           }
         },
         "bad": {
           "no-complaining": {
-            "name": "No Complaining",
+            "name": "No complaining",
             "description": "Avoid negative talk",
             "duration": "All day"
           },
           "no-self-criticism": {
-            "name": "No Self-Criticism",
+            "name": "No self-criticism",
             "description": "Be kind to yourself",
             "duration": "All day"
           },
           "no-catastrophizing": {
-            "name": "No Catastrophizing",
+            "name": "No catastrophizing",
             "description": "Stop worst-case thinking",
             "duration": "All day"
           }
@@ -1251,7 +1251,7 @@
       "alcohol": {
         "good": {
           "mocktails": {
-            "name": "Drink Mocktails",
+            "name": "Drink mocktails",
             "description": "Enjoy non-alcoholic drinks",
             "duration": "Social events"
           },
@@ -1261,24 +1261,24 @@
             "duration": "30 min"
           },
           "support-group": {
-            "name": "Support Group",
+            "name": "Support group",
             "description": "Connect with others",
             "duration": "Weekly"
           }
         },
         "bad": {
           "no-alcohol": {
-            "name": "No Alcohol",
+            "name": "No alcohol",
             "description": "Track alcohol-free days",
             "duration": "All day"
           },
           "avoid-bars": {
-            "name": "Avoid Bars",
+            "name": "Avoid bars",
             "description": "Skip drinking venues",
             "duration": "All day"
           },
           "no-home-stocking": {
-            "name": "No Alcohol at Home",
+            "name": "No alcohol at home",
             "description": "Remove from house",
             "duration": "Ongoing"
           }
@@ -1287,34 +1287,34 @@
       "oversleeping": {
         "good": {
           "consistent-bedtime": {
-            "name": "Consistent Bedtime",
+            "name": "Consistent bedtime",
             "description": "Sleep at same time",
             "duration": "Evening"
           },
           "morning-routine": {
-            "name": "Morning Routine",
+            "name": "Morning routine",
             "description": "Exciting morning activities",
             "duration": "30 min"
           },
           "sunlight-exposure": {
-            "name": "Get Sunlight",
+            "name": "Get sunlight",
             "description": "Expose to morning light",
             "duration": "15 min"
           }
         },
         "bad": {
           "no-snooze": {
-            "name": "No Snooze Button",
+            "name": "No snooze button",
             "description": "Get up with first alarm",
             "duration": "Morning"
           },
           "no-late-sleep": {
-            "name": "No Late Sleep",
+            "name": "No late sleep",
             "description": "Sleep before midnight",
             "duration": "Evening"
           },
           "alarm-far-away": {
-            "name": "Alarm Across Room",
+            "name": "Alarm across room",
             "description": "Force yourself to get up",
             "duration": "Bedtime"
           }
@@ -1325,7 +1325,7 @@
   "wizard": {
     "navigation": {
       "continue": "Continue",
-      "createHabit": "Create Habit",
+      "createHabit": "Create habit",
       "creating": "Creating..."
     },
     "alerts": {
@@ -1354,12 +1354,12 @@
         "message": "Choose at least one task to track"
       },
       "notificationsEnabled": {
-        "title": "Notifications Enabled! 🔔",
+        "title": "Notifications enabled! 🔔",
         "message": "You'll receive reminders to help you stay on track.",
         "button": "Great!"
       },
       "notificationsDisabled": {
-        "title": "Notifications Disabled",
+        "title": "Notifications disabled",
         "message": "You can enable them later in Settings.",
         "button": "OK"
       },
@@ -1368,61 +1368,61 @@
         "message": "Failed to create habit. Please try again."
       },
       "exitWizard": {
-        "title": "Exit Habit Creation?",
+        "title": "Exit habit creation?",
         "message": "Your progress will be lost. Are you sure you want to exit?",
-        "cancel": "Continue Creating",
+        "cancel": "Continue creating",
         "confirm": "Exit"
       }
     },
     "habitTypeSelector": {
-      "title": "Choose Your Path",
+      "title": "Choose your path",
       "subtitle": "Are you building something new or\nletting go of something old?",
-      "buildHabit": "Build a Habit",
+      "buildHabit": "Build a habit",
       "buildHabitDescription": "Create positive routines",
-      "breakHabit": "Break a Habit",
+      "breakHabit": "Break a habit",
       "breakHabitDescription": "Let go of old patterns",
       "quote": "\"Every action you take is a vote for\nthe person you wish to become\""
     },
     "habitCategorySelector": {
-      "title": "Choose Your Focus",
+      "title": "Choose your focus",
       "subtitleGood": "Select the area you want to improve",
       "subtitleBad": "What would you like to overcome?",
-      "createCustom": "Create Custom Habit",
+      "createCustom": "Create custom habit",
       "createCustomDescriptionGood": "Build something unique",
       "createCustomDescriptionBad": "Define your own goal",
       "tip": "Choose the category that resonates most\nwith your current goals"
     },
     "customHabitCreator": {
-      "title": "Name Your Habit",
+      "title": "Name your habit",
       "subtitle": "Make it personal and meaningful",
-      "habitName": "Habit Name",
-      "habitNamePlaceholder": "e.g., Morning Workout",
+      "habitName": "Habit name",
+      "habitNamePlaceholder": "e.g., Morning workout",
       "characters": "characters",
-      "chooseIcon": "Choose an Icon",
+      "chooseIcon": "Choose an icon",
       "preview": "Preview",
-      "customHabit": "Custom Habit",
+      "customHabit": "Custom habit",
       "tipGood": "Choose a name that motivates you daily",
       "tipBad": "Frame your habit positively"
     },
     "customTaskCreator": {
-      "title": "Define Your Tasks",
+      "title": "Define your tasks",
       "subtitle": "Create specific actions for\n\"{{habitName}}\"",
       "tasksDefined": "{{count}} of {{max}} tasks defined",
       "taskPlaceholder": "Task {{number}}",
-      "addAnotherTask": "Add Another Task",
-      "tasksPreview": "Tasks Preview",
+      "addAnotherTask": "Add another task",
+      "tasksPreview": "Tasks preview",
       "tip": "Break down your goals into small steps\nProgress compounds over time"
     },
     "taskSelector": {
-      "title": "Choose Your Tasks",
+      "title": "Choose your tasks",
       "subtitle": "Select up to {{max}} daily actions to track",
       "selected": "{{count}} of {{max}} selected",
       "tip": "Start small and build momentum\nYou can always add more tasks later"
     },
     "goalSetting": {
-      "title": "Set Your Goal",
+      "title": "Set your goal",
       "subtitle": "How long do you want to track this habit?",
-      "default61Days": "61-Day Challenge",
+      "default61Days": "61-day challenge",
       "default61DaysDescription": "Science-backed habit formation",
       "recommended": "Recommended",
       "orChooseCustom": "or choose custom",
@@ -1439,7 +1439,7 @@
       "tip": "Research shows 66 days is the average time\nto form a new automatic habit"
     },
     "frequencySelector": {
-      "title": "Set Your Rhythm",
+      "title": "Set your rhythm",
       "subtitle": "How often will you practice this habit?",
       "daily": "Daily",
       "dailySubtitle": "Every single day",
@@ -1461,13 +1461,13 @@
       "tip": "Daily habits are 2.5x more likely to stick\nStart small and build momentum"
     },
     "notificationSetup": {
-      "title": "Daily Reminders",
+      "title": "Daily reminders",
       "subtitle": "Get gentle nudges to stay on track",
-      "enabled": "Notifications On",
+      "enabled": "Notifications on",
       "enabledDescription": "Daily reminder active",
-      "disabled": "Notifications Off",
+      "disabled": "Notifications off",
       "disabledDescription": "No reminders",
-      "permissionRequired": "Permission Required",
+      "permissionRequired": "Permission required",
       "permissionMessage": "Please enable notifications in your device settings.",
       "quickSelect": "Quick select:",
       "morning": "Morning",
@@ -1476,7 +1476,7 @@
       "noonTime": "12:00 PM",
       "evening": "Evening",
       "eveningTime": "6:00 PM",
-      "customTime": "Choose Custom Time",
+      "customTime": "Choose custom time",
       "remindAt": "You'll be reminded at",
       "tipEnabled": "Choose a time that fits naturally into your routine",
       "tipDisabled": "You can always enable reminders later in settings"
@@ -1485,22 +1485,22 @@
   "achievements": {
     "level": "Level {{level}}",
     "tapToClose": "Tap anywhere to close",
-    "screenTitle": "Tier Ranks",
-    "currentAchievement": "Current Rank",
+    "screenTitle": "Tier ranks",
+    "currentAchievement": "Current rank",
     "unlocked": "Unlocked",
-    "bestStreak": "Best Streak",
+    "bestStreak": "Best streak",
     "totalXP": "Total XP",
     "next": "Next: {{title}}",
     "perfectDays": "Perfect",
     "habits": "Habits",
     "streak": "Streak",
-    "achievementUnlocked": "New Rank Unlocked!",
-    "progressStatus": "Progress Status",
+    "achievementUnlocked": "New rank unlocked!",
+    "progressStatus": "Progress status",
     "unlockedAt": "Unlocked at {{count}} completions",
     "requiresCompletions": "Requires {{count}} total completions",
     "moreNeeded": "{{count}} more needed • {{percent}}% complete",
     "awesome": "Awesome!",
-    "keepGoing": "Keep Going!",
+    "keepGoing": "Keep going!",
     "all": "All",
     "lockedBadge": "Locked",
     "complete": "Complete",
@@ -1512,62 +1512,62 @@
     },
     "tiers": {
       "novice": "Novice",
-      "risingHero": "Rising Hero",
-      "masteryAwakens": "Mastery Awakens",
-      "legendaryAscent": "Legendary Ascent",
-      "epicMastery": "Epic Mastery",
-      "mythicGlory": "Mythic Glory",
-      "celestialAscension": "Celestial Ascension",
-      "infernalDominion": "Infernal Dominion"
+      "risingHero": "Rising hero",
+      "masteryAwakens": "Mastery awakens",
+      "legendaryAscent": "Legendary ascent",
+      "epicMastery": "Epic mastery",
+      "mythicGlory": "Mythic glory",
+      "celestialAscension": "Celestial ascension",
+      "infernalDominion": "Infernal dominion"
     },
     "titles": {
-      "level1": "The First Stepper",
+      "level1": "The first stepper",
       "level2": "Pathfinder",
-      "level3": "Apprentice of Discipline",
-      "level4": "Seeker of Resolve",
-      "level5": "Bearer of the Flame",
-      "level6": "Squire of Habits",
-      "level7": "The Steadfast",
-      "level8": "Guardian of Routine",
-      "level9": "Keeper of the Path",
-      "level10": "Knight of Consistency",
-      "level11": "Champion of Focus",
-      "level12": "Breaker of Limits",
-      "level13": "The Unyielding",
-      "level14": "Warden of Progress",
-      "level15": "Hero of Momentum",
-      "level16": "Blade of Resolve",
-      "level17": "Defender of Discipline",
-      "level18": "The Iron Willed",
-      "level19": "Master of the Grind",
-      "level20": "The Golden Victor",
-      "level21": "The Relentless",
-      "level22": "Stormbringer of Habits",
-      "level23": "The Phoenix Riser",
-      "level24": "Champion of Time",
-      "level25": "The Crowned Conqueror",
-      "level26": "The Eternal Flame",
-      "level27": "Titan of Consistency",
-      "level28": "The Invincible",
-      "level29": "Legend of the Grind",
-      "level30": "Ascended One",
-      "level31": "Celestial Warden",
-      "level32": "Starborne Champion",
-      "level33": "Cosmic Sentinel",
-      "level34": "Ethereal Sovereign",
-      "level35": "Transcendent Master",
-      "level36": "Lord of Ashes",
-      "level37": "Infernal Forgemaster",
-      "level38": "Emperor of Flames",
-      "level39": "Titan of the Blaze",
-      "level40": "God of the Inferno"
+      "level3": "Apprentice of discipline",
+      "level4": "Seeker of resolve",
+      "level5": "Bearer of the flame",
+      "level6": "Squire of habits",
+      "level7": "The steadfast",
+      "level8": "Guardian of routine",
+      "level9": "Keeper of the path",
+      "level10": "Knight of consistency",
+      "level11": "Champion of focus",
+      "level12": "Breaker of limits",
+      "level13": "The unyielding",
+      "level14": "Warden of progress",
+      "level15": "Hero of momentum",
+      "level16": "Blade of resolve",
+      "level17": "Defender of discipline",
+      "level18": "The iron willed",
+      "level19": "Master of the grind",
+      "level20": "The golden victor",
+      "level21": "The relentless",
+      "level22": "Stormbringer of habits",
+      "level23": "The phoenix riser",
+      "level24": "Champion of time",
+      "level25": "The crowned conqueror",
+      "level26": "The eternal flame",
+      "level27": "Titan of consistency",
+      "level28": "The invincible",
+      "level29": "Legend of the grind",
+      "level30": "Ascended one",
+      "level31": "Celestial warden",
+      "level32": "Starborne champion",
+      "level33": "Cosmic sentinel",
+      "level34": "Ethereal sovereign",
+      "level35": "Transcendent master",
+      "level36": "Lord of ashes",
+      "level37": "Infernal forgemaster",
+      "level38": "Emperor of flames",
+      "level39": "Titan of the blaze",
+      "level40": "God of the inferno"
     }
   },
   "calendar": {
     "title": "Calendar",
-    "questCalendar": "Quest Calendar",
+    "questCalendar": "Quest calendar",
     "today": "Today",
-    "selectDate": "Select Date",
+    "selectDate": "Select date",
     "noHabits": "No habits to display",
     "createHabit": "Create a habit to get started",
     "trackYourJourney": "Track your habit journey",
@@ -1588,9 +1588,9 @@
       "missed": "Missed",
       "selected": "Selected",
       "holiday": "Holiday",
-      "onHoliday": "On Holiday",
-      "streakProtected": "Streak Protected",
-      "holidayPeriod": "Holiday Period"
+      "onHoliday": "On holiday",
+      "streakProtected": "Streak protected",
+      "holidayPeriod": "Holiday period"
     },
     "messages": {
       "completedToday": "Completed today",
@@ -1604,8 +1604,8 @@
       "missed": "Missed • Tomorrow is a new opportunity",
       "tasksReady": "{{count}} task ready to start",
       "tasksReady_plural": "{{count}} tasks ready to start",
-      "questComplete": "Quest Complete!",
-      "keepGoing": "Keep Going! {{completed}} of {{total}} done",
+      "questComplete": "Quest complete!",
+      "keepGoing": "Keep going! {{completed}} of {{total}} done",
       "tomorrowNewDay": "Tomorrow is a new day!",
       "yourStreakSafe": "Your streak is safe!",
       "trackingPaused": "Tracking paused. Enjoy your break!",
@@ -1613,9 +1613,9 @@
       "tasksCompleted": "Tasks completed: {{completed}}/{{total}}"
     },
     "holiday": {
-      "mode": "Holiday Mode",
+      "mode": "Holiday mode",
       "active": "Active",
-      "streakProtected": "Streak Protected",
+      "streakProtected": "Streak protected",
       "enjoyBreak": "Enjoy your break! Your progress is safe."
     },
     "navigation": {
@@ -1634,9 +1634,9 @@
       }
     },
     "emptyState": {
-      "title": "No Habits Yet",
+      "title": "No habits yet",
       "description": "Start your journey by creating your first habit",
-      "button": "Create Your First Habit"
+      "button": "Create your first habit"
     },
     "legend": {
       "complete": "Complete",
@@ -1713,34 +1713,34 @@
     "chart": {
       "completion": "Completion",
       "tasks": "Tasks",
-      "activeHabits": "Active Habits",
+      "activeHabits": "Active habits",
       "noData": "No data available",
       "less": "Less",
       "more": "More"
     },
     "prediction": {
-      "title": "Success Prediction",
+      "title": "Success prediction",
       "noHabits": "No habits to track yet",
       "completed": "Completed",
       "required": "Required",
       "remaining": "Remaining",
-      "showLess": "Show Less",
-      "viewDetails": "View Details",
-      "predictedCompletion": "Predicted Completion",
-      "safetyMargin": "Safety Margin",
+      "showLess": "Show less",
+      "viewDetails": "View details",
+      "predictedCompletion": "Predicted completion",
+      "safetyMargin": "Safety margin",
       "safetyMarginInfo": "Days you can miss and still achieve 70% completion to succeed in your goal.",
-      "canSucceed": "Can Still Succeed?",
+      "canSucceed": "Can still succeed?",
       "yes": "Yes",
       "challenging": "Challenging",
-      "suggestedPace": "Suggested Pace",
-      "progressTimeline": "Progress Timeline",
+      "suggestedPace": "Suggested pace",
+      "progressTimeline": "Progress timeline",
       "day": "Day",
       "days": "days",
       "status": {
-        "excellent": "Excellent Track",
-        "onTrack": "On Track",
-        "needsFocus": "Needs Focus",
-        "atRisk": "At Risk"
+        "excellent": "Excellent track",
+        "onTrack": "On track",
+        "needsFocus": "Needs focus",
+        "atRisk": "At risk"
       },
       "messages": {
         "excellent": "You're crushing it! Keep shining",
@@ -1760,17 +1760,17 @@
     }
   },
   "holidayMode": {
-    "title": "Holiday Mode",
+    "title": "Holiday mode",
     "subtitle": "Pause your habits without losing your progress",
-    "active": "Active Holiday",
+    "active": "Active holiday",
     "period": "Period",
-    "frozenItems": "Frozen Items",
+    "frozenItems": "Frozen items",
     "daysRemaining": "Day remaining | Days remaining",
     "returnOn": "Return on {{date}}",
     "comeBackStronger": "Come back stronger",
     "motivationalMessage": "Your streaks are safe. Rest, recharge, and come back ready to continue your journey.",
-    "viewDetails": "View Details",
-    "endEarly": "End Early",
+    "viewDetails": "View details",
+    "endEarly": "End early",
     "enjoyBreak": "Enjoy your well-deserved break",
     "daysLeft": "{{count}}d left",
     "loadingDates": "Loading dates...",
@@ -1795,7 +1795,7 @@
       "activating": "Activating..."
     },
     "stats": {
-      "premiumAccess": "Premium Access",
+      "premiumAccess": "Premium access",
       "unlimited": "UNLIMITED",
       "createUnlimited": "Create unlimited holiday periods without duration restrictions",
       "periods": "Periods",
@@ -1805,23 +1805,23 @@
       "upgradeMessage": "Upgrade to Premium for unlimited holiday periods",
       "upgrade": "Upgrade to Premium",
       "daysPerPeriod": "Days per period",
-      "yourAllowance": "Your Allowance",
+      "yourAllowance": "Your allowance",
       "freePlan": "FREE PLAN",
       "periodLeft": "Period left",
-      "daysMax": "Max days"
+      "daysMax": "Max Days"
     },
     "form": {
-      "scheduleBreak": "Schedule a Break",
-      "totalDuration": "Total Duration",
+      "scheduleBreak": "Schedule a break",
+      "totalDuration": "Total duration",
       "day": "day",
       "days": "days",
       "startDate": "Start date",
       "endDate": "End date",
-      "freezeScope": "Freeze Scope",
+      "freezeScope": "Freeze scope",
       "all": "All",
       "habits": "Habits",
       "tasks": "Tasks",
-      "activate": "Activate Holiday Mode"
+      "activate": "Activate holiday mode"
     },
     "scope": {
       "infoAll": "All habits paused. Streaks preserved.",
@@ -1833,17 +1833,17 @@
       "done": "Done"
     },
     "alerts": {
-      "selectionRequired": "Selection Required",
+      "selectionRequired": "Selection required",
       "selectHabit": "Please select at least one habit to freeze",
       "selectTask": "Please select at least one task to freeze",
-      "invalidDates": "Invalid Dates",
-      "premiumRequired": "Premium Required",
+      "invalidDates": "Invalid dates",
+      "premiumRequired": "Premium required",
       "premiumMessage": "This feature requires a Premium subscription.",
-      "cannotCreate": "Cannot Create",
+      "cannotCreate": "Cannot create",
       "unableToCreate": "Unable to create holiday period.",
       "error": "Error",
       "validationFailed": "Failed to validate holiday period. Please try again.",
-      "activateTitle": "Activate Holiday Mode?",
+      "activateTitle": "Activate holiday mode?",
       "activateMessage": "All {{scope}} will be paused from {{startDate}} to {{endDate}} ({{duration}} days).",
       "activateMessageAll": "habits",
       "activateMessageSelected": "selected items",
@@ -1853,14 +1853,14 @@
       "freezingTasksPlural": "Freezing {{count}} tasks from {{habitCount}} habits",
       "cancel": "Cancel",
       "activate": "Activate",
-      "premiumFeature": "Premium Feature",
+      "premiumFeature": "Premium feature",
       "featureRequiresPremium": "This feature requires Premium.",
       "upgrade": "Upgrade to Premium",
-      "createFailed": "Creation Failed",
-      "endEarlyTitle": "End Holiday?",
+      "createFailed": "Creation failed",
+      "endEarlyTitle": "End holiday?",
       "endEarlyMessage": "Your habits will resume tracking immediately.",
-      "endHoliday": "End Holiday",
-      "cancelFailed": "Cancellation Failed"
+      "endHoliday": "End holiday",
+      "cancelFailed": "Cancellation failed"
     },
     "premium": {
       "goPremium": "Upgrade to Premium",
@@ -1874,28 +1874,28 @@
     }
   },
   "editUsername": {
-    "title": "Edit Username",
+    "title": "Edit username",
     "subtitle": "Choose a unique username (3-20 characters, letters, numbers, and underscores only)",
     "inputLabel": "Username",
     "placeholder": "Enter username",
     "characterCount": "{{count}}/20 characters",
     "errors": {
-      "emptyTitle": "Invalid Username",
+      "emptyTitle": "Invalid username",
       "emptyMessage": "Username cannot be empty",
-      "tooShortTitle": "Invalid Username",
+      "tooShortTitle": "Invalid username",
       "tooShortMessage": "Username must be at least 3 characters",
-      "tooLongTitle": "Invalid Username",
+      "tooLongTitle": "Invalid username",
       "tooLongMessage": "Username must be less than 20 characters",
-      "invalidCharsTitle": "Invalid Username",
+      "invalidCharsTitle": "Invalid username",
       "invalidCharsMessage": "Username can only contain letters, numbers, and underscores",
-      "takenTitle": "Username Taken",
+      "takenTitle": "Username taken",
       "takenMessage": "This username is already in use. Please choose another one.",
-      "updateFailedTitle": "Update Failed",
+      "updateFailedTitle": "Update failed",
       "updateFailedMessage": "Unable to update username"
     }
   },
   "habitDetails": {
-    "title": "Habit Journey",
+    "title": "Habit journey",
     "notFound": "Habit not found",
     "hero": {
       "building": "Building",
@@ -1913,8 +1913,8 @@
       "tiers": "Tiers"
     },
     "tasks": {
-      "title": "Today's Tasks",
-      "weeklyTitle": "Weekly Tasks",
+      "title": "Today's tasks",
+      "weeklyTitle": "Weekly tasks",
       "customTitle": "Tasks",
       "completed": "{{completed}}/{{total}}",
       "pausedUntil": "Paused {{date}}",
@@ -1928,8 +1928,8 @@
       "missed": "Missed",
       "daysAway_one": "{{count}} day away",
       "daysAway_other": "{{count}} days away",
-      "currentTier": "Current Tier",
-      "nextMilestone": "Next Milestone"
+      "currentTier": "Current tier",
+      "nextMilestone": "Next milestone"
     },
     "milestoneZoomModal": {
       "achieved": "✓ Unlocked",
@@ -1939,7 +1939,7 @@
       "tapToClose": "Tap anywhere to close"
     },
     "tierCelebration": {
-      "unlocked": "Tier Unlocked",
+      "unlocked": "Tier unlocked",
       "streak": "STREAK",
       "days": "{{days}}+ Days",
       "multiplier": "MULTIPLIER",
@@ -1948,7 +1948,7 @@
       "closingIn": "Closing in {{seconds}} seconds..."
     },
     "streakSaver": {
-      "title": "Streak Rescue!",
+      "title": "Streak rescue!",
       "description": "Your {{streak}}-day streak for \"{{habitName}}\" doesn't have to end!",
       "stats": {
         "days": "Days",
@@ -1960,18 +1960,18 @@
       },
       "buttons": {
         "use": "USE STREAK SAVER",
-        "maybeLater": "Maybe Later",
+        "maybeLater": "Maybe later",
         "restoring": "Restoring..."
       },
       "success": {
-        "title": "Streak Restored!",
+        "title": "Streak restored!",
         "subtitle": "Your dedication is back on track",
         "days": "days",
-        "keepGoing": "Keep Going!",
+        "keepGoing": "Keep going!",
         "closingIn": "Closing in {{seconds}} seconds..."
       },
       "loading": {
-        "title": "Saving Streak...",
+        "title": "Saving streak...",
         "saving": "Restoring your streak...",
         "complete": "Streak saved!"
       },
@@ -1987,7 +1987,7 @@
   "levelUp": {
     "title": "LEVEL UP!",
     "levelLabel": "LEVEL",
-    "newAchievement": "New Achievement",
+    "newAchievement": "New achievement",
     "tapToContinue": "Tap to continue",
     "closingIn": "Closing in {{seconds}}s...",
     "motivational": {
@@ -2014,7 +2014,7 @@
     }
   },
   "milestoneRecap": {
-    "title": "Your Progress So Far",
+    "title": "Your progress so far",
     "subtitle": "You've already unlocked {{count}} milestones!",
     "day": "Day {{count}}",
     "totalXp": "XP earned",
@@ -2025,7 +2025,7 @@
     "skip": "Skip",
     "continue": "Continue",
     "back": "Back",
-    "letsStart": "Let's Start",
+    "letsStart": "Let's start",
     "welcome": {
       "title": "Welcome to Nuvoria",
       "subtitle": "Transform your habits into a daily adventure filled with success",
@@ -2034,7 +2034,7 @@
       "unlockAchievements": "Unlock achievements & rewards"
     },
     "xp": {
-      "title": "Earn XP & Level Up",
+      "title": "Earn XP & level up",
       "subtitle": "Complete up to 3 tasks per habit to earn XP. Build streaks to unlock massive bonuses!",
       "firstTask": "Complete your 1st task",
       "secondTask": "Complete your 2nd task",
@@ -2042,7 +2042,7 @@
       "perfectDay": "Perfect day (all tasks done)"
     },
     "tiers": {
-      "title": "Your UI Evolves",
+      "title": "Your UI evolves",
       "subtitle": "Watch your interface transform with beautiful gem themes as you progress",
       "crystal": "Crystal",
       "ruby": "Ruby",
@@ -2055,25 +2055,25 @@
       "daysPlus": "{{count}}+ days"
     },
     "savers": {
-      "title": "Never Lose Progress",
+      "title": "Never lose progress",
       "subtitle": "Use Streak Savers to restore missed days and keep your momentum going",
-      "protectStreak": "Protect Your Streak",
+      "protectStreak": "Protect your streak",
       "protectDesc": "Use savers when you miss a day",
-      "instantRestore": "Instant Restore",
+      "instantRestore": "Instant restore",
       "instantDesc": "Get back on track immediately",
-      "welcomeGift": "Welcome Gift",
+      "welcomeGift": "Welcome gift",
       "welcomeGiftDesc": "You earn 3 Streak Savers to get started"
     },
     "features": {
-      "title": "Stay On Track",
+      "title": "Stay on track",
       "subtitle": "Smart reminders and flexible breaks keep you consistent without pressure",
-      "notifications": "Smart Notifications",
-      "holidayMode": "Holiday Mode",
-      "ready": "You're Ready!",
+      "notifications": "Smart notifications",
+      "holidayMode": "Holiday mode",
+      "ready": "You're ready!",
       "readyDesc": "Let's create your first habit and start your journey to excellence"
     },
     "username": {
-      "title": "Create Your Username",
+      "title": "Create your username",
       "subtitle": "Choose a unique name that represents you in the Nuvoria community",
       "placeholder": "Your username",
       "characterCount": "{{count}} / {{max}} characters",
@@ -2105,64 +2105,64 @@
     "active": "Active",
     "inactive": "Inactive",
     "dailyAt": "Daily at {{time}}",
-    "enableGlobalFirst": "Enable Global Notifications First",
+    "enableGlobalFirst": "Enable global notifications first",
     "enableGlobalFirstMessage": "Please enable notifications in Settings before managing individual habit notifications.",
-    "goToSettings": "Go to Settings",
-    "permissionRequired": "Permission Required",
+    "goToSettings": "Go to settings",
+    "permissionRequired": "Permission required",
     "permissionRequiredMessage": "Please enable notifications in your device settings to receive habit reminders.",
-    "openSettings": "Open Settings",
+    "openSettings": "Open settings",
     "error": "Error",
     "toggleError": "Failed to update notification. Please try again.",
     "timeUpdateError": "Failed to update notification time. Please try again.",
-    "enable": "Enable Notifications",
-    "enabled": "Notifications Enabled",
+    "enable": "Enable notifications",
+    "enabled": "Notifications enabled",
     "enabledMessage": "You will now receive reminders for your habits with notifications enabled.",
     "disable": "Disable",
-    "disableTitle": "Disable Notifications?",
+    "disableTitle": "Disable notifications?",
     "disableMessage": "This will cancel all scheduled habit reminders. You can re-enable them anytime.",
-    "settings": "Notification Settings",
-    "time": "Notification Time",
+    "settings": "Notification settings",
+    "time": "Notification time",
     "frequency": "Frequency",
-    "customMessage": "Custom Message",
-    "testNotification": "Test Notification",
+    "customMessage": "Custom message",
+    "testNotification": "Test notification",
     "permissionMessage": "Notifications are disabled in your device settings. Please enable them to receive habit reminders.",
-    "permissionDenied": "Permission Denied",
+    "permissionDenied": "Permission denied",
     "permissionDeniedMessage": "You need to grant notification permissions to receive habit reminders.",
-    "habitReminder": "Habit Reminder",
-    "dailyChest": "Daily Chest",
-    "streakRisk": "Streak Risk",
-    "achievement": "Achievement Unlocked"
+    "habitReminder": "Habit reminder",
+    "dailyChest": "Daily chest",
+    "streakRisk": "Streak risk",
+    "achievement": "Achievement unlocked"
   },
   "auth": {
-    "tagline": "Consistency Transforms Everything",
-    "signIn": "Sign In",
-    "signOut": "Sign Out",
-    "createAccount": "Create Account",
-    "resetPassword": "Reset Password",
+    "tagline": "Consistency transforms everything",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "createAccount": "Create account",
+    "resetPassword": "Reset password",
     "username": "Username",
     "usernamePlaceholder": "Choose a username",
     "email": "Email",
     "emailPlaceholder": "your.email@example.com",
     "password": "Password",
-    "confirmPassword": "Confirm Password",
+    "confirmPassword": "Confirm password",
     "hide": "Hide",
     "show": "Show",
-    "sendResetLink": "Send Reset Link",
+    "sendResetLink": "Send reset link",
     "forgotPassword": "Forgot password?",
     "createAccountLink": "Create account",
     "signInInstead": "Sign in instead",
     "backToSignIn": "Back to sign in",
     "orContinueWith": "OR CONTINUE WITH",
     "continueWithApple": "Continue with Apple",
-    "missingInfo": "Missing Information",
+    "missingInfo": "Missing information",
     "fillFields": "Please fill in all required fields",
-    "passwordMismatch": "Password Mismatch",
+    "passwordMismatch": "Password mismatch",
     "passwordsDontMatch": "Passwords do not match",
-    "weakPassword": "Weak Password",
+    "weakPassword": "Weak password",
     "passwordMin6": "Password must be at least 6 characters"
   },
   "resetPassword": {
-    "title": "New Password",
+    "title": "New password",
     "subtitle": "Choose a secure new password",
     "newPassword": "New password",
     "newPasswordPlaceholder": "Enter your new password",
@@ -2185,7 +2185,7 @@
     }
   },
   "streakSaver": {
-    "title": "Streak Rescue!",
+    "title": "Streak rescue!",
     "description": "Your {{streak}}-day streak for \"{{habitName}}\" doesn't have to end!",
     "stats": {
       "days": "Days",
@@ -2197,18 +2197,18 @@
     },
     "badge": {
       "outOfStock": "OUT OF STOCK",
-      "refillMessage": "Refill your Streak Savers",
+      "refillMessage": "Refill your streak savers",
       "tapToShop": "Tap to visit shop",
       "streakAlert": "STREAK ALERT",
       "readyToSave": "READY TO SAVE",
       "needsSaving_one": "{{count}} habit needs saving!",
       "needsSaving_other": "{{count}} habits need saving!",
       "allSafe": "All streaks are safe",
-      "available_one": "{{count}} Streak Saver ready",
-      "available_other": "{{count}} Streak Savers ready"
+      "available_one": "{{count}} streak saver ready",
+      "available_other": "{{count}} streak savers ready"
     },
     "selection": {
-      "title": "Habits at Risk",
+      "title": "Habits at risk",
       "subtitle": "Choose which habit to save",
       "streakDays_one": "{{count}} day streak",
       "streakDays_other": "{{count}} day streak",
@@ -2216,18 +2216,18 @@
       "saversAvailable_other": "{{count}} savers available",
       "noSaversTitle": "No savers left!",
       "noSaversMessage": "You're out of streak savers. Buy more to protect your streaks.",
-      "goToShop": "Buy Streak Savers"
+      "goToShop": "Buy streak savers"
     },
     "buttons": {
       "use": "USE STREAK SAVER",
-      "maybeLater": "Maybe Later",
+      "maybeLater": "Maybe later",
       "restoring": "Restoring..."
     },
     "success": {
-      "title": "Streak Restored!",
+      "title": "Streak restored!",
       "subtitle": "Your dedication is back on track",
       "days": "days",
-      "keepGoing": "Keep Going!",
+      "keepGoing": "Keep going!",
       "closingIn": "Closing in {{seconds}} seconds..."
     },
     "motivational": [
@@ -2238,17 +2238,17 @@
       "You're building an incredible habit!"
     ],
     "shop": {
-      "title": "Streak Savers",
+      "title": "Streak savers",
       "subtitle": "Protect your progress from missed days",
       "description": "Choose a pack and receive your Streak Savers instantly",
-      "yourInventory": "Your Inventory",
-      "monthlyRefill": "Monthly Refill",
+      "yourInventory": "Your inventory",
+      "monthlyRefill": "Monthly refill",
       "refillDate": "Next refill: {{date}}",
-      "premiumOnly": "Premium members receive 3 Streak Savers each month",
-      "notPremium": "Upgrade to Premium to get monthly Streak Savers",
+      "premiumOnly": "Premium members receive 3 streak savers each month",
+      "notPremium": "Upgrade to Premium to get monthly streak savers",
       "upgradeToPremium": "Upgrade to Premium",
-      "purchaseSuccess": "Purchase Successful!",
-      "purchaseFailed": "Purchase Failed",
+      "purchaseSuccess": "Purchase successful!",
+      "purchaseFailed": "Purchase failed",
       "addedToInventory": "Added to your inventory",
       "noPackages": "No packages available",
       "popular": "POPULAR",
@@ -2260,60 +2260,60 @@
       "footer": "Restore missed days within 24h",
       "loading": "Loading...",
       "savers": "{{count}} Savers",
-      "receiveDescription": "You will receive {{count}} Streak Savers"
+      "receiveDescription": "You will receive {{count}} streak savers"
     }
   },
   "taskManager": {
-    "manageTitle": "Manage Tasks",
+    "manageTitle": "Manage tasks",
     "maxTasks": "Maximum 3 tasks per habit",
     "taskCount": "{{count}} task",
     "taskCount_plural": "{{count}} tasks",
-    "noTasksTitle": "No Tasks Yet",
+    "noTasksTitle": "No tasks yet",
     "noTasks": "Add your first task to get started with this habit",
-    "addNewTask": "Add New Task",
-    "deleteTask": "Delete Task",
+    "addNewTask": "Add new task",
+    "deleteTask": "Delete task",
     "deleteTaskConfirm": "Are you sure you want to delete \"{{taskName}}\"? This action cannot be undone.",
     "deleteError": "Failed to delete task. Please try again.",
     "deleting": "Deleting...",
     "addError": "Failed to add tasks. Please try again.",
-    "selectTasks": "Select Tasks",
+    "selectTasks": "Select tasks",
     "selectedCount": "{{count}} / {{max}} selected",
     "maxTasksReached": "Maximum 3 tasks per habit reached. Delete a task first to add new ones.",
     "customTaskDurationLabel": "Duration (optional)",
     "customTaskDurationPlaceholder": "30",
     "customTaskDurationHint": "Estimated time to complete this task",
     "allTasksAdded": "All available tasks already added",
-    "allTasksAddedTitle": "All Tasks Added",
+    "allTasksAddedTitle": "All tasks added",
     "allTasksAddedDescription": "You've already added all available tasks for this habit. Create a custom task or manage existing ones.",
     "maxTasksDescription": "You've reached the maximum of 3 tasks per habit. Delete a task to add new ones.",
     "limitReached": {
-      "title": "Task Limit Reached",
+      "title": "Task limit reached",
       "message": "You already have 3 tasks for this habit. Please delete a task before adding new ones."
     },
     "addTasks": "Add {{count}} Task",
     "addTasks_plural": "Add {{count}} Tasks",
-    "createCustomTask": "Create Custom Task",
+    "createCustomTask": "Create custom task",
     "createCustomTaskDescription": "Define your own action",
-    "customTaskNameLabel": "Task Name",
+    "customTaskNameLabel": "Task name",
     "customTaskPlaceholder": "e.g., Drink 8 glasses of water",
     "customTaskTip": "Be specific and measurable. Example: \"Exercise for 30 minutes\" instead of just \"Exercise\"",
     "customTaskLabel": "Custom task",
-    "createTask": "Create Task",
+    "createTask": "Create task",
     "alerts": {
       "noTasksSelected": {
-        "title": "No Tasks Selected",
+        "title": "No tasks selected",
         "message": "Please select at least one task."
       },
       "customTaskEmpty": {
-        "title": "Task Name Required",
+        "title": "Task name required",
         "message": "Please enter a name for your custom task."
       },
       "taskAdded": {
-        "title": "Task Added",
+        "title": "Task added",
         "message": "Your custom task has been created successfully."
       },
       "tasksAdded": {
-        "title": "Tasks Added",
+        "title": "Tasks added",
         "message": "{{count}} task added successfully.",
         "message_plural": "{{count}} tasks added successfully."
       },
@@ -2323,38 +2323,38 @@
   },
   "groups": {
     "title": "Groups",
-    "subtitle": "My Groups",
+    "subtitle": "My groups",
     "activeCount_one": "{{count}} active group",
     "activeCount_other": "{{count}} active groups",
     "info": {
-      "header": "How Groups Work",
+      "header": "How groups work",
       "intro": "Create shared habits with friends and build streaks together. Accountability meets motivation in a collaborative experience.",
       "completion": {
-        "title": "Daily Completion",
+        "title": "Daily completion",
         "description": "Each member completes their tasks individually. At midnight, the group's completion rate determines if the day is validated."
       },
       "xp": {
-        "title": "XP Rewards",
+        "title": "XP rewards",
         "description": "Earn +10 XP instantly when you complete a task. Get bonus XP at midnight: +50 XP for 100% completion, +35 XP for 50-99% completion. The more active members, the more XP you earn together."
       },
       "streak": {
-        "title": "Validation Rules",
+        "title": "Validation rules",
         "description": "100% completion = perfect day with full bonus. 50-99% = validated day with reduced bonus. Below 50% = day not validated and streak breaks (unless saved)."
       },
       "tolerance": {
-        "title": "Weekly Flexibility",
+        "title": "Weekly flexibility",
         "description": "All groups get one 50% tolerance per week. If at least half the team completes their tasks, the day is validated with reduced bonus. After using this flexibility, you need 100% completion or the streak breaks."
       },
       "weekly": {
-        "title": "Weekly Bonus",
+        "title": "Weekly bonus",
         "description": "Achieve 100% completion every day for a full week (Monday to Sunday), and earn a massive +200 XP bonus on Sunday midnight. Perfect teamwork deserves perfect rewards!"
       },
       "invite": {
-        "title": "Invite Members",
+        "title": "Invite members",
         "description": "Share your group's invitation code to invite new members. Tap the code to automatically copy it to your clipboard, then send it to your friends!"
       },
       "limits": {
-        "title": "Group Limits",
+        "title": "Group limits",
         "description": "With the free version, you can join up to 2 groups. Upgrade to Premium to join up to 5 groups and unlock exclusive features!"
       },
       "tip": "Remember: consistency and teamwork are key. Even on tough days, your group is there to keep you motivated!",
@@ -2471,11 +2471,11 @@
       "successMessage": "You can now see shared habits",
       "later": "Later",
       "seePremium": "See Premium",
-      "enterCode": "Enter Invite Code",
+      "enterCode": "Enter invite code",
       "authRequired": "Authentication required",
-      "invalidCode": "Invalid Format",
+      "invalidCode": "Invalid format",
       "invalidCodeMessage": "The code must contain exactly 6 characters (letters and numbers)",
-      "codeNotFound": "Incorrect Code",
+      "codeNotFound": "Incorrect code",
       "codeNotFoundMessage": "This code doesn't match any group. Please check the code and try again."
     },
     "create": {
@@ -2517,8 +2517,8 @@
     },
     "streak": {
       "current": "{{count}} day streak",
-      "noStreakSaver": "No Streak Saver",
-      "noStreakSaverMessage": "You have no more Streak Savers. Would you like to buy some?",
+      "noStreakSaver": "No streak saver",
+      "noStreakSaverMessage": "You have no more streak savers. Would you like to buy some?",
       "later": "Later",
       "buy": "Buy"
     },
@@ -2536,13 +2536,13 @@
     "progress": "Progress",
     "tracked": "Tracked",
     "tracked_description": "Keep an eye on your active achievements",
-    "all_quests": "All Achievements",
+    "all_quests": "All achievements",
     "quests_available": "achievements available",
     "no_quests_found": "No achievements found",
     "no_completed_quests": "No completed achievements yet",
     "reward": "Reward",
-    "exclusive_title": "Exclusive Title",
-    "quest_completed": "Achievement Unlocked!",
+    "exclusive_title": "Exclusive title",
+    "quest_completed": "Achievement unlocked!",
     "pin": "Track",
     "unpin": "Untrack",
     "all": "All",
@@ -2551,9 +2551,9 @@
       "intro": "Achievements let you earn rewards by reaching your goals!",
       "xp_title": "Earn XP",
       "xp_description": "Each completed achievement gives you XP to progress through your ranks.",
-      "titles_title": "Exclusive Titles",
+      "titles_title": "Exclusive titles",
       "titles_description": "Unlock unique titles to display on your profile.",
-      "boosts_title": "XP Boosts",
+      "boosts_title": "XP boosts",
       "boosts_description": "Get boosts that multiply your XP earnings for a limited time.",
       "inventory_title": "Inventory",
       "inventory_description": "Find all your rewards in the inventory and activate your boosts whenever you want.",
@@ -2568,112 +2568,112 @@
       "philosophie": "Philosophy"
     },
     "test_quest": {
-      "name": "First Step",
+      "name": "First step",
       "description_short": "Complete 1 habit",
       "description_long": "Complete any habit once to unlock this quest"
     },
     "seven_sparks": {
-      "name": "Seven Sparks",
+      "name": "Seven sparks",
       "description_short": "Complete at least 1 habit on 7 distinct days",
       "description_long": "Start your journey by completing at least one habit on 7 different days. Small steps lead to big changes."
     },
     "task_master": {
-      "name": "Daily Task Master Professional",
+      "name": "Daily task master professional",
       "description_short": "Complete 50 tasks in 30 days",
       "description_long": "Become a true productivity master by completing 50 tasks over a 30-day period."
     },
     "habit_builder": {
-      "name": "Extraordinary Habit Architect Builder",
+      "name": "Extraordinary habit architect builder",
       "description_short": "Create and maintain 5 habits simultaneously",
       "description_long": "Prove your ability to juggle multiple habits by maintaining 5 active habits at the same time."
     },
     "two_weeks_gentle": {
-      "name": "Two Weeks Gentle",
+      "name": "Two weeks gentle",
       "description_short": "Complete at least 1 habit on 30 distinct days",
       "description_long": "A full month of consistent practice. Consistency builds momentum—keep showing up day after day."
     },
     "thirty_days_drift": {
-      "name": "Thirty Days Drift",
+      "name": "Thirty days drift",
       "description_short": "Complete at least 1 habit on 60 distinct days",
       "description_long": "Two months of sustained progress. Celebrate each day you show up and watch your habits transform your life."
     },
     "perfect_day": {
-      "name": "Perfect Day",
+      "name": "Perfect day",
       "description_short": "Complete all your habits in a single day",
       "description_long": "Your first perfect day. Every habit checked, every promise kept. Feel the satisfaction of a day well done."
     },
     "perfect_week": {
-      "name": "Perfect Week",
+      "name": "Perfect week",
       "description_short": "Complete all your habits for 7 days",
       "description_long": "A week of perfection. Seven days where you showed up completely, proving your commitment to yourself."
     },
     "perfect_three_weeks": {
-      "name": "Three Week Perfection",
+      "name": "Three week perfection",
       "description_short": "Complete all your habits for 21 days",
       "description_long": "Three flawless weeks. You've turned excellence into a habit, proving that perfection is a daily choice."
     },
     "perfect_month": {
-      "name": "Flawless Month",
+      "name": "Flawless month",
       "description_short": "Complete all your habits for 30 days",
       "description_long": "An entire month of absolute perfection. You've demonstrated exceptional mastery of your routines and discipline."
     },
     "streak_seven": {
-      "name": "First Spark of Consistency",
+      "name": "First spark of consistency",
       "description_short": "Maintain a 7-day streak on one habit",
       "description_long": "Seven consecutive days on the same habit. The flame of consistency ignites - keep feeding it."
     },
     "streak_twentyone": {
-      "name": "Three Week Ritual",
+      "name": "Three week ritual",
       "description_short": "Maintain a 21-day streak on one habit",
       "description_long": "Twenty-one days of dedication. They say it takes 21 days to form a habit - you've done it."
     },
     "streak_thirty": {
-      "name": "Month of Devotion",
+      "name": "Month of devotion",
       "description_short": "Maintain a 30-day streak on one habit",
       "description_long": "An entire month without interruption. This habit is now an integral part of who you are."
     },
     "streak_sixty": {
-      "name": "Habit Marathoner",
+      "name": "Habit marathoner",
       "description_short": "Maintain a 60-day streak on one habit",
       "description_long": "Sixty days of unwavering consistency. You've proven you're a marathoner of personal change."
     },
     "streak_hundred": {
-      "name": "Unshakeable Legend",
+      "name": "Unshakeable legend",
       "description_short": "Maintain a 100-day streak on one habit",
       "description_long": "One hundred consecutive days. You are a living legend of perseverance. This habit is engraved in your identity."
     },
     "tasks_25": {
-      "name": "Task Beginner",
+      "name": "Task beginner",
       "description_short": "Complete 25 tasks",
       "description_long": "Your first 25 tasks completed! Every small action adds up to big results."
     },
     "tasks_50": {
-      "name": "Task Enthusiast",
+      "name": "Task enthusiast",
       "description_short": "Complete 50 tasks",
       "description_long": "Fifty tasks done! You're building momentum and proving your dedication."
     },
     "tasks_100": {
-      "name": "Task Champion",
+      "name": "Task champion",
       "description_short": "Complete 100 tasks",
       "description_long": "One hundred tasks conquered! You're a true champion of productivity."
     },
     "tasks_200": {
-      "name": "Task Master",
+      "name": "Task master",
       "description_short": "Complete 200 tasks",
       "description_long": "Two hundred tasks achieved! Your consistency is remarkable and inspiring."
     },
     "tasks_500": {
-      "name": "Task Legend",
+      "name": "Task legend",
       "description_short": "Complete 500 tasks",
       "description_long": "Five hundred tasks completed! You've reached legendary status in task completion."
     },
     "rate_app": {
-      "name": "Community Supporter",
+      "name": "Community supporter",
       "description_short": "Rate the app and leave a review",
       "description_long": "Help others discover the app by rating it and sharing your experience. Your support means the world to us!"
     },
     "first_comeback": {
-      "name": "First Comeback",
+      "name": "First comeback",
       "description_short": "Return after a 3+ day break",
       "description_long": "Life happens, but you came back. Your first comeback proves that falling off isn't failing—getting back up is what matters."
     },
@@ -2683,62 +2683,62 @@
       "description_long": "Three times you've risen from the ashes. Like the phoenix, you've proven that every setback is just a setup for a comeback."
     },
     "invincible": {
-      "name": "Invincible Spirit",
+      "name": "Invincible spirit",
       "description_short": "Return 10 times after breaks",
       "description_long": "Ten comebacks. You are unstoppable. Your resilience is legendary—nothing can keep you down for long."
     },
     "double_focus": {
-      "name": "Double Focus",
+      "name": "Double focus",
       "description_short": "Complete 2 different habits",
       "description_long": "Balance begins with two. You've started building a multi-faceted routine that touches different areas of your life."
     },
     "quadra": {
-      "name": "Quadra Balance",
+      "name": "Quadra balance",
       "description_short": "Complete 4 different habits",
       "description_long": "Four pillars of personal growth. You're building a well-rounded routine that covers multiple aspects of self-improvement."
     },
     "hexagon": {
-      "name": "Hexagon Master",
+      "name": "Hexagon master",
       "description_short": "Complete 6 different habits",
       "description_long": "Six distinct habits conquered. You've achieved remarkable balance, nurturing growth in every direction of your life."
     },
     "light_week": {
-      "name": "Light Week",
+      "name": "Light week",
       "description_short": "Complete 40% of possible habits this week",
       "description_long": "A gentle start to weekly consistency. Even light engagement builds the foundation for greater achievements."
     },
     "active_week": {
-      "name": "Active Week",
+      "name": "Active week",
       "description_short": "Complete 60% of possible habits this week",
       "description_long": "More than half your weekly potential reached! You're finding your rhythm and building serious momentum."
     },
     "intense_week": {
-      "name": "Intense Week",
+      "name": "Intense week",
       "description_short": "Complete 80% of possible habits this week",
       "description_long": "An intense week of dedication! You're pushing your limits and showing what true commitment looks like."
     },
     "perfect_intensity_week": {
-      "name": "Perfect Weekly Intensity",
+      "name": "Perfect weekly intensity",
       "description_short": "Complete 100% of possible habits this week",
       "description_long": "Every single habit, every single day this week. Absolute perfection in weekly dedication—you are extraordinary!"
     },
     "habit_week": {
-      "name": "One Week Strong",
+      "name": "One week strong",
       "description_short": "Complete at least 1 habit for 7 consecutive days",
       "description_long": "A full week of showing up. This foundation proves you can maintain consistency when it matters."
     },
     "double_routine": {
-      "name": "Double Routine",
+      "name": "Double routine",
       "description_short": "Complete at least 2 habits for 14 days",
       "description_long": "Two weeks of dual dedication. You've proven you can juggle multiple commitments without dropping the ball."
     },
     "discipline_month": {
-      "name": "Month of Discipline",
+      "name": "Month of discipline",
       "description_short": "Complete at least 2 habits for 30 days",
       "description_long": "A month of unwavering double commitment. Your discipline is forging habits that will last a lifetime."
     },
     "routine_master": {
-      "name": "Routine Master",
+      "name": "Routine master",
       "description_short": "Complete at least 3 habits for 60 days",
       "description_long": "Two months with three habits—you've achieved mastery over your routine. Your dedication is truly inspiring."
     },
@@ -2753,27 +2753,27 @@
       "description_long": "Two hundred days of consistent action. You've made habit-building a permanent part of your identity."
     },
     "full_year": {
-      "name": "Full Year Champion",
+      "name": "Full year champion",
       "description_short": "Complete habits on 365 distinct days",
       "description_long": "An entire year of dedication. Every season, every month, you showed up. You are a true habit champion."
     },
     "streak_150": {
-      "name": "Five Month Flame",
+      "name": "Five month flame",
       "description_short": "Maintain a 150-day streak on one habit",
       "description_long": "One hundred fifty consecutive days. Five months of unwavering dedication to a single habit—you burn bright!"
     },
     "streak_365": {
-      "name": "Annual Dedication",
+      "name": "Annual dedication",
       "description_short": "Maintain a 365-day streak on one habit",
       "description_long": "A full year without missing a single day. This level of dedication is rare and remarkable. You are a living legend."
     },
     "tasks_1000": {
-      "name": "Millennial Achiever",
+      "name": "Millennial achiever",
       "description_short": "Complete 1000 tasks",
       "description_long": "One thousand tasks completed! A millennium of micro-achievements that have transformed you into a productivity powerhouse."
     },
     "tasks_2500": {
-      "name": "Titan of Tasks",
+      "name": "Titan of tasks",
       "description_short": "Complete 2500 tasks",
       "description_long": "Twenty-five hundred tasks conquered! You've achieved titan status—a true force of nature in task completion."
     }
@@ -2781,22 +2781,22 @@
   "inventory": {
     "title": "Inventory",
     "loading": "Loading inventory...",
-    "active_boost": "Active Boost",
-    "available_boosts": "Available Boosts",
-    "unlocked_titles": "Unlocked Titles",
+    "active_boost": "Active boost",
+    "available_boosts": "Available boosts",
+    "unlocked_titles": "Unlocked titles",
     "boosts_ready": "boosts ready to activate",
     "titles_unlocked": "exclusive titles unlocked",
-    "xp_boost": "XP Boost",
+    "xp_boost": "XP boost",
     "habit_xp": "Habit XP",
     "duration": "Duration",
     "activate": "Activate",
     "expires_in": "Expires in",
-    "exclusive_title": "Exclusive Title",
-    "empty_title": "Empty Inventory",
+    "exclusive_title": "Exclusive title",
+    "empty_title": "Empty inventory",
     "empty_message": "Complete quests to earn boosts and exclusive titles!",
-    "boost_activated": "Boost Activated!",
+    "boost_activated": "Boost activated!",
     "boost_activated_message": "Your XP boost is now active. All habit XP is multiplied!",
-    "boost_already_active": "Boost Already Active",
+    "boost_already_active": "Boost already active",
     "boost_already_active_message": "You already have an active boost. Wait for it to expire before activating another.",
     "activation_failed": "Failed to activate boost. Please try again.",
     "ok": "OK",
@@ -2804,9 +2804,9 @@
     "boost_already_active_warning": "You already have an active boost. Wait for it to expire before activating another."
   },
   "titles": {
-    "marathon_legend": "Marathon Legend",
-    "zen_voyager": "Zen Voyager",
-    "titan_of_tasks": "Titan of Tasks"
+    "marathon_legend": "Marathon legend",
+    "zen_voyager": "Zen voyager",
+    "titan_of_tasks": "Titan of tasks"
   },
   "loader": {
     "loading_dashboard": "Loading dashboard...",

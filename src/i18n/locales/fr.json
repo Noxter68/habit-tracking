@@ -66,10 +66,10 @@
     "tapToBegin": "Appuyez pour commencer →",
     "createNewHabit": "Créer une nouvelle habitude",
     "habitsSection": {
-      "title": "Mes Habitudes",
+      "title": "Mes habitudes",
       "daily": "Quotidien",
       "weekly": "Hebdo",
-      "addHabit": "Nouvelle Habitude"
+      "addHabit": "Nouvelle habitude"
     },
     "greeting": {
       "morning": "Bonjour",
@@ -89,23 +89,23 @@
       "xpTotal": "XP"
     },
     "levelProgress": {
-      "title": "Progression de Niveau",
+      "title": "Progression de niveau",
       "nextLevel": "Niveau {{current}} → {{next}}",
       "xpRemaining": "{{amount}} XP restants",
       "currentProgress": "{{current}} / {{required}} XP"
     },
     "dailyChallenge": {
-      "title": "Défi Quotidien",
+      "title": "Défi quotidien",
       "collected": "Récupéré !",
-      "readyToClaim": "Prêt à Récupérer !",
+      "readyToClaim": "Prêt à récupérer !",
       "tasksRemaining_one": "{{count}} tâche restante",
       "tasksRemaining_other": "{{count}} tâches restantes",
-      "dailyTask_one": "{{count}} Tâche / jour",
-      "dailyTask_other": "{{count}} Tâches / jour",
-      "weeklyTask_one": "{{count}} Tâche / semaine",
-      "weeklyTask_other": "{{count}} Tâches / semaines",
+      "dailyTask_one": "{{count}} tâche / jour",
+      "dailyTask_other": "{{count}} tâches / jour",
+      "weeklyTask_one": "{{count}} tâche / semaine",
+      "weeklyTask_other": "{{count}} tâches / semaine",
       "weeklyInfo": "Les habitudes hebdomadaires peuvent être complétées à tout moment cette semaine",
-      "debugReset": "🔄 Réinitialiser le Défi (Debug)",
+      "debugReset": "🔄 Réinitialiser le défi (Debug)",
       "xpReward": "+{{amount}} XP"
     },
     "taskBadge": {
@@ -115,56 +115,56 @@
         "message": "Bravo {{name}} ! Journée parfaite, tu es inarrêtable !"
       },
       "almostPerfect": {
-        "title": "Presque Parfait !",
+        "title": "Presque parfait !",
         "subtitle": "{{name}}, la victoire est proche !",
         "message_one": "Plus que {{count}} tâche {{name}}, tu y es presque !",
         "message_other": "Plus que {{count}} tâches {{name}}, tu y es presque !"
       },
       "greatMomentum": {
-        "title": "En Feu !",
+        "title": "En feu !",
         "subtitle": "{{name}}, quel rythme !",
         "message": "Continue comme ça {{name}}, tu assures !"
       },
       "halfwayThere": {
-        "title": "À Mi-Chemin !",
+        "title": "À mi-chemin !",
         "subtitle": "{{name}}, belle progression !",
         "message": "Tu gères {{name}} ! La moitié est faite !"
       },
       "gettingStarted": {
-        "title": "C'est Parti !",
+        "title": "C'est parti !",
         "subtitle": "{{name}}, le premier pas est fait !",
         "message": "Bien joué {{name}} ! Continue sur ta lancée !"
       },
       "readyToShine": {
-        "title": "Nouvelle Journée !",
+        "title": "Nouvelle journée !",
         "subtitle": "{{name}}, c'est ton moment !",
         "message": "Allez {{name}}, montre ce que tu sais faire !"
       },
-      "tasks": "Tâches"
+      "tasks": "tâches"
     },
     "progressStatus": {
       "perfectDay": {
-        "title": "Journée Parfaite !",
+        "title": "Journée parfaite !",
         "subtitle": "Toutes les habitudes terminées",
         "message": "Travail exceptionnel ! Maintenez cet élan !"
       },
       "almostThere": {
-        "title": "Presque Parfait !",
+        "title": "Presque parfait !",
         "subtitle": "{{completed}} sur {{total}} terminées",
         "message": "Super progrès ! Plus qu'un petit peu !"
       },
       "goodProgress": {
-        "title": "Bon Progrès",
+        "title": "Bon progrès",
         "subtitle": "{{completed}} sur {{total}} terminées",
         "message": "Vous êtes à mi-chemin ! Continuez à pousser !"
       },
       "gettingStarted": {
-        "title": "C'est Parti",
+        "title": "C'est parti",
         "subtitle": "{{completed}} sur {{total}} terminées",
         "message": "Chaque pas compte ! Continuez !"
       },
       "readyToBegin": {
-        "title": "Prêt à Commencer ?",
+        "title": "Prêt à commencer ?",
         "subtitle": "Commencez par votre première habitude",
         "message": "Aujourd'hui est un excellent jour pour commencer !"
       }
@@ -194,7 +194,7 @@
     "customHabit": "Habitude personnalisée",
     "createCustom": "Créer la vôtre",
     "habitDetails": "Détails de l'habitude",
-    "tasks": "Tâches",
+    "tasks": "tâches",
     "addTask": "Ajouter une tâche",
     "goal": "Objectif",
     "notifications": "Notifications",
@@ -211,8 +211,8 @@
     "hoursLeft_other": "{{count}}h restantes",
     "unitDay": "j",
     "unitHour": "h",
-    "weeklyTasks": "Tâches Hebdomadaires",
-    "todaysTasks": "Tâches du Jour",
+    "weeklyTasks": "Tâches hebdomadaires",
+    "todaysTasks": "Tâches du jour",
     "tasksPaused_one": "{{count}} tâche en pause",
     "tasksPaused_other": "{{count}} tâches en pause",
     "dayStreak_one": "Jour",
@@ -228,16 +228,16 @@
     "level": "Niveau {{level}}",
     "tapToClose": "Touchez n'importe où pour fermer",
     "screenTitle": "Rangs",
-    "currentAchievement": "Rang Actuel",
+    "currentAchievement": "Rang actuel",
     "unlocked": "Débloqués",
-    "bestStreak": "Meilleure Série",
-    "totalXP": "XP Total",
+    "bestStreak": "Meilleure série",
+    "totalXP": "XP total",
     "next": "Suivant : {{title}}",
     "perfectDays": "Parfait",
     "habits": "Habitudes",
     "streak": "Série",
-    "achievementUnlocked": "Nouveau Rang Débloqué !",
-    "progressStatus": "État de Progression",
+    "achievementUnlocked": "Nouveau rang débloqué !",
+    "progressStatus": "État de progression",
     "unlockedAt": "Débloqué à {{count}} accomplissements",
     "requiresCompletions": "Nécessite {{count}} accomplissements au total",
     "moreNeeded": "{{count}} de plus nécessaires • {{percent}}% complété",
@@ -246,7 +246,7 @@
     "all": "Tous",
     "lockedBadge": "Verrouillé",
     "complete": "Terminé",
-    "percentComplete": "{{percent}}% Terminé",
+    "percentComplete": "{{percent}}% terminé",
     "filters": {
       "all": "Tous",
       "unlocked": "Débloqués",
@@ -254,55 +254,55 @@
     },
     "tiers": {
       "novice": "Novice",
-      "risingHero": "Héros Montant",
-      "masteryAwakens": "Éveil de la Maîtrise",
-      "legendaryAscent": "Ascension Légendaire",
-      "epicMastery": "Maîtrise Épique",
-      "mythicGlory": "Gloire Mythique",
-      "celestialAscension": "Ascension Céleste",
-      "infernalDominion": "Domination Infernale"
+      "risingHero": "Héros montant",
+      "masteryAwakens": "Éveil de la maîtrise",
+      "legendaryAscent": "Ascension légendaire",
+      "epicMastery": "Maîtrise épique",
+      "mythicGlory": "Gloire mythique",
+      "celestialAscension": "Ascension céleste",
+      "infernalDominion": "Domination infernale"
     },
     "titles": {
-      "level1": "Le Premier Pas",
+      "level1": "Le premier pas",
       "level2": "Éclaireur",
-      "level3": "Apprenti de la Discipline",
-      "level4": "Chercheur de Détermination",
-      "level5": "Porteur de la Flamme",
-      "level6": "Écuyer des Habitudes",
+      "level3": "Apprenti de la discipline",
+      "level4": "Chercheur de détermination",
+      "level5": "Porteur de la flamme",
+      "level6": "Écuyer des habitudes",
       "level7": "L'Inébranlable",
-      "level8": "Gardien de la Routine",
-      "level9": "Gardien du Chemin",
-      "level10": "Chevalier de la Constance",
-      "level11": "Champion de la Concentration",
-      "level12": "Briseur de Limites",
+      "level8": "Gardien de la routine",
+      "level9": "Gardien du chemin",
+      "level10": "Chevalier de la constance",
+      "level11": "Champion de la concentration",
+      "level12": "Briseur de limites",
       "level13": "L'Inflexible",
-      "level14": "Gardien du Progrès",
+      "level14": "Gardien du progrès",
       "level15": "Héros de l'Élan",
-      "level16": "Lame de la Détermination",
-      "level17": "Défenseur de la Discipline",
-      "level18": "La Volonté de Fer",
+      "level16": "Lame de la détermination",
+      "level17": "Défenseur de la discipline",
+      "level18": "La volonté de fer",
       "level19": "Maître de l'Effort",
-      "level20": "Le Vainqueur Doré",
+      "level20": "Le vainqueur doré",
       "level21": "L'Implacable",
-      "level22": "Tempête des Habitudes",
-      "level23": "Le Phénix Renaissant",
-      "level24": "Champion du Temps",
-      "level25": "Le Conquérant Couronné",
-      "level26": "La Flamme Éternelle",
-      "level27": "Titan de la Constance",
+      "level22": "Tempête des habitudes",
+      "level23": "Le phénix renaissant",
+      "level24": "Champion du temps",
+      "level25": "Le conquérant couronné",
+      "level26": "La flamme éternelle",
+      "level27": "Titan de la constance",
       "level28": "L'Invincible",
       "level29": "Légende de l'Effort",
       "level30": "L'Élevé",
-      "level31": "Gardien Céleste",
-      "level32": "Champion Stellaire",
-      "level33": "Sentinelle Cosmique",
-      "level34": "Souverain Éthéré",
-      "level35": "Maître Transcendant",
-      "level36": "Seigneur des Cendres",
-      "level37": "Forgeron Infernal",
-      "level38": "Empereur des Flammes",
-      "level39": "Titan du Brasier",
-      "level40": "Dieu de l'Inferno"
+      "level31": "Gardien céleste",
+      "level32": "Champion stellaire",
+      "level33": "Sentinelle cosmique",
+      "level34": "Souverain éthéré",
+      "level35": "Maître transcendant",
+      "level36": "Seigneur des cendres",
+      "level37": "Forgeron infernal",
+      "level38": "Empereur des flammes",
+      "level39": "Titan du brasier",
+      "level40": "Dieu de l'inferno"
     }
   },
   "settings": {
@@ -327,21 +327,21 @@
     "manageNotificationsSubtitle": "Personnaliser les rappels pour chaque habitude",
     "subscription": "Abonnement",
     "premium": "Fonctionnalités Premium",
-    "premiumActive": "Premium Actif",
-    "freePlan": "Plan Gratuit",
+    "premiumActive": "Premium actif",
+    "freePlan": "Plan gratuit",
     "managePremium": "Gérer l'abonnement",
     "managePremiumSubtitle": "Annuler ou modifier votre plan",
     "upgradePremium": "Passer à Premium",
     "upgradePremiumSubtitle": "Débloquez des habitudes et fonctionnalités illimitées",
     "upgrade": "Passer à Premium",
-    "holidayMode": "Mode Vacances",
-    "breakMode": "Mode Pause",
+    "holidayMode": "Mode vacances",
+    "breakMode": "Mode pause",
     "holidayUnlimited": "Périodes de vacances illimitées disponibles",
     "holidayLimited": "Max 14 jours par période • {{periods}} période restante",
     "holidayDaysRemaining": "Se termine le {{date}} • {{count}} jours restants",
     "active": "Actif",
     "streakSavers": "Sauvegardes de série",
-    "buyStreakSavers": "Acheter des Sauvegardes",
+    "buyStreakSavers": "Acheter des sauvegardes",
     "buyStreakSaversSubtitle": "Protégez vos séries des jours manqués",
     "viewPaywall": "Voir les offres Premium",
     "viewPaywallSubtitle": "Découvrir les fonctionnalités et tarifs",
@@ -367,14 +367,14 @@
     "whatsNew": "Quoi de neuf",
     "languageChangeInfo": "L'application se mettra à jour immédiatement lorsque vous sélectionnerez une nouvelle langue.",
     "languageChangeError": "Échec du changement de langue. Veuillez réessayer.",
-    "dailyMotivation": "Motivation Quotidienne",
+    "dailyMotivation": "Motivation quotidienne",
     "dailyMotivationEnabled": "À chaque ouverture",
     "dailyMotivationDisabled": "Une fois par jour",
-    "compactHeader": "En-tête Dashboard Compact",
+    "compactHeader": "En-tête dashboard compact",
     "compactHeaderEnabled": "Vue compacte active",
     "compactHeaderDisabled": "Vue complète",
     "compactHeaderToast": "L'en-tête compact du dashboard a été appliqué",
-    "compactHabits": "Vue Habitudes Compacte",
+    "compactHabits": "Vue habitudes compacte",
     "compactHabitsEnabled": "Vue grille active",
     "compactHabitsDisabled": "Vue liste",
     "compactHabitsToast": "La vue compacte des habitudes a été appliquée",
@@ -451,7 +451,7 @@
     }
   },
   "holidayMode": {
-    "title": "Mode Vacances",
+    "title": "Mode vacances",
     "subtitle": "Mettez vos habitudes en pause sans perdre votre progression",
     "active": "Vacances actives",
     "period": "Période",
@@ -475,7 +475,7 @@
       "scopeOptions": {
         "all": "Tout",
         "habits": "Habitudes",
-        "tasks": "Tâches"
+        "tasks": "tâches"
       },
       "selectHabits": "Sélectionner les habitudes",
       "selectTasks": "Sélectionner les tâches",
@@ -511,7 +511,7 @@
       "freezeScope": "Portée du gel",
       "all": "Tout",
       "habits": "Habitudes",
-      "tasks": "Tâches",
+      "tasks": "tâches",
       "activate": "Activer le mode vacances"
     },
     "scope": {
@@ -642,73 +642,73 @@
     "tips": {
       "habitType": [
         {
-          "title": "Bien Commencer",
+          "title": "Bien commencer",
           "content": "Les recherches montrent que créer des habitudes positives est 2,5 fois plus efficace que d'en éliminer de mauvaises. Commencez par une habitude et maîtrisez-la."
         },
         {
-          "title": "La Science",
+          "title": "La science",
           "content": "Votre cerveau forme de nouveaux chemins neuronaux à chaque répétition. Créer de bonnes habitudes forge des chemins positifs plus rapidement que d'en briser de vieux."
         }
       ],
       "category": [
         {
-          "title": "La Concentration Compte",
+          "title": "La concentration compte",
           "content": "Les études montrent que les personnes qui se concentrent sur une catégorie à la fois ont 67% plus de chances de réussir à créer des habitudes durables."
         },
         {
-          "title": "L'Effet Cumulé",
+          "title": "L'effet cumulé",
           "content": "Les petites améliorations spécifiques à une catégorie se cumulent avec le temps. Une amélioration quotidienne de 1% mène à des résultats 37 fois meilleurs en un an."
         }
       ],
       "tasks": [
         {
-          "title": "Restez Simple",
+          "title": "Restez simple",
           "content": "Les habitudes avec 1-3 actions spécifiques ont un taux de réussite 80% plus élevé que les objectifs vagues. La clarté crée l'engagement."
         },
         {
-          "title": "Empilez Vos Habitudes",
+          "title": "Empilez vos habitudes",
           "content": "Liez de nouvelles habitudes à des routines existantes. Cette technique d'empilement d'habitudes augmente l'adhésion de 58%."
         }
       ],
       "goal": [
         {
-          "title": "La Vérité des 66 Jours",
+          "title": "La vérité des 66 jours",
           "content": "Une recherche de l'University College London a révélé qu'il faut en moyenne 66 jours pour former une habitude. Donnez-vous du temps."
         },
         {
-          "title": "Échéanciers Réalistes",
+          "title": "Échéanciers réalistes",
           "content": "Les objectifs à court terme (21-30 jours) fonctionnent pour les habitudes simples. Les changements de comportement complexes nécessitent 60-90 jours pour devenir automatiques."
         }
       ],
       "frequency": [
         {
-          "title": "Victoires Quotidiennes",
+          "title": "Victoires quotidiennes",
           "content": "Les habitudes quotidiennes ont 2,5 fois plus de chances de perdurer que les hebdomadaires. La constance bat l'intensité à chaque fois."
         },
         {
-          "title": "La Récupération Compte",
+          "title": "La récupération compte",
           "content": "Pour les habitudes physiques, des jours de repos stratégiques préviennent l'épuisement. Écoutez votre corps tout en maintenant la constance."
         }
       ],
       "notification": [
         {
-          "title": "Signaux Environnementaux",
+          "title": "Signaux environnementaux",
           "content": "Les notifications agissent comme des déclencheurs environnementaux. Les études montrent qu'elles augmentent les taux de complétion des habitudes de 40%."
         },
         {
-          "title": "Timing Optimal",
+          "title": "Timing optimal",
           "content": "Les rappels matinaux ont des taux de complétion de 65% contre 42% le soir. Choisissez des moments où votre volonté est la plus forte."
         }
       ]
     },
     "habitTypes": {
       "good": {
-        "title": "Créer une Bonne Habitude",
+        "title": "Créer une bonne habitude",
         "subtitle": "Commencez quelque chose de positif et transformateur",
         "description": "Créez de nouveaux comportements positifs qui correspondent à votre meilleur moi"
       },
       "bad": {
-        "title": "Arrêter une Mauvaise Habitude",
+        "title": "Arrêter une mauvaise habitude",
         "subtitle": "Libérez-vous de ce qui vous retient",
         "description": "Remplacez les schémas indésirables par des alternatives plus saines"
       }
@@ -716,86 +716,86 @@
     "categories": {
       "good": {
         "fitness": {
-          "label": "Fitness & Exercice",
+          "label": "Fitness et exercice",
           "description": "Développer force et endurance",
-          "habitName": "Parcours Fitness"
+          "habitName": "Parcours fitness"
         },
         "health": {
-          "label": "Santé & Bien-être",
+          "label": "Santé et bien-être",
           "description": "Améliorer le bien-être global",
-          "habitName": "Santé & Bien-être"
+          "habitName": "Santé et bien-être"
         },
         "nutrition": {
           "label": "Nutrition",
           "description": "Habitudes alimentaires saines",
-          "habitName": "Alimentation Saine"
+          "habitName": "Alimentation saine"
         },
         "learning": {
-          "label": "Apprentissage & Croissance",
+          "label": "Apprentissage et croissance",
           "description": "Élargir vos connaissances",
-          "habitName": "Apprentissage Quotidien"
+          "habitName": "Apprentissage quotidien"
         },
         "productivity": {
           "label": "Productivité",
           "description": "Maximiser votre efficacité",
-          "habitName": "Boost de Productivité"
+          "habitName": "Boost de productivité"
         },
         "mindfulness": {
-          "label": "Pleine Conscience",
+          "label": "Pleine conscience",
           "description": "Clarté mentale et concentration",
-          "habitName": "Vie Consciente"
+          "habitName": "Vie consciente"
         },
         "sleep": {
-          "label": "Qualité du Sommeil",
+          "label": "Qualité du sommeil",
           "description": "Meilleur repos et récupération",
-          "habitName": "Meilleur Sommeil"
+          "habitName": "Meilleur sommeil"
         },
         "hydration": {
           "label": "Hydratation",
           "description": "Rester bien hydraté",
-          "habitName": "Rester Hydraté"
+          "habitName": "Rester hydraté"
         }
       },
       "bad": {
         "smoking": {
           "label": "Tabagisme",
           "description": "Arrêter les produits du tabac",
-          "habitName": "Arrêter de Fumer"
+          "habitName": "Arrêter de fumer"
         },
         "junk-food": {
           "label": "Malbouffe",
           "description": "Réduire la consommation de malbouffe",
-          "habitName": "Arrêter la Malbouffe"
+          "habitName": "Arrêter la malbouffe"
         },
         "shopping": {
-          "label": "Achats Compulsifs",
+          "label": "Achats compulsifs",
           "description": "Contrôler les habitudes de dépenses",
-          "habitName": "Contrôler les Achats"
+          "habitName": "Contrôler les achats"
         },
         "screen-time": {
-          "label": "Temps d'Écran Excessif",
+          "label": "Temps d'écran excessif",
           "description": "Réduire l'utilisation des appareils",
-          "habitName": "Réduire le Temps d'Écran"
+          "habitName": "Réduire le temps d'écran"
         },
         "procrastination": {
           "label": "Procrastination",
           "description": "Arrêter de reporter les tâches",
-          "habitName": "Arrêter de Procrastiner"
+          "habitName": "Arrêter de procrastiner"
         },
         "negative-thinking": {
-          "label": "Pensées Négatives",
+          "label": "Pensées négatives",
           "description": "Cultiver la positivité",
-          "habitName": "Arrêter les Pensées Négatives"
+          "habitName": "Arrêter les pensées négatives"
         },
         "alcohol": {
           "label": "Alcool",
           "description": "Réduire la consommation d'alcool",
-          "habitName": "Arrêter l'Alcool"
+          "habitName": "Arrêter l'alcool"
         },
         "oversleeping": {
-          "label": "Grasses Matinées",
+          "label": "Grasses matinées",
           "description": "Se lever plus tôt",
-          "habitName": "Arrêter de Trop Dormir"
+          "habitName": "Arrêter de trop dormir"
         }
       }
     },
@@ -803,27 +803,27 @@
       "fitness": {
         "good": {
           "morning-run": {
-            "name": "Course Matinale",
+            "name": "Course matinale",
             "description": "Faire un jogging ou une course",
             "duration": "30 min"
           },
           "gym-workout": {
-            "name": "Séance de Gym",
+            "name": "Séance de gym",
             "description": "Compléter une séance de gym",
             "duration": "45 min"
           },
           "yoga-session": {
-            "name": "Pratique du Yoga",
+            "name": "Pratique du yoga",
             "description": "Compléter une routine de yoga",
             "duration": "20 min"
           },
           "push-ups": {
-            "name": "50 Pompes",
+            "name": "50 pompes",
             "description": "Faire 50 pompes dans la journée",
             "duration": "10 min"
           },
           "walk-10k": {
-            "name": "10 000 Pas",
+            "name": "10 000 pas",
             "description": "Marcher 10 000 pas",
             "duration": "Toute la journée"
           },
@@ -835,17 +835,17 @@
         },
         "bad": {
           "no-elevator": {
-            "name": "Éviter l'Ascenseur",
+            "name": "Éviter l'ascenseur",
             "description": "Prendre les escaliers",
             "duration": "Toute la journée"
           },
           "no-couch": {
-            "name": "Pas de Canapé",
+            "name": "Pas de canapé",
             "description": "Limiter le temps assis",
             "duration": "Toute la journée"
           },
           "active-breaks": {
-            "name": "Pauses Actives",
+            "name": "Pauses actives",
             "description": "Bouger toutes les heures",
             "duration": "5 min/heure"
           }
@@ -859,44 +859,44 @@
             "duration": "15 min"
           },
           "deep-breathing": {
-            "name": "Respiration Profonde",
+            "name": "Respiration profonde",
             "description": "5 minutes d'exercices de respiration",
             "duration": "5 min"
           },
           "cold-shower": {
-            "name": "Douche Froide",
+            "name": "Douche froide",
             "description": "Prendre une douche froide",
             "duration": "5 min"
           },
           "vitamins": {
-            "name": "Prendre des Vitamines",
+            "name": "Prendre des vitamines",
             "description": "Suppléments vitaminiques quotidiens",
             "duration": "1 min"
           },
           "skincare": {
-            "name": "Routine Beauté",
+            "name": "Routine beauté",
             "description": "Soins de la peau matin/soir",
             "duration": "10 min"
           },
           "health-checkup": {
-            "name": "Contrôle Santé",
+            "name": "Contrôle santé",
             "description": "Surveiller les signes vitaux",
             "duration": "5 min"
           }
         },
         "bad": {
           "no-stress": {
-            "name": "Gestion du Stress",
+            "name": "Gestion du stress",
             "description": "Éviter les situations stressantes",
             "duration": "Toute la journée"
           },
           "no-late-nights": {
-            "name": "Pas de Veillées Tardives",
+            "name": "Pas de veillées tardives",
             "description": "Dormir avant minuit",
             "duration": "Soirée"
           },
           "no-overwork": {
-            "name": "Éviter le Surmenage",
+            "name": "Éviter le surmenage",
             "description": "Prendre des pauses régulières",
             "duration": "Toute la journée"
           }
@@ -905,49 +905,49 @@
       "nutrition": {
         "good": {
           "healthy-breakfast": {
-            "name": "Petit-Déjeuner Sain",
+            "name": "Petit-déjeuner sain",
             "description": "Repas matinal nutritif",
             "duration": "20 min"
           },
           "fruit-serving": {
-            "name": "Manger des Fruits",
+            "name": "Manger des fruits",
             "description": "2-3 portions de fruits",
             "duration": "5 min"
           },
           "vegetables": {
-            "name": "Manger des Légumes",
+            "name": "Manger des légumes",
             "description": "5 portions de légumes",
             "duration": "Repas"
           },
           "meal-prep": {
-            "name": "Préparation de Repas",
+            "name": "Préparation de repas",
             "description": "Préparer des repas sains",
             "duration": "30 min"
           },
           "protein-intake": {
-            "name": "Objectifs Protéines",
+            "name": "Objectifs protéines",
             "description": "Atteindre les objectifs de protéines",
             "duration": "Repas"
           },
           "whole-grains": {
-            "name": "Céréales Complètes",
+            "name": "Céréales complètes",
             "description": "Choisir des céréales complètes",
             "duration": "Repas"
           }
         },
         "bad": {
           "no-fast-food": {
-            "name": "Pas de Fast-Food",
+            "name": "Pas de fast-food",
             "description": "Éviter le fast-food",
             "duration": "Toute la journée"
           },
           "no-sugar": {
-            "name": "Limiter le Sucre",
+            "name": "Limiter le sucre",
             "description": "Réduire l'apport en sucre",
             "duration": "Toute la journée"
           },
           "no-late-snacks": {
-            "name": "Pas de Grignotage Tardif",
+            "name": "Pas de grignotage tardif",
             "description": "Ne pas manger après 20h",
             "duration": "Soirée"
           }
@@ -956,49 +956,49 @@
       "learning": {
         "good": {
           "read-book": {
-            "name": "Lire un Livre",
+            "name": "Lire un livre",
             "description": "Lire pour apprendre",
             "duration": "30 min"
           },
           "online-course": {
-            "name": "Cours en Ligne",
+            "name": "Cours en ligne",
             "description": "Compléter un module de cours",
             "duration": "45 min"
           },
           "practice-skill": {
-            "name": "Pratiquer une Compétence",
+            "name": "Pratiquer une compétence",
             "description": "Développement de compétences",
             "duration": "30 min"
           },
           "language-study": {
-            "name": "Étude de Langue",
+            "name": "Étude de langue",
             "description": "Apprendre une nouvelle langue",
             "duration": "20 min"
           },
           "write-journal": {
-            "name": "Écriture de Journal",
+            "name": "Écriture de journal",
             "description": "Réfléchir et écrire",
             "duration": "15 min"
           },
           "watch-tutorial": {
-            "name": "Regarder un Tutoriel",
+            "name": "Regarder un tutoriel",
             "description": "Vidéos éducatives",
             "duration": "20 min"
           }
         },
         "bad": {
           "no-distractions": {
-            "name": "Éviter les Distractions",
+            "name": "Éviter les distractions",
             "description": "Se concentrer sur l'apprentissage",
             "duration": "Temps d'étude"
           },
           "no-multitask": {
-            "name": "Pas de Multitâche",
+            "name": "Pas de multitâche",
             "description": "Une tâche à la fois",
             "duration": "Temps d'étude"
           },
           "no-cramming": {
-            "name": "Pas de Bourrage",
+            "name": "Pas de bourrage",
             "description": "Horaire d'étude régulier",
             "duration": "Quotidien"
           }
@@ -1007,59 +1007,59 @@
       "productivity": {
         "good": {
           "morning-routine": {
-            "name": "Routine Matinale",
+            "name": "Routine matinale",
             "description": "Bien commencer la journée",
             "duration": "30 min"
           },
           "time-blocking": {
-            "name": "Blocs de Temps",
+            "name": "Blocs de temps",
             "description": "Planifier les tâches",
             "duration": "15 min"
           },
           "pomodoro": {
-            "name": "Session Pomodoro",
+            "name": "Session pomodoro",
             "description": "25 min de travail concentré",
             "duration": "25 min"
           },
           "daily-review": {
-            "name": "Revue Quotidienne",
+            "name": "Revue quotidienne",
             "description": "Réviser les progrès",
             "duration": "10 min"
           },
           "priority-tasks": {
-            "name": "Top 3 Tâches",
+            "name": "Top 3 tâches",
             "description": "Compléter les priorités",
             "duration": "Variable"
           },
           "inbox-zero": {
-            "name": "Inbox Zéro",
+            "name": "Inbox zéro",
             "description": "Vider tous les emails",
             "duration": "20 min"
           },
           "plan-day": {
-            "name": "Planifier sa Journée",
+            "name": "Planifier sa journée",
             "description": "Définir les objectifs du jour",
             "duration": "10 min"
           },
           "weekly-review": {
-            "name": "Revue Hebdomadaire",
+            "name": "Revue hebdomadaire",
             "description": "Réviser les progrès de la semaine",
             "duration": "30 min"
           },
           "track-goals": {
-            "name": "Suivre ses Objectifs",
+            "name": "Suivre ses objectifs",
             "description": "Surveiller la progression",
             "duration": "15 min"
           }
         },
         "bad": {
           "no-social-media": {
-            "name": "Pas de Réseaux Sociaux",
+            "name": "Pas de réseaux sociaux",
             "description": "Pendant les heures de travail",
             "duration": "Heures de travail"
           },
           "no-procrastination": {
-            "name": "Commencer les Tâches",
+            "name": "Commencer les tâches",
             "description": "Ne pas reporter les tâches",
             "duration": "Toute la journée"
           },
@@ -1078,22 +1078,22 @@
             "duration": "15 min"
           },
           "gratitude": {
-            "name": "Pratique de Gratitude",
+            "name": "Pratique de gratitude",
             "description": "Lister 3 choses",
             "duration": "5 min"
           },
           "breathing": {
-            "name": "Exercice de Respiration",
+            "name": "Exercice de respiration",
             "description": "Respiration profonde",
             "duration": "5 min"
           },
           "nature-walk": {
-            "name": "Marche dans la Nature",
+            "name": "Marche dans la nature",
             "description": "Marche consciente",
             "duration": "20 min"
           },
           "body-scan": {
-            "name": "Scan Corporel",
+            "name": "Scan corporel",
             "description": "Conscience du corps",
             "duration": "10 min"
           },
@@ -1110,12 +1110,12 @@
             "duration": "Toute la journée"
           },
           "no-negativity": {
-            "name": "Pensée Positive",
+            "name": "Pensée positive",
             "description": "Éviter les pensées négatives",
             "duration": "Toute la journée"
           },
           "no-overthinking": {
-            "name": "Arrêter de Sur-Réfléchir",
+            "name": "Arrêter de sur-réfléchir",
             "description": "Être présent",
             "duration": "Toute la journée"
           }
@@ -1124,39 +1124,39 @@
       "sleep": {
         "good": {
           "bedtime-routine": {
-            "name": "Routine du Coucher",
+            "name": "Routine du coucher",
             "description": "Rituel de détente",
             "duration": "30 min"
           },
           "sleep-8hrs": {
-            "name": "8 Heures de Sommeil",
+            "name": "8 heures de sommeil",
             "description": "Repos complet",
             "duration": "8 heures"
           },
           "wake-same-time": {
-            "name": "Heure de Réveil Constante",
+            "name": "Heure de réveil constante",
             "description": "Se réveiller à la même heure",
             "duration": "Matin"
           },
           "bedroom-prep": {
-            "name": "Préparer la Chambre",
+            "name": "Préparer la chambre",
             "description": "Chambre fraîche, sombre, silencieuse",
             "duration": "10 min"
           }
         },
         "bad": {
           "no-caffeine-pm": {
-            "name": "Pas de Caféine Tardive",
+            "name": "Pas de caféine tardive",
             "description": "Éviter la caféine après 14h",
             "duration": "Après-midi"
           },
           "no-naps": {
-            "name": "Pas de Longues Siestes",
+            "name": "Pas de longues siestes",
             "description": "Éviter le sommeil diurne",
             "duration": "Journée"
           },
           "no-snooze": {
-            "name": "Pas de Bouton Snooze",
+            "name": "Pas de bouton snooze",
             "description": "Se lever immédiatement",
             "duration": "Matin"
           }
@@ -1165,12 +1165,12 @@
       "hydration": {
         "good": {
           "water-morning": {
-            "name": "Eau du Matin",
+            "name": "Eau du matin",
             "description": "Verre d'eau au réveil",
             "duration": "1 min"
           },
           "water-8-glasses": {
-            "name": "8 Verres d'Eau",
+            "name": "8 verres d'eau",
             "description": "Boire 8 verres par jour",
             "duration": "Toute la journée"
           },
@@ -1180,29 +1180,29 @@
             "duration": "10 min"
           },
           "water-bottle": {
-            "name": "Bouteille d'Eau",
+            "name": "Bouteille d'eau",
             "description": "Garder l'eau accessible",
             "duration": "Toute la journée"
           },
           "infused-water": {
-            "name": "Eau Infusée",
+            "name": "Eau infusée",
             "description": "Ajouter des fruits à l'eau",
             "duration": "5 min"
           }
         },
         "bad": {
           "no-soda": {
-            "name": "Pas de Soda",
+            "name": "Pas de soda",
             "description": "Éviter les boissons sucrées",
             "duration": "Toute la journée"
           },
           "no-alcohol": {
-            "name": "Limiter l'Alcool",
+            "name": "Limiter l'alcool",
             "description": "Réduire la consommation d'alcool",
             "duration": "Toute la journée"
           },
           "no-energy-drinks": {
-            "name": "Pas de Boissons Énergisantes",
+            "name": "Pas de boissons énergisantes",
             "description": "Éviter les boissons énergisantes",
             "duration": "Toute la journée"
           }
@@ -1211,34 +1211,34 @@
       "smoking": {
         "good": {
           "breathing-exercises": {
-            "name": "Exercices de Respiration",
+            "name": "Exercices de respiration",
             "description": "Respiration profonde lors des envies",
             "duration": "5 min"
           },
           "chew-gum": {
-            "name": "Mâcher du Chewing-Gum",
+            "name": "Mâcher du chewing-gum",
             "description": "Chewing-gum sans sucre en alternative",
             "duration": "Au besoin"
           },
           "stay-hydrated": {
-            "name": "Boire de l'Eau",
+            "name": "Boire de l'eau",
             "description": "Éliminer les toxines",
             "duration": "Toute la journée"
           }
         },
         "bad": {
           "no-smoking": {
-            "name": "Pas de Cigarettes",
+            "name": "Pas de cigarettes",
             "description": "Suivre les jours sans fumer",
             "duration": "Toute la journée"
           },
           "avoid-triggers": {
-            "name": "Éviter les Déclencheurs",
+            "name": "Éviter les déclencheurs",
             "description": "Éviter les zones fumeurs",
             "duration": "Toute la journée"
           },
           "no-smoke-breaks": {
-            "name": "Pas de Pauses Cigarette",
+            "name": "Pas de pauses cigarette",
             "description": "Faire des promenades à la place",
             "duration": "Pauses"
           }
@@ -1247,54 +1247,54 @@
       "junk-food": {
         "good": {
           "healthy-snacks": {
-            "name": "Collations Saines",
+            "name": "Collations saines",
             "description": "Préparer des alternatives nutritives",
             "duration": "10 min"
           },
           "meal-planning": {
-            "name": "Planifier les Repas",
+            "name": "Planifier les repas",
             "description": "Préparer des options saines",
             "duration": "30 min"
           },
           "grocery-smart": {
-            "name": "Courses Intelligentes",
+            "name": "Courses intelligentes",
             "description": "Acheter seulement des aliments complets",
             "duration": "Hebdomadaire"
           }
         },
         "bad": {
           "no-junk-food": {
-            "name": "Pas de Malbouffe",
+            "name": "Pas de malbouffe",
             "description": "Éviter les aliments transformés",
             "duration": "Toute la journée"
           },
           "no-drive-thru": {
-            "name": "Pas de Drive",
+            "name": "Pas de drive",
             "description": "Éviter les fast-foods",
             "duration": "Toute la journée"
           },
           "no-vending-machine": {
-            "name": "Pas de Distributeurs",
+            "name": "Pas de distributeurs",
             "description": "Éviter les collations malsaines",
             "duration": "Toute la journée"
           },
           "no-fast-food": {
-            "name": "Pas de Fast-Food",
+            "name": "Pas de fast-food",
             "description": "Éviter les restaurants rapides",
             "duration": "Toute la journée"
           },
           "cook-home": {
-            "name": "Cuisiner à la Maison",
+            "name": "Cuisiner à la maison",
             "description": "Préparer ses repas soi-même",
             "duration": "Repas"
           },
           "grocery-list": {
-            "name": "Liste de Courses",
+            "name": "Liste de courses",
             "description": "Planifier ses achats alimentaires",
             "duration": "Hebdomadaire"
           },
           "read-labels": {
-            "name": "Lire les Étiquettes",
+            "name": "Lire les étiquettes",
             "description": "Vérifier les ingrédients",
             "duration": "Courses"
           }
@@ -1303,12 +1303,12 @@
       "shopping": {
         "good": {
           "budget-tracking": {
-            "name": "Suivre le Budget",
+            "name": "Suivre le budget",
             "description": "Surveiller les dépenses quotidiennes",
             "duration": "10 min"
           },
           "shopping-list": {
-            "name": "Utiliser une Liste",
+            "name": "Utiliser une liste",
             "description": "Acheter seulement ce qui est nécessaire",
             "duration": "Avant les courses"
           },
@@ -1320,17 +1320,17 @@
         },
         "bad": {
           "no-impulse-buy": {
-            "name": "Pas d'Achats Impulsifs",
+            "name": "Pas d'achats impulsifs",
             "description": "Attendre 24h avant d'acheter",
             "duration": "Shopping"
           },
           "unsubscribe-emails": {
-            "name": "Se Désabonner des Promos",
+            "name": "Se désabonner des promos",
             "description": "Retirer les tentations d'achats",
             "duration": "Une fois"
           },
           "no-browsing": {
-            "name": "Pas de Lèche-Vitrine",
+            "name": "Pas de lèche-vitrine",
             "description": "Éviter les boutiques en ligne",
             "duration": "Toute la journée"
           }
@@ -1339,34 +1339,34 @@
       "screen-time": {
         "good": {
           "read-physical-book": {
-            "name": "Lire des Livres Papier",
+            "name": "Lire des livres papier",
             "description": "Remplacer le temps d'écran par la lecture",
             "duration": "30 min"
           },
           "outdoor-activity": {
-            "name": "Sortir Dehors",
+            "name": "Sortir dehors",
             "description": "Passer du temps dans la nature",
             "duration": "30 min"
           },
           "face-to-face": {
-            "name": "Temps en Personne",
+            "name": "Temps en personne",
             "description": "Rencontrer les gens hors ligne",
             "duration": "Quotidien"
           }
         },
         "bad": {
           "no-phone-bed": {
-            "name": "Pas de Téléphone au Lit",
+            "name": "Pas de téléphone au lit",
             "description": "Garder les appareils hors de la chambre",
             "duration": "Coucher"
           },
           "limit-social-media": {
-            "name": "Limiter les Réseaux Sociaux",
+            "name": "Limiter les réseaux sociaux",
             "description": "Définir des limites de temps",
             "duration": "30 min max"
           },
           "no-binge-watching": {
-            "name": "Pas de Visionnage Excessif",
+            "name": "Pas de visionnage excessif",
             "description": "Limiter le temps de streaming",
             "duration": "Toute la journée"
           }
@@ -1375,34 +1375,34 @@
       "procrastination": {
         "good": {
           "start-immediately": {
-            "name": "Commencer Immédiatement",
+            "name": "Commencer immédiatement",
             "description": "Règle des 2 minutes pour les tâches",
             "duration": "2 min"
           },
           "break-tasks-down": {
-            "name": "Décomposer les Tâches",
+            "name": "Décomposer les tâches",
             "description": "Rendre les tâches gérables",
             "duration": "10 min"
           },
           "time-block": {
-            "name": "Blocs de Temps",
+            "name": "Blocs de temps",
             "description": "Planifier des heures de travail spécifiques",
             "duration": "Quotidien"
           }
         },
         "bad": {
           "no-delay": {
-            "name": "Ne Pas Reporter",
+            "name": "Ne pas reporter",
             "description": "Faire maintenant, pas plus tard",
             "duration": "Toute la journée"
           },
           "no-excuses": {
-            "name": "Pas d'Excuses",
+            "name": "Pas d'excuses",
             "description": "Agir quoi qu'il arrive",
             "duration": "Toute la journée"
           },
           "no-distractions": {
-            "name": "Éliminer les Distractions",
+            "name": "Éliminer les distractions",
             "description": "Se concentrer sur une tâche",
             "duration": "Temps de travail"
           }
@@ -1411,34 +1411,34 @@
       "negative-thinking": {
         "good": {
           "positive-affirmations": {
-            "name": "Affirmations Positives",
+            "name": "Affirmations positives",
             "description": "Pratiquer les affirmations quotidiennes",
             "duration": "5 min"
           },
           "gratitude-journal": {
-            "name": "Journal de Gratitude",
+            "name": "Journal de gratitude",
             "description": "Écrire 3 choses pour lesquelles être reconnaissant",
             "duration": "10 min"
           },
           "reframe-thoughts": {
-            "name": "Recadrer les Pensées",
+            "name": "Recadrer les pensées",
             "description": "Trouver des perspectives positives",
             "duration": "Au besoin"
           }
         },
         "bad": {
           "no-complaining": {
-            "name": "Ne Pas Se Plaindre",
+            "name": "Ne pas se plaindre",
             "description": "Éviter les discours négatifs",
             "duration": "Toute la journée"
           },
           "no-self-criticism": {
-            "name": "Pas d'Auto-Critique",
+            "name": "Pas d'auto-critique",
             "description": "Être bienveillant envers soi-même",
             "duration": "Toute la journée"
           },
           "no-catastrophizing": {
-            "name": "Pas de Catastrophisme",
+            "name": "Pas de catastrophisme",
             "description": "Arrêter de penser au pire scénario",
             "duration": "Toute la journée"
           }
@@ -1447,34 +1447,34 @@
       "alcohol": {
         "good": {
           "mocktails": {
-            "name": "Boire des Mocktails",
+            "name": "Boire des mocktails",
             "description": "Profiter de boissons sans alcool",
             "duration": "Événements sociaux"
           },
           "exercise-instead": {
-            "name": "Faire de l'Exercice",
+            "name": "Faire de l'exercice",
             "description": "Activité physique en alternative",
             "duration": "30 min"
           },
           "support-group": {
-            "name": "Groupe de Soutien",
+            "name": "Groupe de soutien",
             "description": "Se connecter avec d'autres",
             "duration": "Hebdomadaire"
           }
         },
         "bad": {
           "no-alcohol": {
-            "name": "Pas d'Alcool",
+            "name": "Pas d'alcool",
             "description": "Suivre les jours sans alcool",
             "duration": "Toute la journée"
           },
           "avoid-bars": {
-            "name": "Éviter les Bars",
+            "name": "Éviter les bars",
             "description": "Éviter les lieux de consommation",
             "duration": "Toute la journée"
           },
           "no-home-stocking": {
-            "name": "Pas d'Alcool à la Maison",
+            "name": "Pas d'alcool à la maison",
             "description": "Retirer de la maison",
             "duration": "Permanent"
           }
@@ -1483,34 +1483,34 @@
       "oversleeping": {
         "good": {
           "consistent-bedtime": {
-            "name": "Heure de Coucher Constante",
+            "name": "Heure de coucher constante",
             "description": "Dormir à la même heure",
             "duration": "Soirée"
           },
           "morning-routine": {
-            "name": "Routine Matinale",
+            "name": "Routine matinale",
             "description": "Activités matinales motivantes",
             "duration": "30 min"
           },
           "sunlight-exposure": {
-            "name": "S'Exposer au Soleil",
+            "name": "S'exposer au soleil",
             "description": "Exposition à la lumière matinale",
             "duration": "15 min"
           }
         },
         "bad": {
           "no-snooze": {
-            "name": "Pas de Bouton Snooze",
+            "name": "Pas de bouton snooze",
             "description": "Se lever à la première alarme",
             "duration": "Matin"
           },
           "no-late-sleep": {
-            "name": "Pas de Coucher Tardif",
+            "name": "Pas de coucher tardif",
             "description": "Dormir avant minuit",
             "duration": "Soirée"
           },
           "alarm-far-away": {
-            "name": "Alarme à Distance",
+            "name": "Alarme à distance",
             "description": "Se forcer à se lever",
             "duration": "Coucher"
           }
@@ -1521,7 +1521,7 @@
   "wizard": {
     "navigation": {
       "continue": "Continuer",
-      "createHabit": "Créer l'Habitude",
+      "createHabit": "Créer l'habitude",
       "creating": "Création..."
     },
     "alerts": {
@@ -1550,13 +1550,13 @@
         "message": "Choisissez au moins une tâche à suivre"
       },
       "notificationsEnabled": {
-        "title": "Notifications Activées! 🔔",
+        "title": "Notifications activées ! 🔔",
         "message": "Vous recevrez des rappels pour rester sur la bonne voie.",
-        "button": "Parfait!"
+        "button": "Parfait !"
       },
       "notificationsDisabled": {
-        "title": "Notifications Désactivées",
-        "message": "Vous pouvez les activer plus tard dans les Paramètres.",
+        "title": "Notifications désactivées",
+        "message": "Vous pouvez les activer plus tard dans les paramètres.",
         "button": "OK"
       },
       "error": {
@@ -1571,54 +1571,54 @@
       }
     },
     "habitTypeSelector": {
-      "title": "Choisissez Votre Parcours",
+      "title": "Choisissez votre parcours",
       "subtitle": "Construisez-vous quelque chose de nouveau ou vous souhaitez perdre une mauvaise habitude ?",
-      "buildHabit": "Créer une Habitude",
+      "buildHabit": "Créer une habitude",
       "buildHabitDescription": "Créer des routines positives",
-      "breakHabit": "Arrêter une Habitude",
+      "breakHabit": "Arrêter une habitude",
       "breakHabitDescription": "Perdre une mauvaise habitude",
       "quote": "\"Chaque action que vous entreprenez est un vote pour\nla personne que vous souhaitez devenir\""
     },
     "habitCategorySelector": {
-      "title": "Choisissez Votre Focus",
+      "title": "Choisissez votre focus",
       "subtitleGood": "Sélectionnez le domaine que vous souhaitez améliorer",
       "subtitleBad": "Que souhaitez-vous surmonter ?",
-      "createCustom": "Créer une Habitude Personnalisée",
+      "createCustom": "Créer une habitude personnalisée",
       "createCustomDescriptionGood": "Construire quelque chose d'unique",
       "createCustomDescriptionBad": "Définir votre propre objectif",
       "tip": "Choisissez la catégorie qui résonne le plus\navec vos objectifs actuels"
     },
     "customHabitCreator": {
-      "title": "Nommez Votre Habitude",
+      "title": "Nommez votre habitude",
       "subtitle": "Rendez-la personnelle et significative",
-      "habitName": "Nom de l'Habitude",
-      "habitNamePlaceholder": "ex: Entraînement Matinal",
+      "habitName": "Nom de l'habitude",
+      "habitNamePlaceholder": "ex: Entraînement matinal",
       "characters": "caractères",
-      "chooseIcon": "Choisir une Icône",
+      "chooseIcon": "Choisir une icône",
       "preview": "Aperçu",
-      "customHabit": "Habitude Personnalisée",
+      "customHabit": "Habitude personnalisée",
       "tipGood": "Choisissez un nom qui vous motive quotidiennement",
       "tipBad": "Formulez votre habitude positivement"
     },
     "customTaskCreator": {
-      "title": "Définissez Vos Tâches",
+      "title": "Définissez vos tâches",
       "subtitle": "Créer des actions spécifiques pour\n\"{{habitName}}\"",
       "tasksDefined": "{{count}} sur {{max}} tâches définies",
       "taskPlaceholder": "Tâche {{number}}",
-      "addAnotherTask": "Ajouter une Autre Tâche",
-      "tasksPreview": "Aperçu des Tâches",
+      "addAnotherTask": "Ajouter une autre tâche",
+      "tasksPreview": "Aperçu des tâches",
       "tip": "Divisez vos objectifs en petites étapes\nLes progrès s'accumulent avec le temps"
     },
     "taskSelector": {
-      "title": "Choisissez Vos Tâches",
+      "title": "Choisissez vos tâches",
       "subtitle": "Sélectionnez jusqu'à {{max}} actions quotidiennes à suivre",
       "selected": "{{count}} sur {{max}} sélectionnée | {{count}} sur {{max}} sélectionnées",
       "tip": "Commencez petit et construisez votre élan\nVous pouvez toujours ajouter plus de tâches plus tard"
     },
     "goalSetting": {
-      "title": "Définissez Votre Objectif",
+      "title": "Définissez votre objectif",
       "subtitle": "Combien de temps souhaitez-vous suivre cette habitude ?",
-      "default61Days": "Défi de 61 Jours",
+      "default61Days": "Défi de 61 jours",
       "default61DaysDescription": "Formation d'habitudes basée sur la science",
       "recommended": "Recommandé",
       "orChooseCustom": "ou choisir personnalisé",
@@ -1635,7 +1635,7 @@
       "tip": "Les recherches montrent que 66 jours est le temps moyen\npour former une nouvelle habitude automatique"
     },
     "frequencySelector": {
-      "title": "Définissez Votre Rythme",
+      "title": "Définissez votre rythme",
       "subtitle": "À quelle fréquence pratiquerez-vous cette habitude ?",
       "daily": "Quotidien",
       "dailySubtitle": "Chaque jour",
@@ -1657,13 +1657,13 @@
       "tip": "Les habitudes quotidiennes sont 2,5 fois plus susceptibles de tenir\nCommencez petit et construisez votre élan"
     },
     "notificationSetup": {
-      "title": "Rappels Quotidiens",
+      "title": "Rappels quotidiens",
       "subtitle": "Recevez des coups de pouce doux pour rester sur la bonne voie",
-      "enabled": "Notifications Activées",
+      "enabled": "Notifications activées",
       "enabledDescription": "Rappel quotidien actif",
-      "disabled": "Notifications Désactivées",
+      "disabled": "Notifications désactivées",
       "disabledDescription": "Pas de rappels",
-      "permissionRequired": "Permission Requise",
+      "permissionRequired": "Permission requise",
       "permissionMessage": "Veuillez activer les notifications dans les paramètres de votre appareil.",
       "quickSelect": "Sélection rapide :",
       "morning": "Matin",
@@ -1672,7 +1672,7 @@
       "noonTime": "12h00",
       "evening": "Soir",
       "eveningTime": "18h00",
-      "customTime": "Choisir l'Heure Personnalisée",
+      "customTime": "Choisir l'heure personnalisée",
       "remindAt": "Vous serez rappelé à",
       "tipEnabled": "Choisissez une heure qui s'intègre naturellement dans votre routine",
       "tipDisabled": "Vous pouvez toujours activer les rappels plus tard dans les paramètres"
@@ -1680,7 +1680,7 @@
   },
   "calendar": {
     "title": "Calendrier",
-    "questCalendar": "Calendrier des Quêtes",
+    "questCalendar": "Calendrier des quêtes",
     "today": "Aujourd'hui",
     "selectDate": "Sélectionner une date",
     "noHabits": "Aucune habitude à afficher",
@@ -1703,9 +1703,9 @@
       "missed": "Manqué",
       "selected": "Sélectionné",
       "holiday": "Vacances",
-      "onHoliday": "En Vacances",
-      "streakProtected": "Série Protégée",
-      "holidayPeriod": "Période de Vacances"
+      "onHoliday": "En vacances",
+      "streakProtected": "Série protégée",
+      "holidayPeriod": "Période de vacances"
     },
     "messages": {
       "completedToday": "Terminé aujourd'hui",
@@ -1719,7 +1719,7 @@
       "missed": "Manqué • Demain est une nouvelle opportunité",
       "tasksReady": "{{count}} tâche prête à démarrer",
       "tasksReady_plural": "{{count}} tâches prêtes à démarrer",
-      "questComplete": "Quête Terminée !",
+      "questComplete": "Quête terminée !",
       "keepGoing": "Continue ! {{completed}} sur {{total}} fait",
       "tomorrowNewDay": "Demain est un nouveau jour !",
       "yourStreakSafe": "Votre série est protégée !",
@@ -1728,9 +1728,9 @@
       "tasksCompleted": "Tâches terminées : {{completed}}/{{total}}"
     },
     "holiday": {
-      "mode": "Mode Vacances",
+      "mode": "Mode vacances",
       "active": "Actif",
-      "streakProtected": "Série Protégée",
+      "streakProtected": "Série protégée",
       "enjoyBreak": "Profitez de votre pause ! Votre progression est sauvegardée."
     },
     "navigation": {
@@ -1749,9 +1749,9 @@
       }
     },
     "emptyState": {
-      "title": "Aucune Habitude",
+      "title": "Aucune habitude",
       "description": "Commencez votre parcours en créant votre première habitude",
-      "button": "Créer Votre Première Habitude"
+      "button": "Créer votre première habitude"
     },
     "legend": {
       "complete": "Terminé",
@@ -1827,35 +1827,35 @@
     },
     "chart": {
       "completion": "Réalisation",
-      "tasks": "Tâches",
-      "activeHabits": "Habitudes Actives",
+      "tasks": "tâches",
+      "activeHabits": "Habitudes actives",
       "noData": "Aucune donnée disponible",
       "less": "Moins",
       "more": "Plus"
     },
     "prediction": {
-      "title": "Prédiction de Succès",
+      "title": "Prédiction de succès",
       "noHabits": "Aucune habitude à suivre",
       "completed": "Réalisé",
       "required": "Requis",
       "remaining": "Restant",
-      "showLess": "Voir Moins",
-      "viewDetails": "Voir Détails",
-      "predictedCompletion": "Réalisation Prévue",
-      "safetyMargin": "Marge de Sécurité",
+      "showLess": "Voir moins",
+      "viewDetails": "Voir détails",
+      "predictedCompletion": "Réalisation prévue",
+      "safetyMargin": "Marge de sécurité",
       "safetyMarginInfo": "Jours que vous pouvez manquer tout en atteignant 70% de réalisation pour réussir votre objectif.",
-      "canSucceed": "Peut Encore Réussir ?",
+      "canSucceed": "Peut encore réussir ?",
       "yes": "Oui",
       "challenging": "Difficile",
-      "suggestedPace": "Rythme Suggéré",
-      "progressTimeline": "Chronologie de Progression",
+      "suggestedPace": "Rythme suggéré",
+      "progressTimeline": "Chronologie de progression",
       "day": "Jour",
       "days": "jours",
       "status": {
-        "excellent": "Excellent Parcours",
-        "onTrack": "Sur la Bonne Voie",
-        "needsFocus": "Besoin de Focus",
-        "atRisk": "À Risque"
+        "excellent": "Excellent parcours",
+        "onTrack": "Sur la bonne voie",
+        "needsFocus": "Besoin de focus",
+        "atRisk": "À risque"
       },
       "messages": {
         "excellent": "Vous êtes exceptionnel ! Continuez à briller",
@@ -1875,22 +1875,22 @@
     }
   },
   "holidayPremium": {
-    "title": "Mode Vacances",
+    "title": "Mode vacances",
     "subtitle": "Prenez une pause sans perdre votre progression",
     "premiumFeature": "Fonctionnalité Premium",
-    "description": "Avec Premium, profitez du Mode Vacances illimité pour protéger vos séries quand vous avez besoin d'une pause.",
+    "description": "Avec Premium, profitez du mode vacances illimité pour protéger vos séries quand vous avez besoin d'une pause.",
     "benefits": {
       "title": "Avantages",
-      "unlimited": "Jours de Vacances Illimités",
-      "unlimitedDesc": "Utilisez le Mode Vacances autant que nécessaire",
-      "protection": "Protection Complète des Séries",
+      "unlimited": "Jours de vacances illimités",
+      "unlimitedDesc": "Utilisez le mode vacances autant que nécessaire",
+      "protection": "Protection complète des séries",
       "protectionDesc": "Votre progression reste intacte pendant votre pause",
-      "flexibility": "Flexibilité Totale",
+      "flexibility": "Flexibilité totale",
       "flexibilityDesc": "Planifiez à l'avance ou activez instantanément"
     },
     "howItWorks": {
       "title": "Comment ça fonctionne",
-      "step1": "Activez le Mode Vacances",
+      "step1": "Activez le mode vacances",
       "step1Desc": "Choisissez vos dates de début et de fin",
       "step2": "Profitez de votre pause",
       "step2Desc": "Vos séries sont gelées et protégées",
@@ -1899,7 +1899,7 @@
     },
     "comparison": {
       "title": "Gratuit vs Premium",
-      "free": "Forfait Gratuit",
+      "free": "Forfait gratuit",
       "premium": "Premium",
       "limitedDays": "30 jours par an",
       "unlimitedDays": "Jours illimités",
@@ -1935,7 +1935,7 @@
     }
   },
   "habitDetails": {
-    "title": "Parcours d'Habitude",
+    "title": "Parcours d'habitude",
     "notFound": "Habitude introuvable",
     "hero": {
       "building": "Construction",
@@ -1944,7 +1944,7 @@
       "stats": {
         "streak": "Série",
         "best": "Meilleure",
-        "totalXP": "XP Total",
+        "totalXP": "XP total",
         "consistency": "Régularité"
       }
     },
@@ -1953,21 +1953,21 @@
       "tiers": "Paliers"
     },
     "tasks": {
-      "title": "Tâches du Jour",
-      "weeklyTitle": "Tâches Hebdomadaires",
+      "title": "Tâches du jour",
+      "weeklyTitle": "Tâches hebdomadaires",
       "customTitle": "Tâches",
       "completed": "{{completed}}/{{total}}",
       "pausedUntil": "En pause {{date}}",
       "pausedToday": "jusqu'à aujourd'hui",
       "pausedTomorrow": "jusqu'à demain",
       "weekCompleted": "Tâche complétée !",
-      "currentTier": "Current Tier",
-      "nextMilestone": "Next Milestone"
+      "currentTier": "Palier actuel",
+      "nextMilestone": "Prochain palier"
     },
     "milestones": {
       "title": "Paliers",
-      "currentTier": "Palier Actuel",
-      "nextMilestone": "Prochain Palier",
+      "currentTier": "Palier actuel",
+      "nextMilestone": "Prochain palier",
       "achieved": "Atteint ! +{{xp}} XP",
       "missed": "Manqué",
       "daysAway_one": "Dans {{count}} jour",
@@ -1981,16 +1981,16 @@
       "tapToClose": "Appuyez n'importe où pour fermer"
     },
     "tierCelebration": {
-      "unlocked": "Palier Débloqué",
+      "unlocked": "Palier débloqué",
       "streak": "SÉRIE",
-      "days": "{{days}}+ Jours",
+      "days": "{{days}}+ jours",
       "multiplier": "MULTIPLICATEUR",
       "xpBonus": "{{multiplier}}x XP",
       "tapToContinue": "Appuyez n'importe où pour continuer",
       "closingIn": "Fermeture dans {{seconds}} secondes..."
     },
     "streakSaver": {
-      "title": "Sauvetage de Série !",
+      "title": "Sauvetage de série !",
       "description": "Votre série de {{streak}} jours pour \"{{habitName}}\" n'a pas à se terminer !",
       "stats": {
         "days": "Jours",
@@ -2002,11 +2002,11 @@
       },
       "buttons": {
         "use": "UTILISER UN SAUVETAGE",
-        "maybeLater": "Plus Tard",
+        "maybeLater": "Plus tard",
         "restoring": "Restauration..."
       },
       "success": {
-        "title": "Série Restaurée !",
+        "title": "Série restaurée !",
         "subtitle": "Votre engagement est de retour sur les rails",
         "days": "jours",
         "keepGoing": "Continuez !",
@@ -2029,7 +2029,7 @@
   "levelUp": {
     "title": "NIVEAU SUPÉRIEUR !",
     "levelLabel": "NIVEAU",
-    "newAchievement": "Nouveau Succès",
+    "newAchievement": "Nouveau succès",
     "tapToContinue": "Appuyez pour continuer",
     "closingIn": "Fermeture dans {{seconds}}s...",
     "motivational": {
@@ -2056,7 +2056,7 @@
     }
   },
   "milestoneRecap": {
-    "title": "Vos Paliers Atteints",
+    "title": "Vos paliers atteints",
     "subtitle": "Vous avez déjà débloqué {{count}} paliers !",
     "day": "Jour {{count}}",
     "totalXp": "XP gagnés",
@@ -2149,7 +2149,7 @@
     "dailyAt": "Quotidien à {{time}}",
     "enableGlobalFirst": "Activer d'abord les notifications globales",
     "enableGlobalFirstMessage": "Veuillez activer les notifications dans les Paramètres avant de gérer les notifications individuelles.",
-    "goToSettings": "Aller aux Paramètres",
+    "goToSettings": "Aller aux paramètres",
     "permissionRequired": "Permission requise",
     "permissionRequiredMessage": "Veuillez activer les notifications dans les paramètres de votre appareil pour recevoir des rappels.",
     "openSettings": "Ouvrir les paramètres",
@@ -2179,29 +2179,29 @@
     "signIn": "Connexion",
     "signOut": "Se déconnecter",
     "logout": "Déconnexion",
-    "tagline": "La Discipline Transforme Tout",
-    "createAccount": "Créer un Compte",
-    "resetPassword": "Réinitialiser le Mot de Passe",
+    "tagline": "La discipline transforme tout",
+    "createAccount": "Créer un compte",
+    "resetPassword": "Réinitialiser le mot de passe",
     "username": "Nom d'utilisateur",
     "usernamePlaceholder": "Choisissez un nom d'utilisateur",
     "email": "Email",
     "emailPlaceholder": "votre.email@exemple.com",
     "password": "Mot de passe",
-    "confirmPassword": "Confirmer le Mot de Passe",
+    "confirmPassword": "Confirmer le mot de passe",
     "hide": "Masquer",
     "show": "Afficher",
-    "sendResetLink": "Envoyer le Lien",
+    "sendResetLink": "Envoyer le lien",
     "forgotPassword": "Mot de passe oublié ?",
     "createAccountLink": "Créer un compte",
     "signInInstead": "Se connecter",
     "backToSignIn": "Retour à la connexion",
     "orContinueWith": "OU CONTINUER AVEC",
     "continueWithApple": "Continuer avec Apple",
-    "missingInfo": "Informations Manquantes",
+    "missingInfo": "Informations manquantes",
     "fillFields": "Veuillez remplir tous les champs requis",
-    "passwordMismatch": "Mots de Passe Différents",
+    "passwordMismatch": "Mots de passe différents",
     "passwordsDontMatch": "Les mots de passe ne correspondent pas",
-    "weakPassword": "Mot de Passe Faible",
+    "weakPassword": "Mot de passe faible",
     "passwordMin6": "Le mot de passe doit contenir au moins 6 caractères"
   },
   "resetPassword": {
@@ -2228,7 +2228,7 @@
     }
   },
   "streakSaver": {
-    "title": "Sauvegarde de Série !",
+    "title": "Sauvegarde de série !",
     "description": "Votre série de {{streak}} jours pour \"{{habitName}}\" ne doit pas se terminer !",
     "stats": {
       "days": "Jours",
@@ -2240,18 +2240,18 @@
     },
     "badge": {
       "outOfStock": "RUPTURE DE STOCK",
-      "refillMessage": "Rechargez vos Sauveurs de Série",
+      "refillMessage": "Rechargez vos sauveurs de série",
       "tapToShop": "Touchez pour visiter la boutique",
       "streakAlert": "ALERTE SÉRIE",
       "readyToSave": "PRÊT À SAUVER",
       "needsSaving_one": "{{count}} habitude à sauver !",
       "needsSaving_other": "{{count}} habitudes à sauver !",
       "allSafe": "Toutes les séries sont sauves",
-      "available_one": "{{count}} Sauveur de Série disponible",
-      "available_other": "{{count}} Sauveurs de Série disponibles"
+      "available_one": "{{count}} sauveur de série disponible",
+      "available_other": "{{count}} sauveurs de série disponibles"
     },
     "selection": {
-      "title": "Habitudes en Danger",
+      "title": "Habitudes en danger",
       "subtitle": "Choisissez quelle habitude sauvegarder",
       "streakDays_one": "Série de {{count}} jour",
       "streakDays_other": "Série de {{count}} jours",
@@ -2263,11 +2263,11 @@
     },
     "buttons": {
       "use": "UTILISER SAUVEGARDE",
-      "maybeLater": "Plus Tard",
+      "maybeLater": "Plus tard",
       "restoring": "Restauration..."
     },
     "success": {
-      "title": "Série Restaurée !",
+      "title": "Série restaurée !",
       "subtitle": "Votre dévouement est de retour sur les rails",
       "days": "jours",
       "keepGoing": "Continuez !",
@@ -2286,9 +2286,9 @@
       "Vous construisez une habitude incroyable !"
     ],
     "shop": {
-      "title": "Sauveurs de Série",
+      "title": "Sauveurs de série",
       "subtitle": "Protégez votre progression des jours manqués",
-      "description": "Choisissez un pack et recevez vos Sauveurs instantanément",
+      "description": "Choisissez un pack et recevez vos sauveurs instantanément",
       "yourInventory": "Votre inventaire",
       "monthlyRefill": "Recharge mensuelle",
       "refillDate": "Prochaine recharge : {{date}}",
@@ -2303,65 +2303,65 @@
       "buyNow": "ACHETER",
       "save20": "Économisez 20%",
       "save40": "Économisez 40%",
-      "savers_one": "{{count}} Sauveur",
-      "savers_other": "{{count}} Sauveurs",
+      "savers_one": "{{count}} sauveur",
+      "savers_other": "{{count}} sauveurs",
       "footer": "Restaurez les jours manqués sous 24h",
       "loading": "Chargement...",
-      "savers": "{{count}} Sauvegardes",
-      "receiveDescription": "Vous recevrez {{count}} Sauveurs de série"
+      "savers": "{{count}} sauvegardes",
+      "receiveDescription": "Vous recevrez {{count}} sauveurs de série"
     }
   },
   "taskManager": {
-    "manageTitle": "Gérer les Tâches",
+    "manageTitle": "Gérer les tâches",
     "maxTasks": "Maximum 3 tâches par habitude",
     "taskCount": "{{count}} tâche",
     "taskCount_plural": "{{count}} tâches",
-    "noTasksTitle": "Aucune Tâche",
+    "noTasksTitle": "Aucune tâche",
     "noTasks": "Ajoutez votre première tâche pour commencer cette habitude",
-    "addNewTask": "Ajouter une Tâche",
-    "deleteTask": "Supprimer la Tâche",
+    "addNewTask": "Ajouter une tâche",
+    "deleteTask": "Supprimer la tâche",
     "deleteTaskConfirm": "Êtes-vous sûr de vouloir supprimer \"{{taskName}}\" ? Cette action est irréversible.",
     "deleteError": "Échec de la suppression. Veuillez réessayer.",
     "deleting": "Suppression...",
     "addError": "Échec de l'ajout des tâches. Veuillez réessayer.",
-    "selectTasks": "Sélectionner des Tâches",
+    "selectTasks": "Sélectionner des tâches",
     "selectedCount": "{{count}} / {{max}} sélectionnées",
     "maxTasksReached": "Maximum de 3 tâches par habitude atteint. Supprimez d'abord une tâche pour en ajouter de nouvelles.",
     "customTaskDurationLabel": "Durée (optionnel)",
     "customTaskDurationPlaceholder": "30",
     "customTaskDurationHint": "Temps estimé pour compléter cette tâche",
     "allTasksAdded": "Toutes les tâches disponibles déjà ajoutées",
-    "allTasksAddedTitle": "Toutes les Tâches Ajoutées",
+    "allTasksAddedTitle": "Toutes les tâches ajoutées",
     "allTasksAddedDescription": "Vous avez déjà ajouté toutes les tâches disponibles pour cette habitude. Créez une tâche personnalisée ou gérez celles existantes.",
     "maxTasksDescription": "Vous avez atteint le maximum de 3 tâches par habitude. Supprimez une tâche pour en ajouter de nouvelles.",
     "limitReached": {
-      "title": "Limite de Tâches Atteinte",
+      "title": "Limite de tâches atteinte",
       "message": "Vous avez déjà 3 tâches pour cette habitude. Veuillez supprimer une tâche avant d'en ajouter de nouvelles."
     },
-    "addTasks": "Ajouter {{count}} Tâche",
-    "addTasks_plural": "Ajouter {{count}} Tâches",
-    "createCustomTask": "Créer une Tâche Personnalisée",
+    "addTasks": "Ajouter {{count}} tâche",
+    "addTasks_plural": "Ajouter {{count}} tâches",
+    "createCustomTask": "Créer une tâche personnalisée",
     "createCustomTaskDescription": "Définissez votre propre action",
-    "customTaskNameLabel": "Nom de la Tâche",
+    "customTaskNameLabel": "Nom de la tâche",
     "customTaskPlaceholder": "ex: Boire 8 verres d'eau",
     "customTaskTip": "Soyez spécifique et mesurable. Exemple : \"Faire 30 minutes d'exercice\" au lieu de juste \"Exercice\"",
     "customTaskLabel": "Tâche personnalisée",
-    "createTask": "Créer la Tâche",
+    "createTask": "Créer la tâche",
     "alerts": {
       "noTasksSelected": {
-        "title": "Aucune Tâche Sélectionnée",
+        "title": "Aucune tâche sélectionnée",
         "message": "Veuillez sélectionner au moins une tâche."
       },
       "customTaskEmpty": {
-        "title": "Nom de Tâche Requis",
+        "title": "Nom de tâche requis",
         "message": "Veuillez entrer un nom pour votre tâche personnalisée."
       },
       "taskAdded": {
-        "title": "Tâche Ajoutée",
+        "title": "Tâche ajoutée",
         "message": "Votre tâche personnalisée a été créée avec succès."
       },
       "tasksAdded": {
-        "title": "Tâches Ajoutées",
+        "title": "Tâches ajoutées",
         "message": "{{count}} tâche ajoutée avec succès.",
         "message_plural": "{{count}} tâches ajoutées avec succès."
       },
@@ -2371,14 +2371,14 @@
   },
   "groups": {
     "title": "Groupes",
-    "subtitle": "Mes Groupes",
+    "subtitle": "Mes groupes",
     "activeCount_one": "{{count}} groupe actif",
     "activeCount_other": "{{count}} groupes actifs",
     "info": {
       "header": "Comment ça marche",
       "intro": "Créez des habitudes partagées avec vos amis et construisez des séries ensemble. La responsabilité rencontre la motivation dans une expérience collaborative.",
       "completion": {
-        "title": "Complétion Quotidienne",
+        "title": "Complétion quotidienne",
         "description": "Chaque membre complète ses tâches individuellement. À minuit, le taux de complétion du groupe détermine si la journée est validée."
       },
       "xp": {
@@ -2386,23 +2386,23 @@
         "description": "Gagnez +10 XP instantanément quand vous complétez une tâche. Obtenez des XP bonus à minuit : +50 XP pour 100% de complétion, +35 XP pour 50-99%. Plus il y a de membres actifs, plus vous gagnez d'XP ensemble."
       },
       "streak": {
-        "title": "Règles de Validation",
+        "title": "Règles de validation",
         "description": "100% de complétion = journée parfaite avec bonus complet. 50-99% = journée validée avec bonus réduit. Moins de 50% = journée non validée et la série se casse (sauf si sauvée)."
       },
       "tolerance": {
-        "title": "Flexibilité Hebdomadaire",
+        "title": "Flexibilité hebdomadaire",
         "description": "Tous les groupes ont une tolérance de 50% par semaine. Si au moins la moitié de l'équipe complète ses tâches, la journée est validée avec bonus réduit. Après avoir utilisé cette flexibilité, il faut 100% ou la série casse."
       },
       "weekly": {
-        "title": "Bonus Hebdomadaire",
+        "title": "Bonus hebdomadaire",
         "description": "Atteignez 100% de complétion chaque jour pendant une semaine complète (lundi à dimanche), et gagnez un énorme bonus de +200 XP le dimanche à minuit. Un travail d'équipe parfait mérite des récompenses parfaites !"
       },
       "invite": {
-        "title": "Inviter des Membres",
+        "title": "Inviter des membres",
         "description": "Partagez le code d'invitation de votre groupe pour inviter de nouveaux membres. Appuyez sur le code pour le copier automatiquement dans votre presse-papiers, puis envoyez-le à vos amis !"
       },
       "limits": {
-        "title": "Limites de Groupes",
+        "title": "Limites de groupes",
         "description": "En version gratuite, vous pouvez rejoindre jusqu'à 2 groupes. Passez à Premium pour rejoindre jusqu'à 5 groupes et débloquer des fonctionnalités exclusives !"
       },
       "tip": "Rappel : la constance et le travail d'équipe sont essentiels. Même lors des jours difficiles, votre groupe est là pour vous motiver !",
@@ -2545,7 +2545,7 @@
     "createHabit": {
       "title": "Nouvelle habitude",
       "habitName": "Nom de l'habitude",
-      "placeholder": "Ex: Morning Run",
+      "placeholder": "Ex: Morning run",
       "charactersCount": "{{count}}/50 caractères",
       "frequency": "Fréquence",
       "daily": "Quotidien",
@@ -2589,8 +2589,8 @@
     "no_quests_found": "Aucun accomplissement trouvé",
     "no_completed_quests": "Aucun accomplissement complété pour l'instant",
     "reward": "Récompense",
-    "exclusive_title": "Titre Exclusif",
-    "quest_completed": "Accomplissement Terminé !",
+    "exclusive_title": "Titre exclusif",
+    "quest_completed": "Accomplissement terminé !",
     "pin": "Suivre",
     "unpin": "Ne plus suivre",
     "all": "Toutes",
@@ -2599,7 +2599,7 @@
       "intro": "Les accomplissements vous permettent de gagner des récompenses en atteignant vos objectifs !",
       "xp_title": "Gagnez de l'XP",
       "xp_description": "Chaque accomplissement complété vous rapporte de l'XP pour progresser dans vos rangs.",
-      "titles_title": "Titres Exclusifs",
+      "titles_title": "Titres exclusifs",
       "titles_description": "Débloquez des titres uniques à afficher sur votre profil.",
       "boosts_title": "Boosts d'XP",
       "boosts_description": "Obtenez des boosts qui multiplient vos gains d'XP pendant une durée limitée.",
@@ -2616,112 +2616,112 @@
       "philosophie": "Philosophie"
     },
     "seven_sparks": {
-      "name": "Sept Étincelles",
+      "name": "Sept étincelles",
       "description_short": "Complétez au moins 1 habitude sur 7 jours distincts",
       "description_long": "Commencez votre voyage en complétant au moins une habitude sur 7 jours différents. Les petits pas mènent aux grands changements."
     },
     "task_master": {
-      "name": "Maître des Tâches Quotidiennes",
+      "name": "Maître des tâches quotidiennes",
       "description_short": "Complétez 50 tâches en 30 jours",
       "description_long": "Devenez un véritable maître de la productivité en complétant 50 tâches sur une période de 30 jours."
     },
     "habit_builder": {
-      "name": "Architecte d'Habitudes Extraordinaires",
+      "name": "Architecte d'habitudes extraordinaires",
       "description_short": "Créez et maintenez 5 habitudes simultanément",
       "description_long": "Prouvez votre capacité à jongler avec plusieurs habitudes en maintenant 5 habitudes actives en même temps."
     },
     "two_weeks_gentle": {
-      "name": "Deux Semaines Douces",
+      "name": "Deux semaines douces",
       "description_short": "Complétez au moins 1 habitude sur 30 jours distincts",
       "description_long": "Un mois de pratique régulière. La constance crée l'élan—continuez à vous montrer jour après jour."
     },
     "thirty_days_drift": {
-      "name": "Dérive de Trente Jours",
+      "name": "Dérive de trente jours",
       "description_short": "Complétez au moins 1 habitude sur 60 jours distincts",
       "description_long": "Deux mois de progrès soutenu. Célébrez chaque jour où vous vous présentez et regardez vos habitudes transformer votre vie."
     },
     "perfect_day": {
-      "name": "Jour Parfait",
+      "name": "Jour parfait",
       "description_short": "Complétez toutes vos habitudes en une seule journée",
       "description_long": "Votre première journée parfaite. Chaque habitude cochée, chaque promesse tenue. Ressentez la satisfaction d'une journée accomplie."
     },
     "perfect_week": {
-      "name": "Semaine Parfaite",
+      "name": "Semaine parfaite",
       "description_short": "Complétez toutes vos habitudes pendant 7 jours",
       "description_long": "Une semaine de perfection. Sept jours où vous vous êtes présenté complètement, prouvant votre engagement envers vous-même."
     },
     "perfect_three_weeks": {
-      "name": "Perfection de Trois Semaines",
+      "name": "Perfection de trois semaines",
       "description_short": "Complétez toutes vos habitudes pendant 21 jours",
       "description_long": "Trois semaines impeccables. Vous avez transformé l'excellence en habitude, prouvant que la perfection est un choix quotidien."
     },
     "perfect_month": {
-      "name": "Mois Impeccable",
+      "name": "Mois impeccable",
       "description_short": "Complétez toutes vos habitudes pendant 30 jours",
       "description_long": "Un mois entier de perfection absolue. Vous avez démontré une maîtrise exceptionnelle de vos routines et de votre discipline."
     },
     "streak_seven": {
-      "name": "Première Étincelle de Constance",
+      "name": "Première étincelle de constance",
       "description_short": "Maintenez une streak de 7 jours sur une habitude",
       "description_long": "Sept jours consécutifs sur une même habitude. La flamme de la constance s'allume - continuez à la nourrir."
     },
     "streak_twentyone": {
-      "name": "Rituel de Trois Semaines",
+      "name": "Rituel de trois semaines",
       "description_short": "Maintenez une streak de 21 jours sur une habitude",
       "description_long": "Vingt-et-un jours de dévouement. On dit qu'il faut 21 jours pour former une habitude - vous l'avez fait."
     },
     "streak_thirty": {
-      "name": "Mois de Dévotion",
+      "name": "Mois de dévotion",
       "description_short": "Maintenez une streak de 30 jours sur une habitude",
       "description_long": "Un mois entier sans interruption. Cette habitude fait maintenant partie intégrante de qui vous êtes."
     },
     "streak_sixty": {
-      "name": "Marathonien des Habitudes",
+      "name": "Marathonien des habitudes",
       "description_short": "Maintenez une streak de 60 jours sur une habitude",
       "description_long": "Soixante jours de constance inébranlable. Vous avez prouvé que vous êtes un marathonien du changement personnel."
     },
     "streak_hundred": {
-      "name": "Légende Inébranlable",
+      "name": "Légende inébranlable",
       "description_short": "Maintenez une streak de 100 jours sur une habitude",
       "description_long": "Cent jours consécutifs. Vous êtes une légende vivante de la persévérance. Cette habitude est gravée dans votre identité."
     },
     "test_quest": {
-      "name": "Premier Pas",
+      "name": "Premier pas",
       "description_short": "Complétez 1 habitude",
       "description_long": "Complétez n'importe quelle habitude une fois pour débloquer cette quête"
     },
     "tasks_25": {
-      "name": "Apprenti des Tâches",
+      "name": "Apprenti des tâches",
       "description_short": "Complétez 25 tâches",
       "description_long": "Vos 25 premières tâches complétées ! Chaque petite action s'additionne pour de grands résultats."
     },
     "tasks_50": {
-      "name": "Enthousiaste des Tâches",
+      "name": "Enthousiaste des tâches",
       "description_short": "Complétez 50 tâches",
       "description_long": "Cinquante tâches accomplies ! Vous construisez votre élan et prouvez votre dévouement."
     },
     "tasks_100": {
-      "name": "Champion des Tâches",
+      "name": "Champion des tâches",
       "description_short": "Complétez 100 tâches",
       "description_long": "Cent tâches conquises ! Vous êtes un vrai champion de la productivité."
     },
     "tasks_200": {
-      "name": "Maître des Tâches",
+      "name": "Maître des tâches",
       "description_short": "Complétez 200 tâches",
       "description_long": "Deux cents tâches réalisées ! Votre constance est remarquable et inspirante."
     },
     "tasks_500": {
-      "name": "Légende des Tâches",
+      "name": "Légende des tâches",
       "description_short": "Complétez 500 tâches",
       "description_long": "Cinq cents tâches complétées ! Vous avez atteint le statut légendaire de la complétion de tâches."
     },
     "rate_app": {
-      "name": "Soutien de la Communauté",
+      "name": "Soutien de la communauté",
       "description_short": "Notez l'application et laissez un avis",
       "description_long": "Aidez les autres à découvrir l'application en la notant et en partageant votre expérience. Votre soutien compte énormément pour nous !"
     },
     "first_comeback": {
-      "name": "Premier Retour",
+      "name": "Premier retour",
       "description_short": "Revenez après une pause de 3+ jours",
       "description_long": "La vie arrive, mais vous êtes revenu. Votre premier retour prouve que tomber n'est pas échouer—se relever est ce qui compte."
     },
@@ -2731,62 +2731,62 @@
       "description_long": "Trois fois vous êtes remonté des cendres. Comme le phoenix, vous avez prouvé que chaque revers n'est qu'une préparation pour un retour."
     },
     "invincible": {
-      "name": "Esprit Invincible",
+      "name": "Esprit invincible",
       "description_short": "Revenez 10 fois après des pauses",
       "description_long": "Dix retours. Vous êtes inarrêtable. Votre résilience est légendaire—rien ne peut vous garder à terre longtemps."
     },
     "double_focus": {
-      "name": "Double Focus",
+      "name": "Double focus",
       "description_short": "Complétez 2 habitudes différentes",
       "description_long": "L'équilibre commence avec deux. Vous avez commencé à construire une routine multifacette qui touche différents aspects de votre vie."
     },
     "quadra": {
-      "name": "Équilibre Quadra",
+      "name": "Équilibre quadra",
       "description_short": "Complétez 4 habitudes différentes",
       "description_long": "Quatre piliers de croissance personnelle. Vous construisez une routine équilibrée qui couvre plusieurs aspects du développement personnel."
     },
     "hexagon": {
-      "name": "Maître Hexagone",
+      "name": "Maître hexagone",
       "description_short": "Complétez 6 habitudes différentes",
       "description_long": "Six habitudes distinctes conquises. Vous avez atteint un équilibre remarquable, nourrissant la croissance dans toutes les directions de votre vie."
     },
     "light_week": {
-      "name": "Semaine Légère",
+      "name": "Semaine légère",
       "description_short": "Complétez 40% des habitudes possibles cette semaine",
       "description_long": "Un début en douceur vers la constance hebdomadaire. Même un engagement léger construit les fondations de plus grandes réalisations."
     },
     "active_week": {
-      "name": "Semaine Active",
+      "name": "Semaine active",
       "description_short": "Complétez 60% des habitudes possibles cette semaine",
       "description_long": "Plus de la moitié de votre potentiel hebdomadaire atteint ! Vous trouvez votre rythme et construisez un sérieux élan."
     },
     "intense_week": {
-      "name": "Semaine Intense",
+      "name": "Semaine intense",
       "description_short": "Complétez 80% des habitudes possibles cette semaine",
       "description_long": "Une semaine intense de dévouement ! Vous repoussez vos limites et montrez ce qu'est un vrai engagement."
     },
     "perfect_intensity_week": {
-      "name": "Intensité Hebdomadaire Parfaite",
+      "name": "Intensité hebdomadaire parfaite",
       "description_short": "Complétez 100% des habitudes possibles cette semaine",
       "description_long": "Chaque habitude, chaque jour de cette semaine. Une perfection absolue dans le dévouement hebdomadaire—vous êtes extraordinaire !"
     },
     "habit_week": {
-      "name": "Une Semaine Solide",
+      "name": "Une semaine solide",
       "description_short": "Complétez au moins 1 habitude pendant 7 jours consécutifs",
       "description_long": "Une semaine complète à vous montrer présent. Cette fondation prouve que vous pouvez maintenir la constance quand ça compte."
     },
     "double_routine": {
-      "name": "Double Routine",
+      "name": "Double routine",
       "description_short": "Complétez au moins 2 habitudes pendant 14 jours",
       "description_long": "Deux semaines de double dévouement. Vous avez prouvé que vous pouvez jongler avec plusieurs engagements sans en lâcher un."
     },
     "discipline_month": {
-      "name": "Mois de Discipline",
+      "name": "Mois de discipline",
       "description_short": "Complétez au moins 2 habitudes pendant 30 jours",
       "description_long": "Un mois d'engagement double inébranlable. Votre discipline forge des habitudes qui dureront toute une vie."
     },
     "routine_master": {
-      "name": "Maître de la Routine",
+      "name": "Maître de la routine",
       "description_short": "Complétez au moins 3 habitudes pendant 60 jours",
       "description_long": "Deux mois avec trois habitudes—vous avez atteint la maîtrise de votre routine. Votre dévouement est vraiment inspirant."
     },
@@ -2801,27 +2801,27 @@
       "description_long": "Deux cents jours d'action constante. Vous avez fait de la construction d'habitudes une partie permanente de votre identité."
     },
     "full_year": {
-      "name": "Champion de l'Année",
+      "name": "Champion de l'année",
       "description_short": "Complétez des habitudes sur 365 jours distincts",
       "description_long": "Une année entière de dévouement. Chaque saison, chaque mois, vous étiez présent. Vous êtes un vrai champion des habitudes."
     },
     "streak_150": {
-      "name": "Flamme de Cinq Mois",
+      "name": "Flamme de cinq mois",
       "description_short": "Maintenez une streak de 150 jours sur une habitude",
       "description_long": "Cent cinquante jours consécutifs. Cinq mois de dévouement inébranlable envers une seule habitude—vous brillez !"
     },
     "streak_365": {
-      "name": "Dévouement Annuel",
+      "name": "Dévouement annuel",
       "description_short": "Maintenez une streak de 365 jours sur une habitude",
       "description_long": "Une année complète sans manquer un seul jour. Ce niveau de dévouement est rare et remarquable. Vous êtes une légende vivante."
     },
     "tasks_1000": {
-      "name": "Accomplisseur Millénaire",
+      "name": "Accomplisseur millénaire",
       "description_short": "Complétez 1000 tâches",
       "description_long": "Mille tâches complétées ! Un millénaire de micro-accomplissements qui vous ont transformé en puissance de productivité."
     },
     "tasks_2500": {
-      "name": "Titan des Tâches",
+      "name": "Titan des tâches",
       "description_short": "Complétez 2500 tâches",
       "description_long": "Deux mille cinq cents tâches conquises ! Vous avez atteint le statut de titan—une véritable force de la nature en complétion de tâches."
     }
@@ -2829,22 +2829,22 @@
   "inventory": {
     "title": "Inventaire",
     "loading": "Chargement de l'inventaire...",
-    "active_boost": "Boost Actif",
-    "available_boosts": "Boosts Disponibles",
-    "unlocked_titles": "Titres Débloqués",
+    "active_boost": "Boost actif",
+    "available_boosts": "Boosts disponibles",
+    "unlocked_titles": "Titres débloqués",
     "boosts_ready": "boosts prêts à activer",
     "titles_unlocked": "titres exclusifs débloqués",
     "xp_boost": "Boost XP",
-    "habit_xp": "XP d'Habitude",
+    "habit_xp": "XP d'habitude",
     "duration": "Durée",
     "activate": "Activer",
     "expires_in": "Expire dans",
-    "exclusive_title": "Titre Exclusif",
-    "empty_title": "Inventaire Vide",
+    "exclusive_title": "Titre exclusif",
+    "empty_title": "Inventaire vide",
     "empty_message": "Complétez des quêtes pour gagner des boosts et des titres exclusifs !",
-    "boost_activated": "Boost Activé !",
+    "boost_activated": "Boost activé !",
     "boost_activated_message": "Votre boost XP est maintenant actif. Tous les XP d'habitudes sont multipliés !",
-    "boost_already_active": "Boost Déjà Actif",
+    "boost_already_active": "Boost déjà actif",
     "boost_already_active_message": "Vous avez déjà un boost actif. Attendez qu'il expire avant d'en activer un autre.",
     "activation_failed": "Échec de l'activation du boost. Veuillez réessayer.",
     "ok": "OK",
@@ -2852,9 +2852,9 @@
     "boost_already_active_warning": "Un boost est déjà actif. Attendez qu'il expire avant d'en activer un autre."
   },
   "titles": {
-    "marathon_legend": "Légende du Marathon",
-    "zen_voyager": "Voyageur Zen",
-    "titan_of_tasks": "Titan des Tâches"
+    "marathon_legend": "Légende du marathon",
+    "zen_voyager": "Voyageur zen",
+    "titan_of_tasks": "Titan des tâches"
   },
   "loader": {
     "loading_dashboard": "Chargement du dashboard...",
