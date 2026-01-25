@@ -2177,6 +2177,7 @@
   },
   "auth": {
     "signIn": "Connexion",
+    "signOut": "Se déconnecter",
     "logout": "Déconnexion",
     "tagline": "La Discipline Transforme Tout",
     "createAccount": "Créer un Compte",
