@@ -1571,7 +1571,7 @@
       }
     },
     "habitTypeSelector": {
-      "title": "Choisissez votre parcours",
+      "title": "Créer votre habitude",
       "subtitle": "Construisez-vous quelque chose de nouveau ou vous souhaitez perdre une mauvaise habitude ?",
       "buildHabit": "Créer une habitude",
       "buildHabitDescription": "Créer des routines positives",

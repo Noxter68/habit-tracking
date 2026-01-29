@@ -1375,7 +1375,7 @@
       }
     },
     "habitTypeSelector": {
-      "title": "Choose your path",
+      "title": "Create your habit",
       "subtitle": "Are you building something new or\nletting go of something old?",
       "buildHabit": "Build a habit",
       "buildHabitDescription": "Create positive routines",
