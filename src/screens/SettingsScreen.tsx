@@ -688,7 +688,7 @@ const SettingsScreen: React.FC = () => {
         onPress: async () => {
           await OnboardingService.resetOnboarding(user.id);
           await checkOnboardingStatus();
-          navigation.navigate('Onboarding');
+          navigation.navigate('Onboarding', { isReview: true });
         },
       },
     ]);

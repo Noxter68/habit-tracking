@@ -2067,52 +2067,105 @@
     "skip": "Passer",
     "continue": "Continuer",
     "back": "Retour",
-    "letsStart": "C'est parti",
+    "letsGo": "C'est parti",
+    "startJourney": "Commencer mon parcours",
     "welcome": {
       "title": "Bienvenue sur Nuvoria",
-      "subtitle": "Transformez vos habitudes en une aventure quotidienne remplie de succès",
-      "buildHabits": "Construisez des habitudes durables",
-      "trackProgress": "Suivez vos progrès visuellement",
-      "unlockAchievements": "Débloquez des succès et récompenses"
+      "subtitle": "Construisez des habitudes durables, suivez vos progrès et transformez votre quotidien"
     },
-    "xp": {
-      "title": "Gagnez des XP et montez de niveau",
-      "subtitle": "Complétez jusqu'à 3 tâches par habitude pour gagner de L'XP. Construisez des séries pour débloquer d'énormes bonus !",
-      "firstTask": "Complétez votre 1ère tâche",
-      "secondTask": "Complétez votre 2ème tâche",
-      "thirdTask": "Complétez votre 3ème tâche",
-      "perfectDay": "Journée parfaite"
+    "goals": {
+      "title": "Qu'est-ce qui vous amène ?",
+      "subtitle": "Sélectionnez tout ce qui vous correspond",
+      "options": {
+        "routines": "Construire de meilleures routines",
+        "bad_habits": "Briser mes mauvaises habitudes",
+        "productivity": "Être plus productif",
+        "health": "Améliorer ma santé",
+        "growth": "Développement personnel"
+      }
     },
-    "tiers": {
-      "title": "Votre interface évolue",
-      "subtitle": "Regardez votre interface se transformer avec de magnifiques thèmes de gemmes au fur et à mesure de votre progression",
-      "crystal": "Cristal",
-      "ruby": "Rubis",
-      "amethyst": "Améthyste",
-      "jade": "Jade",
-      "topaz": "Topaze",
-      "obsidian": "Obsidienne",
-      "days": "{{count}} jours",
-      "daysRange": "{{min}}-{{max}} jours",
-      "daysPlus": "{{count}}+ jours"
+    "motivation": {
+      "title": "Qu'est-ce qui vous freine ?",
+      "subtitle": "Comprendre votre défi nous aide à mieux vous accompagner",
+      "options": {
+        "consistency": "Je commence mais je ne tiens pas",
+        "forgetting": "J'oublie de faire mes habitudes",
+        "motivation": "Je manque de motivation",
+        "starting": "Je ne sais pas par où commencer"
+      }
     },
-    "savers": {
-      "title": "Ne perdez jamais vos progrès",
-      "subtitle": "Utilisez les Sauveurs de Séries pour restaurer les jours manqués et maintenir votre élan",
-      "protectStreak": "Protégez votre série",
-      "protectDesc": "Utilisez des sauveurs quand vous manquez un jour",
-      "instantRestore": "Restauration instantanée",
-      "instantDesc": "Remettez-vous sur la bonne voie immédiatement",
-      "welcomeGift": "Cadeau de bienvenue",
-      "welcomeGiftDesc": "Vous gagnez 3 Sauveurs de Séries pour commencer"
+    "loadingPlan": {
+      "title": "Création de votre plan",
+      "subtitle": "Préparation d'un plan personnalisé pour {{goal}}",
+      "analyzingGoals": "Analyse de vos objectifs",
+      "findingStrategy": "Recherche de la meilleure stratégie",
+      "selectingHabits": "Sélection des habitudes pour vous"
     },
-    "features": {
+    "quickHabit": {
+      "title": "Votre première habitude",
+      "subtitle": "Choisissez-en une pour commencer — vous pourrez en ajouter d'autres plus tard",
+      "habits": {
+        "morning_routine": {
+          "name": "Routine matinale",
+          "desc": "Commencez votre journée avec intention"
+        },
+        "drink_water": {
+          "name": "Boire de l'eau",
+          "desc": "Restez hydraté tout au long de la journée"
+        },
+        "read_10_pages": {
+          "name": "Lire chaque jour",
+          "desc": "Lire au moins 10 pages par jour"
+        },
+        "no_phone_morning": {
+          "name": "Matin sans téléphone",
+          "desc": "Pas de téléphone pendant la première heure"
+        },
+        "eat_healthy": {
+          "name": "Manger sainement",
+          "desc": "Choisir un repas nutritif"
+        },
+        "sleep_early": {
+          "name": "Dormir tôt",
+          "desc": "Être au lit avant 23h"
+        },
+        "plan_my_day": {
+          "name": "Planifier ma journée",
+          "desc": "Planifier les priorités de demain"
+        },
+        "focus_session": {
+          "name": "Session de concentration",
+          "desc": "30 min de travail profond"
+        },
+        "exercise_10min": {
+          "name": "Exercice physique",
+          "desc": "10 minutes d'entraînement"
+        },
+        "meditate": {
+          "name": "Méditer",
+          "desc": "5 minutes de pleine conscience"
+        }
+      }
+    },
+    "notifications": {
       "title": "Restez sur la bonne voie",
-      "subtitle": "Des rappels intelligents et des pauses flexibles vous gardent constant sans pression",
-      "notifications": "Notifications intelligentes",
-      "holidayMode": "Mode vacances",
-      "ready": "Vous êtes prêt !",
-      "readyDesc": "Créons votre première habitude et commençons votre voyage vers l'excellence"
+      "subtitle": "Les rappels intelligents vous aident à construire des habitudes durables",
+      "subtitleForgetting": "Vous avez dit oublier vos habitudes — les rappels sont votre meilleur allié",
+      "smartReminders": "Rappels intelligents",
+      "smartRemindersDesc": "Soyez notifié au moment parfait",
+      "perfectTiming": "Timing parfait",
+      "perfectTimingDesc": "Les rappels s'adaptent à votre emploi du temps",
+      "noSpam": "Jamais de spam",
+      "noSpamDesc": "Uniquement les rappels que vous choisissez",
+      "enable": "Activer les rappels",
+      "maybeLater": "Peut-être plus tard"
+    },
+    "celebration": {
+      "title": "Vous êtes prêt !",
+      "subtitle": "Votre parcours commence maintenant. Chaque petit pas compte",
+      "recap": "Votre configuration",
+      "goalLabel": "Votre objectif :",
+      "habitLabel": "Première habitude :"
     },
     "username": {
       "title": "Créez votre pseudo",

@@ -86,7 +86,7 @@ export type RootStackParamList = {
   Debug: undefined;
   NotificationManager: undefined;
   HolidayMode: undefined;
-  Onboarding: undefined;
+  Onboarding: { isReview?: boolean } | undefined;
   ResetPassword: undefined;
 
   GroupsList: undefined;
@@ -356,16 +356,10 @@ function AppNavigator() {
 function useNotificationSetup() {
   useEffect(() => {
     const setupNotifications = async () => {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-
-      if (finalStatus !== 'granted') {
-        Logger.debug('Notification permissions not granted');
+      // Don't request permissions here — only during onboarding (NotificationStep)
+      const { status } = await Notifications.getPermissionsAsync();
+      if (status !== 'granted') {
+        Logger.debug('Notification permissions not yet granted');
         return;
       }
 

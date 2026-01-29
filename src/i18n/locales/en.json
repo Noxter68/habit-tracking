@@ -2025,52 +2025,105 @@
     "skip": "Skip",
     "continue": "Continue",
     "back": "Back",
-    "letsStart": "Let's start",
+    "letsGo": "Let's go",
+    "startJourney": "Start my journey",
     "welcome": {
       "title": "Welcome to Nuvoria",
-      "subtitle": "Transform your habits into a daily adventure filled with success",
-      "buildHabits": "Build lasting habits",
-      "trackProgress": "Track your progress visually",
-      "unlockAchievements": "Unlock achievements & rewards"
+      "subtitle": "Build lasting habits, track your progress, and transform your daily routine"
     },
-    "xp": {
-      "title": "Earn XP & level up",
-      "subtitle": "Complete up to 3 tasks per habit to earn XP. Build streaks to unlock massive bonuses!",
-      "firstTask": "Complete your 1st task",
-      "secondTask": "Complete your 2nd task",
-      "thirdTask": "Complete your 3rd task",
-      "perfectDay": "Perfect day (all tasks done)"
+    "goals": {
+      "title": "What brings you here?",
+      "subtitle": "Select everything that applies to you",
+      "options": {
+        "routines": "Build better routines",
+        "bad_habits": "Break bad habits",
+        "productivity": "Be more productive",
+        "health": "Improve my health",
+        "growth": "Personal growth"
+      }
     },
-    "tiers": {
-      "title": "Your UI evolves",
-      "subtitle": "Watch your interface transform with beautiful gem themes as you progress",
-      "crystal": "Crystal",
-      "ruby": "Ruby",
-      "amethyst": "Amethyst",
-      "jade": "Jade",
-      "topaz": "Topaz",
-      "obsidian": "Obsidian",
-      "days": "{{count}} days",
-      "daysRange": "{{min}}-{{max}} days",
-      "daysPlus": "{{count}}+ days"
+    "motivation": {
+      "title": "What's holding you back?",
+      "subtitle": "Understanding your challenge helps us support you better",
+      "options": {
+        "consistency": "I start but can't stay consistent",
+        "forgetting": "I forget to do my habits",
+        "motivation": "I lack motivation",
+        "starting": "I don't know where to start"
+      }
     },
-    "savers": {
-      "title": "Never lose progress",
-      "subtitle": "Use Streak Savers to restore missed days and keep your momentum going",
-      "protectStreak": "Protect your streak",
-      "protectDesc": "Use savers when you miss a day",
-      "instantRestore": "Instant restore",
-      "instantDesc": "Get back on track immediately",
-      "welcomeGift": "Welcome gift",
-      "welcomeGiftDesc": "You earn 3 Streak Savers to get started"
+    "loadingPlan": {
+      "title": "Creating your plan",
+      "subtitle": "Building a personalized plan for {{goal}}",
+      "analyzingGoals": "Analyzing your goals",
+      "findingStrategy": "Finding the best strategy",
+      "selectingHabits": "Selecting habits for you"
     },
-    "features": {
+    "quickHabit": {
+      "title": "Your first habit",
+      "subtitle": "Pick one to get started — you can always add more later",
+      "habits": {
+        "morning_routine": {
+          "name": "Morning Routine",
+          "desc": "Start your day with intention"
+        },
+        "drink_water": {
+          "name": "Drink Water",
+          "desc": "Stay hydrated throughout the day"
+        },
+        "read_10_pages": {
+          "name": "Read Daily",
+          "desc": "Read at least 10 pages a day"
+        },
+        "no_phone_morning": {
+          "name": "No Phone Morning",
+          "desc": "No phone for the first hour"
+        },
+        "eat_healthy": {
+          "name": "Eat Healthy",
+          "desc": "Choose a nutritious meal"
+        },
+        "sleep_early": {
+          "name": "Sleep Early",
+          "desc": "Be in bed by 11pm"
+        },
+        "plan_my_day": {
+          "name": "Plan My Day",
+          "desc": "Plan tomorrow's priorities"
+        },
+        "focus_session": {
+          "name": "Focus Session",
+          "desc": "30 min of deep work"
+        },
+        "exercise_10min": {
+          "name": "Exercise",
+          "desc": "10 minute workout"
+        },
+        "meditate": {
+          "name": "Meditate",
+          "desc": "5 minutes of mindfulness"
+        }
+      }
+    },
+    "notifications": {
       "title": "Stay on track",
-      "subtitle": "Smart reminders and flexible breaks keep you consistent without pressure",
-      "notifications": "Smart notifications",
-      "holidayMode": "Holiday mode",
-      "ready": "You're ready!",
-      "readyDesc": "Let's create your first habit and start your journey to excellence"
+      "subtitle": "Smart reminders help you build habits that last",
+      "subtitleForgetting": "You said you forget your habits — reminders are your best ally",
+      "smartReminders": "Smart reminders",
+      "smartRemindersDesc": "Get notified at the perfect time",
+      "perfectTiming": "Perfect timing",
+      "perfectTimingDesc": "Reminders adapt to your schedule",
+      "noSpam": "No spam, ever",
+      "noSpamDesc": "Only the reminders you choose",
+      "enable": "Enable reminders",
+      "maybeLater": "Maybe later"
+    },
+    "celebration": {
+      "title": "You're all set!",
+      "subtitle": "Your journey starts now. Every small step counts",
+      "recap": "Your setup",
+      "goalLabel": "Your goal:",
+      "habitLabel": "First habit:"
     },
     "username": {
       "title": "Create your username",

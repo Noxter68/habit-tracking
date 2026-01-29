@@ -46,19 +46,41 @@ export class NotificationService {
    * @returns Vrai si l'initialisation a reussi
    */
   static async initialize(): Promise<boolean> {
-    const registered = await this.registerForPushNotifications();
-
-    if (registered) {
-      await this.setupNotificationCategories();
-      this.setupNotificationHandler();
-      this.setupNotificationResponseListener();
+    // Check if permissions already granted (don't request here)
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status === 'granted') {
+      await this.setupAfterPermission();
+      return true;
     }
-
-    return registered;
+    // Still set up handlers so they're ready when permission is granted later
+    this.setupNotificationHandler();
+    this.setupNotificationResponseListener();
+    return false;
   }
 
   /**
-   * Enregistrer l'appareil pour les notifications push
+   * Set up notification categories, handlers and Android channels.
+   * Called after permission is confirmed granted.
+   */
+  static async setupAfterPermission(): Promise<void> {
+    await this.setupNotificationCategories();
+    this.setupNotificationHandler();
+    this.setupNotificationResponseListener();
+
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('habits', {
+        name: 'Habit Reminders',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#14b8a6',
+        sound: 'true',
+      });
+    }
+  }
+
+  /**
+   * Demander les permissions de notification à l'utilisateur.
+   * Appelé uniquement depuis l'onboarding ou les settings.
    *
    * @returns Vrai si les permissions sont accordees
    */
@@ -76,15 +98,8 @@ export class NotificationService {
       return false;
     }
 
-    if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('habits', {
-        name: 'Habit Reminders',
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#14b8a6',
-        sound: 'true',
-      });
-    }
+    // Now that we have permission, set up everything
+    await this.setupAfterPermission();
 
     return true;
   }
