@@ -59,7 +59,9 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [isDebug, setIsDebug] = useState(false);
   const [hasGivenFeedback, setHasGivenFeedback] = useState(true); // default true to avoid flash
+  const [hasInteracted, setHasInteracted] = useState(true); // true if user closed or submitted → blocks auto-show
   const hasCheckedRef = useRef(false);
+  const hasTriggeredRef = useRef(false);
   const prevHabitsCountRef = useRef<number | null>(null);
 
   // ==========================================================================
@@ -84,12 +86,17 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (!data?.feedback) {
         // No feedback at all
         setHasGivenFeedback(false);
+        setHasInteracted(false);
         return;
       }
+
+      // User has interacted with the modal → don't auto-show again
+      setHasInteracted(true);
 
       // Check if it's a real feedback or just closed_by_user
       try {
         const parsed = JSON.parse(data.feedback);
+        // closed_by_user = not real feedback, Settings can still offer it
         setHasGivenFeedback(parsed.status !== 'closed_by_user');
       } catch {
         setHasGivenFeedback(true);
@@ -108,10 +115,11 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // ==========================================================================
 
   useEffect(() => {
-    if (hasCheckedRef.current || !user?.id || hasGivenFeedback) return;
+    if (hasCheckedRef.current || hasTriggeredRef.current || !user?.id || hasInteracted) return;
     if (habits.length === 0) return; // no habits yet, wait
 
     hasCheckedRef.current = true;
+    hasTriggeredRef.current = true;
 
     // User has habits and hasn't given feedback → show after delay
     const timer = setTimeout(() => {
@@ -119,7 +127,7 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }, 4000);
 
     return () => clearTimeout(timer);
-  }, [user?.id, habits.length, hasGivenFeedback]);
+  }, [user?.id, habits.length, hasInteracted]);
 
   // ==========================================================================
   // Auto-show: detect first habit creation (0 → 1+)
@@ -130,13 +138,17 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const prevCount = prevHabitsCountRef.current;
     prevHabitsCountRef.current = currentCount;
 
-    if (prevCount !== null && prevCount === 0 && currentCount >= 1 && user?.id && !hasGivenFeedback) {
+    // Skip if already triggered by the other effect
+    if (hasTriggeredRef.current) return;
+
+    if (prevCount !== null && prevCount === 0 && currentCount >= 1 && user?.id && !hasInteracted) {
+      hasTriggeredRef.current = true;
       const timer = setTimeout(() => {
         setShowFeedbackModal(true);
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [habits.length, user?.id, hasGivenFeedback]);
+  }, [habits.length, user?.id, hasInteracted]);
 
   // ==========================================================================
   // Public methods
@@ -157,6 +169,7 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const closeFeedback = useCallback(() => {
     setShowFeedbackModal(false);
     setIsDebug(false);
+    setHasInteracted(true);
     // Refresh stats after modal is closed so level up detection happens
     // when the feedback modal is no longer blocking the celebration modal
     if (pendingRefreshRef.current) {
