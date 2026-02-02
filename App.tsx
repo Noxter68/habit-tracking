@@ -41,9 +41,11 @@ import { SubscriptionProvider } from './src/context/SubscriptionContext';
 import { QuestProvider } from './src/context/QuestContext';
 import { InventoryProvider } from './src/context/InventoryContext';
 import { QuestNotificationProvider } from './src/context/QuestNotificationContext';
+import { FeedbackProvider } from './src/context/FeedbackContext';
 
 // Components
 import { CelebrationRenderer } from '@/components/celebrations/CelebrationRenderer';
+import { FeedbackRenderer } from '@/components/feedback/FeedbackRenderer';
 import DashboardLoader from '@/components/DashboardLoader';
 import CustomTabBar from '@/components/CustomTabBar';
 import { ConnectionToast } from '@/components/ConnectionToast';
@@ -344,6 +346,7 @@ function AppNavigator() {
       </Stack.Navigator>
 
       <CelebrationRenderer />
+      <FeedbackRenderer />
       <ConnectionToast visible={showConnectionError} />
     </>
   );
@@ -496,6 +499,7 @@ export default function App() {
             <StatsProvider>
               <CelebrationQueueProvider>
                 <HabitProvider>
+                  <FeedbackProvider>
                   <AchievementProvider>
                     <QuestNotificationProvider>
                       <QuestProvider>
@@ -512,6 +516,7 @@ export default function App() {
                       </QuestProvider>
                     </QuestNotificationProvider>
                   </AchievementProvider>
+                  </FeedbackProvider>
                 </HabitProvider>
               </CelebrationQueueProvider>
             </StatsProvider>

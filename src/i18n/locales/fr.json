@@ -393,6 +393,11 @@
       "later": "Plus tard",
       "thankYou": "Merci !",
       "rewardReceived": "Votre récompense a été ajoutée à votre compte."
+    },
+    "feedback": {
+      "sectionTitle": "Ton avis",
+      "title": "Donner son avis",
+      "subtitle": "Dis-nous ce que tu penses de Nuvoria"
     }
   },
   "paywall": {
@@ -2933,5 +2938,22 @@
     "preparing_gems": "Préparation des gemmes...",
     "syncing_habits": "Synchronisation des habitudes...",
     "calculating_progress": "Calcul de ta progression..."
+  },
+  "feedback": {
+    "title": "Comment trouves-tu Nuvoria ?",
+    "subtitle": "Ton avis nous aide à améliorer l'app",
+    "ratings": {
+      "great": "Très bien",
+      "good": "Bien",
+      "could_be_better": "Peut mieux faire"
+    },
+    "suggestionPlaceholder": "Une suggestion ? (optionnel)",
+    "bonusHint": "en récompense !",
+    "submit": "Envoyer",
+    "skipForNow": "Plus tard",
+    "skipHint": "Tu pourras toujours donner ton avis plus tard dans les Réglages.",
+    "thankYouTitle": "Merci pour ton avis !",
+    "thankYouToast": "Merci pour ton avis !",
+    "boostLocation": "On t'a récompensé avec des XP bonus pour ton avis !"
   }
 }

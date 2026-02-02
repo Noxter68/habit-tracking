@@ -196,6 +196,7 @@ export interface Profile {
   created_at: string;
   updated_at: string;
   has_completed_onboarding?: boolean;
+  feedback?: string | null;
 }
 
 export interface HabitDB {

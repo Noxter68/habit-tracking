@@ -311,6 +311,11 @@
       "later": "Maybe later",
       "thankYou": "Thank you!",
       "rewardReceived": "Your reward has been added to your account."
+    },
+    "feedback": {
+      "sectionTitle": "Your feedback",
+      "title": "Give feedback",
+      "subtitle": "Tell us what you think of Nuvoria"
     }
   },
   "paywall": {
@@ -2885,5 +2890,22 @@
     "preparing_gems": "Preparing gems...",
     "syncing_habits": "Syncing habits...",
     "calculating_progress": "Calculating your progress..."
+  },
+  "feedback": {
+    "title": "How do you like Nuvoria?",
+    "subtitle": "Your feedback helps us improve the app",
+    "ratings": {
+      "great": "Great",
+      "good": "Good",
+      "could_be_better": "Could be better"
+    },
+    "suggestionPlaceholder": "Any suggestion? (optional)",
+    "bonusHint": "as a reward!",
+    "submit": "Send",
+    "skipForNow": "Later",
+    "skipHint": "You can always share your feedback later in Settings.",
+    "thankYouTitle": "Thanks for your feedback!",
+    "thankYouToast": "Thanks for your feedback!",
+    "boostLocation": "We've rewarded you with bonus XP for your feedback!"
   }
 }

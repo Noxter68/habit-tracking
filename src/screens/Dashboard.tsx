@@ -30,11 +30,11 @@ import DailyChallenge from '@/components/dashboard/DailyChallenge';
 import { HabitCategoryBadge } from '@/components/dashboard/HabitCategoryBadge';
 import { AddHabitBar } from '@/components/dashboard/AddHabitBar';
 import { DailyMotivationModal } from '@/components/motivation/DailyMotivationModal';
-
 // Contexts
 import { useAuth } from '../context/AuthContext';
 import { useHabits } from '../context/HabitContext';
 import { useStats } from '../context/StatsContext';
+import { useFeedback } from '@/context/FeedbackContext';
 import { useLevelUp } from '@/context/LevelUpContext';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { useQuestNotification } from '@/context/QuestNotificationContext';
@@ -79,6 +79,7 @@ const Dashboard: React.FC = () => {
   const { showQuestCompletion } = useQuestNotification();
   const { refreshQuests } = useQuests();
   const { activeBoost, toggleDebugBoost, refreshInventory } = useInventory();
+  const { openFeedbackDebug } = useFeedback();
 
   // Check if boost is active
   const hasActiveBoost = activeBoost && new Date(activeBoost.expires_at) > new Date();
@@ -1273,6 +1274,14 @@ const Dashboard: React.FC = () => {
                 >
                   <Text style={tw`text-emerald-700 font-medium`}>
                     {debugFirstHabitMilestone ? '🎯 1st Habit Glow ON' : '🎯 Glow 1st Habit Only'}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => openFeedbackDebug()}
+                  style={[tw`px-6 py-3 rounded-xl`, { backgroundColor: '#ede9fe' }]}
+                >
+                  <Text style={tw`text-violet-700 font-medium`}>
+                    💬 Test Feedback Modal
                   </Text>
                 </TouchableOpacity>
               </View>

@@ -38,12 +38,14 @@ import { GroupTierUpModal } from '@/components/groups/GroupTierUpModal';
 import { GroupLevelUpModal } from '@/components/groups/GroupLevelUpModal';
 import { StreakSaverShopModal } from '@/components/streakSaver/StreakSaverShopModal';
 import { UpdateModal } from '@/components/updateModal';
+import { useFeedback } from '@/context/FeedbackContext';
 
 import { getUpdatesForVersion, getModalTexts } from '@/utils/updateContent';
 
 import { useAuth } from '@/context/AuthContext';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { useGroupCelebration } from '@/context/GroupCelebrationContext';
+import { useStats } from '@/context/StatsContext';
 import { useDailyMotivation } from '@/hooks/useDailyMotivation';
 
 import { HolidayModeService } from '@/services/holidayModeService';
@@ -96,7 +98,8 @@ type IconName =
   | 'shopping-bag'
   | 'megaphone'
   | 'layout-compact'
-  | 'list-compact';
+  | 'list-compact'
+  | 'message-heart';
 
 interface SettingsSectionProps {
   title: string;
@@ -230,6 +233,12 @@ const Icon: React.FC<IconProps> = ({ name, size = 22, color = '#52525B' }) => {
         <Rect x="3" y="4" width="18" height="4" rx="1" stroke={color} strokeWidth={2} />
         <Rect x="3" y="10" width="18" height="4" rx="1" stroke={color} strokeWidth={2} />
         <Rect x="3" y="16" width="18" height="4" rx="1" stroke={color} strokeWidth={2} />
+      </Svg>
+    ),
+    'message-heart': (
+      <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <Path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        <Path d="M12 13.5c-1.5 1.5-3.5.5-3.5-1 0-1 .7-1.7 1.5-2l2 2 2-2c.8.3 1.5 1 1.5 2 0 1.5-2 2.5-3.5 1z" fill={color} stroke={color} strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
       </Svg>
     ),
   };
@@ -451,6 +460,7 @@ const SettingsScreen: React.FC = () => {
   const { isPremium } = useSubscription();
   const navigation = useNavigation<NavigationProp>();
   const { triggerTierUp, triggerLevelUp } = useGroupCelebration();
+  const { stats, refreshStats } = useStats();
   const { forceShow: showDailyMotivation, isEnabled: dailyMotivationEnabled, toggleEnabled: toggleDailyMotivation } = useDailyMotivation();
 
   // ============================================================================
@@ -469,6 +479,7 @@ const SettingsScreen: React.FC = () => {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [hasRated, setHasRated] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const { openFeedback, hasGivenFeedback } = useFeedback();
 
   // Compact view preferences
   const [isHeaderCompact, setIsHeaderCompact] = useState(false);
@@ -527,6 +538,7 @@ const SettingsScreen: React.FC = () => {
       Logger.error('Error loading rating status:', error);
     }
   }, [user?.id]);
+
 
   /**
    * Charge les préférences de vue compacte et l'état "seen" des badges
@@ -1098,6 +1110,27 @@ const SettingsScreen: React.FC = () => {
                   trailing={
                     <View style={tw`px-3 py-1.5 bg-amber-500 rounded-lg`}>
                       <Text style={tw`text-white text-xs font-bold`}>+500 XP</Text>
+                    </View>
+                  }
+                  isLast
+                />
+              </SettingsSection>
+            )}
+
+            {/* Section Donner son avis - Cachée si déjà donné */}
+            {!hasGivenFeedback && (
+              <SettingsSection title={t('settings.feedback.sectionTitle')} delay={420}>
+                <SettingsItem
+                  icon="message-heart"
+                  title={t('settings.feedback.title')}
+                  subtitle={t('settings.feedback.subtitle')}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    openFeedback();
+                  }}
+                  trailing={
+                    <View style={tw`px-3 py-1.5 bg-violet-500 rounded-lg`}>
+                      <Text style={tw`text-white text-xs font-bold`}>+{Math.min(Math.floor(((stats?.level ?? 1) - 1) / 5), 7) * 100 + 100} XP</Text>
                     </View>
                   }
                   isLast
