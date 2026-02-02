@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
-import { RefreshCw, Bell, Battery, HelpCircle } from 'lucide-react-native';
+import { Repeat, BellRing, Flame, Compass } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import * as Haptics from 'expo-haptics';
 import tw from '../../lib/tailwind';
@@ -10,14 +10,35 @@ export type ChallengeId = 'consistency' | 'forgetting' | 'motivation' | 'startin
 interface ChallengeOption {
   id: ChallengeId;
   icon: React.ReactNode;
+  selectedIcon: React.ReactNode;
   color: string;
 }
 
 const CHALLENGE_OPTIONS: ChallengeOption[] = [
-  { id: 'consistency', icon: <RefreshCw size={22} color="white" strokeWidth={2} />, color: '#f59e0b' },
-  { id: 'forgetting', icon: <Bell size={22} color="white" strokeWidth={2} />, color: '#3b82f6' },
-  { id: 'motivation', icon: <Battery size={22} color="white" strokeWidth={2} />, color: '#ef4444' },
-  { id: 'starting', icon: <HelpCircle size={22} color="white" strokeWidth={2} />, color: '#8b5cf6' },
+  {
+    id: 'consistency',
+    icon: <Repeat size={24} color="rgba(255,255,255,0.8)" strokeWidth={1.8} />,
+    selectedIcon: <Repeat size={24} color="white" strokeWidth={2} />,
+    color: '#f59e0b',
+  },
+  {
+    id: 'forgetting',
+    icon: <BellRing size={24} color="rgba(255,255,255,0.8)" strokeWidth={1.8} />,
+    selectedIcon: <BellRing size={24} color="white" strokeWidth={2} />,
+    color: '#3b82f6',
+  },
+  {
+    id: 'motivation',
+    icon: <Flame size={24} color="rgba(255,255,255,0.8)" strokeWidth={1.8} />,
+    selectedIcon: <Flame size={24} color="white" strokeWidth={2} />,
+    color: '#ef4444',
+  },
+  {
+    id: 'starting',
+    icon: <Compass size={24} color="rgba(255,255,255,0.8)" strokeWidth={1.8} />,
+    selectedIcon: <Compass size={24} color="white" strokeWidth={2} />,
+    color: '#8b5cf6',
+  },
 ];
 
 interface MotivationStepProps {
@@ -53,22 +74,24 @@ const MotivationStep: React.FC<MotivationStepProps> = ({ selectedChallenge, onCh
               key={challenge.id}
               onPress={() => selectChallenge(challenge.id)}
               style={({ pressed }) => [
-                tw`flex-row items-center gap-4 rounded-2xl px-5 py-3`,
+                tw`flex-row items-center gap-4 rounded-2xl px-5 py-3.5`,
                 {
-                  backgroundColor: isSelected ? `${challenge.color}30` : 'rgba(255, 255, 255, 0.1)',
-                  borderWidth: 2,
-                  borderColor: isSelected ? challenge.color : 'transparent',
+                  backgroundColor: isSelected ? `${challenge.color}20` : 'rgba(255, 255, 255, 0.08)',
+                  borderWidth: 1.5,
+                  borderColor: isSelected ? `${challenge.color}90` : 'rgba(255, 255, 255, 0.1)',
                   opacity: pressed ? 0.8 : 1,
                 },
               ]}
             >
               <View
                 style={[
-                  tw`w-10 h-10 rounded-full items-center justify-center`,
-                  { backgroundColor: isSelected ? `${challenge.color}40` : 'rgba(255, 255, 255, 0.15)' },
+                  tw`w-11 h-11 rounded-xl items-center justify-center`,
+                  {
+                    backgroundColor: isSelected ? `${challenge.color}35` : 'rgba(255, 255, 255, 0.1)',
+                  },
                 ]}
               >
-                {challenge.icon}
+                {isSelected ? challenge.selectedIcon : challenge.icon}
               </View>
               <Text style={tw`text-base font-semibold text-white flex-1`}>
                 {t(`onboarding.motivation.options.${challenge.id}`)}

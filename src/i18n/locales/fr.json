@@ -2071,11 +2071,27 @@
     "startJourney": "Commencer mon parcours",
     "welcome": {
       "title": "Bienvenue sur Nuvoria",
-      "subtitle": "Construisez des habitudes durables, suivez vos progrès et transformez votre quotidien"
+      "subtitle": "Ton arme secrète pour des habitudes qui tiennent vraiment"
+    },
+    "socialProof": {
+      "title": "Ne nous crois pas sur parole",
+      "subtitle": "sur l'App Store",
+      "reviews": {
+        "0": "M'a aidé à être plus discipliné. Le design est vraiment soigné !",
+        "1": "Le système d'XP et de séries motive à revenir chaque jour.",
+        "2": "Design épuré, progression gamifiée satisfaisante. Des mises à jour régulières.",
+        "3": "M'a aidé à démarrer des habitudes que j'essayais depuis des années. L'aspect gaming est top !"
+      }
+    },
+    "impact": {
+      "title": "80% des gens abandonnent leurs habitudes trop tôt.",
+      "subtitle": "Pas par manque de volonté — mais par manque de motivation au bon moment.",
+      "punchline": "Nuvoria transforme chaque petite victoire en récompense immédiate.",
+      "cta": "Créer ma première victoire"
     },
     "goals": {
-      "title": "Qu'est-ce qui vous amène ?",
-      "subtitle": "Sélectionnez tout ce qui vous correspond",
+      "title": "C'est quoi ta mission ?",
+      "subtitle": "Coche tout ce qui te parle",
       "options": {
         "routines": "Construire de meilleures routines",
         "bad_habits": "Briser mes mauvaises habitudes",
@@ -2085,8 +2101,8 @@
       }
     },
     "motivation": {
-      "title": "Qu'est-ce qui vous freine ?",
-      "subtitle": "Comprendre votre défi nous aide à mieux vous accompagner",
+      "title": "Soyons honnêtes — c'est quoi le blocage ?",
+      "subtitle": "Zéro jugement, on est tous passés par là",
       "options": {
         "consistency": "Je commence mais je ne tiens pas",
         "forgetting": "J'oublie de faire mes habitudes",
@@ -2095,15 +2111,17 @@
       }
     },
     "loadingPlan": {
-      "title": "Création de votre plan",
-      "subtitle": "Préparation d'un plan personnalisé pour {{goal}}",
-      "analyzingGoals": "Analyse de vos objectifs",
+      "title": "On cherche tes habitudes idéales",
+      "subtitle": "Recherche des meilleures habitudes pour {{goal}}",
+      "analyzingGoals": "Analyse de tes objectifs",
       "findingStrategy": "Recherche de la meilleure stratégie",
-      "selectingHabits": "Sélection des habitudes pour vous"
+      "selectingHabits": "Sélection des habitudes pour toi",
+      "optimizingProgress": "Optimisation de ton parcours",
+      "cta": "Voir mes habitudes"
     },
     "quickHabit": {
-      "title": "Votre première habitude",
-      "subtitle": "Choisissez-en une pour commencer — vous pourrez en ajouter d'autres plus tard",
+      "title": "Choisis ta première habitude",
+      "subtitle": "Juste une pour démarrer — tu pourras en ajouter d'autres après",
       "habits": {
         "morning_routine": {
           "name": "Routine matinale",
@@ -2148,9 +2166,9 @@
       }
     },
     "notifications": {
-      "title": "Restez sur la bonne voie",
-      "subtitle": "Les rappels intelligents vous aident à construire des habitudes durables",
-      "subtitleForgetting": "Vous avez dit oublier vos habitudes — les rappels sont votre meilleur allié",
+      "title": "Un petit rappel de temps en temps ?",
+      "subtitle": "Des rappels malins pour ne jamais casser ta série",
+      "subtitleForgetting": "Tu oublies souvent — les rappels sont ton meilleur allié",
       "smartReminders": "Rappels intelligents",
       "smartRemindersDesc": "Soyez notifié au moment parfait",
       "perfectTiming": "Timing parfait",
@@ -2161,15 +2179,16 @@
       "maybeLater": "Peut-être plus tard"
     },
     "celebration": {
-      "title": "Vous êtes prêt !",
-      "subtitle": "Votre parcours commence maintenant. Chaque petit pas compte",
-      "recap": "Votre configuration",
-      "goalLabel": "Votre objectif :",
-      "habitLabel": "Première habitude :"
+      "title": "C'est parti !",
+      "subtitle": "Ton aventure commence maintenant. Jour 1 de quelque chose de grand",
+      "recap": "Petit récap",
+      "goalLabel": "Ta mission",
+      "habitLabel": "Premier power move",
+      "cta": "On y va !"
     },
     "username": {
-      "title": "Créez votre pseudo",
-      "subtitle": "Choisissez un nom unique qui vous représente dans la communauté Nuvoria",
+      "title": "Comment on t'appelle ?",
+      "subtitle": "Choisis un nom pour ton aventure Nuvoria",
       "placeholder": "Votre pseudo",
       "characterCount": "{{count}} / {{max}} caractères",
       "errors": {

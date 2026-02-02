@@ -3,8 +3,8 @@ import { View, Pressable, Text, StatusBar, ImageBackground, Alert } from 'react-
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay, runOnJS } from 'react-native-reanimated';
-import { ChevronRight, ChevronLeft } from 'lucide-react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay, withRepeat, Easing, runOnJS } from 'react-native-reanimated';
+import { ChevronRight, ChevronLeft, Brain } from 'lucide-react-native';
 import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import tw from '../lib/tailwind';
@@ -24,10 +24,12 @@ import QuickHabitStep from '../components/onboarding/QuickHabitStep';
 import NotificationStep from '../components/onboarding/NotificationStep';
 import CelebrationStep from '../components/onboarding/CelebrationStep';
 import UsernameStep from '../components/onboarding/UsernameStep';
+import SocialProofStep from '../components/onboarding/SocialProofStep';
+import ImpactStep from '../components/onboarding/ImpactStep';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Onboarding'>;
 
-type StepId = 'welcome' | 'username' | 'goals' | 'motivation' | 'loadingPlan' | 'quickHabit' | 'notifications' | 'celebration';
+type StepId = 'welcome' | 'socialProof' | 'username' | 'goals' | 'motivation' | 'loadingPlan' | 'impact' | 'quickHabit' | 'notifications' | 'celebration';
 
 interface StepConfig {
   id: StepId;
@@ -37,6 +39,8 @@ interface StepConfig {
   hasCustomNav?: boolean;
   // Use app icon instead of gem
   isAppIcon?: boolean;
+  // Use custom icon instead of gem image
+  useCustomIcon?: boolean;
 }
 
 const STEPS: StepConfig[] = [
@@ -47,9 +51,15 @@ const STEPS: StepConfig[] = [
     isAppIcon: true,
   },
   {
-    id: 'username',
-    gemColor: '#ec4899',
-    gemSource: require('../../assets/interface/gems/ruby-gem.png'),
+    id: 'socialProof',
+    gemColor: '#f59e0b',
+    gemSource: require('../../assets/interface/gems/topaz-gem.png'),
+  },
+  {
+    id: 'impact',
+    gemColor: '#8b5cf6',
+    gemSource: require('../../assets/interface/gems/amethyst-gem.png'),
+    useCustomIcon: true,
   },
   {
     id: 'goals',
@@ -65,7 +75,6 @@ const STEPS: StepConfig[] = [
     id: 'loadingPlan',
     gemColor: '#8b5cf6',
     gemSource: require('../../assets/interface/gems/amethyst-gem.png'),
-    hasCustomNav: true, // Auto-advances, no nav buttons
   },
   {
     id: 'quickHabit',
@@ -79,9 +88,15 @@ const STEPS: StepConfig[] = [
     hasCustomNav: true,
   },
   {
+    id: 'username',
+    gemColor: '#ec4899',
+    gemSource: require('../../assets/interface/gems/ruby-gem.png'),
+  },
+  {
     id: 'celebration',
     gemColor: '#10b981',
     gemSource: require('../../assets/interface/gems/jade-gem.png'),
+    hasCustomNav: true,
   },
 ];
 
@@ -119,6 +134,7 @@ const OnboardingScreen: React.FC = () => {
   const [selectedChallenge, setSelectedChallenge] = useState<ChallengeId | null>(null);
   const [selectedHabit, setSelectedHabit] = useState<string | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [loadingComplete, setLoadingComplete] = useState(false);
 
   // Filter steps: username only for Apple auth on first onboarding (not review)
   const isAppleAuth = user?.app_metadata?.provider === 'apple';
@@ -131,9 +147,16 @@ const OnboardingScreen: React.FC = () => {
   // Welcome screen: logo fades in first, then content + buttons after a delay
   const welcomeGemOpacity = useSharedValue(0);
   const welcomeContentOpacity = useSharedValue(0);
+  const floatY = useSharedValue(0);
   const [initialAnimDone, setInitialAnimDone] = useState(false);
 
   useEffect(() => {
+    // Gentle floating animation for the app icon
+    floatY.value = withRepeat(
+      withTiming(-8, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
+      -1,
+      true,
+    );
     // Initial welcome: logo first, then text + buttons
     welcomeGemOpacity.value = withTiming(1, { duration: 500 });
     welcomeContentOpacity.value = withDelay(400, withTiming(1, { duration: 500 }, (finished) => {
@@ -168,7 +191,7 @@ const OnboardingScreen: React.FC = () => {
   };
 
   const handleNext = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (currentStep < steps.length - 1) {
       setCurrentStep((prev) => prev + 1);
     } else {
@@ -177,7 +200,7 @@ const OnboardingScreen: React.FC = () => {
   };
 
   const handleBack = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (currentStep > 0) {
       setCurrentStep((prev) => prev - 1);
     }
@@ -298,6 +321,9 @@ const OnboardingScreen: React.FC = () => {
   const animatedWelcomeContent = useAnimatedStyle(() => ({
     opacity: welcomeContentOpacity.value,
   }));
+  const animatedFloat = useAnimatedStyle(() => ({
+    transform: [{ translateY: floatY.value }],
+  }));
 
   // Use displayedStep for ALL visual elements to avoid mismatches during transitions
   const step = steps[displayedStep];
@@ -305,7 +331,7 @@ const OnboardingScreen: React.FC = () => {
   const isLastStep = displayedStep === steps.length - 1;
   const isNotificationStep = step.id === 'notifications';
   const hasCustomNav = step.hasCustomNav === true;
-  const hideGem = step.id === 'goals' || step.id === 'motivation' || step.id === 'notifications' || step.id === 'loadingPlan';
+  const hideGem = step.id === 'goals' || step.id === 'motivation' || step.id === 'notifications' || step.id === 'loadingPlan' || step.id === 'socialProof' || step.id === 'quickHabit';
   // On first load, welcome uses staggered fade (logo first, then content)
   const useWelcomeAnim = step.id === 'welcome' && !initialAnimDone;
 
@@ -316,6 +342,7 @@ const OnboardingScreen: React.FC = () => {
     if (current.id === 'goals') return selectedGoals.length === 0;
     if (current.id === 'motivation') return selectedChallenge === null;
     if (current.id === 'quickHabit') return selectedHabit === null;
+    if (current.id === 'loadingPlan') return !loadingComplete;
     return false;
   })();
 
@@ -330,6 +357,8 @@ const OnboardingScreen: React.FC = () => {
     switch (step.id) {
       case 'welcome':
         return <WelcomeStep {...commonProps} />;
+      case 'socialProof':
+        return <SocialProofStep {...commonProps} />;
       case 'username':
         return (
           <UsernameStep
@@ -363,9 +392,11 @@ const OnboardingScreen: React.FC = () => {
             {...commonProps}
             selectedGoals={selectedGoals}
             selectedChallenge={selectedChallenge}
-            onLoadingComplete={() => setCurrentStep((prev) => prev + 1)}
+            onLoadingComplete={() => setLoadingComplete(true)}
           />
         );
+      case 'impact':
+        return <ImpactStep {...commonProps} />;
       case 'quickHabit':
         return (
           <QuickHabitStep
@@ -390,6 +421,7 @@ const OnboardingScreen: React.FC = () => {
             {...commonProps}
             selectedGoals={selectedGoals}
             selectedHabitName={selectedHabitName}
+            onStart={handleComplete}
           />
         );
       default:
@@ -450,25 +482,44 @@ const OnboardingScreen: React.FC = () => {
           ]}
         >
           {step.isAppIcon ? (
-            <View
-              style={{
-                width: 180,
-                height: 180,
-                marginTop: 12,
-                alignItems: 'center',
-                justifyContent: 'center',
-                shadowColor: '#8b5cf6',
-                shadowOffset: { width: 0, height: 12 },
-                shadowOpacity: 0.7,
-                shadowRadius: 24,
-                elevation: 18,
-              }}
+            <Animated.View
+              style={[
+                {
+                  width: 225,
+                  height: 225,
+                  marginTop: 24,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  shadowColor: '#8b5cf6',
+                  shadowOffset: { width: 0, height: 12 },
+                  shadowOpacity: 0.7,
+                  shadowRadius: 24,
+                  elevation: 18,
+                },
+                animatedFloat,
+              ]}
             >
               <Image
                 source={step.gemSource}
-                style={{ width: 180, height: 180 }}
+                style={{ width: 203, height: 203 }}
                 contentFit="contain"
               />
+            </Animated.View>
+          ) : step.useCustomIcon ? (
+            <View
+              style={[
+                tw`w-36 h-36 rounded-full items-center justify-center`,
+                {
+                  backgroundColor: `${step.gemColor}25`,
+                  shadowColor: step.gemColor,
+                  shadowOffset: { width: 0, height: 12 },
+                  shadowOpacity: 0.5,
+                  shadowRadius: 24,
+                  elevation: 18,
+                },
+              ]}
+            >
+              <Brain size={64} color="#c4b5fd" strokeWidth={1.5} />
             </View>
           ) : (
             <View
@@ -567,7 +618,7 @@ const OnboardingScreen: React.FC = () => {
                       },
                     ]}
                   >
-                    {isLastStep ? t('onboarding.startJourney') : t('onboarding.continue')}
+                    {isLastStep ? t('onboarding.startJourney') : step.id === 'impact' ? t('onboarding.impact.cta') : step.id === 'loadingPlan' ? t('onboarding.loadingPlan.cta') : t('onboarding.continue')}
                   </Text>
                   <ChevronRight
                     size={20}

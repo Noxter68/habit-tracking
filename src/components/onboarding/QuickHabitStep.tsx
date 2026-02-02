@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { View, Text, Pressable } from 'react-native';
-import { Droplet, Dumbbell, Moon, BookOpen, Target, Brain, Heart, Salad } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import * as Haptics from 'expo-haptics';
 import tw from '../../lib/tailwind';
@@ -8,35 +7,44 @@ import { GoalId } from './GoalStep';
 
 export interface QuickHabit {
   id: string;
-  icon: React.ReactNode;
   color: string;
 }
 
 const HABIT_SUGGESTIONS: Record<GoalId, QuickHabit[]> = {
   routines: [
-    { id: 'morning_routine', icon: <Target size={22} color="white" strokeWidth={2} />, color: '#3b82f6' },
-    { id: 'drink_water', icon: <Droplet size={22} color="white" strokeWidth={2} />, color: '#06b6d4' },
-    { id: 'read_10_pages', icon: <BookOpen size={22} color="white" strokeWidth={2} />, color: '#8b5cf6' },
+    { id: 'morning_routine', color: '#3b82f6' },
+    { id: 'drink_water', color: '#06b6d4' },
+    { id: 'read_10_pages', color: '#8b5cf6' },
+    { id: 'sleep_early', color: '#6366f1' },
+    { id: 'meditate', color: '#ec4899' },
   ],
   bad_habits: [
-    { id: 'no_phone_morning', icon: <Brain size={22} color="white" strokeWidth={2} />, color: '#ef4444' },
-    { id: 'eat_healthy', icon: <Salad size={22} color="white" strokeWidth={2} />, color: '#10b981' },
-    { id: 'sleep_early', icon: <Moon size={22} color="white" strokeWidth={2} />, color: '#6366f1' },
+    { id: 'no_phone_morning', color: '#ef4444' },
+    { id: 'eat_healthy', color: '#10b981' },
+    { id: 'sleep_early', color: '#6366f1' },
+    { id: 'drink_water', color: '#06b6d4' },
+    { id: 'read_10_pages', color: '#8b5cf6' },
   ],
   productivity: [
-    { id: 'plan_my_day', icon: <Target size={22} color="white" strokeWidth={2} />, color: '#f59e0b' },
-    { id: 'read_10_pages', icon: <BookOpen size={22} color="white" strokeWidth={2} />, color: '#8b5cf6' },
-    { id: 'focus_session', icon: <Brain size={22} color="white" strokeWidth={2} />, color: '#3b82f6' },
+    { id: 'plan_my_day', color: '#f59e0b' },
+    { id: 'read_10_pages', color: '#8b5cf6' },
+    { id: 'focus_session', color: '#3b82f6' },
+    { id: 'exercise_10min', color: '#10b981' },
+    { id: 'meditate', color: '#ec4899' },
   ],
   health: [
-    { id: 'drink_water', icon: <Droplet size={22} color="white" strokeWidth={2} />, color: '#06b6d4' },
-    { id: 'exercise_10min', icon: <Dumbbell size={22} color="white" strokeWidth={2} />, color: '#10b981' },
-    { id: 'sleep_early', icon: <Moon size={22} color="white" strokeWidth={2} />, color: '#6366f1' },
+    { id: 'drink_water', color: '#06b6d4' },
+    { id: 'exercise_10min', color: '#10b981' },
+    { id: 'sleep_early', color: '#6366f1' },
+    { id: 'eat_healthy', color: '#10b981' },
+    { id: 'meditate', color: '#ec4899' },
   ],
   growth: [
-    { id: 'read_10_pages', icon: <BookOpen size={22} color="white" strokeWidth={2} />, color: '#8b5cf6' },
-    { id: 'meditate', icon: <Heart size={22} color="white" strokeWidth={2} />, color: '#ec4899' },
-    { id: 'plan_my_day', icon: <Target size={22} color="white" strokeWidth={2} />, color: '#f59e0b' },
+    { id: 'read_10_pages', color: '#8b5cf6' },
+    { id: 'meditate', color: '#ec4899' },
+    { id: 'plan_my_day', color: '#f59e0b' },
+    { id: 'exercise_10min', color: '#10b981' },
+    { id: 'morning_routine', color: '#3b82f6' },
   ],
 };
 
@@ -89,7 +97,7 @@ const QuickHabitStep: React.FC<QuickHabitStepProps> = ({
               key={habit.id}
               onPress={() => selectHabit(habit.id)}
               style={({ pressed }) => [
-                tw`flex-row items-center gap-4 rounded-2xl px-5 py-4`,
+                tw`flex-row items-center gap-4 rounded-2xl px-5 py-3`,
                 {
                   backgroundColor: isSelected ? `${habit.color}30` : 'rgba(255, 255, 255, 0.1)',
                   borderWidth: 2,
@@ -98,14 +106,6 @@ const QuickHabitStep: React.FC<QuickHabitStepProps> = ({
                 },
               ]}
             >
-              <View
-                style={[
-                  tw`w-11 h-11 rounded-full items-center justify-center`,
-                  { backgroundColor: isSelected ? `${habit.color}40` : 'rgba(255, 255, 255, 0.15)' },
-                ]}
-              >
-                {habit.icon}
-              </View>
               <View style={tw`flex-1`}>
                 <Text style={tw`text-base font-semibold text-white`}>
                   {t(`onboarding.quickHabit.habits.${habit.id}.name`)}

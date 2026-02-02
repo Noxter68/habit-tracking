@@ -2029,11 +2029,27 @@
     "startJourney": "Start my journey",
     "welcome": {
       "title": "Welcome to Nuvoria",
-      "subtitle": "Build lasting habits, track your progress, and transform your daily routine"
+      "subtitle": "Your new secret weapon for habits that actually stick"
+    },
+    "socialProof": {
+      "title": "Don't just take our word for it",
+      "subtitle": "on the App Store",
+      "reviews": {
+        "0": "Helped me be more disciplined. A lot of thought put into the design!",
+        "1": "The XP, streaks and gamification make you want to come back every day.",
+        "2": "Clean design, satisfying progression system. Regular updates keep improving it.",
+        "3": "Helped me start habits I'd been trying for years. The gaming aspect is fun!"
+      }
+    },
+    "impact": {
+      "title": "80% of people give up their habits too early.",
+      "subtitle": "Not from lack of willpower — but from lack of motivation at the right time.",
+      "punchline": "Nuvoria turns every small win into an instant reward.",
+      "cta": "Create my first win"
     },
     "goals": {
-      "title": "What brings you here?",
-      "subtitle": "Select everything that applies to you",
+      "title": "So, what's the mission?",
+      "subtitle": "Pick everything that sounds like you",
       "options": {
         "routines": "Build better routines",
         "bad_habits": "Break bad habits",
@@ -2043,8 +2059,8 @@
       }
     },
     "motivation": {
-      "title": "What's holding you back?",
-      "subtitle": "Understanding your challenge helps us support you better",
+      "title": "Real talk — what's tricky?",
+      "subtitle": "No judgment, we've all been there",
       "options": {
         "consistency": "I start but can't stay consistent",
         "forgetting": "I forget to do my habits",
@@ -2053,15 +2069,17 @@
       }
     },
     "loadingPlan": {
-      "title": "Creating your plan",
-      "subtitle": "Building a personalized plan for {{goal}}",
+      "title": "Finding your perfect habits",
+      "subtitle": "Searching the best match for {{goal}}",
       "analyzingGoals": "Analyzing your goals",
       "findingStrategy": "Finding the best strategy",
-      "selectingHabits": "Selecting habits for you"
+      "selectingHabits": "Selecting habits for you",
+      "optimizingProgress": "Optimizing your progress path",
+      "cta": "See my habits"
     },
     "quickHabit": {
-      "title": "Your first habit",
-      "subtitle": "Pick one to get started — you can always add more later",
+      "title": "Pick your starter habit",
+      "subtitle": "Just one to kick things off — add more anytime",
       "habits": {
         "morning_routine": {
           "name": "Morning Routine",
@@ -2106,9 +2124,9 @@
       }
     },
     "notifications": {
-      "title": "Stay on track",
-      "subtitle": "Smart reminders help you build habits that last",
-      "subtitleForgetting": "You said you forget your habits — reminders are your best ally",
+      "title": "Want a friendly nudge?",
+      "subtitle": "Smart reminders so you never miss a streak",
+      "subtitleForgetting": "You said you forget — reminders are your best ally",
       "smartReminders": "Smart reminders",
       "smartRemindersDesc": "Get notified at the perfect time",
       "perfectTiming": "Perfect timing",
@@ -2119,15 +2137,16 @@
       "maybeLater": "Maybe later"
     },
     "celebration": {
-      "title": "You're all set!",
-      "subtitle": "Your journey starts now. Every small step counts",
-      "recap": "Your setup",
-      "goalLabel": "Your goal:",
-      "habitLabel": "First habit:"
+      "title": "Let's do this!",
+      "subtitle": "Your adventure starts now. Day 1 of something big",
+      "recap": "Quick recap",
+      "goalLabel": "Your mission",
+      "habitLabel": "First power move",
+      "cta": "Let's go!"
     },
     "username": {
-      "title": "Create your username",
-      "subtitle": "Choose a unique name that represents you in the Nuvoria community",
+      "title": "What should we call you?",
+      "subtitle": "Pick a name for your Nuvoria adventure",
       "placeholder": "Your username",
       "characterCount": "{{count}} / {{max}} characters",
       "errors": {
