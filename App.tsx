@@ -254,9 +254,10 @@ function AppNavigator() {
   }, []);
 
   // Détermine si on peut afficher l'UI
+  // On attend aussi que hasCompletedOnboarding soit chargé (non null) pour éviter un flash vers l'onboarding
   const canShowUI = useMemo(() => {
-    return languageInitialized && !authLoading && !isCheckingFirstLaunch && minLoadingTimePassed;
-  }, [authLoading, isCheckingFirstLaunch, minLoadingTimePassed]);
+    return languageInitialized && !authLoading && !isCheckingFirstLaunch && minLoadingTimePassed && (user === null || hasCompletedOnboarding !== null);
+  }, [authLoading, isCheckingFirstLaunch, minLoadingTimePassed, languageInitialized, user, hasCompletedOnboarding]);
 
   // ============================================================================
   // RENDER: LOADER
@@ -292,7 +293,7 @@ function AppNavigator() {
 
   return (
     <>
-      <Stack.Navigator initialRouteName={hasCompletedOnboarding ? 'MainTabs' : 'Onboarding'} screenOptions={{ headerShown: false, animation: 'fade' }}>
+      <Stack.Navigator initialRouteName={hasCompletedOnboarding === true ? 'MainTabs' : 'Onboarding'} screenOptions={{ headerShown: false, animation: 'fade' }}>
         <Stack.Screen name="MainTabs" component={MainTabs} options={{ animation: 'fade' }} />
         <Stack.Screen name="HabitWizard" component={HabitWizard} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="HabitDetails" component={HabitDetails} options={{ animation: 'slide_from_right' }} />

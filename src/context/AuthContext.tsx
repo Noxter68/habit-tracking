@@ -82,8 +82,8 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   /** Reinitialisation du mot de passe */
   resetPassword: (email: string) => Promise<void>;
-  /** Onboarding complete */
-  hasCompletedOnboarding: boolean;
+  /** Onboarding complete (null = loading, false = not completed, true = completed) */
+  hasCompletedOnboarding: boolean | null;
   /** Marque l'onboarding comme complete */
   completeOnboarding: (status?: 'started' | 'skipped') => Promise<void>;
   /** Verifie le statut de l'onboarding */
@@ -117,7 +117,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [username, setUsername] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean | null>(null);
   const [hasConnectionError, setHasConnectionError] = useState(false);
 
   // ==========================================================================
