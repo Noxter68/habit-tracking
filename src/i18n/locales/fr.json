@@ -2070,6 +2070,7 @@
   },
   "onboarding": {
     "skip": "Passer",
+    "skipOnboarding": "Je découvre seul",
     "continue": "Continuer",
     "back": "Retour",
     "letsGo": "C'est parti",

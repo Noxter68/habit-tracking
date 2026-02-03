@@ -339,18 +339,70 @@ const HabitWizard: React.FC = () => {
         <View style={tw`flex-1`}>
           {/* Header - Exit & Back Buttons */}
           <View style={tw`px-6 pt-2 flex-row items-center ${isFirstStep ? 'justify-between' : 'justify-start'}`}>
-            {/* Exit Button - Only visible on first step */}
+            {/* Exit Button - Only visible on first step - with depth */}
             {isFirstStep && (
-              <Pressable onPress={handleExit} disabled={isCreating} style={({ pressed }) => [tw`w-12 h-12 rounded-full items-center justify-center bg-white/10`, pressed && tw`opacity-70`]}>
-                <X size={24} color="#ffffff" strokeWidth={2.5} />
-              </Pressable>
+              <View style={{ position: 'relative' }}>
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: 4,
+                    left: 0,
+                    right: 0,
+                    bottom: -4,
+                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                    borderRadius: 16,
+                    width: 48,
+                    height: 48,
+                  }}
+                />
+                <Pressable
+                  onPress={handleExit}
+                  disabled={isCreating}
+                  style={({ pressed }) => [
+                    tw`w-12 h-12 items-center justify-center`,
+                    {
+                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                      borderRadius: 16,
+                      transform: pressed ? [{ translateY: 2 }] : [{ translateY: 0 }],
+                    },
+                  ]}
+                >
+                  <X size={24} color="#ffffff" strokeWidth={2.5} />
+                </Pressable>
+              </View>
             )}
 
-            {/* Back Button - Only visible when not on first step */}
+            {/* Back Button - Only visible when not on first step - with depth */}
             {!isFirstStep && (
-              <Pressable onPress={handleBack} disabled={isCreating} style={({ pressed }) => [tw`w-12 h-12 rounded-full items-center justify-center bg-white/10`, pressed && tw`opacity-70`]}>
-                <ChevronLeft size={24} color="#ffffff" strokeWidth={2.5} />
-              </Pressable>
+              <View style={{ position: 'relative' }}>
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: 4,
+                    left: 0,
+                    right: 0,
+                    bottom: -4,
+                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                    borderRadius: 16,
+                    width: 48,
+                    height: 48,
+                  }}
+                />
+                <Pressable
+                  onPress={handleBack}
+                  disabled={isCreating}
+                  style={({ pressed }) => [
+                    tw`w-12 h-12 items-center justify-center`,
+                    {
+                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                      borderRadius: 16,
+                      transform: pressed ? [{ translateY: 2 }] : [{ translateY: 0 }],
+                    },
+                  ]}
+                >
+                  <ChevronLeft size={24} color="#ffffff" strokeWidth={2.5} />
+                </Pressable>
+              </View>
             )}
           </View>
 
@@ -368,12 +420,37 @@ const HabitWizard: React.FC = () => {
               ))}
             </View>
 
-            {/* Continue Button */}
-            <Pressable onPress={handleNext} disabled={isCreating} style={({ pressed }) => [tw`bg-white rounded-full py-4 px-8`, pressed && tw`opacity-80`, isCreating && tw`opacity-50`]}>
-              <Text style={tw`text-purple-600 text-lg font-bold text-center`}>
-                {isCreating ? t('wizard.navigation.creating') : isLastStep ? t('wizard.navigation.createHabit') : t('wizard.navigation.continue')}
-              </Text>
-            </Pressable>
+            {/* Continue Button - with depth effect */}
+            <View style={{ position: 'relative' }}>
+              {/* Shadow layer for depth */}
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 4,
+                  left: 0,
+                  right: 0,
+                  bottom: -4,
+                  backgroundColor: isCreating ? 'rgba(0, 0, 0, 0.15)' : 'rgba(88, 28, 135, 0.5)',
+                  borderRadius: 16,
+                }}
+              />
+              <Pressable
+                onPress={handleNext}
+                disabled={isCreating}
+                style={({ pressed }) => [
+                  tw`py-4 px-8`,
+                  {
+                    backgroundColor: isCreating ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.98)',
+                    borderRadius: 16,
+                    transform: pressed && !isCreating ? [{ translateY: 2 }] : [{ translateY: 0 }],
+                  },
+                ]}
+              >
+                <Text style={[tw`text-lg font-bold text-center`, { color: isCreating ? 'rgba(88, 28, 135, 0.5)' : '#7c3aed' }]}>
+                  {isCreating ? t('wizard.navigation.creating') : isLastStep ? t('wizard.navigation.createHabit') : t('wizard.navigation.continue')}
+                </Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       </SafeAreaView>

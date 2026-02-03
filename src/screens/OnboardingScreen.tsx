@@ -301,7 +301,7 @@ const OnboardingScreen: React.FC = () => {
 
   const handleSkip = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    await completeOnboarding();
+    await completeOnboarding('skipped');
     navigation.replace('MainTabs');
   };
 
@@ -435,11 +435,9 @@ const OnboardingScreen: React.FC = () => {
       <StatusBar barStyle="light-content" />
 
       <SafeAreaView style={tw`flex-1`}>
-        {/* Header - Skip button and Progress dots */}
+        {/* Header - Progress dots only */}
         <View style={tw`px-6 pt-1`}>
-          <View style={tw`flex-row justify-between items-center`}>
-            <View style={tw`w-20`} />
-
+          <View style={tw`flex-row justify-center items-center`}>
             {/* Progress Indicators */}
             <View style={tw`flex-row gap-2`}>
               {steps.map((_, index) => (
@@ -455,20 +453,6 @@ const OnboardingScreen: React.FC = () => {
                 />
               ))}
             </View>
-
-            {/* Skip Button */}
-            <Pressable
-              onPress={handleSkip}
-              style={({ pressed }) => [
-                tw`px-5 py-2.5 rounded-full`,
-                {
-                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                  opacity: pressed ? 0.7 : 1,
-                },
-              ]}
-            >
-              <Text style={tw`text-sm font-semibold text-white/90`}>{t('onboarding.skip')}</Text>
-            </Pressable>
           </View>
         </View>
 
@@ -550,82 +534,136 @@ const OnboardingScreen: React.FC = () => {
         {!hasCustomNav && (
           <Animated.View style={[useWelcomeAnim ? animatedWelcomeContent : animatedContentStyle, tw`px-8 pb-8 pt-8`]}>
             {displayedStep === 0 ? (
-              <Pressable
-                onPress={handleNext}
-                style={({ pressed }) => [
-                  tw`h-14 rounded-full flex-row items-center justify-center gap-2`,
-                  {
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    opacity: pressed ? 0.9 : 1,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 8,
-                    elevation: 5,
-                  },
-                ]}
-              >
-                <Text style={tw`text-base font-bold text-purple-900`}>
-                  {t('onboarding.letsGo')}
-                </Text>
-                <ChevronRight size={20} color="#581c87" strokeWidth={2.5} />
-              </Pressable>
-            ) : (
-              <View style={tw`flex-row justify-between items-center gap-4`}>
-                <Pressable
-                  onPress={handleBack}
-                  style={({ pressed }) => [
-                    tw`w-14 h-14 rounded-full items-center justify-center`,
-                    {
-                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                      opacity: pressed ? 0.7 : 1,
-                      shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.3,
-                      shadowRadius: 8,
-                      elevation: 5,
-                    },
-                  ]}
-                >
-                  <ChevronLeft size={26} color="white" strokeWidth={2.5} />
-                </Pressable>
-
-                <Pressable
-                  onPress={handleNext}
-                  disabled={isContinueDisabled}
-                  style={({ pressed }) => [
-                    tw`flex-1 h-14 rounded-full flex-row items-center justify-center gap-2`,
-                    {
-                      backgroundColor: isContinueDisabled
-                        ? 'rgba(255, 255, 255, 0.3)'
-                        : 'rgba(255, 255, 255, 0.95)',
-                      opacity: pressed ? 0.9 : 1,
-                      shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.3,
-                      shadowRadius: 8,
-                      elevation: 5,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      tw`text-base font-bold`,
+              <View style={tw`gap-3`}>
+                {/* Main CTA with depth effect */}
+                <View style={{ position: 'relative' }}>
+                  {/* Shadow layer for depth */}
+                  <View
+                    style={{
+                      position: 'absolute',
+                      top: 4,
+                      left: 0,
+                      right: 0,
+                      bottom: -4,
+                      backgroundColor: 'rgba(88, 28, 135, 0.5)',
+                      borderRadius: 16,
+                    }}
+                  />
+                  <Pressable
+                    onPress={handleNext}
+                    style={({ pressed }) => [
+                      tw`h-14 flex-row items-center justify-center gap-2`,
                       {
-                        color: isContinueDisabled
-                          ? 'rgba(88, 28, 135, 0.4)'
-                          : '#581c87',
+                        backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                        borderRadius: 16,
+                        transform: pressed ? [{ translateY: 2 }] : [{ translateY: 0 }],
                       },
                     ]}
                   >
-                    {isLastStep ? t('onboarding.startJourney') : step.id === 'impact' ? t('onboarding.impact.cta') : step.id === 'loadingPlan' ? t('onboarding.loadingPlan.cta') : t('onboarding.continue')}
+                    <Text style={tw`text-base font-bold text-purple-900`}>
+                      {t('onboarding.letsGo')}
+                    </Text>
+                    <ChevronRight size={20} color="#581c87" strokeWidth={2.5} />
+                  </Pressable>
+                </View>
+
+                {/* Skip button - visible on first step */}
+                <Pressable
+                  onPress={handleSkip}
+                  style={({ pressed }) => [
+                    tw`h-12 flex-row items-center justify-center`,
+                    {
+                      backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                      borderRadius: 16,
+                      borderWidth: 1,
+                      borderColor: 'rgba(255, 255, 255, 0.25)',
+                      opacity: pressed ? 0.7 : 1,
+                    },
+                  ]}
+                >
+                  <Text style={tw`text-sm font-semibold text-white/90`}>
+                    {t('onboarding.skipOnboarding')}
                   </Text>
-                  <ChevronRight
-                    size={20}
-                    color={isContinueDisabled ? 'rgba(88, 28, 135, 0.4)' : '#581c87'}
-                    strokeWidth={2.5}
-                  />
                 </Pressable>
+              </View>
+            ) : (
+              <View style={tw`flex-row justify-between items-center gap-4`}>
+                {/* Back button with depth */}
+                <View style={{ position: 'relative' }}>
+                  <View
+                    style={{
+                      position: 'absolute',
+                      top: 4,
+                      left: 0,
+                      right: 0,
+                      bottom: -4,
+                      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                      borderRadius: 16,
+                      width: 56,
+                      height: 56,
+                    }}
+                  />
+                  <Pressable
+                    onPress={handleBack}
+                    style={({ pressed }) => [
+                      tw`w-14 h-14 items-center justify-center`,
+                      {
+                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                        borderRadius: 16,
+                        transform: pressed ? [{ translateY: 2 }] : [{ translateY: 0 }],
+                      },
+                    ]}
+                  >
+                    <ChevronLeft size={26} color="white" strokeWidth={2.5} />
+                  </Pressable>
+                </View>
+
+                {/* Continue button with depth */}
+                <View style={{ flex: 1, position: 'relative' }}>
+                  <View
+                    style={{
+                      position: 'absolute',
+                      top: 4,
+                      left: 0,
+                      right: 0,
+                      bottom: -4,
+                      backgroundColor: isContinueDisabled ? 'rgba(0, 0, 0, 0.15)' : 'rgba(88, 28, 135, 0.5)',
+                      borderRadius: 16,
+                    }}
+                  />
+                  <Pressable
+                    onPress={handleNext}
+                    disabled={isContinueDisabled}
+                    style={({ pressed }) => [
+                      tw`h-14 flex-row items-center justify-center gap-2`,
+                      {
+                        backgroundColor: isContinueDisabled
+                          ? 'rgba(255, 255, 255, 0.3)'
+                          : 'rgba(255, 255, 255, 0.98)',
+                        borderRadius: 16,
+                        transform: pressed && !isContinueDisabled ? [{ translateY: 2 }] : [{ translateY: 0 }],
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        tw`text-base font-bold`,
+                        {
+                          color: isContinueDisabled
+                            ? 'rgba(88, 28, 135, 0.4)'
+                            : '#581c87',
+                        },
+                      ]}
+                    >
+                      {isLastStep ? t('onboarding.startJourney') : step.id === 'impact' ? t('onboarding.impact.cta') : step.id === 'loadingPlan' ? t('onboarding.loadingPlan.cta') : t('onboarding.continue')}
+                    </Text>
+                    <ChevronRight
+                      size={20}
+                      color={isContinueDisabled ? 'rgba(88, 28, 135, 0.4)' : '#581c87'}
+                      strokeWidth={2.5}
+                    />
+                  </Pressable>
+                </View>
               </View>
             )}
           </Animated.View>

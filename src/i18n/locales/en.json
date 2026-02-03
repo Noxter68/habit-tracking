@@ -2028,6 +2028,7 @@
   },
   "onboarding": {
     "skip": "Skip",
+    "skipOnboarding": "I'll explore on my own",
     "continue": "Continue",
     "back": "Back",
     "letsGo": "Let's go",

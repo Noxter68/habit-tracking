@@ -1156,14 +1156,7 @@ const Dashboard: React.FC = () => {
                   <Text style={tw`text-sm text-stone-500 mt-0.5`}>{t('dashboard.allHabitsPaused')}</Text>
                 </View>
               </View>
-            ) : (
-              <View style={tw`flex-row items-center justify-between mb-4`}>
-                <View>
-                  <Text style={tw`text-xl font-bold text-stone-700`}>{t('dashboard.getStarted')}</Text>
-                  <Text style={tw`text-sm text-stone-500 mt-0.5`}>{t('dashboard.startBuilding')}</Text>
-                </View>
-              </View>
-            )}
+            ) : null}
             {/* Full Holiday Mode Display */}
             {showFullHolidayMode ? (
               activeHoliday ? (
@@ -1231,24 +1224,108 @@ const Dashboard: React.FC = () => {
                 )}
               </View>
             ) : (
-              /* Empty State - Create First Habit */
-              <View style={tw`px-5`}>
-                <Pressable onPress={handleCreateHabit} style={({ pressed }) => [pressed && tw`scale-[0.98]`]}>
-                  <LinearGradient colors={['rgba(243, 244, 246, 0.5)', 'rgba(229, 231, 235, 0.3)']} style={tw`rounded-2xl p-8 items-center border border-stone-200`}>
-                    <View style={tw`w-16 h-16 mb-4`}>
-                      <LinearGradient colors={['#9CA3AF', '#6B7280']} style={tw`w-full h-full rounded-2xl items-center justify-center shadow-lg`}>
-                        <Plus size={28} color="#ffffff" strokeWidth={2.5} />
-                      </LinearGradient>
+              /* Empty State - Create First Habit - Cartoony/Gamified Style - Crystal Blue */
+              <View style={tw`mt-6`}>
+                {/* Card Container with depth effect */}
+                <View style={{ position: 'relative' }}>
+                  {/* Shadow layer for depth - crystal blue style */}
+                  <View
+                    style={{
+                      position: 'absolute',
+                      top: 5,
+                      left: 4,
+                      right: -4,
+                      bottom: -5,
+                      backgroundColor: '#93c5fd',
+                      borderRadius: 20,
+                    }}
+                  />
+                  <Pressable
+                    onPress={handleCreateHabit}
+                    style={({ pressed }) => [
+                      {
+                        backgroundColor: '#eff6ff',
+                        borderRadius: 20,
+                        borderWidth: 2,
+                        borderColor: '#bfdbfe',
+                        padding: 28,
+                        alignItems: 'center',
+                        transform: pressed ? [{ translateY: 2 }, { translateX: 2 }] : [{ translateY: 0 }, { translateX: 0 }],
+                      },
+                    ]}
+                  >
+                    {/* Gem/Icon with glow effect */}
+                    <View
+                      style={[
+                        tw`w-20 h-20 mb-5 items-center justify-center`,
+                        {
+                          backgroundColor: '#dbeafe',
+                          borderRadius: 24,
+                          borderWidth: 3,
+                          borderColor: '#93c5fd',
+                          shadowColor: '#3b82f6',
+                          shadowOffset: { width: 0, height: 4 },
+                          shadowOpacity: 0.3,
+                          shadowRadius: 12,
+                          elevation: 8,
+                        },
+                      ]}
+                    >
+                      <View
+                        style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: 16,
+                          backgroundColor: '#3b82f6',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Plus size={28} color="#ffffff" strokeWidth={3} />
+                      </View>
                     </View>
 
-                    <Text style={tw`text-lg font-bold text-stone-700 mb-2`}>{t('dashboard.createFirstHabit')}</Text>
-                    <Text style={tw`text-sm text-stone-500 text-center px-4`}>{t('dashboard.startJourney')}</Text>
+                    {/* Title */}
+                    <Text style={[tw`text-xl font-black text-blue-900 mb-2 text-center`, { letterSpacing: -0.5 }]}>
+                      {t('dashboard.createFirstHabit')}
+                    </Text>
 
-                    <View style={tw`mt-4 px-6 py-2 bg-sand rounded-full border border-stone-300 shadow-sm`}>
-                      <Text style={tw`text-sm font-semibold text-stone-600`}>{t('dashboard.tapToBegin')}</Text>
+                    {/* Subtitle */}
+                    <Text style={tw`text-sm text-blue-600 text-center px-2 mb-6`}>
+                      {t('dashboard.startJourney')}
+                    </Text>
+
+                    {/* CTA Button with depth */}
+                    <View style={{ position: 'relative', width: '100%' }}>
+                      {/* Button shadow */}
+                      <View
+                        style={{
+                          position: 'absolute',
+                          top: 4,
+                          left: 0,
+                          right: 0,
+                          bottom: -4,
+                          backgroundColor: '#2563eb',
+                          borderRadius: 16,
+                        }}
+                      />
+                      <View
+                        style={{
+                          backgroundColor: '#3b82f6',
+                          borderRadius: 16,
+                          paddingVertical: 14,
+                          paddingHorizontal: 24,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Text style={tw`text-base font-bold text-white`}>
+                          {t('dashboard.tapToBegin')}
+                        </Text>
+                      </View>
                     </View>
-                  </LinearGradient>
-                </Pressable>
+                  </Pressable>
+                </View>
               </View>
             )}
             {/* Boutons de debug - DEV ONLY */}

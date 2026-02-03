@@ -85,7 +85,7 @@ interface AuthContextType {
   /** Onboarding complete */
   hasCompletedOnboarding: boolean;
   /** Marque l'onboarding comme complete */
-  completeOnboarding: () => Promise<void>;
+  completeOnboarding: (status?: 'started' | 'skipped') => Promise<void>;
   /** Verifie le statut de l'onboarding */
   checkOnboardingStatus: () => Promise<void>;
 }
@@ -351,12 +351,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   /**
    * Marque l'onboarding comme complete
+   * @param status - 'started' si l'utilisateur a fait l'onboarding, 'skipped' s'il a skip
    */
-  const completeOnboarding = async () => {
+  const completeOnboarding = async (status: 'started' | 'skipped' = 'started') => {
     if (!user) return;
 
     try {
-      const success = await OnboardingService.completeOnboarding(user.id);
+      const success = await OnboardingService.completeOnboarding(user.id, undefined, status);
       if (success) {
         setHasCompletedOnboarding(true);
       }

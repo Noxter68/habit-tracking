@@ -66,11 +66,15 @@ export class OnboardingService {
    *
    * @param userId - L'identifiant de l'utilisateur
    * @param username - Le pseudo optionnel de l'utilisateur
+   * @param status - Le statut de l'onboarding ('started' ou 'skipped')
    * @returns Vrai si la mise a jour a reussi
    */
-  static async completeOnboarding(userId: string, username?: string): Promise<boolean> {
+  static async completeOnboarding(userId: string, username?: string, status: 'started' | 'skipped' = 'started'): Promise<boolean> {
     try {
-      const updateData: any = { has_completed_onboarding: true };
+      const updateData: any = {
+        has_completed_onboarding: true,
+        onboarding_status: status,
+      };
 
       // Si un pseudo est fourni, l'ajouter aux donnees a mettre a jour
       if (username && username.trim()) {
@@ -88,7 +92,7 @@ export class OnboardingService {
         return false;
       }
 
-      Logger.info('Onboarding completed for user:', userId, username ? `with username: ${username}` : '');
+      Logger.info('Onboarding completed for user:', userId, `status: ${status}`, username ? `with username: ${username}` : '');
       return true;
     } catch (error) {
       Logger.error('Exception completing onboarding:', error);
