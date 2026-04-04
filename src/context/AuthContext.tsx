@@ -141,13 +141,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const updateUserTimezone = async (userId: string): Promise<void> => {
     try {
       const timezoneOffset = -new Date().getTimezoneOffset() / 60;
+      const timezoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-      Logger.debug(`[Auth] Updating timezone: UTC${timezoneOffset >= 0 ? '+' : ''}${timezoneOffset}`);
+      Logger.debug(`[Auth] Updating timezone: UTC${timezoneOffset >= 0 ? '+' : ''}${timezoneOffset} (${timezoneName})`);
 
       const { error } = await supabase
         .from('profiles')
         .update({
           timezone_offset: Math.round(timezoneOffset),
+          timezone_name: timezoneName,
           updated_at: new Date().toISOString(),
         })
         .eq('id', userId);

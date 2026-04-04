@@ -201,7 +201,7 @@ const LeaderboardScreen = () => {
                         </View>
 
                         {/* Username avec drapeau aligné */}
-                        <Text style={{ fontSize: 12 }}>{getFlagFromTimezone(topThree[1].timezone_offset)}</Text>
+                        <Text style={{ fontSize: 12 }}>{getFlagFromTimezone(topThree[1].timezone_offset, topThree[1].timezone_name)}</Text>
                         <View style={tw`flex-row items-center gap-1.5 mt-2 mb-2`}>
                           <Text style={{ fontSize: 16, fontWeight: '900', color: '#FFFFFF' }} numberOfLines={1}>
                             {topThree[1].username}
@@ -250,7 +250,7 @@ const LeaderboardScreen = () => {
                         </View>
 
                         {/* Username avec drapeau aligné */}
-                        <Text style={{ fontSize: 14 }}>{getFlagFromTimezone(topThree[0].timezone_offset)}</Text>
+                        <Text style={{ fontSize: 14 }}>{getFlagFromTimezone(topThree[0].timezone_offset, topThree[0].timezone_name)}</Text>
                         <View style={tw`flex-row items-center gap-2 mt-2 mb-2`}>
                           <Text style={{ fontSize: 16, fontWeight: '900', color: '#FFFFFF' }} numberOfLines={1}>
                             {topThree[0].username}
@@ -294,7 +294,7 @@ const LeaderboardScreen = () => {
                         </View>
 
                         {/* Username avec drapeau aligné */}
-                        <Text style={{ fontSize: 12 }}>{getFlagFromTimezone(topThree[2].timezone_offset)}</Text>
+                        <Text style={{ fontSize: 12 }}>{getFlagFromTimezone(topThree[2].timezone_offset, topThree[2].timezone_name)}</Text>
                         <View style={tw`flex-row items-center gap-1.5 mt-2 mb-2`}>
                           <Text style={{ fontSize: 16, fontWeight: '900', color: '#FFFFFF' }} numberOfLines={1}>
                             {topThree[2].username}
@@ -450,7 +450,7 @@ const LeaderboardScreen = () => {
                         <View style={tw`flex-row items-center gap-2 mb-0.5`}>
                           {/* Drapeau du pays avec container arrondi */}
                           <View style={tw`bg-white/25 rounded-full p-0.5`}>
-                            <Text style={tw`text-base`}>{getFlagFromTimezone(user.timezone_offset)}</Text>
+                            <Text style={tw`text-base`}>{getFlagFromTimezone(user.timezone_offset, user.timezone_name)}</Text>
                           </View>
                           <Text style={tw`text-white font-bold text-sm flex-shrink`} numberOfLines={1}>
                             {user.username}

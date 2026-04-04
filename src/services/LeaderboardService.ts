@@ -39,6 +39,7 @@ export interface LeaderboardEntry {
   weeklyXP?: number;
   isCurrentUser?: boolean;
   timezone_offset?: number;
+  timezone_name?: string;
   localRank?: number; // Rang dans le classement local (même pays)
 }
 
@@ -100,7 +101,7 @@ export class LeaderboardService {
       // 2. OR have total_xp > 0 (to not exclude users whose transactions might be missing)
       const { data: topUsers, error: topError } = await supabase
         .from('profiles')
-        .select('id, username, email, total_xp, current_level, timezone_offset')
+        .select('id, username, email, total_xp, current_level, timezone_offset, timezone_name')
         .neq('username', 'testuser')
         .gt('total_xp', 0)
         .order('total_xp', { ascending: false })
@@ -166,13 +167,14 @@ export class LeaderboardService {
         weeklyXP: weeklyXPMap.get(user.id) || 0,
         isCurrentUser: user.id === userId,
         timezone_offset: (user as any).timezone_offset,
+        timezone_name: (user as any).timezone_name,
       }));
 
       const userInTop = leaderboard.some((u) => u.id === userId);
       if (!userInTop && currentUserRank > 0) {
         const { data: currentUser } = await supabase
           .from('profiles')
-          .select('id, username, email, total_xp, current_level, timezone_offset')
+          .select('id, username, email, total_xp, current_level, timezone_offset, timezone_name')
           .eq('id', userId)
           .single();
 
@@ -216,6 +218,7 @@ export class LeaderboardService {
             weeklyXP: userWeeklyXP,
             isCurrentUser: true,
             timezone_offset: (currentUser as any).timezone_offset,
+            timezone_name: (currentUser as any).timezone_name,
           });
         }
       }
@@ -312,7 +315,7 @@ export class LeaderboardService {
 
       const { data: users, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, username, email, total_xp, current_level, timezone_offset')
+        .select('id, username, email, total_xp, current_level, timezone_offset, timezone_name')
         .in('id', topUserIds)
         .neq('username', 'testuser');
 
@@ -333,6 +336,7 @@ export class LeaderboardService {
           isCurrentUser: user.id === userId,
           avatar: this.generateAvatar(user.username || user.email),
           timezone_offset: (user as any).timezone_offset,
+          timezone_name: (user as any).timezone_name,
         }))
         .sort((a, b) => (b.weeklyXP || 0) - (a.weeklyXP || 0));
 
@@ -377,7 +381,7 @@ export class LeaderboardService {
       // 1. Récupérer le profil de l'utilisateur
       const { data: userProfile, error: profileError } = await supabase
         .from('profiles')
-        .select('id, total_xp, timezone_offset')
+        .select('id, total_xp, timezone_offset, timezone_name')
         .eq('id', userId)
         .single();
 
@@ -410,12 +414,12 @@ export class LeaderboardService {
       }
 
       // 4. Calculer le rang local (par pays basé sur timezone)
-      const userCountry = getCountryFromTimezone(userProfile.timezone_offset);
+      const userCountry = getCountryFromTimezone(userProfile.timezone_offset, (userProfile as any).timezone_name);
 
       // Récupérer tous les utilisateurs du même pays
       const { data: localUsers, error: localError } = await supabase
         .from('profiles')
-        .select('id, total_xp, timezone_offset')
+        .select('id, total_xp, timezone_offset, timezone_name')
         .neq('username', 'testuser')
         .order('total_xp', { ascending: false });
 
@@ -426,7 +430,7 @@ export class LeaderboardService {
 
       // Filtrer par pays et calculer le rang local
       const sameCountryUsers = localUsers.filter((user) => {
-        const country = getCountryFromTimezone((user as any).timezone_offset);
+        const country = getCountryFromTimezone((user as any).timezone_offset, (user as any).timezone_name);
         return country.code === userCountry.code;
       });
 
@@ -484,7 +488,7 @@ export class LeaderboardService {
       // 1. Récupérer le timezone de l'utilisateur
       const { data: userProfile, error: profileError } = await supabase
         .from('profiles')
-        .select('timezone_offset')
+        .select('timezone_offset, timezone_name')
         .eq('id', userId)
         .single();
 
@@ -493,12 +497,12 @@ export class LeaderboardService {
         return { leaderboard: [], currentUserRank: 0 };
       }
 
-      const userCountry = getCountryFromTimezone((userProfile as any).timezone_offset);
+      const userCountry = getCountryFromTimezone((userProfile as any).timezone_offset, (userProfile as any).timezone_name);
 
       // 2. Récupérer tous les utilisateurs avec XP > 0
       const { data: allUsers, error: usersError } = await supabase
         .from('profiles')
-        .select('id, username, email, total_xp, current_level, timezone_offset')
+        .select('id, username, email, total_xp, current_level, timezone_offset, timezone_name')
         .neq('username', 'testuser')
         .gt('total_xp', 0)
         .order('total_xp', { ascending: false });
@@ -510,7 +514,7 @@ export class LeaderboardService {
 
       // 3. Filtrer par pays
       const sameCountryUsers = allUsers.filter((user) => {
-        const country = getCountryFromTimezone((user as any).timezone_offset);
+        const country = getCountryFromTimezone((user as any).timezone_offset, (user as any).timezone_name);
         return country.code === userCountry.code;
       });
 
@@ -542,6 +546,7 @@ export class LeaderboardService {
           avatar: this.generateAvatar(user.username || user.email),
           isCurrentUser: user.id === userId,
           timezone_offset: (user as any).timezone_offset,
+          timezone_name: (user as any).timezone_name,
         };
       });
 
