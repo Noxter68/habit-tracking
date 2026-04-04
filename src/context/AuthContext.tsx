@@ -46,6 +46,7 @@ import { RevenueCatService } from '@/services/RevenueCatService';
 import { PushTokenService } from '@/services/pushTokenService';
 import { OnboardingService } from '@/services/onboardingService';
 import { LanguageDetectionService } from '@/services/languageDetectionService';
+import { AttributionService } from '@/services/attributionService';
 
 // ============================================================================
 // IMPORTS - Utils
@@ -554,6 +555,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         updateUserTimezone(data.user.id).catch(() => {});
         RevenueCatService.setAppUserId(data.user.id).catch(() => {});
+        AttributionService.processAttribution(data.user.id).catch(() => {});
 
         Logger.info('Sign up successful');
       }
@@ -586,6 +588,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (data.user) {
         updateUserTimezone(data.user.id).catch(() => {});
         RevenueCatService.setAppUserId(data.user.id).catch(() => {});
+        AttributionService.processAttribution(data.user.id).catch(() => {});
         Logger.debug('Sign in successful');
       }
     } catch (error: any) {
@@ -626,6 +629,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         await LanguageDetectionService.initializeUserLanguage(data.user.id);
         updateUserTimezone(data.user.id).catch(() => {});
         RevenueCatService.setAppUserId(data.user.id).catch(() => {});
+        AttributionService.processAttribution(data.user.id).catch(() => {});
         Logger.debug('Apple Sign In successful');
       }
     } catch (error: any) {
