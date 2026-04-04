@@ -100,6 +100,9 @@ export const getUpdatesForVersion = (version: string, locale: string = 'en'): Up
   const updatesMap: Record<string, UpdateItem[]> = {
     updates_1_2_1_en: updates_1_2_1_en,
     updates_1_2_1_fr: updates_1_2_1_fr,
+    // 1.2.2 = internal fixes (timezone, attribution) — reuse 1.2.1 content
+    updates_1_2_2_en: updates_1_2_1_en,
+    updates_1_2_2_fr: updates_1_2_1_fr,
   };
 
   return updatesMap[key] || updatesMap[`updates_${version.replace(/\./g, '_')}_en`] || [];
